@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Runtime & Concurrency — Interactive Interview Wiki</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #a855f7;
+      --code-bg: #090d16;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 16px 24px;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    .brand-badge {
+      background: var(--accent);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.15s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+    /* Progress & Filter Bar */
+    .toolbar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .progress-bar-wrap {
+      flex: 1;
+      min-width: 200px;
+      height: 10px;
+      background: var(--bg);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip {
+      background: var(--bg);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip.active {
+      background: var(--accent);
+      color: #090d16;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .search-input {
+      margin-left: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      min-width: 210px;
+    }
+    /* Flashcard Deck */
+    .flashcard-stage {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .module-tag {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .status-pill {
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .status-mastered { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+    .status-review { background: rgba(245, 158, 11, 0.2); color: var(--amber); }
+    .status-unseen { background: rgba(148, 163, 184, 0.15); color: var(--muted); }
+    .question-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+    .question-ru {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .answer-box {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+    .answer-box.visible { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .short-answer {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 4px solid var(--accent);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 16px;
+      font-size: 1rem;
+    }
+    .details-list {
+      margin: 12px 0 16px 20px;
+    }
+    .details-list li {
+      margin-bottom: 8px;
+      color: #e2e8f0;
+    }
+    pre.code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.83rem;
+      color: #cbd5e1;
+      margin-top: 12px;
+    }
+    .card-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.9rem;
+    }
+    .btn:hover { background: var(--surface-hover); }
+    .btn-primary {
+      background: var(--accent);
+      color: #090d16;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: #7dd3fc; }
+    .btn-green {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .btn-amber {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border-color: var(--amber);
+    }
+    /* Interactive Simulators */
+    .sim-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .sim-steps {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
+      flex-wrap: wrap;
+    }
+    .step-pill {
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .step-pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .sim-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .sim-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .sim-box h4 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      letter-spacing: 0.04em;
+    }
+    .reg-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: var(--surface);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-family: monospace;
+      font-size: 0.86rem;
+    }
+    .reg-highlight {
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+    /* All Cards Accordion View & Cheat Sheet */
+    .accordion-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+    .accordion-header:hover { background: var(--surface-hover); }
+    .accordion-body {
+      padding: 0 18px 18px 18px;
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+    .accordion-item.open .accordion-body { display: block; padding-top: 16px; }
+    table.cheat-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table.cheat-table th, table.cheat-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    table.cheat-table th {
+      background: #0b1120;
+      color: var(--accent);
+    }
+    .hidden { display: none !important; }
+    .kbd-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-badge">GO 1.24+</span>
+      <span>Go Runtime & Concurrency Interview Wiki</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchView('flashcards', this)">1. Карточки (Flashcards)</button>
+      <button class="tab-btn" onclick="switchView('simulators', this)">2. Интерактивные диаграммы (3)</button>
+      <button class="tab-btn" onclick="switchView('allcards', this)">3. Все 14 вопросов списком</button>
+      <button class="tab-btn" onclick="switchView('cheatsheet', this)">4. Сводная таблица (RU)</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- VIEW 1: FLASHCARDS -->
+  <section id="view-flashcards">
+    <div class="toolbar">
+      <div class="progress-row">
+        <div>
+          <strong>Прогресс заучивания:</strong>
+          <span id="progress-text" style="color: var(--accent); margin-left: 6px;">0 / 14 изучено</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div id="progress-fill" class="progress-bar-fill"></div>
+        </div>
+        <button class="btn" style="padding: 4px 10px; font-size: 0.78rem;" onclick="resetProgress()">Сбросить</button>
+      </div>
+      <div class="filter-row">
+        <button class="chip active" onclick="setFilter('all', this)">Все (14)</button>
+        <button class="chip" onclick="setFilter('m1', this)">1. Горутины и Стек (4)</button>
+        <button class="chip" onclick="setFilter('m2', this)">2. Планировщик GMP (4)</button>
+        <button class="chip" onclick="setFilter('m3', this)">3. Каналы, Select и CAS (4)</button>
+        <button class="chip" onclick="setFilter('m4', this)">4. Escape Analysis и GC (2)</button>
+        <button class="chip" onclick="setFilter('review', this)">На повторение</button>
+        <input type="text" id="search-input" class="search-input" placeholder="Поиск (gogo, sudog, CAS...)" oninput="onSearchInput()" />
+      </div>
+    </div>
+
+    <div class="flashcard-stage" id="card-stage">
+      <div>
+        <div class="card-meta">
+          <span class="module-tag" id="card-module">MODULE</span>
+          <span id="card-counter" style="color: var(--muted); font-size: 0.85rem;">Card 1 of 14</span>
+          <span class="status-pill status-unseen" id="card-status">Не изучено</span>
+        </div>
+        <div class="question-title" id="card-q-en">Loading...</div>
+        <div class="question-ru" id="card-q-ru"></div>
+
+        <div class="answer-box" id="card-answer-box">
+          <div class="short-answer">
+            <strong>Short Interview Answer (EN):</strong>
+            <div id="card-short-en" style="margin-top: 4px;"></div>
+          </div>
+          <strong>Key Details to Mention:</strong>
+          <ul class="details-list" id="card-details-en"></ul>
+          <pre class="code-block" id="card-code"></pre>
+        </div>
+      </div>
+
+      <div class="card-controls">
+        <div style="display:flex; gap:8px;">
+          <button class="btn" onclick="prevCard()">← Назад</button>
+          <button class="btn btn-primary" onclick="toggleAnswer()" id="reveal-btn">Показать ответ (Space)</button>
+          <button class="btn" onclick="nextCard()">Далее →</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-amber" onclick="markCard('review')">Повторить ещё</button>
+          <button class="btn btn-green" onclick="markCard('mastered')">Знаю отлично ✓</button>
+        </div>
+      </div>
+    </div>
+    <div class="kbd-hint">Горячие клавиши: <strong>Пробел</strong> — открыть/скрыть ответ | <strong>← / →</strong> — листать карточки | <strong>1</strong> — Знаю, <strong>2</strong> — Повторить</div>
+  </section>
+
+  <!-- VIEW 2: INTERACTIVE SIMULATORS -->
+  <section id="view-simulators" class="hidden">
+    <!-- Simulator 1: Goroutine creation, runnext & gogo registers -->
+    <div class="sim-card">
+      <h3>Диаграмма 1: От <code>go fn()</code> до регистров CPU (<code>newproc</code> → <code>P.runnext</code> → <code>runtime.gogo</code>)</h3>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-top: 4px;">Пошагово переключай такты, чтобы увидеть, как заполняется <code>gobuf</code>, работает LIFO-слот <code>runnext</code> и подменяются регистры <code>RSP</code>, <code>RIP</code> и <code>R14</code>.</p>
+      <div class="sim-steps" id="sim1-steps"></div>
+      <div id="sim1-desc" class="short-answer"></div>
+      <div class="sim-grid">
+        <div class="sim-box">
+          <h4>Регистры ядра CPU (Поток M)</h4>
+          <div class="reg-row" id="s1-r14"><span>R14 (curg):</span><strong></strong></div>
+          <div class="reg-row" id="s1-rsp"><span>RSP (Stack Ptr):</span><strong></strong></div>
+          <div class="reg-row" id="s1-rip"><span>RIP (Instr Ptr):</span><strong></strong></div>
+        </div>
+        <div class="sim-box">
+          <h4>Очереди процессора P</h4>
+          <div class="reg-row" id="s1-runnext"><span>P.runnext (LIFO 1):</span><strong></strong></div>
+          <div class="reg-row" id="s1-runq"><span>P.runq[256] (FIFO):</span><strong></strong></div>
+          <div class="reg-row" id="s1-gfree"><span>P.gFree (Пул G):</span><strong></strong></div>
+        </div>
+        <div class="sim-box">
+          <h4>Стек горутины G2 в хипе (2 КБ)</h4>
+          <div class="reg-row" id="s1-gstatus"><span>G2.atomicstatus:</span><strong></strong></div>
+          <div class="reg-row" id="s1-gobuf"><span>G2.sched (gobuf):</span><strong></strong></div>
+          <div class="reg-row" id="s1-bottom"><span>Дно стека [0xc00017f0]:</span><strong></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator 2: Channels, sudog, sendDirect & selectgo -->
+    <div class="sim-card">
+      <h3>Диаграмма 2: Каналы (<code>hchan</code>), парковка <code>sudog</code>, <code>sendDirect</code> и гонка <code>selectDone</code></h3>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-top: 4px;">Как горутина безопасно паркуется на стеке <code>g0</code>, получает данные напрямую из чужого стека и избегает дедлока в <code>selectgo</code>.</p>
+      <div class="sim-steps" id="sim2-steps"></div>
+      <div id="sim2-desc" class="short-answer"></div>
+      <div class="sim-grid">
+        <div class="sim-box">
+          <h4>Читатель G1 (Стек 0xc000_1000)</h4>
+          <div class="reg-row" id="s2-g1state"><span>Статус G1:</span><strong></strong></div>
+          <div class="reg-row" id="s2-g1var"><span>Переменная x [0x17e0]:</span><strong></strong></div>
+          <div class="reg-row" id="s2-seldone"><span>G1.selectDone (CAS):</span><strong></strong></div>
+        </div>
+        <div class="sim-box">
+          <h4>Канал runtime.hchan (в хипе)</h4>
+          <div class="reg-row" id="s2-lock"><span>hchan.lock (futex):</span><strong></strong></div>
+          <div class="reg-row" id="s2-recvq"><span>hchan.recvq (*sudog):</span><strong></strong></div>
+          <div class="reg-row" id="s2-buf"><span>Кольцевой буфер buf:</span><strong></strong></div>
+        </div>
+        <div class="sim-box">
+          <h4>Писатель G2 и Процессор P</h4>
+          <div class="reg-row" id="s2-g2action"><span>Действие писателя G2:</span><strong></strong></div>
+          <div class="reg-row" id="s2-copy"><span>Траектория копирования:</span><strong></strong></div>
+          <div class="reg-row" id="s2-runnext"><span>Слот P.runnext:</span><strong></strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulator 3: Escape Analysis & Tri-Color GC -->
+    <div class="sim-card">
+      <h3>Диаграмма 3: Escape Analysis и Трёхцветный сборщик мусора (Tri-Color GC + Write Barrier)</h3>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-top: 4px;">Пошаговое окрашивание графа объектов (White → Grey → Black) и работа Гибридного барьера записи.</p>
+      <div class="sim-steps" id="sim3-steps"></div>
+      <div id="sim3-desc" class="short-answer"></div>
+      <div class="sim-grid">
+        <div class="sim-box">
+          <h4>Фаза GC и Статус мира</h4>
+          <div class="reg-row" id="s3-phase"><span>Текущая фаза:</span><strong></strong></div>
+          <div class="reg-row" id="s3-wb"><span>Hybrid Write Barrier:</span><strong></strong></div>
+          <div class="reg-row" id="s3-roots"><span>Корни (Стек + Globals):</span><strong></strong></div>
+        </div>
+        <div class="sim-box">
+          <h4>Трёхцветный граф объектов в Хипе</h4>
+          <div class="reg-row" id="s3-white"><span>Белые (Кандидаты):</span><strong></strong></div>
+          <div class="reg-row" id="s3-grey"><span>Серые (В очереди):</span><strong></strong></div>
+          <div class="reg-row" id="s3-black"><span>Чёрные (Проверены):</span><strong></strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 3: ALL CARDS ACCORDION -->
+  <section id="view-allcards" class="hidden">
+    <h2 style="margin-bottom: 16px;">Полный справочник (Все 14 карточек Q&A на одной странице)</h2>
+    <div id="accordion-container"></div>
+  </section>
+
+  <!-- VIEW 4: CHEAT SHEET TABLE -->
+  <section id="view-cheatsheet" class="hidden">
+    <h2 style="margin-bottom: 16px;">Сводная шпаргалка по рантайму Go (от А до Я перед интервью)</h2>
+    <table class="cheat-table">
+      <thead>
+        <tr>
+          <th>Механизм</th>
+          <th>Как работает под капотом (Функции и структуры)</th>
+          <th>Ключевые цифры и маркеры для ответа</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Горутина и Стек</strong></td>
+          <td><code>go fn()</code> → <code>runtime.newproc</code> на стеке <code>g0</code>. Структура <code>runtime.g</code> + стек в хипе. На дно стека кладётся адрес возврата <code>runtime.goexit</code>.</td>
+          <td>Стек от <strong>2 КБ</strong> до <strong>1 ГБ</strong>. В коде нет ID/handle. Уменьшается в 2 раза при загрузке &lt; 25%.</td>
+        </tr>
+        <tr>
+          <td><strong>2. Регистры и Переключение</strong></td>
+          <td>Контекст хранится в <code>g.sched</code> (<code>gobuf</code>). <code>runtime.gogo</code> грузит <code>&G</code> в <code>R14</code>, стек в <code>RSP</code> и делает <code>JMP</code> в <code>RIP</code>. Обратно на <code>g0</code> — через <code>mcall</code>.</td>
+          <td>Занимает <strong>~10–20 нс</strong> в user space (против 1–2 мкс у потоков ОС).</td>
+        </tr>
+        <tr>
+          <td><strong>3. Расширение стека</strong></td>
+          <td>Пролог функции сравнивает <code>RSP</code> с <code>g.stackguard0</code> → <code>morestack</code> (на <code>g0</code>) → <code>copystack</code> → <code>adjustpointers</code>.</td>
+          <td>Удвоение <strong>2x</strong> в хипе. Внутренние указатели сдвигаются на <code>Δ = new.hi - old.hi</code> по битовой карте стека.</td>
+        </tr>
+        <tr>
+          <td><strong>4. Планировщик GMP и <code>runnext</code></strong></td>
+          <td>Мультиплексирование M:N. У каждого <code>P</code> (`GOMAXPROCS`) есть <code>LRQ[256]</code> и приоритетный 1-слотовый LIFO <code>runnext</code>.</td>
+          <td><code>runnext</code> держит данные в горячем <strong>L1/L2 кеше CPU</strong>. Каждый <strong>61-й тик</strong> проверяется <code>GRQ</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>5. Вытеснение и Work Stealing</strong></td>
+          <td>Гибридное: кооперативное (<code>stackPreempt</code>) + асинхронное через поток <code>sysmon</code>. Пустой <code>P</code> крадёт задачи через <code>runqgrab</code>.</td>
+          <td>Квота <strong>10 мс</strong> → сигнал <strong><code>SIGURG</code></strong> → отправка в <code>GRQ</code>. Крадётся ровно <strong>50%</strong> чужой <code>LRQ</code> через <code>CAS</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>6. Канал (<code>hchan</code>) и <code>sendDirect</code></strong></td>
+          <td><code>*runtime.hchan</code> в хипе: кольцевой <code>buf</code>, очереди <code>sendq</code>/<code>recvq</code> из <code>sudog</code> и мьютекс <code>lock</code>. Парковка через <code>gopark(chanparkcommit)</code>.</td>
+          <td>Если ждёт читатель — прямое копирование <strong>из стека в стек</strong> (<code>sendDirect</code> + <code>typeBitsBulkBarrier</code>) в обход буфера.</td>
+        </tr>
+        <tr>
+          <td><strong>7. Оператор <code>select</code></strong></td>
+          <td><code>runtime.selectgo</code>: массивы <code>pollorder</code> и <code>lockorder</code> на стеке. Подписка через цепочку <code>g.waiting</code> из <code>sudog</code>.</td>
+          <td><code>pollorder</code> (Фишер—Йетс против голодания), <code>lockorder</code> (сортировка адресов <code>*hchan</code> против AB-BA дедлока), гонка пробуждений через <code>g.selectDone.CompareAndSwap(0, 1)</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>8. Атомики и <code>CAS</code></strong></td>
+          <td>Интринсик компилятора → ассемблер <code>LOCK CMPXCHGL</code> (на amd64).</td>
+          <td>Блокирует <strong>64-байтную кэш-линию L1/L2</strong> по протоколу <strong>MESI</strong> и сбрасывает Store Buffer.</td>
+        </tr>
+        <tr>
+          <td><strong>9. Escape Analysis и GC</strong></td>
+          <td><code>-gcflags="-m"</code> (Sharing Down = стек, Sharing Up = хип). Конкурентный <strong>трёхцветный Mark-and-Sweep GC</strong> с <strong>Hybrid Write Barrier</strong>.</td>
+          <td>2 паузы STW (&lt;100 мкс), до 25% CPU на разметку, управляется <strong><code>GOGC=100</code></strong> и <strong><code>GOMEMLIMIT</code></strong>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+const CARDS = [
+  {
+    id: "c1", mod: "m1", modName: "1. Goroutines & Stack",
+    qEN: "Q1: What is a goroutine (both in code and in the runtime) and how is it created?",
+    qRU: "Что такое горутина на уровне кода и на уровне рантайма, и как она создаётся?",
+    shortEN: "At the code level, a goroutine is a concurrently executing function or closure launched with the 'go' keyword with no user-accessible handle or ID. At the runtime level, it is a lightweight user-space thread represented by a runtime.g struct with a 2 KB stack allocated on the heap.",
+    detailsEN: [
+      "Syntactic Abstraction: 'go fn()' returns nothing — there is no Thread object, Future, or goroutine ID in user space.",
+      "Under the Hood (runtime.newproc): The compiler translates 'go fn()' into runtime.newproc(funcval), switching to the OS thread's g0 system stack.",
+      "Initialization: Grabs a runtime.g from P.gFree (or allocates a new G + 2 KB heap stack), pushes runtime.goexit as a fake return address at the stack bottom, populates g.sched (gobuf), and places G into P.runnext."
+    ],
+    code: `// src/runtime/proc.go
+func newproc(fn *funcval) {
+    gp := getg()
+    pc := getcallerpc()
+    systemstack(func() {
+        newg := newproc1(fn, gp, pc) // prepares G & 2KB stack on g0
+        pp := getg().m.p.ptr()
+        runqput(pp, newg, true)      // puts newg into P.runnext (LIFO slot)
+    })
+}`
+  },
+  {
+    id: "c2", mod: "m1", modName: "1. Goroutines & Stack",
+    qEN: "Q2: Why did Go designers intentionally omit a goroutine ID or handle in user code?",
+    qRU: "Почему создатели Go намеренно не дали горутинам ID или объект-дескриптор в коде?",
+    shortEN: "To prevent Thread-Local Storage (TLS) abuse and unsafe external termination. Killing a goroutine forcibly from outside would leave mutexes locked, shared memory corrupted, and resources leaked.",
+    detailsEN: [
+      "No Thread-Local Storage (TLS): Prevents libraries from secretly coupling state to a specific execution thread ID.",
+      "Safe Cooperative Cancellation: Instead of an external .kill() or .stop() method, Go enforces explicit lifecycle management through channels and context.Context."
+    ],
+    code: `// Explicit cooperative cancellation instead of thread.kill():
+ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+defer cancel()
+go func(ctx context.Context) {
+    select {
+    case <-ctx.Done():
+        return // clean exit, defers run, locks released
+    }
+}(ctx)`
+  },
+  {
+    id: "c3", mod: "m1", modName: "1. Goroutines & Stack",
+    qEN: "Q3: Where does a goroutine live in memory, and how does dynamic stack growth (morestack / copystack) work?",
+    qRU: "Где горутина живёт в памяти и как работает динамическое расширение стека (morestack / copystack)?",
+    shortEN: "Both runtime.g and its contiguous 2 KB stack live on the process heap. Every non-leaf function prologue compares the CPU's RSP register against g.stackguard0. On overflow, runtime.morestack switches to g0, allocates a 2x larger heap block (copystack), copies frames, and shifts internal stack pointers.",
+    detailsEN: [
+      "Prologue Check: Stacks grow downward (from stack.hi to stack.lo). If RSP <= g.stackguard0, the prologue jumps to runtime.morestack.",
+      "Doubling on g0 (copystack): Allocates a contiguous heap block 2x the size (up to 1 GB on 64-bit) and copies bytes via memmove.",
+      "Pointer Adjustment (adjustpointers): Uses compiler-generated stack bitmaps to find any pointer on the stack pointing into [old.lo, old.hi) and shifts it by delta = new.hi - old.hi.",
+      "Shrinking: During GC, if a stack uses less than 25% of its capacity, GC shrinks it by half."
+    ],
+    code: `// Compiler-inserted function prologue (amd64):
+CMPQ SP, 16(R14)       // compare RSP against g.stackguard0 (R14 holds *g)
+JLS  morestack_noctxt  // if RSP <= stackguard0 -> switch to g0 & grow stack`
+  },
+  {
+    id: "c4", mod: "m1", modName: "1. Goroutines & Stack",
+    qEN: "Q4: How does an OS thread (M) actually start executing a goroutine and switch CPU registers (mcall vs. gogo)?",
+    qRU: "Как поток ОС начинает исполнять горутину и как физически подменяются регистры процессора (mcall / gogo)?",
+    shortEN: "Each OS thread (M) runs the scheduler on a dedicated system stack (g0). Once schedule() picks a goroutine, runtime.gogo switches from g0 to G in ~10-20ns by loading G into R14, G.sched.sp into the CPU's RSP register, and jumping (JMP) directly to G.sched.pc (RIP).",
+    detailsEN: [
+      "Minimal Context (runtime.gobuf): Because switches happen at function boundaries in user space, Go only saves SP, PC, BP, and R14 (no kernel trap or SIMD state dump).",
+      "runtime.gogo(&g.sched) [g0 -> G]: Loads *g into R14, overwrites RSP with G's 2 KB heap stack address, and executes JMP to load the function address into RIP.",
+      "runtime.mcall(fn) [G -> g0]: Saves G's current PC/RSP into g.sched, switches RSP to g0's stack, and runs scheduler logic.",
+      "The runtime.goexit Trick: When the goroutine's entry function finishes and executes RET, the CPU pops the fake return address runtime.goexit from the bottom of the stack, which calls mcall(goexit0) to recycle G into P.gFree."
+    ],
+    code: `// src/runtime/asm_amd64.s — runtime.gogo(buf *gobuf)
+MOVQ gobuf_g(BX), DX
+MOVQ DX, R14            // 1. Set current goroutine register R14 = *G
+MOVQ gobuf_sp(BX), SP   // 2. Swap Stack Pointer RSP to G's 2KB heap stack!
+MOVQ gobuf_bp(BX), BP   // 3. Restore frame pointer RBP
+MOVQ gobuf_pc(BX), BX
+JMP  BX                 // 4. Load G's PC into RIP and start executing!`
+  },
+  {
+    id: "c5", mod: "m2", modName: "2. GMP Scheduler",
+    qEN: "Q5: How does the Go GMP scheduler model work?",
+    qRU: "Как устроена модель планировщика GMP в Go?",
+    shortEN: "Go uses an M:N scheduler that multiplexes M goroutines (G) onto N OS kernel threads (M) across at most GOMAXPROCS logical processors (P).",
+    detailsEN: [
+      "G (Goroutine): Holds the heap stack, saved registers (gobuf), and atomicstatus (_Grunnable, _Grunning, _Gwaiting, _Gsyscall).",
+      "M (Machine): OS kernel thread containing its own g0 system stack.",
+      "P (Processor): Logical scheduling context (count = GOMAXPROCS) holding a lock-free 256-element Local Run Queue (LRQ), a 1-slot LIFO runnext, and a per-P mcache for lock-free small heap allocations."
+    ],
+    code: `// M must acquire a P to execute Go code:
+// [ M (OS Thread) ] <---> [ P (GOMAXPROCS) ] ---> [ G (Running) ]
+//                                            ---> [ runnext (1-slot LIFO) ]
+//                                            ---> [ LRQ (256-slot FIFO) ]`
+  },
+  {
+    id: "c6", mod: "m2", modName: "2. GMP Scheduler",
+    qEN: "Q6: Why does each processor (P) have a 1-element LIFO slot (runnext) alongside its 256-element FIFO queue?",
+    qRU: "Зачем у каждого процессора P есть одноэлементный LIFO-стек (runnext) перед обычной FIFO-очередью на 256 горутин?",
+    shortEN: "P.runnext is a single-slot high-priority LIFO queue designed to maximize L1/L2 CPU cache locality for newly created or newly unblocked goroutines without starving older tasks.",
+    detailsEN: [
+      "L1/L2 Cache Locality: When G1 spawns G2 (newproc) or wakes G2 on a channel (goready), the memory G2 will touch is already hot in the current CPU core's L1/L2 cache.",
+      "No Starvation Compromise: A full LIFO stack would starve older goroutines. With a 1-slot LIFO, placing a new goroutine into P.runnext via atomic CAS displaces any previous occupant into the tail of the 256-element FIFO queue (runq)."
+    ],
+    code: `// src/runtime/proc.go — inside runqput(pp *p, gp *g, next bool)
+oldnext := pp.runnext
+if pp.runnext.cas(oldnext, guintptr(unsafe.Pointer(gp))) {
+    if oldnext == 0 { return }
+    gp = oldnext.ptr() // displaced old goroutine goes to FIFO runq[256]
+}`
+  },
+  {
+    id: "c7", mod: "m2", modName: "2. GMP Scheduler",
+    qEN: "Q7: How does goroutine preemption work in Go (Cooperative vs. Asynchronous)?",
+    qRU: "Как в планировщике Go работает вытеснение горутин (кооперативное и асинхронное)?",
+    shortEN: "Since Go 1.14, the scheduler uses hybrid preemption combining cooperative preemption (at channel/I/O blocks and function prologues) with asynchronous signal-based preemption via sysmon and SIGURG.",
+    detailsEN: [
+      "Cooperative Preemption: Voluntary switches on channel operations, mutexes, I/O, or function prologues when g.stackguard0 is poisoned with stackPreempt.",
+      "Asynchronous Preemption: Prevents tight CPU loops ('for {}') from starving the runtime. The background sysmon thread (which runs without a P) detects any goroutine running for > 10 ms and sends a SIGURG signal to its OS thread (M).",
+      "Signal Handler: Interrupts M, saves G's registers, parks the preempted G into the Global Run Queue (GRQ), and schedules the next goroutine."
+    ],
+    code: `// Asynchronous Preemption Flow (Go 1.14+):
+// G runs > 10ms -> sysmon sends SIGURG to M -> M saves RIP/RSP ->
+// G moves to Global Run Queue (GRQ) -> M runs next G from P's queue`
+  },
+  {
+    id: "c8", mod: "m2", modName: "2. GMP Scheduler",
+    qEN: "Q8: How does Work Stealing work, and how do blocking syscalls differ from network I/O?",
+    qRU: "Как работает кража задач (Work Stealing) и чем блокирующий syscall отличается от сетевого ввода-вывода через netpoller?",
+    shortEN: "In runtime.findrunnable, P checks GRQ every 61st tick, then its own runnext/LRQ, GRQ, netpoller, and finally steals half of a random P's LRQ via lock-free CAS. Network I/O parks only G inside netpoller, whereas blocking syscalls hand P off to another OS thread.",
+    detailsEN: [
+      "1/61 Fairness Rule: Every 61st tick (P.schedtick % 61 == 0), P checks the Global Run Queue (GRQ) first so two local goroutines cannot starve the GRQ.",
+      "Work Stealing: Picks a random P and atomically steals 50% of its LRQ from the tail using lock-free CAS on runqhead.",
+      "Network I/O (netpoller): Uses epoll/kqueue/IOCP. G is parked (_Gwaiting) while M and P never block in the OS kernel.",
+      "Blocking syscall (P Handoff): M1 blocks in the kernel with G (_Gsyscall) and detaches P (_Psyscall). sysmon hands P off to another thread M2 so local queues keep running."
+    ],
+    code: `// Lookup order in runtime.findrunnable():
+// 1. Every 61st tick -> Global Run Queue (GRQ)
+// 2. Local P.runnext -> Local P.runq[256] (LRQ)
+// 3. Global Run Queue (GRQ) -> 4. Network Poller (netpoller)
+// 5. Work Stealing: steal 50% from a random victim P's LRQ`
+  },
+  {
+    id: "c9", mod: "m3", modName: "3. Channels, Select & CAS",
+    qEN: "Q9: What is inside runtime.hchan, and why do wait queues hold runtime.sudog instead of runtime.g?",
+    qRU: "Как устроена структура канала runtime.hchan и зачем очереди хранят обёртку sudog вместо самой горутины runtime.g?",
+    shortEN: "Calling make(chan T) allocates a runtime.hchan struct on the heap (returning *hchan), which contains a circular buffer (buf), sendq/recvq wait queues of runtime.sudog structs, and an internal mutex (lock). sudog enables an M:N relationship so one goroutine can wait on multiple channels simultaneously inside a select.",
+    detailsEN: [
+      "Ring Buffer: buf pointer, dataqsiz (capacity), qcount (current items), sendx and recvx indices.",
+      "Why sudog: A single goroutine in a select statement must enqueue itself into several different channels at once. Each branch gets its own sudog (from P's sudogcache) pointing to the same *g and the stack variable address (elem).",
+      "Mutex-Protected: Channels are NOT lock-free; operations acquire hchan.lock (backed by OS futex)."
+    ],
+    code: `type hchan struct {
+    qcount, dataqsiz uint
+    buf              unsafe.Pointer // ring buffer in heap
+    sendx, recvx     uint
+    recvq, sendq     waitq          // doubly-linked list of *sudog
+    lock             mutex          // internal runtime mutex
+}`
+  },
+  {
+    id: "c10", mod: "m3", modName: "3. Channels, Select & CAS",
+    qEN: "Q10: Walk through channel send/receive (gopark, sendDirect, and the nil/closed channel matrix).",
+    qRU: "Как работают отправка и чтение из канала (gopark, прямое копирование sendDirect и таблица поведения nil/закрытых каналов)?",
+    shortEN: "Under hchan.lock, sending executes one of three paths: direct stack-to-stack copy (sendDirect) if a receiver is waiting in recvq, copying into the ring buffer, or parking via gopark(chanparkcommit).",
+    detailsEN: [
+      "Direct Stack-to-Stack Copy (sendDirect): If recvq has a waiting sudog, the sender copies data straight from its own stack into the parked receiver's stack (sg.elem) via memmove + typeBitsBulkBarrier, completely bypassing hchan.buf, then calls goready (putting the receiver into P.runnext).",
+      "Why gopark unlocks on g0 (chanparkcommit): A blocking goroutine switches RSP to the g0 stack BEFORE releasing hchan.lock so another thread cannot wake and resume G while it is still running on its own stack.",
+      "Nil vs. Closed Matrix: Send/Receive on nil channel blocks forever; Send/Close on closed channel panics; Receive on closed channel drains buffer then returns (zero-value, false)."
+    ],
+    code: `// Direct copy from sender's stack to parked receiver's stack:
+func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
+    dst := sg.elem // address of variable right on parked G1's stack!
+    typeBitsBulkBarrier(t, uintptr(dst), uintptr(src), t.Size_)
+    memmove(dst, src, t.Size_)
+}`
+  },
+  {
+    id: "c11", mod: "m3", modName: "3. Channels, Select & CAS",
+    qEN: "Q11: How does the select statement (runtime.selectgo) work under the hood?",
+    qRU: "Как устроен оператор select под капотом (pollorder, lockorder, цепочка sudog и гонка пробуждений selectDone)?",
+    shortEN: "runtime.selectgo allocates two stack arrays: pollorder (a Fisher-Yates random shuffle to prevent starvation) and lockorder (a heap-sort of channel memory addresses to prevent AB-BA deadlocks). If no channel is ready, it enqueues a sudog into every channel, arbitrates concurrent wakeups via atomic g.selectDone.CompareAndSwap(0, 1), and unsubscribes losing sudogs upon waking.",
+    detailsEN: [
+      "pollorder (Fairness): Randomly shuffles non-nil cases via cheaprandn so ready channels are picked uniformly.",
+      "lockorder (Deadlock Avoidance): Sorts *hchan pointers by ascending memory address before locking all channels (selock), preventing AB-BA deadlocks between concurrent selects.",
+      "Wakeup Race (g.selectDone): When parked in multiple channels, competing writers must win g.selectDone.CompareAndSwap(0, 1) to claim the wakeup. Once awakened, G re-locks all channels and removes its unused sudogs."
+    ],
+    code: `// Inside waitq.dequeue() — resolving simultaneous select wakeups:
+if sgp.isSelect && !sgp.g.selectDone.CompareAndSwap(0, 1) {
+    continue // another CPU core already woke this goroutine on another case!
+}`
+  },
+  {
+    id: "c12", mod: "m3", modName: "3. Channels, Select & CAS",
+    qEN: "Q12: How does Compare-And-Swap (CAS) work in Go assembly and CPU caches, and where is it used?",
+    qRU: "Как работает CAS в Go на уровне ассемблера и кешей процессора, и где он применяется в рантайме?",
+    shortEN: "atomic.CompareAndSwap is a compiler intrinsic that emits a single hardware instruction: LOCK CMPXCHG on x86-64. The CPU locks the 64-byte L1/L2 cache line in Exclusive/Modified state via the MESI coherency protocol, flushes the store buffer, and atomically swaps the value if *ptr == old.",
+    detailsEN: [
+      "Assembly (LOCK CMPXCHGL): Compares accumulator EAX (old) with memory 0(BX). If equal, writes ECX (new) into memory and sets Zero Flag ZF = 1; otherwise copies memory into EAX and clears ZF = 0.",
+      "Where Go Runtime Uses CAS: 1) Goroutine status transitions (casgstatus), 2) P.runnext and P.runqhead (lock-free Work Stealing), 3) select wakeup race (g.selectDone), 4) sync.Mutex / runtime.mutex fast-path, 5) sysmon P handoff.",
+      "Trade-offs: Heavy contention causes L1 cache-line ping-pong across cores; susceptible to the ABA problem unless paired with monotonic counters."
+    ],
+    code: `// src/internal/runtime/atomic/asm_amd64.s
+TEXT ·Cas(SB), NOSPLIT, $0-17
+    MOVQ ptr+0(FP), BX
+    MOVL old+8(FP), AX       // EAX = expected old value
+    MOVL new+12(FP), CX      // ECX = new value
+    LOCK
+    CMPXCHGL CX, 0(BX)       // MESI cache-line lock + atomic compare & swap
+    SETEQ ret+16(FP)         // return ZF (1 = true, 0 = false)
+    RET`
+  },
+  {
+    id: "c13", mod: "m4", modName: "4. Escape Analysis & GC",
+    qEN: "Q13: What is Escape Analysis in Go, and what causes a variable to escape to the heap?",
+    qRU: "Что такое Escape Analysis в Go и в каких случаях переменная убегает в хип?",
+    shortEN: "Escape Analysis is a compile-time static analysis (-gcflags='-m') that allocates variables on the goroutine's fast stack if the compiler can prove their lifetime does not outlive the function frame and their size is bounded; otherwise, they escape to the shared heap.",
+    detailsEN: [
+      "Sharing Down vs. Sharing Up: Passing a pointer down to a helper function stays on the stack. Returning a pointer up ('return &x') always escapes to the heap because the frame is destroyed on RET.",
+      "Common Escape Triggers: 1) Returning pointers up, 2) Interface method calls (e.g., fmt.Println) due to dynamic dispatch via itab, 3) Variables captured by closures or goroutines, 4) Slices with runtime-determined size make([]T, n) or objects > 64 KB."
+    ],
+    code: `// Sharing Down -> Stays on Stack:
+func main() { x := 42; printPtr(&x) }
+
+// Sharing Up -> Escapes to Heap (go build -gcflags="-m"):
+func newInt() *int { x := 42; return &x } // moved to heap: x`
+  },
+  {
+    id: "c14", mod: "m4", modName: "4. Escape Analysis & GC",
+    qEN: "Q14: How does Go's Tri-Color Mark-and-Sweep GC and Hybrid Write Barrier work?",
+    qRU: "Как устроен трёхцветный сборщик мусора (GC) в Go и зачем нужен Гибридный барьер записи?",
+    shortEN: "Go uses a concurrent, tri-color (White/Grey/Black), non-generational, non-compacting garbage collector tuned for sub-millisecond pause latency. During Concurrent Mark, a compiler-injected Hybrid Write Barrier shades mutated heap pointers Grey so live objects are never accidentally swept.",
+    detailsEN: [
+      "Why Non-Generational & Non-Compacting: Escape Analysis already keeps short-lived objects on stacks (replacing a Young Gen), and TCMalloc-style size classes (mspan/mcache) prevent fragmentation without moving objects.",
+      "Tri-Color Invariant: White = unvisited candidates for collection; Grey = live objects waiting to have their children scanned; Black = scanned live objects (never point directly to White).",
+      "The 4 Phases: 1) Mark Setup (STW #1, enables Write Barrier), 2) Concurrent Mark (~25% GOMAXPROCS CPU + Mark Assist), 3) Mark Termination (STW #2, disables Write Barrier), 4) Concurrent Sweep.",
+      "Pacing: Triggered by GOGC (default 100% heap doubling), GOMEMLIMIT (soft memory limit since Go 1.19), or sysmon every 2 minutes."
+    ],
+    code: `// Pseudo-code of compiler-injected Hybrid Write Barrier during Concurrent Mark:
+func writePointer(slot *unsafe.Pointer, ptr unsafe.Pointer) {
+    if writeBarrier.enabled {
+        shade(*slot) // shade old target Grey (Yuasa deletion barrier)
+        shade(ptr)   // shade new target Grey (Dijkstra insertion barrier)
+    }
+    *slot = ptr
+}`
+  }
+];
+
+const SIM1_DATA = [
+  {
+    title: "Шаг 1: go doWork() → newproc1 на стеке g0",
+    desc: "Горутина G1 вызывает go doWork(). Управление через systemstack переключается на 8 КБ системный стек потока g0. На стеке g0 из пула P.gFree берётся структура G2 со стеком 2 КБ в хипе.",
+    r14: "g0 (системная горутина)", rsp: "0x7fff_8000 (стек g0)", rip: "runtime.newproc1",
+    runnext: "G_old (предыдущая)", runq: "[ G3, G4 ] (2 шт.)", gfree: "Извлечена G2",
+    gstatus: "_Gdead → _Grunnable", gobuf: "Инициализация...", bottom: "Запись runtime.goexit"
+  },
+  {
+    title: "Шаг 2: Подготовка gobuf и трюка с goexit",
+    desc: "На самое дно 2 КБ стека G2 (0xc000_17f0) записывается фейковый адрес возврата runtime.goexit. В структуру G2.sched (gobuf) сохраняются будущий RSP (0xc000_17f0) и будущий RIP (адрес функции doWork).",
+    r14: "g0 (системная горутина)", rsp: "0x7fff_8000 (стек g0)", rip: "runtime.newproc1",
+    runnext: "G_old", runq: "[ G3, G4 ]", gfree: "Пуст",
+    gstatus: "_Grunnable", gobuf: "{sp: 0xc00017f0, pc: doWork}", bottom: "*0xc00017f0 = &runtime.goexit"
+  },
+  {
+    title: "Шаг 3: Постановка в LIFO-слот P.runnext (CAS)",
+    desc: "Вызывается runqput(P, G2, true). Атомарный CAS ставит свежую G2 в приоритетный LIFO-слот P.runnext (ради горячего кеша L1/L2 ядра), а вытесненная G_old уходит в хвост FIFO-очереди P.runq[256].",
+    r14: "g0 (системная горутина)", rsp: "0x7fff_8000 (стек g0)", rip: "runtime.runqput",
+    runnext: "G2 (приоритет L1 cache!)", runq: "[ G3, G4, G_old ]", gfree: "Пуст",
+    gstatus: "_Grunnable", gobuf: "{sp: 0xc00017f0, pc: doWork}", bottom: "&runtime.goexit"
+  },
+  {
+    title: "Шаг 4: Ассемблерный прыжок runtime.gogo (Подмена регистров)",
+    desc: "Планировщик вызывает schedule() → execute(G2) → runtime.gogo(&G2.sched). За 4 инструкции ассемблера в R14 загружается &G2, в RSP загружается адрес 2 КБ буфера в куче (0xc000_17f0), а JMP перебрасывает RIP в код doWork!",
+    r14: "G2 (0xc000_0400)", rsp: "0xc000_17f0 (2 КБ стек в хипе!)", rip: "main.doWork (ваш код)",
+    runnext: "Пусто (0)", runq: "[ G3, G4, G_old ]", gfree: "Пуст",
+    gstatus: "_Grunning", gobuf: "Очищен (в регистрах CPU)", bottom: "&runtime.goexit"
+  },
+  {
+    title: "Шаг 5: Завершение функции RET → goexit → mcall на g0",
+    desc: "Функция doWork выполняет инструкцию RET. Процессор снимает со дна стека подложенный адрес runtime.goexit! Вызывается mcall(goexit0): RSP возвращается на стек g0, а G2 со своим 2 КБ стеком кладётся обратно в пул P.gFree.",
+    r14: "g0 (возврат в планировщик)", rsp: "0x7fff_8000 (стек g0)", rip: "runtime.goexit0 → schedule()",
+    runnext: "Пусто (0)", runq: "[ G3, G4, G_old ]", gfree: "G2 возвращена в пул!",
+    gstatus: "_Gdead (в пуле gFree)", gobuf: "Сброшен", bottom: "Готов к переиспользованию"
+  }
+];
+
+const SIM2_DATA = [
+  {
+    title: "Шаг 1: G1 читает из пустого канала (Упаковка в sudog)",
+    desc: "G1 выполняет x := <-ch. Захватывается hchan.lock. Так как канал пуст, G1 берёт из кеша процессора структуру sudog, записывает в sudog.elem прямой адрес своей стековой переменной &x (0x17e0) и ставит sudog в очередь hchan.recvq.",
+    g1state: "_Grunning (захватила лок)", g1var: "x = 0 (ждёт по адресу 0x17e0)", seldone: "0 (свободна)",
+    lock: "ЗАХВАЧЕН (горутиной G1)", recvq: "[ sudog(G1, elem=0x17e0) ]", buf: "Пуст (qcount = 0)",
+    g2action: "Ещё не подошла", copy: "Нет", runnext: "Пусто"
+  },
+  {
+    title: "Шаг 2: Безопасная парковка gopark(chanparkcommit) на стеке g0",
+    desc: "Чтобы другой поток не разбудил G1 до сохранения её регистров, G1 вызывает gopark: сначала через mcall(park_m) сохраняет RSP/RIP в G1.sched и переходит на стек g0, и ТОЛЬКО на стеке g0 вызывает chanparkcommit, отпуская hchan.lock!",
+    g1state: "_Gwaiting (запаркована)", g1var: "x = 0 [адрес 0x17e0 в sudog]", seldone: "0 (ожидает CAS)",
+    lock: "СВОБОДЕН (отпущен на g0!)", recvq: "[ sudog(G1, elem=0x17e0) ]", buf: "Пуст",
+    g2action: "Подходит к каналу ch <- 42", copy: "Ожидание писателя", runnext: "Поток M1 взял другую задачу"
+  },
+  {
+    title: "Шаг 3: Гонка в select (CAS по G1.selectDone) и sendDirect",
+    desc: "Писатель G2 выполняет ch <- 42, захватывает hchan.lock и достаёт sudog из recvq. Выигрывает атомарный G1.selectDone.CompareAndSwap(0, 1) и вызывает sendDirect: memmove копирует число 42 НАПРЯМУЮ из стека G2 в стек спящей G1 (по адресу 0x17e0) в обход буфера!",
+    g1state: "_Gwaiting (в стек пишут!)", g1var: "x = 42 (скопировано напрямую!)", seldone: "1 (CAS выигран писателем G2!)",
+    lock: "ЗАХВАЧЕН (писателем G2)", recvq: "Пуста (sudog извлечён)", buf: "Обойдён (не использовался!)",
+    g2action: "Выполняет sendDirect (memmove)", copy: "Стек G2 → Стек G1 (0x17e0)", runnext: "Пусто"
+  },
+  {
+    title: "Шаг 4: Пробуждение goready(G1) и постановка в P.runnext",
+    desc: "Писатель G2 отпускает hchan.lock и вызывает goready(G1). Статус G1 меняется на _Grunnable, и она помещается в приоритетный LIFO-слот P.runnext. Если это был select, проснувшаяся G1 по списку lockorder удаляет свои лишние sudog из остальных каналов.",
+    g1state: "_Grunnable (разбужена!)", g1var: "x = 42 (готова к работе)", seldone: "Сброшен в 0 после пробуждения",
+    lock: "СВОБОДЕН", recvq: "Пуста", buf: "Пуст",
+    g2action: "Продолжает работу", copy: "Завершено (0 аллокаций)", runnext: "G1 (запустится следующей!)"
+  }
+];
+
+const SIM3_DATA = [
+  {
+    title: "Фаза 1: Escape Analysis (Компиляция) и Mark Setup (STW #1)",
+    desc: "На этапе компиляции переменные без возврата указателя наверх (Sharing Down) остались на стеке. В хипе вырос объём памяти (GOGC=100). Короткая пауза Stop-The-World #1 (~20 мкс) включает Hybrid Write Barrier. Все объекты в куче пока Белые.",
+    phase: "1. Mark Setup (STW #1)", wb: "ВКЛЮЧЁН (перехватывает *slot = ptr)", roots: "Готовы к сканированию",
+    white: "Объекты A, B, C, D, E (все)", grey: "Пусто", black: "Пусто"
+  },
+  {
+    title: "Фаза 2: Сканирование корней (Roots → Grey)",
+    desc: "Мир снова запущен! Горутины работают параллельно с GC. Сборщик мусора сканирует корни (стеки горутин и глобальные переменные) и красит все объекты хипа, на которые есть прямые ссылки из стеков (A и B), в Серый цвет.",
+    phase: "2. Concurrent Mark (Старт)", wb: "АКТИВЕН", roots: "Стек указывает на A и B",
+    white: "C, D, E (непосещённые)", grey: "A, B (в очереди на обход)", black: "Пусто"
+  },
+  {
+    title: "Фаза 3: Конкурентная разметка и срабатывание Write Barrier",
+    desc: "Воркеры GC (25% CPU) берут Серые A и B, красят их в Чёрный, а их детей (C и D) — в Серый. В этот момент горутина перекидывает ссылку на объект D: срабатывает Hybrid Write Barrier и удерживает D в Сером цвете, не давая GC потерять живой объект!",
+    phase: "2. Concurrent Mark + Write Barrier", wb: "СРАБОТАЛ: затенил изменённый указатель в Серый", roots: "Просканированы",
+    white: "E (недостижимый мусор)", grey: "C, D (проверяются дочерние ссылки)", black: "A, B (полностью проверены)"
+  },
+  {
+    title: "Фаза 4: Mark Termination (STW #2) и Concurrent Sweep",
+    desc: "Серых объектов больше не осталось! Короткая пауза STW #2 выключает Write Barrier. Все живые объекты (A, B, C, D) стали Чёрными. Оставшийся Белым объект E фоново очищается на этапе Concurrent Sweep (возвращается в mspan без дефрагментации).",
+    phase: "3 & 4. Mark Termination → Sweep", wb: "ВЫКЛЮЧЕН", roots: "Чисты",
+    white: "Объект E → ОСВОБОЖДЁН в mspan!", grey: "Пусто (0)", black: "A, B, C, D (сохранены, станут Белыми к следующему циклу)"
+  }
+];
+
+let state = {
+  filter: "all",
+  search: "",
+  index: 0,
+  revealed: false,
+  progress: JSON.parse(localStorage.getItem("go_prep_progress_v1") || "{}")
+};
+
+function saveProgress() {
+  localStorage.setItem("go_prep_progress_v1", JSON.stringify(state.progress));
+  updateProgressBar();
+}
+
+function getFilteredCards() {
+  return CARDS.filter(c => {
+    if (state.filter === "review" && state.progress[c.id] !== "review") return false;
+    if (state.filter !== "all" && state.filter !== "review" && c.mod !== state.filter) return false;
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + c.code).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function updateProgressBar() {
+  const mastered = CARDS.filter(c => state.progress[c.id] === "mastered").length;
+  const pct = Math.round((mastered / CARDS.length) * 100);
+  document.getElementById
