@@ -7,6 +7,20 @@ let state = {
   progress: JSON.parse(localStorage.getItem("go_prep_progress_v2") || "{}")
 };
 
+// Автоматическая привязка всех 28 карточек к 6 диаграммам
+const CARD_TO_SIM = {
+  c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
+  c7: "sim2", c8: "sim2", c9: "sim2", c10: "sim2", c11: "sim1",
+  c13: "sim3", c16: "sim3", c17: "sim3",
+  c18: "sim4", c19: "sim4",
+  c20: "sim5", c21: "sim5",
+  c23: "sim6", c24: "sim6", c25: "sim6", c26: "sim6", c27: "sim6", c28: "sim6"
+};
+
+function getCardSimId(card) {
+  return CARD_TO_SIM[card.id] || card.simId || null;
+}
+
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
 function saveProgress() {
   localStorage.setItem("go_prep_progress_v2", JSON.stringify(state.progress));
@@ -31,26 +45,37 @@ function getFilteredCards() {
   return CARDS.filter(c => {
     if (state.filter === "review" && state.progress[c.id] !== "review") return false;
     if (state.filter !== "all" && state.filter !== "review" && c.mod !== state.filter) return false;
-    if (state.level !== "all" && c.level !== state.level) return false;
+    if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
-      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + c.practicalRU + " " + c.code).toLowerCase();
+      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + (c.practicalRU || "") + " " + c.code).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   });
 }
 
+function updateFilterButtonsUI() {
+  document.querySelectorAll("#module-filter-row .chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.filter === state.filter);
+  });
+  document.querySelectorAll("#level-filter-row .level-chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.level === state.level);
+  });
+}
+
 function renderCard() {
+  updateFilterButtonsUI();
   const list = getFilteredCards();
   const ansBox = document.getElementById("card-answer-box");
 
   if (list.length === 0) {
     document.getElementById("card-module").textContent = "ПУСТО";
-    document.getElementById("card-level").textContent = "—";
+    document.getElementById("card-level").textContent = "0 карточек";
+    document.getElementById("card-level").className = "level-badge";
     document.getElementById("card-counter").textContent = "0 из 0";
-    document.getElementById("card-q-en").textContent = "Нет карточек по выбранному фильтру";
-    document.getElementById("card-q-ru").textContent = "Переключи фильтр модуля/уровня выше или очисти строку поиска.";
+    document.getElementById("card-q-en").textContent = "Нет карточек по выбранному сочетанию фильтров";
+    document.getElementById("card-q-ru").textContent = "Нажми «Все (28)» или переключи уровень сложности выше.";
     ansBox.classList.remove("visible");
     return;
   }
@@ -61,9 +86,11 @@ function renderCard() {
   const card = list[state.index];
   document.getElementById("card-module").textContent = card.modName;
 
+  const lvl = card.level || "senior";
+  const lvlLabel = card.levelLabel || "🟡 Senior";
   const lvlEl = document.getElementById("card-level");
-  lvlEl.textContent = card.levelLabel;
-  lvlEl.className = "level-badge level-" + card.level;
+  lvlEl.textContent = lvlLabel;
+  lvlEl.className = "level-badge level-" + lvl;
 
   document.getElementById("card-counter").textContent = `Карточка ${state.index + 1} из ${list.length} (${card.id.toUpperCase()})`;
   document.getElementById("card-q-en").textContent = card.qEN;
@@ -78,12 +105,20 @@ function renderCard() {
     ul.appendChild(li);
   });
 
-  document.getElementById("card-practical-ru").textContent = card.practicalRU || "";
+  const pracWrap = document.getElementById("card-practical-wrap");
+  if (card.practicalRU) {
+    pracWrap.classList.remove("hidden");
+    document.getElementById("card-practical-ru").textContent = card.practicalRU;
+  } else {
+    pracWrap.classList.add("hidden");
+  }
+
   document.getElementById("card-code").textContent = card.code;
 
+  const targetSim = getCardSimId(card);
   const simLinkWrap = document.getElementById("card-sim-link");
-  if (card.simId) {
-    simLinkWrap.innerHTML = `<a href="#/simulators/${card.simId}" class="btn btn-sm">🔬 Открыть интерактивную диаграмму по этой теме →</a>`;
+  if (targetSim) {
+    simLinkWrap.innerHTML = `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Открыть интерактивную диаграмму (${targetSim.toUpperCase()}) →</a>`;
   } else {
     simLinkWrap.innerHTML = "";
   }
@@ -132,9 +167,6 @@ function setFilter(f) {
   state.filter = f;
   state.index = 0;
   state.revealed = false;
-  document.querySelectorAll(".chip").forEach(c => {
-    c.classList.toggle("active", c.dataset.filter === f);
-  });
   renderCard();
 }
 
@@ -142,9 +174,10 @@ function setLevel(lvl) {
   state.level = lvl;
   state.index = 0;
   state.revealed = false;
-  document.querySelectorAll(".level-chip").forEach(c => {
-    c.classList.toggle("active", c.dataset.level === lvl);
-  });
+  // Если был включён пустой фильтр "На повторение", сбрасываем модуль на "Все", чтобы уровень сразу показал карточки
+  if (state.filter === "review" && getFilteredCards().length === 0) {
+    state.filter = "all";
+  }
   renderCard();
 }
 
@@ -154,86 +187,64 @@ function onSearchInput() {
   renderCard();
 }
 
-/* --- ИНТЕРАКТИВНЫЕ СИМУЛЯТОРЫ --- */
-function setRow(id, val, highlight) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.querySelector("strong").textContent = val;
-  el.classList.toggle("reg-highlight", !!highlight);
-}
-
-function renderSim1(idx) {
-  document.querySelectorAll("#sim1-steps .step-pill").forEach((b, i) => b.classList.toggle("active", i === idx));
-  const d = SIM1_DATA[idx];
-  document.getElementById("sim1-desc").textContent = d.desc;
-  setRow("s1-r14", d.r14, idx === 3 || idx === 4);
-  setRow("s1-rsp", d.rsp, idx === 3 || idx === 4);
-  setRow("s1-rip", d.rip, idx === 3);
-  setRow("s1-runnext", d.runnext, idx === 2);
-  setRow("s1-runq", d.runq, idx === 2);
-  setRow("s1-gfree", d.gfree, idx === 0 || idx === 4);
-  setRow("s1-gstatus", d.gstatus, true);
-  setRow("s1-gobuf", d.gobuf, idx === 1);
-  setRow("s1-bottom", d.bottom, idx === 1 || idx === 4);
-}
-
-function renderSim2(idx) {
-  document.querySelectorAll("#sim2-steps .step-pill").forEach((b, i) => b.classList.toggle("active", i === idx));
-  const d = SIM2_DATA[idx];
-  document.getElementById("sim2-desc").textContent = d.desc;
-  setRow("s2-g1state", d.g1state, true);
-  setRow("s2-g1var", d.g1var, idx === 2);
-  setRow("s2-seldone", d.seldone, idx === 2);
-  setRow("s2-lock", d.lock, idx === 1);
-  setRow("s2-recvq", d.recvq, idx === 0);
-  setRow("s2-buf", d.buf, false);
-  setRow("s2-g2action", d.g2action, idx === 2);
-  setRow("s2-copy", d.copy, idx === 2);
-  setRow("s2-runnext", d.runnext, idx === 3);
-}
-
-function renderSim3(idx) {
-  document.querySelectorAll("#sim3-steps .step-pill").forEach((b, i) => b.classList.toggle("active", i === idx));
-  const d = SIM3_DATA[idx];
-  document.getElementById("sim3-desc").textContent = d.desc;
-  setRow("s3-phase", d.phase, true);
-  setRow("s3-wb", d.wb, idx === 2);
-  setRow("s3-roots", d.roots, idx === 1);
-  setRow("s3-white", d.white, idx === 3);
-  setRow("s3-grey", d.grey, idx === 1 || idx === 2);
-  setRow("s3-black", d.black, idx === 3);
-}
-
+/* --- УНИВЕРСАЛЬНЫЙ ДВИЖОК ВСЕХ 6 СИМУЛЯТОРОВ --- */
 function initSimulators() {
-  const s1Wrap = document.getElementById("sim1-steps");
-  SIM1_DATA.forEach((step, idx) => {
-    const b = document.createElement("button");
-    b.className = "step-pill" + (idx === 0 ? " active" : "");
-    b.textContent = step.title;
-    b.onclick = () => renderSim1(idx);
-    s1Wrap.appendChild(b);
-  });
-  renderSim1(0);
+  const container = document.getElementById("simulators-list");
+  if (!container) return;
+  container.innerHTML = "";
 
-  const s2Wrap = document.getElementById("sim2-steps");
-  SIM2_DATA.forEach((step, idx) => {
-    const b = document.createElement("button");
-    b.className = "step-pill" + (idx === 0 ? " active" : "");
-    b.textContent = step.title;
-    b.onclick = () => renderSim2(idx);
-    s2Wrap.appendChild(b);
-  });
-  renderSim2(0);
+  SIMULATORS.forEach((sim, simIdx) => {
+    const card = document.createElement("div");
+    card.className = "sim-card";
+    card.id = sim.id;
 
-  const s3Wrap = document.getElementById("sim3-steps");
-  SIM3_DATA.forEach((step, idx) => {
-    const b = document.createElement("button");
-    b.className = "step-pill" + (idx === 0 ? " active" : "");
-    b.textContent = step.title;
-    b.onclick = () => renderSim3(idx);
-    s3Wrap.appendChild(b);
+    const stepsHtml = sim.steps
+      .map((st, idx) => `<button type="button" class="step-pill ${idx === 0 ? "active" : ""}" onclick="renderSimStep(${simIdx}, ${idx})">${st.title}</button>`)
+      .join("");
+
+    card.innerHTML = `
+      <div class="sim-header">
+        <div>
+          <h3>${sim.title}</h3>
+          <p class="muted-text">${sim.subtitle}</p>
+        </div>
+        <a href="#/cards/${sim.cardId}" class="btn btn-sm">${sim.cardLabel}</a>
+      </div>
+      <div class="sim-steps" id="${sim.id}-steps">${stepsHtml}</div>
+      <div id="${sim.id}-desc" class="short-answer"></div>
+      <div class="sim-grid" id="${sim.id}-grid"></div>
+    `;
+    container.appendChild(card);
+    renderSimStep(simIdx, 0);
   });
-  renderSim3(0);
+}
+
+function renderSimStep(simIdx, stepIdx) {
+  const sim = SIMULATORS[simIdx];
+  const step = sim.steps[stepIdx];
+
+  document.querySelectorAll(`#${sim.id}-steps .step-pill`).forEach((btn, i) => {
+    btn.classList.toggle("active", i === stepIdx);
+  });
+
+  document.getElementById(`${sim.id}-desc`).textContent = step.desc;
+
+  const grid = document.getElementById(`${sim.id}-grid`);
+  grid.innerHTML = step.boxes
+    .map(box => `
+      <div class="sim-box">
+        <h4>${box.title}</h4>
+        ${box.rows
+          .map(r => `
+            <div class="reg-row ${r.hl ? "reg-highlight" : ""}">
+              <span>${r.k}</span>
+              <strong>${r.v}</strong>
+            </div>
+          `)
+          .join("")}
+      </div>
+    `)
+    .join("");
 }
 
 /* --- БАЗА ЗНАНИЙ (WIKI) И ТАБЛИЦА-ШПАРГАЛКА --- */
@@ -243,12 +254,17 @@ function initWikiAndCheatsheet() {
   CARDS.forEach(c => {
     const item = document.createElement("div");
     item.className = "accordion-item open";
-    const simBtn = c.simId ? `<a href="#/simulators/${c.simId}" class="btn btn-sm">Диаграмма →</a>` : "";
+    const targetSim = getCardSimId(c);
+    const simBtn = targetSim ? `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Диаграмма (${targetSim.toUpperCase()}) →</a>` : "";
+    const lvl = c.level || "senior";
+    const lvlLabel = c.levelLabel || "🟡 Senior";
+    const pracHtml = c.practicalRU ? `<div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${c.practicalRU}</div>` : "";
+
     item.innerHTML = `
       <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
         <span>${c.qEN}</span>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <span class="level-badge level-${c.level}">${c.levelLabel}</span>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <span class="level-badge level-${lvl}">${lvlLabel}</span>
           <span class="module-tag">${c.modName}</span>
         </div>
       </div>
@@ -257,7 +273,7 @@ function initWikiAndCheatsheet() {
         <div class="short-answer"><strong>1. Base Answer (EN):</strong> ${c.shortEN}</div>
         <strong>2. Under the Hood Details (EN):</strong>
         <ul class="details-list">${c.detailsEN.map(x => `<li>${x}</li>`).join("")}</ul>
-        <div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${c.practicalRU}</div>
+        ${pracHtml}
         <pre class="code-block">${c.code}</pre>
         <div class="btn-group" style="margin-top: 12px;">
           <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
@@ -313,8 +329,8 @@ function handleRoute() {
   });
 
   if (activeRoute === "cards" && param) {
-    setFilter("all");
-    setLevel("all");
+    state.filter = "all";
+    state.level = "all";
     const idx = CARDS.findIndex(c => c.id === param);
     if (idx !== -1) {
       state.index = idx;
@@ -327,7 +343,7 @@ function handleRoute() {
   if (activeRoute === "simulators" && param) {
     const targetSim = document.getElementById(param);
     if (targetSim) {
-      setTimeout(() => targetSim.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+      setTimeout(() => targetSim.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     }
   }
 }
