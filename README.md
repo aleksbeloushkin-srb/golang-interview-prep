@@ -1,40 +1,123 @@
-# ⚡ Go Runtime & Concurrency — Interactive Interview Wiki
+# ⚡ Go Runtime & Concurrency — Interactive Interview Wiki & Code Review Quiz
 
-![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)
-![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/)
+[![Flashcards](https://img.shields.io/badge/Flashcards-38_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)
+[![Simulators](https://img.shields.io/badge/Simulators-7_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-20_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
-Интерактивная база знаний, шпаргалка и тренажёр по внутреннему устройству рантайма Go (планировщик GMP, управление стеками, регистры CPU, каналы, `select`, атомики `CAS` и сборщик мусора). 
+Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
 
-Спроектировано для глубокой подготовки к **Middle / Senior / Staff Go Backend** интервью — с разбором исходного кода рантайма (`src/runtime/`) и ассемблерных вставок (`asm_amd64.s`).
-
-🔗 **[Открыть интерактивный тренажёр (Live Demo)](https://<your-username>.github.io/<repo-name>/)**
-
----
-
-## ✨ Возможности
-
-* 🗂 **14 глубоких карточек Q&A (на английском + перевод вопросов):** Структурированные ответы в формате `Short Interview Answer` + `Key Details to Mention` + реальные вырезки из исходников рантайма Go.
-* 🔬 **3 пошаговых интерактивных симулятора:**
-  1. **Путь горутины и регистры CPU:** `go fn()` $\rightarrow$ `newproc1` на стеке `g0` $\rightarrow$ трюк с `runtime.goexit` $\rightarrow$ LIFO-слот `P.runnext` $\rightarrow$ переключение регистров `R14`, `RSP` и `RIP` в `runtime.gogo`.
-  2. **Каналы (`hchan`) и `selectgo`:** парковка через `sudog` и `gopark(chanparkcommit)` на стеке `g0`, прямое копирование между стеками (`sendDirect`), `pollorder` / `lockorder` и атомарная гонка пробуждений `g.selectDone`.
-  3. **Escape Analysis и Tri-Color GC:** фазы трёхцветной разметки Дейкстры (White $\rightarrow$ Grey $\rightarrow$ Black), работа `Hybrid Write Barrier` и настройка `GOGC` / `GOMEMLIMIT`.
-* 💾 **Сохранение прогресса (`localStorage`):** Отмечай карточки как «Знаю отлично» или «Повторить ещё» — прогресс сохраняется прямо в браузере.
-* ⌨️ **Keyboard-First навигация:** Полное управление с клавиатуры без мыши.
-* 📦 **Zero Dependencies (Single-File Architecture):** Весь проект — это один самодостаточный файл `index.html` на чистом HTML/CSS/JS. Работает офлайн на любом устройстве.
+Охватывает внутреннее устройство рантайма Go (`src/runtime/`, `asm_amd64.s`) от базовых концепций до уровня архитектора компилятора: планировщик GMP, управление стеками и переключение регистров CPU, каналы (`hchan`/`sudog`), `selectgo`, атомики `CAS` (`MESI`), трёхцветный сборщик мусора, аллокатор памяти, новые мапы на **SwissTables** и новинки **Go 1.24–1.25+**.
 
 ---
 
-## 📚 Архитектура колоды (4 модуля)
+## 🔗 Быстрые ссылки (Live Demo)
 
-### Модуль 1: Горутины, Стек и Регистры CPU
-* **Q1:** Определение горутины в коде и рантайме (`runtime.g`, `runtime.newproc`).
-* **Q2:** Почему у горутин намеренно нет `ID` или дескриптора (`Thread` handle) в пользовательском коде.
-* **Q3:** Где живёт горутина в памяти и как работает динамический рост/сжатие стека (`stackguard0`, `morestack`, `copystack`, сдвиг указателей `adjustpointers`).
-* **Q4:** Как поток ОС (`M`) физически исполняет горутину и подменяет регистры (`g0`, `gobuf`, `runtime.mcall`, `runtime.gogo`, `runtime.goexit`).
+* 🗂 **[1. Тренажёр карточек (38 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)** — с фильтрацией по 5 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
+* 🔬 **[2. Интерактивные диаграммы рантайма (7 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
+* 📖 **[3. Полная база знаний (Wiki — все 38 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
+* 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
+* 🧠 **[5. Code Traps & Production Code Review Quiz (20 задач)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском.
 
-### Модуль 2: Планировщик GMP, Вытеснение и Work Stealing
-* **Q5:** Устройство модели планировщика `G-M-P` и мультиплексирование $M:N$.
-* **Q6:** Зачем каждому процессору `P` нужен одноэлементный LIFO-стек `runnext` перед FIFO-очередью `runq[256]` (L1/L2 CPU cache locality).
-* **Q7:** Гибридное вытеснение горутин (кооперативное через `stackPreempt` и асинхронное через `sysmon` + сигнал `SIGURG` каждые 10 мс).
-* **Q8:** Алгоритм поиска работы (`runtime.findrunnable`), правило каждого 61-го тика, `Work Stealing` (кража 50% очереди) и разница между `netpoller` и блокирующим `syscall
+---
+
+## ✨ Ключевые особенности
+
+* **3-уровневая глубина каждой карточки:**
+  1. `Base Interview Answer (EN)` — ёмкий 20-секундный ответ на английском.
+  2. `Under the Hood Details (EN)` — низкоуровневая механика рантайма и вырезки из исходников Go (`proc.go`, `chan.go`, `select.go`, `asm_amd64.s`).
+  3. `🛠️ Production Debugging (RU)` — как знание этого механизма помогает расследовать реальные проблемы в продакшене (CPU throttling в K8s, утечки горутин, `False Sharing` кэш-линий, `noscan mspan`, `GOMEMLIMIT`).
+* **7 интерактивных пошаговых симуляторов (`#/simulators`):**
+  * **Sim 1:** Путь от `go fn()` до регистров CPU (`newproc1` на стеке `g0` $\rightarrow$ `runtime.goexit` $\rightarrow$ LIFO-слот `P.runnext` $\rightarrow$ `runtime.gogo` и регистры `R14`, `RSP`, `RIP`).
+  * **Sim 2:** Планировщик GMP, правило 61-го тика, асинхронное вытеснение (`sysmon` + `SIGURG` каждые 10 мс), `Work Stealing` (50% очереди) и `Syscall Handoff` против `netpoller`.
+  * **Sim 3:** Каналы (`runtime.hchan`), безопасная парковка `sudog` через `gopark(chanparkcommit)` на стеке `g0` и прямое копирование между стеками (`sendDirect`).
+  * **Sim 4:** Оператор `select` (`runtime.selectgo`): перемешивание `pollorder` (Фишер — Йетс), сортировка адресов `lockorder` против AB-BA дедлока и атомарная гонка пробуждений `g.selectDone`.
+  * **Sim 5:** Аппаратный `CAS` (`LOCK CMPXCHGL`), протокол когерентности кэшей `MESI` и переключение `sync.Mutex` между `Normal Mode` и `Starvation Mode` (> 1 мс).
+  * **Sim 6:** Аллокатор памяти (`mcache` / `mcentral` / `mheap`, спаны `scan` vs `noscan`) и 4 фазы трёхцветного GC с `Hybrid Write Barrier`.
+  * **Sim 7:** Эволюция `map` в Go: классическая `hmap`/`bmap` против новой **SwissTable (Go 1.24+)** (`ctrl` мета-слово, `H1`/`H2` хеш, `SIMD/SWAR` побитовый поиск за 1 такт и `Extendible Hashing`).
+* **20 боевых задач на Code Review (`#/quiz`):**
+  * Каждая задача содержит реальный сниппет кода, **6 сложных вариантов ответа** (с разбором популярных полу-мифов), объяснение корневой причины в рантайме на русском и готовую речь для интервью на английском (`Ready-to-Speak English Answer`).
+
+---
+
+## 📚 Содержание модулей (38 карточек + 20 задач)
+
+### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
+* Горутина против потока ОС (стек 2 КБ vs 2 МБ, переключение ~15 нс vs ~1–2 мкс).
+* `Data Race` против `Race Condition` и устройство детектора гонок (`-race` / ThreadSanitizer).
+* Создание горутины (`runtime.newproc`, пул `P.gFree`), отсутствие `Thread ID` и трюк с `runtime.goexit`.
+* Физическое размещение стека в куче (`mheap`) и работа регистра `RSP`.
+* Динамическое расширение и сжатие стека (`stackguard0`, `morestack`, `copystack`, сдвиг указателей `adjustpointers`).
+* Низкоуровневое переключение контекста на системном стеке `g0` (`gobuf`, `runtime.gogo`, `runtime.mcall`).
+
+### Модуль 2: Планировщик GMP, Вытеснение и Work Stealing (`Q7 – Q12`)
+* Модель `G-M-P`, роль `GOMAXPROCS` и проблема CFS CPU Throttling в Kubernetes.
+* Кооперативное (`stackPreempt`) и асинхронное вытеснение (`sysmon` + сигнал `SIGURG` после 10 мс).
+* Поиск работы в `runtime.findrunnable`, правило честности каждого 61-го тика и алгоритм `Work Stealing` (`runqsteal`).
+* Сетевой мультиплексор `netpoller` (`epoll`/`kqueue`) против блокирующих системных вызовов и `Cgo` (Handoff `_Psyscall` и лимит 10 000 потоков).
+* Зачем процессору `P` нужен одноэлементный приоритетный LIFO-стек `runnext` (горячий L1/L2 кэш ядра).
+* Диагностика и предотвращение утечек горутин (`Goroutine Leaks`) через `pprof`.
+
+### Модуль 3: Каналы (`hchan`), `select`, `CAS` и Примитивы синхронизации (`Q13 – Q22`)
+* Буферизованные и небуферизованные каналы в памяти, матрица поведения `nil` / `closed` / `open` каналов.
+* Архитектурный выбор: Каналы против Мьютексов (`sync.Mutex` / `sync.RWMutex`).
+* Внутреннее устройство `runtime.hchan` и роль связующей структуры `runtime.sudog` ($M:N$ ожидание).
+* Механика `chansend` / `chanrecv`: `sendDirect` (`memmove` + `typeBitsBulkBarrier` из стека в стек) и защита от гонки в `gopark(chanparkcommit)`.
+* Паттерны приоритетного `select` и внутренний цикл `runtime.selectgo` (`pollorder`, `lockorder`, `g.selectDone`).
+* Ассемблер `LOCK CMPXCHGL`, протокол `MESI` и проблема `False Sharing` 64-байтных кэш-линий.
+* Внутреннее устройство `sync.Mutex` (`Normal` vs `Starvation Mode` 1 мс), `sync.WaitGroup`, `sync.Once` и `context.Context` (`WithoutCancel`).
+
+### Модуль 4: Память, Аллокатор и Сборщик мусора (`Q23 – Q28`)
+* Стек против Кучи и статический анализ побега (`Escape Analysis`, `-gcflags="-m"`, *Sharing Down vs. Sharing Up*).
+* Иерархия аллокатора памяти Go (`mspan`, `P.mcache`, `mcentral`, `mheap`) и оптимизация кэшей через `noscan` спаны.
+* Трёхцветный алгоритм Дейкстры (White / Grey / Black), 4 фазы цикла GC и механизм `Mark Assist`.
+* Устройство `Hybrid Write Barrier` (Юаса + Дейкстра) и управление памятью через `GOGC` и `GOMEMLIMIT`.
+
+### Модуль 5: Мапы (`SwissTables`), Слайсы, Интерфейсы, `defer` и Go 1.24–1.25+ (`Q29 – Q38`)
+* Устройство срезов и строк, формула плавного роста в `runtime.growslice` (от `2x` к `1.25x` после 256) и округление по классам размеров `mspan`.
+* Классическая мапа (`hmap`/`bmap`, `tophash[8]`, инкрементальная эвакуация) против новой **SwissTable в Go 1.24+** (`ctrl` 64-битное слово, `H1`/`H2` хеш, `SIMD/SWAR` параллельный поиск и `Extendible Hashing`).
+* Проблема невозврата памяти мапой после `delete`/`clear` и рандомизация итерации.
+* Внутреннее устройство интерфейсов (`eface` vs `iface`, таблица `itab`) и правила наборов методов (*Value vs. Pointer Receiver*).
+* Эволюция `defer` (`Open-Coded Defers` через битовую маску на стеке), раскрутка стека в `gopanic` и `gorecover`.
+* Новинки **Go 1.24–1.25+**: `weak.Pointer`, интернирование через `unique.Make`, `runtime.AddCleanup` (взамен `SetFinalizer`), внутренние корутины итераторов (`runtime.newcoro` / `coroswitch`), нативный cgroup-aware `GOMAXPROCS`, `testing/synctest` и `trace.FlightRecorder`.
+
+---
+
+## 🗂 Структура проекта
+
+Проект построен по модульной схеме без внешних зависимостей и сборщиков (Zero-Build SPA с Hash-роутером):
+
+```text
+golang-runtime-prep/
+├── index.html          # Каркас приложения и навигация по вкладкам
+├── README.md           # Документация репозитория
+├── css/
+│   └── style.css       # Стили, адаптивная сетка и тёмная тема
+├── data/
+│   ├── cards.js        # База из 38 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
+│   ├── simulators.js   # Пошаговые состояния для 7 диаграмм и сводной таблицы
+│   └── quiz.js         # 20 задач на Production Code Review (по 6 вариантов ответа)
+└── js/
+    └── app.js          # Hash-роутер (#/cards, #/simulators, #/wiki, #/quiz), фильтры и localStorage
+
+```
+
+## ⌨️ Горячие клавиши и локальный запуск
+
+
+В режиме карточек (#/cards) работает быстрое управление с клавиатуры:
+
+* Space (Пробел) — показать / скрыть ответ
+* ← / → — предыдущая / следующая карточка
+* 1 — отметить «Знаю отлично ✓»
+* 2 — отметить «Повторить ещё»
+
+Локальный запуск на macOS / Linux:
+
+```bash
+git clone [https://github.com/aleksbeloushkin-srb/golang-runtime-prep.git](https://github.com/aleksbeloushkin-srb/golang-runtime-prep.git)
+cd golang-runtime-prep
+open index.html
+```
+
