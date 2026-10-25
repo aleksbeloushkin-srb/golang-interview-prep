@@ -373,3 +373,66 @@ document.addEventListener("DOMContentLoaded", () => {
   initWikiAndCheatsheet();
   handleRoute();
 });
+
+
+/* --- РЕНДЕР ИНТЕРАКТИВНОГО QUIZ (ЗАДАЧИ С ПОДВОХОМ) --- */
+function initQuiz() {
+  const container = document.getElementById("quiz-container");
+  if (!container) return;
+  container.innerHTML = "";
+
+  QUIZ_QUESTIONS.forEach((q, idx) => {
+    const card = document.createElement("div");
+    card.className = "sim-card";
+    card.style.marginBottom = "20px";
+
+    const optionsHtml = q.options
+      .map((opt, oIdx) => `
+        <label style="display:block; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:8px; cursor:pointer; font-size:0.9rem;">
+          <input type="radio" name="${q.id}" value="${oIdx}" style="margin-right:8px;" onchange="checkQuizAnswer('${q.id}', ${oIdx}, ${q.correct})">
+          ${opt}
+        </label>
+      `)
+      .join("");
+
+    card.innerHTML = `
+      <h3 style="margin-bottom:8px; color:var(--accent);">${q.title}</h3>
+      <p style="font-weight:600; margin-bottom:6px;">🇷🇺 ${q.ru}</p>
+      <p class="muted-text" style="font-style:italic; margin-bottom:12px;">🇬🇧 ${q.en}</p>
+      <pre class="code-block">${q.code}</pre>
+      <div style="margin: 16px 0;">${optionsHtml}</div>
+      <div id="${q.id}-result" class="hidden" style="margin-top:12px; padding:14px; border-radius:8px; background:rgba(56,189,248,0.1); border-left:4px solid var(--accent);">
+        <strong id="${q.id}-title-res"></strong>
+        <p style="margin-top:6px; font-size:0.92rem;"><strong>🇷🇺 Разбор:</strong> <span id="${q.id}-exp-ru"></span></p>
+        <p style="margin-top:6px; font-size:0.92rem; color:var(--muted);"><strong>🇬🇧 Interview Speech:</strong> <span id="${q.id}-exp-en"></span></p>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function checkQuizAnswer(qId, selectedIdx, correctIdx) {
+  const q = QUIZ_QUESTIONS.find(x => x.id === qId);
+  if (!q) return;
+
+  const resBox = document.getElementById(`${qId}-result`);
+  const titleRes = document.getElementById(`${qId}-title-res`);
+  const expRu = document.getElementById(`${qId}-exp-ru`);
+  const expEn = document.getElementById(`${qId}-exp-en`);
+
+  resBox.classList.remove("hidden");
+  const isCorrect = selectedIdx === correctIdx;
+
+  if (isCorrect) {
+    titleRes.textContent = "✅ Верно! Отличный ответ.";
+    resBox.style.borderColor = "var(--green)";
+    resBox.style.background = "rgba(34,197,94,0.1)";
+  } else {
+    titleRes.textContent = "❌ Не совсем так. Правильный вариант отмечен в списке.";
+    resBox.style.borderColor = "var(--red)";
+    resBox.style.background = "rgba(239,68,68,0.1)";
+  }
+
+  expRu.textContent = q.explanationRU;
+  expEn.textContent = q.speechEN;
+}

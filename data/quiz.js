@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Go Runtime & Concurrency — Interactive Interview Wiki & Quiz</title>
+  <link rel="stylesheet" href="css/style.css?v=4" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <a href="#/cards" class="brand">
+        <span class="brand-badge">GO 1.25+</span>
+        <span>Go Runtime Interview Wiki</span>
+      </a>
+      <nav class="nav-tabs">
+        <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки (28)</a>
+        <a href="#/simulators" class="tab-btn" data-route="simulators">2. Диаграммы (6)</a>
+        <a href="#/wiki" class="tab-btn" data-route="wiki">3. База знаний (Wiki)</a>
+        <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">4. Шпаргалка</a>
+        <a href="#/quiz" class="tab-btn" data-route="quiz" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.4);">5. 🧠 Code Traps Quiz</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- РАЗДЕЛ 1: ТРЕНАЖЁР КАРТОЧЕК (FLASHCARDS) -->
+    <section id="view-cards" class="route-view">
+      <div class="toolbar">
+        <div class="progress-row">
+          <div>
+            <strong>Прогресс заучивания:</strong>
+            <span id="progress-text" class="accent-text">0 / 28 изучено</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div id="progress-fill" class="progress-bar-fill"></div>
+          </div>
+          <button class="btn btn-sm" type="button" onclick="resetProgress()">Сбросить прогресс</button>
+        </div>
+
+        <div class="filter-row" id="module-filter-row">
+          <span class="filter-label">Модуль:</span>
+          <button type="button" class="chip active" data-filter="all" onclick="setFilter('all')">Все (28)</button>
+          <button type="button" class="chip" data-filter="m1" onclick="setFilter('m1')">1. Горутины и Стек (6)</button>
+          <button type="button" class="chip" data-filter="m2" onclick="setFilter('m2')">2. Планировщик GMP (6)</button>
+          <button type="button" class="chip" data-filter="m3" onclick="setFilter('m3')">3. Каналы, Select и Sync (10)</button>
+          <button type="button" class="chip" data-filter="m4" onclick="setFilter('m4')">4. Память и GC (6)</button>
+          <button type="button" class="chip" data-filter="review" onclick="setFilter('review')">⭐ На повторение</button>
+        </div>
+
+        <div class="filter-row" id="level-filter-row">
+          <span class="filter-label">Уровень:</span>
+          <button type="button" class="level-chip active" data-level="all" onclick="setLevel('all')">Все уровни (28)</button>
+          <button type="button" class="level-chip" data-level="base" onclick="setLevel('base')">🟢 Base (8)</button>
+          <button type="button" class="level-chip" data-level="senior" onclick="setLevel('senior')">🟡 Senior (13)</button>
+          <button type="button" class="level-chip" data-level="deep" onclick="setLevel('deep')">🔴 Deep Dive (7)</button>
+          <input type="text" id="search-input" class="search-input" placeholder="Поиск (pprof, gogo, sudog, mutex...)" oninput="onSearchInput()" />
+        </div>
+      </div>
+
+      <div class="flashcard-stage" id="card-stage">
+        <div>
+          <div class="card-meta">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span class="module-tag" id="card-module">MODULE</span>
+              <span class="level-badge" id="card-level">LEVEL</span>
+            </div>
+            <span id="card-counter" class="muted-text">Карточка 1 из 28</span>
+            <span class="status-pill status-unseen" id="card-status">Новая</span>
+          </div>
+          <div class="question-title" id="card-q-en">Загрузка...</div>
+          <div class="question-ru" id="card-q-ru"></div>
+
+          <div class="answer-box" id="card-answer-box">
+            <div class="short-answer">
+              <strong>1. Base Interview Answer (EN — чётко и кратко):</strong>
+              <div id="card-short-en" style="margin-top: 4px;"></div>
+            </div>
+
+            <strong>2. Key Technical Details & Under the Hood (EN):</strong>
+            <ul class="details-list" id="card-details-en"></ul>
+
+            <div class="practical-box" id="card-practical-wrap">
+              <strong>🛠️ 3. Как это помогает на практике в продакшене (Production Debugging):</strong>
+              <div id="card-practical-ru" style="margin-top: 6px;"></div>
+            </div>
+
+            <pre class="code-block" id="card-code"></pre>
+            <div id="card-sim-link" style="margin-top: 14px;"></div>
+          </div>
+        </div>
+
+        <div class="card-controls">
+          <div class="btn-group">
+            <button type="button" class="btn" onclick="prevCard()">← Назад</button>
+            <button type="button" class="btn btn-primary" onclick="toggleAnswer()" id="reveal-btn">Показать ответ (Space)</button>
+            <button type="button" class="btn" onclick="nextCard()">Далее →</button>
+          </div>
+          <div class="btn-group">
+            <button type="button" class="btn btn-amber" onclick="markCard('review')">Повторить ещё (2)</button>
+            <button type="button" class="btn btn-green" onclick="markCard('mastered')">Знаю отлично ✓ (1)</button>
+          </div>
+        </div>
+      </div>
+      <div class="kbd-hint">
+        Горячие клавиши: <strong>Пробел</strong> — открыть/скрыть ответ | <strong>← / →</strong> — листать карточки | <strong>1</strong> — Знаю, <strong>2</strong> — Повторить
+      </div>
+    </section>
+
+    <!-- РАЗДЕЛ 2: ИНТЕРАКТИВНЫЕ СИМУЛЯТОРЫ ДИАГРАММ -->
+    <section id="view-simulators" class="route-view hidden">
+      <div class="toolbar" style="margin-bottom: 20px;">
+        <div class="filter-row">
+          <span class="filter-label">Быстрый переход к диаграмме:</span>
+          <a href="#/simulators/sim1" class="chip">1. Стек g0 и Регистры (gogo)</a>
+          <a href="#/simulators/sim2" class="chip">2. GMP, sysmon и Work Stealing</a>
+          <a href="#/simulators/sim3" class="chip">3. Канал hchan и sendDirect</a>
+          <a href="#/simulators/sim4" class="chip">4. Select: pollorder и lockorder</a>
+          <a href="#/simulators/sim5" class="chip">5. CAS (MESI) и sync.Mutex</a>
+          <a href="#/simulators/sim6" class="chip">6. Аллокатор и Tri-Color GC</a>
+        </div>
+      </div>
+      <div id="simulators-list"></div>
+    </section>
+
+    <!-- РАЗДЕЛ 3: БАЗА ЗНАНИЙ (WIKI) -->
+    <section id="view-wiki" class="route-view hidden">
+      <div class="section-top">
+        <h2>Полная база знаний (Все 28 карточек от Base до Deep Dive + Продакшен-кейсы)</h2>
+        <div class="btn-group">
+          <button type="button" class="btn btn-sm" onclick="toggleAllAccordions(true)">Развернуть все</button>
+          <button type="button" class="btn btn-sm" onclick="toggleAllAccordions(false)">Свернуть все</button>
+        </div>
+      </div>
+      <div id="accordion-container"></div>
+    </section>
+
+    <!-- РАЗДЕЛ 4: ШПАРГАЛКА -->
+    <section id="view-cheatsheet" class="route-view hidden">
+      <h2 style="margin-bottom: 16px;">Сводная шпаргалка по рантайму Go (от А до Я с быстрыми переходами)</h2>
+      <div class="table-wrap">
+        <table class="cheat-table">
+          <thead>
+            <tr>
+              <th>Этап / Механизм</th>
+              <th>Как работает под капотом (Функции и структуры)</th>
+              <th>Главные цифры и маркеры для интервью</th>
+              <th>Переход</th>
+            </tr>
+          </thead>
+          <tbody id="cheatsheet-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- РАЗДЕЛ 5: 🧠 CODE TRAPS QUIZ (Собеседования с задачками) -->
+    <section id="view-quiz" class="route-view hidden">
+      <div class="section-top">
+        <h2>🧠 Go Code Traps & Interview Quiz (Задачи с подвохом)</h2>
+        <span class="muted-text">Хитрые сниппеты кода, которые дают на Senior Go-собеседованиях</span>
+      </div>
+      <div id="quiz-container"></div>
+    </section>
+
+  </main>
+
+  <script src="data/cards.js?v=4"></script>
+  <script src="data/simulators.js?v=4"></script>
+  <script src="data/quiz.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
+</body>
+</html>
