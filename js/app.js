@@ -1,10 +1,38 @@
+const PROGRESS_KEY = "go_prep_progress_v2";
+let storageMessage = "";
+
+function loadProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) {
+      throw new Error("Invalid progress format");
+    }
+    const progress = {};
+    for (const card of CARDS) {
+      if (saved[card.id] === "mastered" || saved[card.id] === "review") {
+        progress[card.id] = saved[card.id];
+      }
+    }
+    return progress;
+  } catch {
+    storageMessage = "Не удалось прочитать сохранённый прогресс. Можно заниматься, но проверь сохранение перед закрытием страницы.";
+    return {};
+  }
+}
+
+function showStorageMessage() {
+  const notice = document.getElementById("storage-notice");
+  notice.textContent = storageMessage;
+  notice.classList.toggle("hidden", !storageMessage);
+}
+
 let state = {
   filter: "all",
   level: "all",
   search: "",
   index: 0,
   revealed: false,
-  progress: JSON.parse(localStorage.getItem("go_prep_progress_v2") || "{}")
+  progress: loadProgress()
 };
 
 // Безопасное экранирование символов <, >, & чтобы код с каналами (<-ch) и циклами (i < 3) не ломал HTML!
@@ -34,7 +62,13 @@ function getCardSimId(card) {
 
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
 function saveProgress() {
-  localStorage.setItem("go_prep_progress_v2", JSON.stringify(state.progress));
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
+    storageMessage = "";
+  } catch {
+    storageMessage = "Прогресс обновлён только на этой странице: браузер не разрешил сохранение. Не закрывай её, если хочешь сохранить текущие отметки.";
+  }
+  showStorageMessage();
   updateProgressBar();
 }
 
@@ -49,7 +83,10 @@ function updateProgressBar() {
 }
 
 function resetProgress() {
+  if (!window.confirm("Удалить все сохранённые отметки карточек? Это действие нельзя отменить.")) return;
   state.progress = {};
+  state.index = 0;
+  state.revealed = false;
   saveProgress();
   renderCard();
 }
@@ -63,7 +100,7 @@ function getFilteredCards() {
     if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
-      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + (c.practicalRU || "") + " " + c.code).toLowerCase();
+      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + (c.practicalRU || "") + " " + c.detailsEN.join(" ") + " " + (c.shortRU || "") + " " + (c.detailsRU || []).join(" ") + " " + c.code).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -73,9 +110,11 @@ function getFilteredCards() {
 function updateFilterButtonsUI() {
   document.querySelectorAll("#module-filter-row .chip").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.filter === state.filter);
+    btn.setAttribute("aria-pressed", String(btn.dataset.filter === state.filter));
   });
   document.querySelectorAll("#level-filter-row .level-chip").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.level === state.level);
+    btn.setAttribute("aria-pressed", String(btn.dataset.level === state.level));
   });
 }
 
@@ -85,14 +124,21 @@ function renderCard() {
   const ansBox = document.getElementById("card-answer-box");
   if (!ansBox) return;
 
+  document.querySelectorAll("#card-controls button").forEach(button => {
+    button.disabled = !list.length || (button.dataset.grade !== undefined && !state.revealed);
+  });
+  const revealButton = document.getElementById("reveal-btn");
+  revealButton.setAttribute("aria-expanded", String(!!list.length && state.revealed));
+  revealButton.textContent = state.revealed && list.length ? "Скрыть ответ" : "Показать ответ";
   if (list.length === 0) {
     document.getElementById("card-module").textContent = "ПУСТО";
     document.getElementById("card-level").textContent = "0 карточек";
     document.getElementById("card-level").className = "level-badge";
     document.getElementById("card-counter").textContent = "0 из 0";
     document.getElementById("card-q-en").textContent = "Нет карточек по выбранному сочетанию фильтров";
-    document.getElementById("card-q-ru").textContent = "Нажми «Все (28)» или переключи уровень сложности выше.";
+    document.getElementById("card-q-ru").textContent = state.filter === "review" ? "В этой подборке нет карточек на повторение. Можно выбрать другой уровень или открыть все карточки." : "Измени поиск, модуль или уровень в разделе «Настроить подборку».";
     ansBox.classList.remove("visible");
+    document.getElementById("card-status").textContent = "";
     return;
   }
 
@@ -144,39 +190,49 @@ function renderCard() {
   pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
   pill.textContent = st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая";
 
-  if (state.revealed) {
-    ansBox.classList.add("visible");
-    document.getElementById("reveal-btn").textContent = "Скрыть ответ (Space)";
-  } else {
-    ansBox.classList.remove("visible");
-    document.getElementById("reveal-btn").textContent = "Показать ответ (Space)";
-  }
+  ansBox.classList.toggle("visible", state.revealed);
 }
 
 function toggleAnswer() {
+  if (!getFilteredCards().length) return;
   state.revealed = !state.revealed;
   renderCard();
+  if (window.matchMedia("(max-width: 640px)").matches) {
+    if (state.revealed) document.getElementById("card-answer-box").scrollIntoView({ block: "start" });
+    else returnToQuestion();
+  }
+}
+
+function returnToQuestion() {
+  const question = document.getElementById("card-stage");
+  if (question.getBoundingClientRect().top < 0) question.scrollIntoView({ block: "start" });
 }
 
 function nextCard() {
   state.index++;
   state.revealed = false;
   renderCard();
+  returnToQuestion();
 }
 
 function prevCard() {
   state.index--;
   state.revealed = false;
   renderCard();
+  returnToQuestion();
 }
 
 function markCard(status) {
   const list = getFilteredCards();
-  if (!list.length) return;
+  if (!list.length || !state.revealed || !["mastered", "review"].includes(status)) return;
   const card = list[state.index];
   state.progress[card.id] = status;
   saveProgress();
-  nextCard();
+  // Removing the current item already shifts the next item into its place.
+  if (getFilteredCards().some(c => c.id === card.id)) state.index++;
+  state.revealed = false;
+  renderCard();
+  returnToQuestion();
 }
 
 function setFilter(f) {
@@ -190,15 +246,13 @@ function setLevel(lvl) {
   state.level = lvl;
   state.index = 0;
   state.revealed = false;
-  if (state.filter === "review" && getFilteredCards().length === 0) {
-    state.filter = "all";
-  }
   renderCard();
 }
 
 function onSearchInput() {
   state.search = document.getElementById("search-input").value.trim();
   state.index = 0;
+  state.revealed = false;
   renderCard();
 }
 
@@ -275,21 +329,21 @@ function initWikiAndCheatsheet() {
       const lvl = c.level || "senior";
       const lvlLabel = c.levelLabel || "🟡 Senior";
       const pracHtml = c.practicalRU
-        ? `<div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${escapeHtml(c.practicalRU)}</div>`
+        ? `<div class="practical-box"><strong>Где это пригодится:</strong> ${escapeHtml(c.practicalRU)}</div>`
         : "";
 
       item.innerHTML = `
-        <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+        <button type="button" class="accordion-header" aria-expanded="true" aria-controls="wiki-${c.id}">
           <span>${escapeHtml(c.qEN)}</span>
-          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <span class="accordion-badges">
             <span class="level-badge level-${lvl}">${escapeHtml(lvlLabel)}</span>
             <span class="module-tag">${escapeHtml(c.modName)}</span>
-          </div>
-        </div>
-        <div class="accordion-body">
+          </span>
+        </button>
+        <div class="accordion-body" id="wiki-${c.id}">
           <p class="muted-text" style="margin-bottom:10px;">${escapeHtml(c.qRU)}</p>
-          <div class="short-answer"><strong>1. Base Answer (EN):</strong> ${escapeHtml(c.shortEN)}</div>
-          <strong>2. Under the Hood Details (EN):</strong>
+          <div class="short-answer"><strong>Коротко по-английски:</strong> ${escapeHtml(c.shortEN)}</div>
+          <strong>Как это работает (EN):</strong>
           <ul class="details-list">${c.detailsEN.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
           ${pracHtml}
           <pre class="code-block">${escapeHtml(c.code)}</pre>
@@ -299,6 +353,10 @@ function initWikiAndCheatsheet() {
           </div>
         </div>
       `;
+      item.querySelector(".accordion-header").addEventListener("click", event => {
+        const open = item.classList.toggle("open");
+        event.currentTarget.setAttribute("aria-expanded", String(open));
+      });
       wrap.appendChild(item);
     });
   }
@@ -328,6 +386,7 @@ function initWikiAndCheatsheet() {
 function toggleAllAccordions(open) {
   document.querySelectorAll(".accordion-item").forEach(el => {
     el.classList.toggle("open", open);
+    el.querySelector(".accordion-header").setAttribute("aria-expanded", String(open));
   });
 }
 
@@ -410,24 +469,28 @@ function handleRoute() {
 
   document.querySelectorAll(".nav-tabs .tab-btn").forEach(link => {
     link.classList.toggle("active", link.dataset.route === activeRoute);
+    if (link.dataset.route === activeRoute) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
 
   if (activeRoute === "cards" && param) {
     state.filter = "all";
     state.level = "all";
+    state.search = "";
+    document.getElementById("search-input").value = "";
     const idx = CARDS.findIndex(c => c.id === param);
     if (idx !== -1) {
       state.index = idx;
-      state.revealed = true;
+      state.revealed = false;
       renderCard();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: "auto" });
     }
   }
 
   if (activeRoute === "simulators" && param) {
     const targetSim = document.getElementById(param);
     if (targetSim) {
-      setTimeout(() => targetSim.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+      setTimeout(() => targetSim.scrollIntoView({ behavior: "auto", block: "start" }), 60);
     }
   }
 }
@@ -435,6 +498,7 @@ function handleRoute() {
 function syncDynamicCounters() {
   if (typeof CARDS === "undefined") return;
   const total = CARDS.length;
+  document.getElementById("wiki-title").textContent = `База знаний: ${total} тем`;
   const baseCnt = CARDS.filter(c => c.level === "base").length;
   const senCnt = CARDS.filter(c => c.level === "senior").length;
   const deepCnt = CARDS.filter(c => c.level === "deep").length;
@@ -467,7 +531,8 @@ function syncDynamicCounters() {
 
 /* --- ГОРЯЧИЕ КЛАВИШИ --- */
 window.addEventListener("keydown", e => {
-  if (document.activeElement.tagName === "INPUT") return;
+  if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest("input, textarea, select, button, a, summary, [contenteditable]:not([contenteditable=false]), [role=button]")) return;
   const isCardsView = !document.getElementById("view-cards").classList.contains("hidden");
   if (!isCardsView) return;
 
@@ -484,6 +549,7 @@ window.addEventListener("keydown", e => {
 window.addEventListener("hashchange", handleRoute);
 
 document.addEventListener("DOMContentLoaded", () => {
+  showStorageMessage();
   syncDynamicCounters();
   updateProgressBar();
   renderCard();
