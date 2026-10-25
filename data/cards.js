@@ -399,29 +399,47 @@ func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
     modName: "3. Channels, Select & Sync",
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
-    simId: null,
-    qEN: "Q18: How does the select statement behave at the code level (multiple ready cases, default, nil channels, and priorities)?",
-    qRU: "Как работает оператор select на уровне кода (если готовы сразу несколько веток, как работает default, nil-каналы и как реализовать приоритет одного канала над другим)?",
-    shortEN: "A 'select' statement waits on multiple channel operations simultaneously. If multiple cases are ready at the same time, Go chooses one at random with uniform probability. If none are ready, it executes the 'default' branch if present, or blocks until one case becomes ready. Any case with a 'nil' channel is ignored.",
+    simId: "sim4",
+    qEN: "Q18: How does select choose a case, and can cancellation take priority?",
+    qRU: "Как select выбирает готовую ветку и можно ли дать отмене приоритет?",
+    shortEN: "A select runs one ready channel operation. If several are ready, it chooses one uniformly at random. A default branch runs only when none is ready; without it, select waits. A nil channel cannot become ready. Putting cancellation first in the source does not give it priority.",
+    shortRU: "Select выполняет одну готовую операцию с каналом. Если готовы несколько, он выбирает одну равновероятно. Ветка default выполняется только при отсутствии готовых операций; без неё select ждёт. Nil-канал не может стать готовым. Порядок веток в коде не даёт отмене приоритет.",
     detailsEN: [
-      "Compiler Fast-Paths: 'select {}' blocks forever; a 1-case select compiles to a regular channel op; a 1-case + default compiles to non-blocking 'selectnbrecv'/'selectnbsend'.",
-      "Why Random Selection: Prevents starvation when one channel is constantly full.",
-      "Implementing Priority in Go: Because 'select' is intentionally fair/random, if you need 'highPriorityCh' to always be drained before 'lowPriorityCh', you use a nested two-level select with a 'default' branch."
+      "Channel operands and send values are evaluated once when select is entered, before a case is chosen. A nil-channel case cannot proceed, but evaluating its operands can still have side effects.",
+      "A preliminary cancellation check stops work if cancellation is already visible there. Cancellation can occur between that check and the next select, where a ready job can still be chosen. This is not a strict priority guarantee.",
+      "Random choice does not guarantee a maximum waiting time. Check the receive ok value when the jobs channel can close, and pass context to work that supports cancellation."
     ],
-    practicalRU: "Классическая задача на собеседовании и баг в продакшене: у тебя есть воркер с `select { case <-ctx.Done(): return; case job := <-jobs: ... }`. Если очередь `jobs` всегда полна, то даже после отмены `ctx.Done()` рантайм с вероятностью 50% продолжит выбирать ветку `jobs`! Чтобы гарантировать мгновенную остановку (или приоритетный канал), перед основным `select` ставят неблокирующий `select { case <-ctx.Done(): return; default: }`.",
-    code: `// Implementing strict priority (always check ctx.Done() or highPrioCh first):
-for {
-    select {
-    case <-ctx.Done():
-        return // Guaranteed immediate exit even if jobsCh is 100% full!
-    default:
-    }
-    select {
-    case <-ctx.Done():
-        return
-    case job := <-jobsCh:
-        handle(job)
-    }
+    detailsRU: [
+      "Выражения каналов и отправляемых значений вычисляются один раз при входе в select, до выбора ветки. Операция с nil-каналом не выполнится, но вычисление выражений всё равно может иметь побочные эффекты.",
+      "Предварительная проверка останавливает работу, если отмена уже видна в этот момент. Отмена может произойти между проверкой и следующим select: тогда готовая задача всё ещё может быть выбрана. Строгого приоритета здесь нет.",
+      "Случайный выбор не гарантирует максимальное время ожидания. Проверяй ok при чтении закрываемой очереди и передавай context в работу, которая умеет обрабатывать отмену."
+    ],
+    practicalRU: "Если воркер продолжает брать задания после отмены, проверь момент выбора задачи и поддержку context внутри самой операции. Предварительная проверка уменьшает нежелательную работу, но не делает проверку и получение задачи атомарными. Для строгой границы приёма задач потребуется отдельный протокол синхронизации.",
+    versionNote: "Гарантии select одинаковы для Go 1.17, 1.25 и 1.26. Для фрагмента ниже нужен импорт пакета context; handle должен поддерживать отмену.",
+    sources: [
+      {"title": "Go specification: select", "url": "https://go.dev/ref/spec#Select_statements"},
+      {"title": "context.Context", "url": "https://pkg.go.dev/context@go1.26.1#Context"}
+    ],
+    code: `// Function fragment; import "context". Cancellation is cooperative.
+func Run(ctx context.Context, jobs <-chan int, handle func(context.Context, int) error) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case job, ok := <-jobs:
+			if !ok {
+				return nil
+			}
+			if err := handle(ctx, job); err != nil {
+				return err
+			}
+		}
+	}
 }`
   },
   {
@@ -430,19 +448,31 @@ for {
     modName: "3. Channels, Select & Sync",
     level: "deep",
     levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim2",
-    qEN: "Q19: How does runtime.selectgo work under the hood (pollorder, lockorder, and the g.selectDone wakeup race)?",
-    qRU: "Как устроен оператор select под капотом (runtime.selectgo: массивы pollorder, lockorder и разрешение гонки пробуждений через g.selectDone)?",
-    shortEN: "runtime.selectgo builds two index arrays on the stack: pollorder (a Fisher–Yates shuffle via cheaprandn for fairness) and lockorder (a heap-sort of channel memory addresses to prevent AB-BA deadlocks when locking multiple channels). If parking is required, it enqueues a sudog into every channel, uses atomic g.selectDone.CompareAndSwap(0, 1) so only one channel can wake the goroutine, and unsubscribes remaining sudogs upon waking.",
+    simId: "sim4",
+    qEN: "Q19: Why does selectgo use pollorder, lockorder, and selectDone?",
+    qRU: "Зачем selectgo нужны pollorder, lockorder и selectDone?",
+    shortEN: "The runtime needs to choose a ready case without introducing a lock-order deadlock. It checks cases in a randomized pollorder and locks distinct channels in a consistent lockorder. If it must wait, it registers each active case; selectDone allows only one competing channel operation to claim the goroutine.",
+    shortRU: "Рантайму нужно выбрать готовую ветку и не создать дедлок из-за порядка захвата блокировок. Ветки проверяются в случайном pollorder, а разные каналы блокируются в согласованном lockorder. Если приходится ждать, каждая активная ветка регистрируется в очереди; selectDone позволяет только одной конкурирующей операции забрать ожидающую горутину.",
     detailsEN: [
-      "Pass 1 (Lock & Poll): Locks all unique channels in ascending memory address order ('selock(scases, lockorder)') and checks readiness in random 'pollorder'. If one is ready, executes and unlocks immediately.",
-      "Pass 2 (Enqueue & Park): Links a separate 'sudog' (with 'isSelect = true') for each case into 'g.waiting', enqueues them into all channels, and calls 'gopark(selparkcommit)' to unlock all channels on g0.",
-      "Pass 3 (CAS Arbitration & Cleanup): If two writers hit different branches on two CPU cores at the same nanosecond, both attempt 'sgp.g.selectDone.CompareAndSwap(0, 1)'. Only the winner copies data and wakes G; once awake, G re-locks 'lockorder' and removes its losing sudogs via 'dequeueSudoG'."
+      "sellock locks each distinct channel in address order. Pass 1 polls for ready operations. If none is ready and blocking is allowed, pass 2 enqueues sudogs while those same locks are still held.",
+      "gopark with selparkcommit releases the channel locks as the goroutine parks. A matching operation claims a select waiter with selectDone.CompareAndSwap(0, 1); losing operations skip that waiter.",
+      "After resuming, selectgo calls sellock again. Pass 3 removes remaining registrations and releases the sudogs; selunlock releases the locks. In this ordinary blocking path there are two acquisitions of the channel set, not three."
     ],
-    practicalRU: "В pprof CPU высоконагруженных брокеров сообщений функция 'runtime.selectgo' (и в частности 'selock' / 'sellock') часто светится в топе потребления CPU! Почему? Потому что каждый блокирующий select с 4 каналами захватывает и отпускает 4 мьютекса ТРИЖДЫ за один цикл (при опросе, при парковке и при отписке от 3 неиспользованных каналов). Поэтому объединение событий в один канал работает в разы быстрее, чем select из 10 разных каналов.",
-    code: `// Inside waitq.dequeue() — resolving simultaneous select wakeups across CPU cores:
+    detailsRU: [
+      "sellock захватывает каждый уникальный канал по порядку адресов. Первый проход проверяет готовность. Если готовых операций нет и разрешено ждать, второй проход добавляет sudog под теми же блокировками.",
+      "gopark с selparkcommit отпускает блокировки при парковке. Подходящая операция забирает ожидающего участника select через selectDone.CompareAndSwap(0, 1); проигравшая операция пропускает его.",
+      "После возобновления selectgo снова вызывает sellock. Третий проход удаляет оставшиеся регистрации и освобождает sudog, затем selunlock отпускает блокировки. В обычном блокирующем пути набор каналов захватывается дважды, а не трижды."
+    ],
+    practicalRU: "Если selectgo заметен в CPU-профиле, сначала проверь частоту вызовов, число каналов и конкуренцию за них. Объединение событий в один канал меняет устройство программы и само по себе не обещает ускорения: сравни варианты на одинаковой нагрузке.",
+    versionNote: "Детали runtime сверены с Go 1.25.0 и 1.26.1. Это описание обычного блокирующего пути, а не контракт языка или обещание производительности.",
+    sources: [
+      {"title": "select.go — Go 1.25.0", "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/select.go"},
+      {"title": "select.go — Go 1.26.1", "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/select.go"},
+      {"title": "waitq.dequeue — Go 1.26.1", "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"}
+    ],
+    code: `// Simplified excerpt from runtime.waitq.dequeue; not standalone Go.
 if sgp.isSelect && !sgp.g.selectDone.CompareAndSwap(0, 1) {
-    continue // Another CPU core already won CAS(0 -> 1) on another select branch!
+    continue // Another operation has already claimed this select waiter.
 }`
   },
   {

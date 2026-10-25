@@ -582,29 +582,57 @@ func ReadBalance(id int) int64 {
   },
   {
     id: "q20",
-    title: "Задача 20: Потеря данных при записи в файл / облачный стрим из-за defer f.Close()",
-    ru: "Почему при переполнении диска или обрыве сети эта функция часто возвращает nil (успех), хотя файл в S3 / на диске оказался битым или пустым?",
-    en: "Why can this function return a nil error even when writing to disk, NFS, or a gzip/S3 stream fails to persist the data?",
-    code: `func WriteReport(path string, payload []byte) error {
+    title: "Задача 20: Результат записи отчёта",
+    ru: "Write вернул nil, но последующий Close вернул ошибку. Что вернёт эта функция и как сохранить обе ошибки?",
+    en: "Write returned nil, but the later Close returned an error. What does this function return, and how would you preserve both errors?",
+    code: `// Intentionally faulty function fragment; import "os".
+func WriteReport(path string, payload []byte) error {
     f, err := os.Create(path)
     if err != nil {
         return err
     }
-    defer f.Close() // Игнорируем ошибку закрытия при записи!
+    defer f.Close()
 
     _, err = f.Write(payload)
     return err
 }`,
     options: [
-      "Вызов defer f.Close() выполняется асинхронно в фоновом потоке sysmon уже после того, как вызывающий код проверил возвращённую ошибку",
-      "При записи (Write) в буферизованные потоки (gzip.Writer, bufio.Writer, S3/GCS writer) и сетевые файловые системы (NFS/FUSE) метод Write() лишь копирует байты в буфер в памяти или page cache ядра, а финальный сброс буфера (flush) и проверка квоты диска происходят внутри Close()! Игнорируя ошибку в defer f.Close(), функция возвращает nil при потерянных данных (фикс: именованный возврат (err error) и errors.Join(err, f.Close()) в defer)",
-      "Метод f.Write(payload) в Go не гарантирует запись всех байтов среза и при частичной записи возвращает err == nil по спецификации io.Writer",
-      "Сборщик мусора закрывает файловый дескриптор через runtime.AddCleanup раньше, чем успевает выполниться отложенный вызов defer f.Close()",
-      "Оператор return err возвращает значение до вызова defer f.Close(), поэтому операционная система видит открытый дескриптор и откатывает изменения файла",
-      "Для записи файлов на диск в Go необходимо обязательно вызывать syscall.Fsync() перед каждым вызовом f.Write()"
+      "Вернёт ошибку Close: отложенный вызов завершится до выхода, и его результат автоматически заменит nil.",
+      "Вернёт nil. Достаточно перенести Close перед return: обработка его ошибки нужна только для сетевых файлов.",
+      "Вернёт nil. Нужно вернуть только ошибку Close, потому что после закрытия ошибка Write уже не имеет значения.",
+      "Вернёт nil. Следует убрать defer: отложенное закрытие выполняется после того, как вызывающий код получил результат.",
+      "Вернёт nil: ошибка Close потеряна. Именованный err и errors.Join позволяют сохранить обе ошибки.",
+      "Вернёт nil. Вызов Sync после Write автоматически включит ошибку будущего Close в возвращаемый результат."
     ],
-    correct: 1,
-    explanationRU: "Для файлов, открытых только на чтение (os.Open), `defer f.Close()` с игнорированием ошибки абсолютно безопасен. Но при ЗАПИСИ (особенно через обёртки `gzip.Writer`, `csv.Writer`, `bufio.Writer`, облачные стримы S3 или сетевые диски) метод `Close()` сбрасывает финальные буферы, пишет футеры архива и фиксирует метаданные. Если `f.Write()` вернул `nil`, а `f.Close()` в `defer` вернул `ENOSPC (no space left on device)` или ошибку сети, одиночный `defer f.Close()` молча проглотит эту ошибку, и ваша система посчитает отчёт успешно сохранённым! Идиоматическое решение — именованный параметр `(err error)` и `defer func() { err = errors.Join(err, f.Close()) }()`.",
-    speechEN: "While ignoring 'f.Close()' on read-only files is fine, ignoring 'Close()' on writable files or buffered streams ('gzip.Writer', 'bufio.Writer', S3/NFS streams) is a classic data-loss bug. 'Write()' often just buffers bytes in memory or OS page cache, while 'Close()' performs the actual flush, writes trailer checksums, and surfaces I/O errors. Use a named return '(err error)' and 'defer func() { err = errors.Join(err, f.Close()) }()' so close errors are never swallowed."
+    correct: 4,
+    explanationRU: "Функция вернёт nil: результат f.Close() нигде не используется. Defer выполняется до завершения функции, но сам по себе не меняет возвращаемую ошибку. В исправлении ниже именованный результат err получает ошибку Write, а отложенная функция объединяет её с ошибкой Close через errors.Join. Это сохраняет обе причины, если ошиблись оба вызова. У разных обёрток разный контракт: bufio.Writer требует Flush, csv.Writer — Flush и затем Error, gzip.Writer — Close. Закрытие os.File не заменяет Sync, когда требуется сохранение данных на устойчивом носителе; для атомарной замены файла нужен отдельный протокол.",
+    speechEN: "This function returns nil because it discards the error from Close. The deferred call runs before the function finishes, but its result does not automatically replace the return value. I would use a named error result and join the write and close errors in a deferred closure. For bufio.Writer I must check Flush; for csv.Writer I must call Flush and then check Error; gzip.Writer has its own Close. Closing os.File does not replace Sync when durable storage is required, and atomic file replacement needs a separate protocol.",
+    correctedCode: `package report
+
+import (
+	"errors"
+	"os"
+)
+
+// WriteReport reports write and close errors; it does not promise durable storage.
+func WriteReport(path string, payload []byte) (err error) {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, f.Close())
+	}()
+	_, err = f.Write(payload)
+	return err
+}`,
+    versionNote: "errors.Join доступен с Go 1.20, подходит для 1.25/1.26. В Go 1.17 можно сохранить ошибку Write и вернуть Close только при err == nil; для сохранения обеих нужна собственная составная ошибка.",
+    sources: [
+      {"title": "os.File.Close / Sync", "url": "https://pkg.go.dev/os@go1.26.1#File.Close"},
+      {"title": "errors.Join", "url": "https://pkg.go.dev/errors@go1.26.1#Join"},
+      {"title": "bufio.Writer.Flush", "url": "https://pkg.go.dev/bufio@go1.26.1#Writer.Flush"},
+      {"title": "csv.Writer.Flush / Error", "url": "https://pkg.go.dev/encoding/csv@go1.26.1#Writer.Flush"},
+      {"title": "gzip.Writer.Close", "url": "https://pkg.go.dev/compress/gzip@go1.26.1#Writer.Close"}
+    ]
   }
 ];

@@ -64,7 +64,7 @@
 * Архитектурный выбор: Каналы против Мьютексов (`sync.Mutex` / `sync.RWMutex`).
 * Внутреннее устройство `runtime.hchan` и роль связующей структуры `runtime.sudog` ($M:N$ ожидание).
 * Механика `chansend` / `chanrecv`: `sendDirect` (`memmove` + `typeBitsBulkBarrier` из стека в стек) и защита от гонки в `gopark(chanparkcommit)`.
-* Паттерны приоритетного `select` и внутренний цикл `runtime.selectgo` (`pollorder`, `lockorder`, `g.selectDone`).
+* Выбор готовых веток и ограничения приоритета отмены в `select` и внутренний цикл `runtime.selectgo` (`pollorder`, `lockorder`, `g.selectDone`).
 * Ассемблер `LOCK CMPXCHGL`, протокол `MESI` и проблема `False Sharing` 64-байтных кэш-линий.
 * Внутреннее устройство `sync.Mutex` (`Normal` vs `Starvation Mode` 1 мс), `sync.WaitGroup`, `sync.Once` и `context.Context` (`WithoutCancel`).
 

@@ -621,9 +621,9 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
   .card-meta { gap: 6px; margin-bottom: 12px; }
   .question-title { font-size: 1.15rem; }
   .card-controls { position: sticky; bottom: 0; background: var(--surface); margin: 16px -4px -4px; padding: 12px 4px max(12px, env(safe-area-inset-bottom, 0px)); gap: 8px; }
-  .card-controls .btn { justify-content: center; padding: 9px 7px; font-size: 0.82rem; }
-  .card-navigation { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; width: 100%; }
-  .card-grades { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .card-controls .btn { justify-content: center; padding: 9px 7px; font-size: 0.82rem; min-width: 0; overflow-wrap: anywhere; }
+  .card-navigation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); width: 100%; }
+  .card-grades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .kbd-hint { display: none; }
   .short-answer, .practical-box { padding: 12px; }
   .sim-card { padding: 16px; }
@@ -634,3 +634,11 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+
+.translated-answer { margin: 12px 0 16px; }
+.translated-answer summary { cursor: pointer; padding: 8px 0; color: var(--accent); }
+.translated-answer p { margin-top: 8px; }
+.content-references { margin: 16px 0; color: var(--muted); font-size: 0.9rem; }
+.content-references ul { margin-left: 20px; }
+.content-references a { color: var(--accent); text-underline-offset: 3px; }

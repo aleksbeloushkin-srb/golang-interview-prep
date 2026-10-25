@@ -45,6 +45,24 @@ function escapeHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
+function russianExplanationHtml(card) {
+  if (!card.shortRU) return "";
+  return `<details class="translated-answer" lang="ru">
+    <summary>Объяснение на русском</summary>
+    <p>${escapeHtml(card.shortRU)}</p>
+    <ul class="details-list">${(card.detailsRU || []).map(text => `<li>${escapeHtml(text)}</li>`).join("")}</ul>
+  </details>`;
+}
+
+function referencesHtml(item) {
+  const sources = (item.sources || []).filter(source => source.url.startsWith("https://"));
+  if (!item.versionNote && !sources.length) return "";
+  return `<aside class="content-references" aria-label="Версии и источники">
+    ${item.versionNote ? `<p>${escapeHtml(item.versionNote)}</p>` : ""}
+    ${sources.length ? `<ul>${sources.map(source => `<li><a href="${escapeHtml(source.url)}">${escapeHtml(source.title)}</a></li>`).join("")}</ul>` : ""}
+  </aside>`;
+}
+
 // Автоматическая привязка карточек к 6 диаграммам
 const CARD_TO_SIM = {
   c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
@@ -158,6 +176,8 @@ function renderCard() {
   document.getElementById("card-q-en").textContent = card.qEN;
   document.getElementById("card-q-ru").textContent = card.qRU;
   document.getElementById("card-short-en").textContent = card.shortEN;
+  document.getElementById("card-translation").innerHTML = russianExplanationHtml(card);
+  document.getElementById("card-references").innerHTML = referencesHtml(card);
 
   const ul = document.getElementById("card-details-en");
   ul.innerHTML = "";
@@ -342,10 +362,12 @@ function initWikiAndCheatsheet() {
         </button>
         <div class="accordion-body" id="wiki-${c.id}">
           <p class="muted-text" style="margin-bottom:10px;">${escapeHtml(c.qRU)}</p>
-          <div class="short-answer"><strong>Коротко по-английски:</strong> ${escapeHtml(c.shortEN)}</div>
+          <div class="short-answer" lang="en"><strong lang="ru">Коротко по-английски:</strong> ${escapeHtml(c.shortEN)}</div>
+          ${russianExplanationHtml(c)}
           <strong>Как это работает (EN):</strong>
           <ul class="details-list">${c.detailsEN.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
           ${pracHtml}
+          ${referencesHtml(c)}
           <pre class="code-block">${escapeHtml(c.code)}</pre>
           <div class="btn-group" style="margin-top: 12px;">
             <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
@@ -418,8 +440,10 @@ function initQuiz() {
       <div style="margin: 16px 0;">${optionsHtml}</div>
       <div id="${q.id}-result" class="hidden" style="margin-top:12px; padding:14px; border-radius:8px; background:rgba(56,189,248,0.1); border-left:4px solid var(--accent);">
         <strong id="${q.id}-title-res"></strong>
-        <p style="margin-top:8px; font-size:0.92rem;"><strong>🇷🇺 Разбор под капотом:</strong> <span id="${q.id}-exp-ru"></span></p>
-        <p style="margin-top:8px; font-size:0.92rem; color:#cbd5e1;"><strong>🇬🇧 How to answer in English:</strong> <span id="${q.id}-exp-en"></span></p>
+        <p style="margin-top:8px; font-size:0.92rem;"><strong>🇷🇺 Почему так:</strong> <span id="${q.id}-exp-ru"></span></p>
+        <p style="margin-top:8px; font-size:0.92rem; color:#cbd5e1;"><strong>🇬🇧 How to answer in English:</strong> <span id="${q.id}-exp-en" lang="en"></span></p>
+        ${q.correctedCode ? `<details class="translated-answer"><summary>Исправленный пример</summary><pre class="code-block">${escapeHtml(q.correctedCode)}</pre></details>` : ""}
+        ${referencesHtml(q)}
       </div>
     `;
     container.appendChild(card);
