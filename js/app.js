@@ -7,7 +7,17 @@ let state = {
   progress: JSON.parse(localStorage.getItem("go_prep_progress_v2") || "{}")
 };
 
-// Автоматическая привязка всех 28 карточек к 6 диаграммам
+// Безопасное экранирование символов <, >, & чтобы код с каналами (<-ch) и циклами (i < 3) не ломал HTML!
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Автоматическая привязка карточек к 6 диаграммам
 const CARD_TO_SIM = {
   c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
   c7: "sim2", c8: "sim2", c9: "sim2", c10: "sim2", c11: "sim1",
@@ -28,10 +38,13 @@ function saveProgress() {
 }
 
 function updateProgressBar() {
+  if (typeof CARDS === "undefined") return;
   const mastered = CARDS.filter(c => state.progress[c.id] === "mastered").length;
   const pct = Math.round((mastered / CARDS.length) * 100);
-  document.getElementById("progress-text").textContent = `${mastered} / ${CARDS.length} изучено (${pct}%)`;
-  document.getElementById("progress-fill").style.width = `${pct}%`;
+  const txt = document.getElementById("progress-text");
+  const fill = document.getElementById("progress-fill");
+  if (txt) txt.textContent = `${mastered} / ${CARDS.length} изучено (${pct}%)`;
+  if (fill) fill.style.width = `${pct}%`;
 }
 
 function resetProgress() {
@@ -42,6 +55,7 @@ function resetProgress() {
 
 /* --- ФИЛЬТРАЦИЯ И РЕНДЕР КАРТОЧЕК --- */
 function getFilteredCards() {
+  if (typeof CARDS === "undefined") return [];
   return CARDS.filter(c => {
     if (state.filter === "review" && state.progress[c.id] !== "review") return false;
     if (state.filter !== "all" && state.filter !== "review" && c.mod !== state.filter) return false;
@@ -68,6 +82,7 @@ function renderCard() {
   updateFilterButtonsUI();
   const list = getFilteredCards();
   const ansBox = document.getElementById("card-answer-box");
+  if (!ansBox) return;
 
   if (list.length === 0) {
     document.getElementById("card-module").textContent = "ПУСТО";
@@ -174,7 +189,6 @@ function setLevel(lvl) {
   state.level = lvl;
   state.index = 0;
   state.revealed = false;
-  // Если был включён пустой фильтр "На повторение", сбрасываем модуль на "Все", чтобы уровень сразу показал карточки
   if (state.filter === "review" && getFilteredCards().length === 0) {
     state.filter = "all";
   }
@@ -190,7 +204,7 @@ function onSearchInput() {
 /* --- УНИВЕРСАЛЬНЫЙ ДВИЖОК ВСЕХ 6 СИМУЛЯТОРОВ --- */
 function initSimulators() {
   const container = document.getElementById("simulators-list");
-  if (!container) return;
+  if (!container || typeof SIMULATORS === "undefined") return;
   container.innerHTML = "";
 
   SIMULATORS.forEach((sim, simIdx) => {
@@ -199,16 +213,16 @@ function initSimulators() {
     card.id = sim.id;
 
     const stepsHtml = sim.steps
-      .map((st, idx) => `<button type="button" class="step-pill ${idx === 0 ? "active" : ""}" onclick="renderSimStep(${simIdx}, ${idx})">${st.title}</button>`)
+      .map((st, idx) => `<button type="button" class="step-pill ${idx === 0 ? "active" : ""}" onclick="renderSimStep(${simIdx}, ${idx})">${escapeHtml(st.title)}</button>`)
       .join("");
 
     card.innerHTML = `
       <div class="sim-header">
         <div>
-          <h3>${sim.title}</h3>
-          <p class="muted-text">${sim.subtitle}</p>
+          <h3>${escapeHtml(sim.title)}</h3>
+          <p class="muted-text">${escapeHtml(sim.subtitle)}</p>
         </div>
-        <a href="#/cards/${sim.cardId}" class="btn btn-sm">${sim.cardLabel}</a>
+        <a href="#/cards/${sim.cardId}" class="btn btn-sm">${escapeHtml(sim.cardLabel)}</a>
       </div>
       <div class="sim-steps" id="${sim.id}-steps">${stepsHtml}</div>
       <div id="${sim.id}-desc" class="short-answer"></div>
@@ -233,12 +247,12 @@ function renderSimStep(simIdx, stepIdx) {
   grid.innerHTML = step.boxes
     .map(box => `
       <div class="sim-box">
-        <h4>${box.title}</h4>
+        <h4>${escapeHtml(box.title)}</h4>
         ${box.rows
           .map(r => `
             <div class="reg-row ${r.hl ? "reg-highlight" : ""}">
-              <span>${r.k}</span>
-              <strong>${r.v}</strong>
+              <span>${escapeHtml(r.k)}</span>
+              <strong>${escapeHtml(r.v)}</strong>
             </div>
           `)
           .join("")}
@@ -250,64 +264,133 @@ function renderSimStep(simIdx, stepIdx) {
 /* --- БАЗА ЗНАНИЙ (WIKI) И ТАБЛИЦА-ШПАРГАЛКА --- */
 function initWikiAndCheatsheet() {
   const wrap = document.getElementById("accordion-container");
-  wrap.innerHTML = "";
-  CARDS.forEach(c => {
-    const item = document.createElement("div");
-    item.className = "accordion-item open";
-    const targetSim = getCardSimId(c);
-    const simBtn = targetSim ? `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Диаграмма (${targetSim.toUpperCase()}) →</a>` : "";
-    const lvl = c.level || "senior";
-    const lvlLabel = c.levelLabel || "🟡 Senior";
-    const pracHtml = c.practicalRU ? `<div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${c.practicalRU}</div>` : "";
+  if (wrap && typeof CARDS !== "undefined") {
+    wrap.innerHTML = "";
+    CARDS.forEach(c => {
+      const item = document.createElement("div");
+      item.className = "accordion-item open";
+      const targetSim = getCardSimId(c);
+      const simBtn = targetSim ? `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Диаграмма (${targetSim.toUpperCase()}) →</a>` : "";
+      const lvl = c.level || "senior";
+      const lvlLabel = c.levelLabel || "🟡 Senior";
+      const pracHtml = c.practicalRU
+        ? `<div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${escapeHtml(c.practicalRU)}</div>`
+        : "";
 
-    item.innerHTML = `
-      <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
-        <span>${c.qEN}</span>
-        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <span class="level-badge level-${lvl}">${lvlLabel}</span>
-          <span class="module-tag">${c.modName}</span>
+      item.innerHTML = `
+        <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
+          <span>${escapeHtml(c.qEN)}</span>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span class="level-badge level-${lvl}">${escapeHtml(lvlLabel)}</span>
+            <span class="module-tag">${escapeHtml(c.modName)}</span>
+          </div>
         </div>
-      </div>
-      <div class="accordion-body">
-        <p class="muted-text" style="margin-bottom:10px;">${c.qRU}</p>
-        <div class="short-answer"><strong>1. Base Answer (EN):</strong> ${c.shortEN}</div>
-        <strong>2. Under the Hood Details (EN):</strong>
-        <ul class="details-list">${c.detailsEN.map(x => `<li>${x}</li>`).join("")}</ul>
-        ${pracHtml}
-        <pre class="code-block">${c.code}</pre>
-        <div class="btn-group" style="margin-top: 12px;">
-          <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
-          ${simBtn}
+        <div class="accordion-body">
+          <p class="muted-text" style="margin-bottom:10px;">${escapeHtml(c.qRU)}</p>
+          <div class="short-answer"><strong>1. Base Answer (EN):</strong> ${escapeHtml(c.shortEN)}</div>
+          <strong>2. Under the Hood Details (EN):</strong>
+          <ul class="details-list">${c.detailsEN.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+          ${pracHtml}
+          <pre class="code-block">${escapeHtml(c.code)}</pre>
+          <div class="btn-group" style="margin-top: 12px;">
+            <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
+            ${simBtn}
+          </div>
         </div>
-      </div>
-    `;
-    wrap.appendChild(item);
-  });
+      `;
+      wrap.appendChild(item);
+    });
+  }
 
   const tbody = document.getElementById("cheatsheet-tbody");
-  tbody.innerHTML = "";
-  CHEATSHEET_ROWS.forEach(r => {
-    const tr = document.createElement("tr");
-    const simLink = r.simId ? `<a href="#/simulators/${r.simId}" class="btn btn-sm">Диаграмма</a>` : "";
-    tr.innerHTML = `
-      <td><strong>${r.topic}</strong></td>
-      <td>${r.how}</td>
-      <td>${r.markers}</td>
-      <td>
-        <div class="btn-group">
-          <a href="#/cards/${r.cardId}" class="btn btn-sm">Карточка</a>
-          ${simLink}
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+  if (tbody && typeof CHEATSHEET_ROWS !== "undefined") {
+    tbody.innerHTML = "";
+    CHEATSHEET_ROWS.forEach(r => {
+      const tr = document.createElement("tr");
+      const simLink = r.simId ? `<a href="#/simulators/${r.simId}" class="btn btn-sm">Диаграмма</a>` : "";
+      tr.innerHTML = `
+        <td><strong>${r.topic}</strong></td>
+        <td>${r.how}</td>
+        <td>${r.markers}</td>
+        <td>
+          <div class="btn-group">
+            <a href="#/cards/${r.cardId}" class="btn btn-sm">Карточка</a>
+            ${simLink}
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 }
 
 function toggleAllAccordions(open) {
   document.querySelectorAll(".accordion-item").forEach(el => {
     el.classList.toggle("open", open);
   });
+}
+
+/* --- РЕНДЕР ИНТЕРАКТИВНОГО QUIZ (ЗАДАЧИ С ПОДВОХОМ) --- */
+function initQuiz() {
+  const container = document.getElementById("quiz-container");
+  if (!container || typeof QUIZ_QUESTIONS === "undefined") return;
+  container.innerHTML = "";
+
+  QUIZ_QUESTIONS.forEach(q => {
+    const card = document.createElement("div");
+    card.className = "sim-card";
+    card.style.marginBottom = "20px";
+
+    const optionsHtml = q.options
+      .map((opt, oIdx) => `
+        <label style="display:block; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:8px; cursor:pointer; font-size:0.9rem;">
+          <input type="radio" name="${q.id}" value="${oIdx}" style="margin-right:8px;" onchange="checkQuizAnswer('${q.id}', ${oIdx}, ${q.correct})">
+          <span>${escapeHtml(opt)}</span>
+        </label>
+      `)
+      .join("");
+
+    card.innerHTML = `
+      <h3 style="margin-bottom:8px; color:var(--accent);">${escapeHtml(q.title)}</h3>
+      <p style="font-weight:600; margin-bottom:6px;">🇷🇺 ${escapeHtml(q.ru)}</p>
+      <p class="muted-text" style="font-style:italic; margin-bottom:12px;">🇬🇧 ${escapeHtml(q.en)}</p>
+      <pre class="code-block">${escapeHtml(q.code)}</pre>
+      <div style="margin: 16px 0;">${optionsHtml}</div>
+      <div id="${q.id}-result" class="hidden" style="margin-top:12px; padding:14px; border-radius:8px; background:rgba(56,189,248,0.1); border-left:4px solid var(--accent);">
+        <strong id="${q.id}-title-res"></strong>
+        <p style="margin-top:8px; font-size:0.92rem;"><strong>🇷🇺 Разбор под капотом:</strong> <span id="${q.id}-exp-ru"></span></p>
+        <p style="margin-top:8px; font-size:0.92rem; color:#cbd5e1;"><strong>🇬🇧 How to answer in English:</strong> <span id="${q.id}-exp-en"></span></p>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function checkQuizAnswer(qId, selectedIdx, correctIdx) {
+  if (typeof QUIZ_QUESTIONS === "undefined") return;
+  const q = QUIZ_QUESTIONS.find(x => x.id === qId);
+  if (!q) return;
+
+  const resBox = document.getElementById(`${qId}-result`);
+  const titleRes = document.getElementById(`${qId}-title-res`);
+  const expRu = document.getElementById(`${qId}-exp-ru`);
+  const expEn = document.getElementById(`${qId}-exp-en`);
+
+  resBox.classList.remove("hidden");
+  const isCorrect = selectedIdx === correctIdx;
+
+  if (isCorrect) {
+    titleRes.textContent = "✅ Верно! Отличный ответ.";
+    resBox.style.borderColor = "#22c55e";
+    resBox.style.background = "rgba(34, 197, 94, 0.12)";
+  } else {
+    titleRes.textContent = `❌ Не совсем так (правильный вариант — №${correctIdx + 1}). Посмотри разбор:`;
+    resBox.style.borderColor = "#ef4444";
+    resBox.style.background = "rgba(239, 68, 68, 0.12)";
+  }
+
+  expRu.textContent = q.explanationRU;
+  expEn.textContent = q.speechEN;
 }
 
 /* --- HASH ROUTER (НАВИГАЦИЯ И ПРЯМЫЕ ССЫЛКИ) --- */
@@ -370,70 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateProgressBar();
   renderCard();
   initSimulators();
-  initQuiz();
   initWikiAndCheatsheet();
+  initQuiz();
   handleRoute();
 });
-
-
-/* --- РЕНДЕР ИНТЕРАКТИВНОГО QUIZ (ЗАДАЧИ С ПОДВОХОМ) --- */
-function initQuiz() {
-  const container = document.getElementById("quiz-container");
-  if (!container) return;
-  container.innerHTML = "";
-
-  QUIZ_QUESTIONS.forEach((q, idx) => {
-    const card = document.createElement("div");
-    card.className = "sim-card";
-    card.style.marginBottom = "20px";
-
-    const optionsHtml = q.options
-      .map((opt, oIdx) => `
-        <label style="display:block; padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; margin-bottom:8px; cursor:pointer; font-size:0.9rem;">
-          <input type="radio" name="${q.id}" value="${oIdx}" style="margin-right:8px;" onchange="checkQuizAnswer('${q.id}', ${oIdx}, ${q.correct})">
-          ${opt}
-        </label>
-      `)
-      .join("");
-
-    card.innerHTML = `
-      <h3 style="margin-bottom:8px; color:var(--accent);">${q.title}</h3>
-      <p style="font-weight:600; margin-bottom:6px;">🇷🇺 ${q.ru}</p>
-      <p class="muted-text" style="font-style:italic; margin-bottom:12px;">🇬🇧 ${q.en}</p>
-      <pre class="code-block">${q.code}</pre>
-      <div style="margin: 16px 0;">${optionsHtml}</div>
-      <div id="${q.id}-result" class="hidden" style="margin-top:12px; padding:14px; border-radius:8px; background:rgba(56,189,248,0.1); border-left:4px solid var(--accent);">
-        <strong id="${q.id}-title-res"></strong>
-        <p style="margin-top:6px; font-size:0.92rem;"><strong>🇷🇺 Разбор:</strong> <span id="${q.id}-exp-ru"></span></p>
-        <p style="margin-top:6px; font-size:0.92rem; color:var(--muted);"><strong>🇬🇧 Interview Speech:</strong> <span id="${q.id}-exp-en"></span></p>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function checkQuizAnswer(qId, selectedIdx, correctIdx) {
-  const q = QUIZ_QUESTIONS.find(x => x.id === qId);
-  if (!q) return;
-
-  const resBox = document.getElementById(`${qId}-result`);
-  const titleRes = document.getElementById(`${qId}-title-res`);
-  const expRu = document.getElementById(`${qId}-exp-ru`);
-  const expEn = document.getElementById(`${qId}-exp-en`);
-
-  resBox.classList.remove("hidden");
-  const isCorrect = selectedIdx === correctIdx;
-
-  if (isCorrect) {
-    titleRes.textContent = "✅ Верно! Отличный ответ.";
-    resBox.style.borderColor = "var(--green)";
-    resBox.style.background = "rgba(34,197,94,0.1)";
-  } else {
-    titleRes.textContent = "❌ Не совсем так. Правильный вариант отмечен в списке.";
-    resBox.style.borderColor = "var(--red)";
-    resBox.style.background = "rgba(239,68,68,0.1)";
-  }
-
-  expRu.textContent = q.explanationRU;
-  expEn.textContent = q.speechEN;
-}
