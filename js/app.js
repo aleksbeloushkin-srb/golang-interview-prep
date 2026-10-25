@@ -317,7 +317,7 @@ function handleRoute() {
   const route = parts[0] || "cards";
   const param = parts[1] || null;
 
-  const validRoutes = ["cards", "simulators", "wiki", "cheatsheet"];
+  const validRoutes = ["cards", "simulators", "wiki", "cheatsheet", "quiz"];
   const activeRoute = validRoutes.includes(route) ? route : "cards";
 
   document.querySelectorAll(".route-view").forEach(sec => {
@@ -370,6 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateProgressBar();
   renderCard();
   initSimulators();
+  initQuiz();
   initWikiAndCheatsheet();
   handleRoute();
 });
