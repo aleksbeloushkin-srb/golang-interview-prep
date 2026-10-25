@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Go Runtime & Concurrency — Interactive Interview Wiki</title>
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <title>Go Runtime & Concurrency — Interactive Interview Wiki & Quiz</title>
+  <link rel="stylesheet" href="css/style.css?v=4" />
 </head>
 <body>
 
@@ -18,7 +18,8 @@
         <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки (28)</a>
         <a href="#/simulators" class="tab-btn" data-route="simulators">2. Диаграммы (6)</a>
         <a href="#/wiki" class="tab-btn" data-route="wiki">3. База знаний (Wiki)</a>
-        <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">4. Шпаргалка (Таблица)</a>
+        <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">4. Шпаргалка</a>
+        <a href="#/quiz" class="tab-btn" data-route="quiz" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.4);">5. 🧠 Code Traps Quiz</a>
       </nav>
     </div>
   </header>
@@ -39,7 +40,6 @@
           <button class="btn btn-sm" type="button" onclick="resetProgress()">Сбросить прогресс</button>
         </div>
 
-        <!-- Фильтр по модулям -->
         <div class="filter-row" id="module-filter-row">
           <span class="filter-label">Модуль:</span>
           <button type="button" class="chip active" data-filter="all" onclick="setFilter('all')">Все (28)</button>
@@ -50,7 +50,6 @@
           <button type="button" class="chip" data-filter="review" onclick="setFilter('review')">⭐ На повторение</button>
         </div>
 
-        <!-- Фильтр по уровню сложности + Поиск -->
         <div class="filter-row" id="level-filter-row">
           <span class="filter-label">Уровень:</span>
           <button type="button" class="level-chip active" data-level="all" onclick="setLevel('all')">Все уровни (28)</button>
@@ -110,7 +109,7 @@
       </div>
     </section>
 
-    <!-- РАЗДЕЛ 2: ВСЕ 6 ИНТЕРАКТИВНЫХ СИМУЛЯТОРОВ ДИАГРАММ -->
+    <!-- РАЗДЕЛ 2: ИНТЕРАКТИВНЫЕ СИМУЛЯТОРЫ ДИАГРАММ -->
     <section id="view-simulators" class="route-view hidden">
       <div class="toolbar" style="margin-bottom: 20px;">
         <div class="filter-row">
@@ -123,11 +122,10 @@
           <a href="#/simulators/sim6" class="chip">6. Аллокатор и Tri-Color GC</a>
         </div>
       </div>
-      <!-- Сюда автоматически рендерятся все 6 интерактивных симуляторов из data/simulators.js -->
       <div id="simulators-list"></div>
     </section>
 
-    <!-- РАЗДЕЛ 3: БАЗА ЗНАНИЙ (ВСЕ 28 ВОПРОСОВ СПИСКОМ) -->
+    <!-- РАЗДЕЛ 3: БАЗА ЗНАНИЙ (WIKI) -->
     <section id="view-wiki" class="route-view hidden">
       <div class="section-top">
         <h2>Полная база знаний (Все 28 карточек от Base до Deep Dive + Продакшен-кейсы)</h2>
@@ -139,7 +137,7 @@
       <div id="accordion-container"></div>
     </section>
 
-    <!-- РАЗДЕЛ 4: СВОДНАЯ ТАБЛИЦА-ШПАРГАЛКА -->
+    <!-- РАЗДЕЛ 4: ШПАРГАЛКА -->
     <section id="view-cheatsheet" class="route-view hidden">
       <h2 style="margin-bottom: 16px;">Сводная шпаргалка по рантайму Go (от А до Я с быстрыми переходами)</h2>
       <div class="table-wrap">
@@ -157,10 +155,20 @@
       </div>
     </section>
 
+    <!-- РАЗДЕЛ 5: 🧠 CODE TRAPS QUIZ (Собеседования с задачками) -->
+    <section id="view-quiz" class="route-view hidden">
+      <div class="section-top">
+        <h2>🧠 Go Code Traps & Interview Quiz (Задачи с подвохом)</h2>
+        <span class="muted-text">Хитрые сниппеты кода, которые дают на Senior Go-собеседованиях</span>
+      </div>
+      <div id="quiz-container"></div>
+    </section>
+
   </main>
 
-  <script src="data/cards.js?v=3"></script>
-  <script src="data/simulators.js?v=3"></script>
-  <script src="js/app.js?v=3"></script>
+  <script src="data/cards.js?v=4"></script>
+  <script src="data/simulators.js?v=4"></script>
+  <script src="data/quiz.js?v=4"></script>
+  <script src="js/app.js?v=4"></script>
 </body>
 </html>
