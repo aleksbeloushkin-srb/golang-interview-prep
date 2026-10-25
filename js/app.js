@@ -24,7 +24,8 @@ const CARD_TO_SIM = {
   c13: "sim3", c16: "sim3", c17: "sim3",
   c18: "sim4", c19: "sim4",
   c20: "sim5", c21: "sim5",
-  c23: "sim6", c24: "sim6", c25: "sim6", c26: "sim6", c27: "sim6", c28: "sim6"
+  c23: "sim6", c24: "sim6", c25: "sim6", c26: "sim6", c27: "sim6", c28: "sim6",
+  c30: "sim7", c31: "sim7", c32: "sim7", c37: "sim1", c38: "sim2"
 };
 
 function getCardSimId(card) {
@@ -431,6 +432,34 @@ function handleRoute() {
   }
 }
 
+function syncDynamicCounters() {
+  if (typeof CARDS === "undefined") return;
+  const total = CARDS.length;
+  const baseCnt = CARDS.filter(c => c.level === "base").length;
+  const senCnt = CARDS.filter(c => c.level === "senior").length;
+  const deepCnt = CARDS.filter(c => c.level === "deep").length;
+
+  const tabCards = document.querySelector('.tab-btn[data-route="cards"]');
+  if (tabCards) tabCards.textContent = `1. Карточки (${total})`;
+
+  const tabSims = document.querySelector('.tab-btn[data-route="simulators"]');
+  if (tabSims && typeof SIMULATORS !== "undefined") {
+    tabSims.textContent = `2. Диаграммы (${SIMULATORS.length})`;
+  }
+
+  const btnAllMod = document.querySelector('#module-filter-row .chip[data-filter="all"]');
+  if (btnAllMod) btnAllMod.textContent = `Все (${total})`;
+
+  const btnAllLvl = document.querySelector('#level-filter-row .level-chip[data-level="all"]');
+  if (btnAllLvl) btnAllLvl.textContent = `Все уровни (${total})`;
+  const btnBase = document.querySelector('#level-filter-row .level-chip[data-level="base"]');
+  if (btnBase) btnBase.textContent = `🟢 Base (${baseCnt})`;
+  const btnSen = document.querySelector('#level-filter-row .level-chip[data-level="senior"]');
+  if (btnSen) btnSen.textContent = `🟡 Senior (${senCnt})`;
+  const btnDeep = document.querySelector('#level-filter-row .level-chip[data-level="deep"]');
+  if (btnDeep) btnDeep.textContent = `🔴 Deep Dive (${deepCnt})`;
+}
+
 /* --- ГОРЯЧИЕ КЛАВИШИ --- */
 window.addEventListener("keydown", e => {
   if (document.activeElement.tagName === "INPUT") return;
@@ -450,6 +479,7 @@ window.addEventListener("keydown", e => {
 window.addEventListener("hashchange", handleRoute);
 
 document.addEventListener("DOMContentLoaded", () => {
+  syncDynamicCounters();
   updateProgressBar();
   renderCard();
   initSimulators();
