@@ -1,14 +1,15 @@
 let state = {
   filter: "all",
+  level: "all",
   search: "",
   index: 0,
   revealed: false,
-  progress: JSON.parse(localStorage.getItem("go_prep_progress_v1") || "{}")
+  progress: JSON.parse(localStorage.getItem("go_prep_progress_v2") || "{}")
 };
 
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
 function saveProgress() {
-  localStorage.setItem("go_prep_progress_v1", JSON.stringify(state.progress));
+  localStorage.setItem("go_prep_progress_v2", JSON.stringify(state.progress));
   updateProgressBar();
 }
 
@@ -30,9 +31,10 @@ function getFilteredCards() {
   return CARDS.filter(c => {
     if (state.filter === "review" && state.progress[c.id] !== "review") return false;
     if (state.filter !== "all" && state.filter !== "review" && c.mod !== state.filter) return false;
+    if (state.level !== "all" && c.level !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
-      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + c.code).toLowerCase();
+      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + c.practicalRU + " " + c.code).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -45,9 +47,10 @@ function renderCard() {
 
   if (list.length === 0) {
     document.getElementById("card-module").textContent = "ПУСТО";
+    document.getElementById("card-level").textContent = "—";
     document.getElementById("card-counter").textContent = "0 из 0";
     document.getElementById("card-q-en").textContent = "Нет карточек по выбранному фильтру";
-    document.getElementById("card-q-ru").textContent = "Переключи фильтр выше или очисти строку поиска.";
+    document.getElementById("card-q-ru").textContent = "Переключи фильтр модуля/уровня выше или очисти строку поиска.";
     ansBox.classList.remove("visible");
     return;
   }
@@ -57,6 +60,11 @@ function renderCard() {
 
   const card = list[state.index];
   document.getElementById("card-module").textContent = card.modName;
+
+  const lvlEl = document.getElementById("card-level");
+  lvlEl.textContent = card.levelLabel;
+  lvlEl.className = "level-badge level-" + card.level;
+
   document.getElementById("card-counter").textContent = `Карточка ${state.index + 1} из ${list.length} (${card.id.toUpperCase()})`;
   document.getElementById("card-q-en").textContent = card.qEN;
   document.getElementById("card-q-ru").textContent = card.qRU;
@@ -70,9 +78,9 @@ function renderCard() {
     ul.appendChild(li);
   });
 
+  document.getElementById("card-practical-ru").textContent = card.practicalRU || "";
   document.getElementById("card-code").textContent = card.code;
 
-  // Ссылка на связанную диаграмму
   const simLinkWrap = document.getElementById("card-sim-link");
   if (card.simId) {
     simLinkWrap.innerHTML = `<a href="#/simulators/${card.simId}" class="btn btn-sm">🔬 Открыть интерактивную диаграмму по этой теме →</a>`;
@@ -126,6 +134,16 @@ function setFilter(f) {
   state.revealed = false;
   document.querySelectorAll(".chip").forEach(c => {
     c.classList.toggle("active", c.dataset.filter === f);
+  });
+  renderCard();
+}
+
+function setLevel(lvl) {
+  state.level = lvl;
+  state.index = 0;
+  state.revealed = false;
+  document.querySelectorAll(".level-chip").forEach(c => {
+    c.classList.toggle("active", c.dataset.level === lvl);
   });
   renderCard();
 }
@@ -221,6 +239,7 @@ function initSimulators() {
 /* --- БАЗА ЗНАНИЙ (WIKI) И ТАБЛИЦА-ШПАРГАЛКА --- */
 function initWikiAndCheatsheet() {
   const wrap = document.getElementById("accordion-container");
+  wrap.innerHTML = "";
   CARDS.forEach(c => {
     const item = document.createElement("div");
     item.className = "accordion-item open";
@@ -228,12 +247,17 @@ function initWikiAndCheatsheet() {
     item.innerHTML = `
       <div class="accordion-header" onclick="this.parentElement.classList.toggle('open')">
         <span>${c.qEN}</span>
-        <span class="module-tag">${c.modName}</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span class="level-badge level-${c.level}">${c.levelLabel}</span>
+          <span class="module-tag">${c.modName}</span>
+        </div>
       </div>
       <div class="accordion-body">
         <p class="muted-text" style="margin-bottom:10px;">${c.qRU}</p>
-        <div class="short-answer"><strong>Short Answer:</strong> ${c.shortEN}</div>
+        <div class="short-answer"><strong>1. Base Answer (EN):</strong> ${c.shortEN}</div>
+        <strong>2. Under the Hood Details (EN):</strong>
         <ul class="details-list">${c.detailsEN.map(x => `<li>${x}</li>`).join("")}</ul>
+        <div class="practical-box"><strong>🛠️ 3. Практика в продакшене:</strong> ${c.practicalRU}</div>
         <pre class="code-block">${c.code}</pre>
         <div class="btn-group" style="margin-top: 12px;">
           <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
@@ -245,6 +269,7 @@ function initWikiAndCheatsheet() {
   });
 
   const tbody = document.getElementById("cheatsheet-tbody");
+  tbody.innerHTML = "";
   CHEATSHEET_ROWS.forEach(r => {
     const tr = document.createElement("tr");
     const simLink = r.simId ? `<a href="#/simulators/${r.simId}" class="btn btn-sm">Диаграмма</a>` : "";
@@ -279,19 +304,17 @@ function handleRoute() {
   const validRoutes = ["cards", "simulators", "wiki", "cheatsheet"];
   const activeRoute = validRoutes.includes(route) ? route : "cards";
 
-  // Переключаем видимую секцию
   document.querySelectorAll(".route-view").forEach(sec => {
     sec.classList.toggle("hidden", sec.id !== `view-${activeRoute}`);
   });
 
-  // Подсвечиваем активный пункт в шапке
   document.querySelectorAll(".nav-tabs .tab-btn").forEach(link => {
     link.classList.toggle("active", link.dataset.route === activeRoute);
   });
 
-  // Если перешли по прямой ссылке на карточку (#/cards/c10)
   if (activeRoute === "cards" && param) {
     setFilter("all");
+    setLevel("all");
     const idx = CARDS.findIndex(c => c.id === param);
     if (idx !== -1) {
       state.index = idx;
@@ -301,7 +324,6 @@ function handleRoute() {
     }
   }
 
-  // Если перешли по прямой ссылке на конкретную диаграмму (#/simulators/sim2)
   if (activeRoute === "simulators" && param) {
     const targetSim = document.getElementById(param);
     if (targetSim) {
