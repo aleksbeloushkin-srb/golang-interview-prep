@@ -434,13 +434,13 @@ const SIMULATORS = [
   {
     id: "sim4",
     title: "Диаграмма 4: Оператор select под капотом (pollorder, lockorder и атомарная гонка g.selectDone)",
-    subtitle: "Как runtime.selectgo избегает голодания каналов, предотвращает AB-BA дедлок мьютексов и разрешает одновременное пробуждение на разных ядрах.",
+    subtitle: "Учебная трасса получения из трёх разных небуферизованных каналов в Go 1.25/1.26. Адреса условные; показан один допустимый исход, без гарантии времени ожидания.",
     cardId: "c19",
     cardLabel: "Карточка Q19 (selectgo) →",
     steps: [
       {
         title: "1. Генерация pollorder (Shuffle) и lockorder (HeapSort)",
-        desc: "Горутина G1 входит в select по 3 каналам: chA (0x3000), chB (0x1000), chC (0x2000). На стеке строятся два массива: случайный pollorder (через Фишера—Йетса против голодания) и отсортированный по адресам памяти lockorder (против AB-BA дедлока мьютексов).",
+        desc: "Горутина G1 входит в select по 3 каналам: chA (0x3000), chB (0x1000), chC (0x2000). На стеке строятся два массива: случайный pollorder (без гарантии максимального времени ожидания) и отсортированный по адресам памяти lockorder (против AB-BA дедлока мьютексов).",
         boxes: [
           {
             title: "Стек горутины G1 (selectgo)",
@@ -470,7 +470,7 @@ const SIMULATORS = [
       },
       {
         title: "2. Проход 2: Подписка на все 3 канала (цепочка g.waiting)",
-        desc: "Из кеша P берутся 3 отдельных структуры sudog (с флагом isSelect = true), связываются в список G1.waiting и ставятся в очереди recvq всех трёх каналов. Вызывается gopark(selparkcommit), отпускающий все 3 мьютекса на стеке g0.",
+        desc: "Под блокировками, уже захваченными перед первым проходом, регистрируются 3 sudog через acquireSudog: по одному в recvq каждого канала. Они также связаны в G1.waiting. gopark(selparkcommit) отпускает блокировки при парковке; повторного захвата между опросом и регистрацией нет.",
         boxes: [
           {
             title: "Спящая горутина G1",
@@ -493,14 +493,14 @@ const SIMULATORS = [
             rows: [
               { k: "Ядро CPU 1:", v: "Писатель W1 готовит запись в chC", hl: false },
               { k: "Ядро CPU 2:", v: "Писатель W2 готовит запись в chA", hl: false },
-              { k: "Гонка пробуждений:", v: "Оба придут в одну наносекунду!", hl: false }
+              { k: "Гонка пробуждений:", v: "Операции могут конкурировать за одну G1", hl: false }
             ]
           }
         ]
       },
       {
         title: "3. Гонка пробуждений на 2 ядрах: CAS по флагу G1.selectDone",
-        desc: "В одну и ту же наносекунду Писатель W1 пишет в chC, а Писатель W2 пишет в chA! Оба видят isSelect = true и выполняют атомарный G1.selectDone.CompareAndSwap(0, 1). Писатель W1 выигрывает CAS (0 → 1), копирует данные и будит G1, а W2 проигрывает и игнорирует sudog_A!",
+        desc: "В этом сценарии W1 и W2 конкурируют за ожидающую G1. W1 первым выполняет успешный CAS selectDone (0 → 1), передаёт значение и делает G1 runnable. W2 извлекает sudog_A, проигрывает CAS и продолжает искать другого получателя. Выбор W1 здесь иллюстративный.",
         boxes: [
           {
             title: "Арбитраж гонки (G1.selectDone)",
@@ -521,7 +521,7 @@ const SIMULATORS = [
           {
             title: "Ядро 2: Писатель W2 в канал chA",
             rows: [
-              { k: "Результат CAS(0, 1):", v: "FALSE (Опоздал — G1 уже разбужена!)", hl: true },
+              { k: "Результат CAS(0, 1):", v: "FALSE (другая операция уже забрала G1)", hl: true },
               { k: "Действие W2:", v: "Пропускает sudog_A, ищет другого читателя", hl: false },
               { k: "Безопасность стека G1:", v: "Двойная запись предотвращена!", hl: false }
             ]
@@ -530,12 +530,12 @@ const SIMULATORS = [
       },
       {
         title: "4. Проход 3: Пробуждение G1 и очистка лишних sudog",
-        desc: "Разбуженная G1 снова захватывает мьютексы всех 3 каналов строго в порядке lockorder (selock), вырезает свои неиспользованные sudog_B и sudog_A из очередей chB и chA (dequeueSudoG), возвращает все 3 sudog в кеш P и выполняет код победившего case 2!",
+        desc: "После возобновления G1 повторно захватывает каналы через sellock в порядке lockorder. Она удаляет оставшиеся регистрации: sudog_B ещё в очереди, а sudog_A в этом сценарии уже извлечён проигравшим W2. Затем releaseSudog освобождает все три записи, selunlock отпускает блокировки, и select возвращает case 2.",
         boxes: [
           {
             title: "Проснувшаяся горутина G1",
             rows: [
-              { k: "Захват локов:", v: "selock по lockorder (chB → chC → chA)", hl: false },
+              { k: "Захват локов:", v: "sellock по lockorder (chB → chC → chA)", hl: false },
               { k: "Победившая ветка:", v: "case 2 (определена по G1.param == sudog_C)", hl: true },
               { k: "Кеш P.sudogcache:", v: "Все 3 sudog возвращены через releaseSudog", hl: true }
             ]
@@ -545,15 +545,15 @@ const SIMULATORS = [
             rows: [
               { k: "chB.recvq (0x1000):", v: "sudog_B вырезан из двусвязного списка!", hl: true },
               { k: "chC.recvq (0x2000):", v: "Уже извлечён писателем W1", hl: false },
-              { k: "chA.recvq (0x3000):", v: "sudog_A вырезан из двусвязного списка!", hl: true }
+              { k: "chA.recvq (0x3000):", v: "Уже извлечён W2; удалять повторно не нужно", hl: true }
             ]
           },
           {
             title: "Завершение selectgo",
             rows: [
-              { k: "Отпускание локов:", v: "sellock в обратном порядке", hl: false },
+              { k: "Отпускание локов:", v: "selunlock в обратном порядке", hl: false },
               { k: "Возврат из selectgo:", v: "return casi = 2, recvOK = true", hl: true },
-              { k: "Накладные расходы:", v: "3 цикла selock/sellock на 1 блокирующий select", hl: false }
+              { k: "Накладные расходы:", v: "2 захвата набора каналов: опрос/регистрация и очистка", hl: false }
             ]
           }
         ]
@@ -1000,7 +1000,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "7. Оператор select (runtime.selectgo)",
     how: "Массивы <code>pollorder</code> и <code>lockorder</code> на стеке. Подписка через цепочку <code>g.waiting</code> из <code>sudog</code> с флагом <code>isSelect = true</code>.",
-    markers: "<code>pollorder</code> (Фишер—Йетс против голодания), <code>lockorder</code> (сортировка адресов <code>*hchan</code> против AB-BA дедлока), гонка пробуждений через <code>g.selectDone.CompareAndSwap(0, 1)</code>.",
+    markers: "<code>pollorder</code> — случайный опрос без гарантии срока ожидания. <code>lockorder</code> — согласованный порядок блокировок. В обычном блокирующем пути Go 1.25/1.26: два захвата набора каналов, арбитраж через <code>selectDone.CompareAndSwap(0, 1)</code>.",
     cardId: "c19", simId: "sim4"
   },
   {

@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg: #0f172a;
   --surface: #1e293b;
   --surface-hover: #334155;
@@ -579,3 +580,65 @@ table.cheat-table th {
   font-size: 0.93rem;
   color: #f1f5f9;
 }
+
+/* Reading and review controls */
+button, input, summary { font: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.btn, .chip, .level-chip, .step-pill, summary { min-height: 44px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn:disabled:hover { background: var(--bg); border-color: var(--border); }
+.study-settings summary { cursor: pointer; display: list-item; padding: 8px 0; }
+.study-settings .filter-row { margin: 12px 0; }
+.search-input { font-size: 1rem; max-width: 100%; min-height: 44px; }
+.recall-prompt { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
+.storage-notice { padding: 12px; border: 1px solid var(--amber); border-radius: 8px; margin-bottom: 12px; }
+.flashcard-stage { scroll-margin-top: 140px; }
+.answer-box { scroll-margin-top: 140px; }
+.flashcard-stage > div, .sim-grid > *, .accordion-header > * { min-width: 0; }
+.question-title, .question-ru, .answer-box, .accordion-body, .sim-card { overflow-wrap: anywhere; }
+pre.code-block { max-width: 100%; overflow-wrap: normal; }
+.accordion-header { width: 100%; border: 0; background: transparent; color: var(--text); text-align: left; flex-wrap: wrap; }
+.accordion-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.sim-grid { grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+.reg-row { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  header { position: static; padding: 10px 12px; }
+  .header-inner { gap: 8px; }
+  .brand { font-size: 0.95rem; gap: 8px; }
+  .brand-badge { white-space: nowrap; }
+  .nav-tabs { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding: 4px 2px; }
+  .tab-btn { flex: 0 0 auto; white-space: nowrap; }
+  .container { margin: 12px auto; padding: 0 12px; }
+  .toolbar { padding: 12px; margin-bottom: 12px; gap: 4px; }
+  .progress-row { gap: 8px; }
+  .progress-bar-wrap { min-width: 80px; }
+  .progress-row > div:first-child { width: 100%; }
+  .search-input { width: 100%; min-width: 0; }
+  .flashcard-stage { padding: 16px; min-height: 0; scroll-margin-top: 12px; }
+  .answer-box { scroll-margin-top: 12px; }
+  .card-meta { gap: 6px; margin-bottom: 12px; }
+  .question-title { font-size: 1.15rem; }
+  .card-controls { position: sticky; bottom: 0; background: var(--surface); margin: 16px -4px -4px; padding: 12px 4px max(12px, env(safe-area-inset-bottom, 0px)); gap: 8px; }
+  .card-controls .btn { justify-content: center; padding: 9px 7px; font-size: 0.82rem; min-width: 0; overflow-wrap: anywhere; }
+  .card-navigation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); width: 100%; }
+  .card-grades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .kbd-hint { display: none; }
+  .short-answer, .practical-box { padding: 12px; }
+  .sim-card { padding: 16px; }
+  .accordion-header { padding: 12px; }
+  .accordion-body { padding-left: 12px; padding-right: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+
+.translated-answer { margin: 12px 0 16px; }
+.translated-answer summary { cursor: pointer; padding: 8px 0; color: var(--accent); }
+.translated-answer p { margin-top: 8px; }
+.content-references { margin: 16px 0; color: var(--muted); font-size: 0.9rem; }
+.content-references ul { margin-left: 20px; }
+.content-references a { color: var(--accent); text-underline-offset: 3px; }
