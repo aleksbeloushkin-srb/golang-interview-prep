@@ -447,6 +447,11 @@ function syncDynamicCounters() {
     tabSims.textContent = `2. Диаграммы (${SIMULATORS.length})`;
   }
 
+  const tabQuiz = document.querySelector('.tab-btn[data-route="quiz"]');
+  if (tabQuiz && typeof QUIZ_QUESTIONS !== "undefined") {
+    tabQuiz.textContent = `5. 🧠 Code Traps Quiz (${QUIZ_QUESTIONS.length})`;
+  }
+
   const btnAllMod = document.querySelector('#module-filter-row .chip[data-filter="all"]');
   if (btnAllMod) btnAllMod.textContent = `Все (${total})`;
 
