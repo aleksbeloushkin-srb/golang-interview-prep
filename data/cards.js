@@ -648,5 +648,257 @@ func writePointer(slot *unsafe.Pointer, ptr unsafe.Pointer) {
     }
     *slot = ptr
 }`
+  },
+// ==========================================
+  // МОДУЛЬ 5: МАПЫ (SWISSTABLES), ИНТЕРФЕЙСЫ, DEFER И GO 1.24–1.25+ (Q29 - Q38)
+  // ==========================================
+  {
+    id: "c29",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "base",
+    levelLabel: "🟢 Base (Entry/Mid)",
+    simId: null,
+    qEN: "Q29: How are slices and strings represented in memory, and how does slice growth (runtime.growslice) work?",
+    qRU: "Как в памяти устроены срезы (slice) и строки (string), и по какой формуле растёт capacity при append (runtime.growslice)?",
+    shortEN: "A string is an immutable 16-byte header (pointer + len), while a slice is a 24-byte header (pointer to backing array + len + cap). When append() exceeds capacity, runtime.growslice allocates a new array: doubling (2x) for small slices (< 256 elements) and transitioning smoothly to ~1.25x + 192 for larger slices, rounded up to the nearest allocator size class.",
+    detailsEN: [
+      "Header Layout (64-bit): 'runtime.stringStruct' = {str unsafe.Pointer, len int} (16 bytes). 'runtime.slice' = {array unsafe.Pointer, len int, cap int} (24 bytes).",
+      "Smooth Growth Formula (Go 1.18+): If oldCap < 256, newCap = 2 * oldCap. If oldCap >= 256, it grows in a loop: 'newCap += (newCap + 3*256) / 4' (approaching 1.25x growth with a smooth transition).",
+      "Size-Class Rounding (roundupsize): After computing newCap, 'growslice' asks the memory allocator for the exact 'mspan' size class (e.g., 32, 48, 64, 80 bytes) and sets the final cap to fill the entire span so zero bytes are wasted!"
+    ],
+    practicalRU: "Почему `s := []int{1, 2}; s = append(s, 3, 4, 5)` даёт `cap(s) == 6`, а не `4` или `8`? Потому что 5 элементов по 8 байт требуют 40 байт, а ближайший класс размера в аллокаторе Go (`mspan`) — 48 байт (`48 / 8 = 6` элементов)! А для экстремальной оптимизации конвертации `string <-> []byte` без аллокаций в горячих путях используют `unsafe.String(unsafe.SliceData(b), len(b))`.",
+    code: `// src/runtime/slice.go — nextslicecap growth formula (Go 1.18+):
+func nextslicecap(newLen, oldCap int) int {
+    newcap := oldCap
+    doublecap := newcap + newcap
+    if newLen > doublecap { return newLen }
+    const threshold = 256
+    if oldCap < threshold { return doublecap }
+    for {
+        newcap += (newcap + 3*threshold) >> 2 // ~1.25x smooth growth
+        if uint(newcap) >= uint(newLen) { break }
+    }
+    return newcap
+}`
+  },
+  {
+    id: "c30",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "senior",
+    levelLabel: "🟡 Senior (Runtime)",
+    simId: "sim7",
+    qEN: "Q30: How did the classic Go map (hmap / bmap before Go 1.24) work under the hood, and how did incremental evacuation work?",
+    qRU: "Как была устроена классическая мапа в Go (hmap / bmap до Go 1.24), зачем был массив tophash[8] и как работала инкрементальная эвакуация?",
+    shortEN: "Classic Go maps used a header struct ('runtime.hmap') pointing to an array of $2^B$ buckets ('bmap'). Each bucket held up to 8 key-value pairs, prefixed by an 8-byte 'tophash' array storing the top 8 bits of each key's hash. When load factor exceeded 6.5 (or too many overflow buckets accumulated), Go allocated a 2x bucket array and evacuated 1–2 old buckets incrementally on every write or delete.",
+    detailsEN: [
+      "Bucket Layout (bmap): 8 'tophash' bytes, followed by 8 keys packed together, then 8 values packed together (to eliminate struct alignment padding!), and an 'overflow' pointer.",
+      "Hash Split: Low B bits select the bucket index; top 8 bits are compared against 'tophash[0..7]' before doing expensive key equality checks.",
+      "2 Triggers for Growth: 1) Load factor > 6.5 elements/bucket -> doubles bucket count ($B+1$); 2) Too many overflow buckets (from mass additions + deletions) with load factor <= 6.5 -> Same-Size Grow to compact overflow chains.",
+      "Incremental Evacuation: To avoid latency spikes on huge maps, Go never rehashes the whole map at once. Instead, 'oldbuckets' keeps the old array, and every 'mapassign'/'mapdelete' evacuates up to 2 buckets into X/Y split targets until finished."
+    ],
+    practicalRU: "Классический вопрос на собеседовании: почему нельзя взять адрес элемента мапы (`p := &m[\"key\"]` — ошибка компиляции)? Потому что при следующей записи в мапу может начаться инкрементальная эвакуация бакета (или сплит группы в SwissTable), ключ с значением физически переедут в новый блок памяти, и указатель `p` превратился бы в висячую ссылку (dangling pointer)!",
+    code: `// Classic bmap memory layout (keys and values grouped to avoid padding):
+// +-------------------+-------------------+---------------------+----------+
+// | tophash [8]uint8  | keys [8]KeyType   | values [8]ValueType | overflow |
+// +-------------------+-------------------+---------------------+----------+`
+  },
+  {
+    id: "c31",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "deep",
+    levelLabel: "🔴 Deep Dive + Prod Cases",
+    simId: "sim7",
+    qEN: "Q31: How do SwissTable maps work in Go 1.24+ under the hood (ctrl metadata bytes, H1/H2 hash split, SIMD/SWAR probing, and Split-Table growth)?",
+    qRU: "Как устроены новые мапы на базе SwissTables в Go 1.24+ (управляющее 64-битное слово ctrl, H1/H2 хеш, побитовый поиск за 1 такт и разбиение таблиц)?",
+    shortEN: "Starting in Go 1.24, the built-in map was replaced by a SwissTable implementation featuring open addressing, 8-slot groups with a 64-bit control word ('ctrl'), SIMD/SWAR bitmask probing (checking all 8 slots in parallel without branches), and Extendible Hashing (splitting large maps into independent 1024-entry sub-tables so growth never rehashes the entire map at once).",
+    detailsEN: [
+      "57/7 Hash Split (H1 & H2): The 64-bit hash is split into H1 (top 57 bits — selects the table and starting group) and H2 (bottom 7 bits — stored inside the control byte as a fingerprint).",
+      "Group & 64-bit Control Word (ctrl): Each group holds 8 key-value slots and one 8-byte 'ctrl' metadata word (1 byte per slot: '0b10000000' = Empty, '0b11111110' = Deleted/Tombstone, or '0b0xxxxxxx' = 7-bit H2 hash). No overflow pointer chains!",
+      "SWAR / SIMD Parallel Lookup: To find a key, Go broadcasts its 7-bit H2 across a 64-bit word and compares it against all 8 'ctrl' bytes in a SINGLE bitwise operation (or SIMD instruction), yielding a bitmask of matching slots.",
+      "Extendible Hashing (Directory of Tables): To preserve O(1) worst-case insertion latency without stop-the-world rehashing, a large SwissMap uses a top-level directory pointing to independent sub-tables (each capped at 1024 slots). When one sub-table hits 7/8 (87.5%) load factor, ONLY that single 1024-slot table splits into two!"
+    ],
+    practicalRU: "В продакшене переход на SwissTables в Go 1.24–1.25+ даёт ускорение операций с `map` до **30–60%** и экономит память за счёт более высокого максимального заполнения (**87.5% = 7/8** против ~81% = 6.5/8 у старой мапы) и полного отказа от аллокаций отдельных `overflow`-бакетов.",
+    code: `// SwissTable Group in Go 1.24+ (internal/runtime/maps):
+type group struct {
+    ctrl uint64     // 8 control bytes: [Empty(0x80) | Deleted(0xFE) | 0b0 + 7-bit H2]
+    slots [8]slot   // 8 {key, elem} pairs contiguous in a single CPU cache line!
+}
+// Parallel lookup matches all 8 slots in 1 register operation without a loop!`
+  },
+  {
+    id: "c32",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "base",
+    levelLabel: "🟢 Base (Entry/Mid)",
+    simId: "sim7",
+    qEN: "Q32: Why does deleting keys from a Go map NOT free memory (Map Memory Leak), and why is map iteration order randomized?",
+    qRU: "Почему удаление всех ключей через delete(m, k) или clear(m) НЕ уменьшает память мапы в куче, и почему порядок обхода range по мапе случайный?",
+    shortEN: "Deleting keys from a map marks slots as empty/tombstones (so they can be reused by future inserts), but never shrinks the allocated bucket/group array in the heap. To actually release memory back to the GC after a spike, you must copy remaining keys into a new map or replace the map reference. Map iteration starts at a random offset to prevent developers from relying on hash order.",
+    detailsEN: [
+      "The Peak-Map Memory Leak: If a global cache map grows to 5 million entries (consuming ~300 MB) and you later call 'delete(m, k)' on all 5 million keys (or 'clear(m)'), 'len(m)' becomes 0, but the underlying 300 MB table array remains allocated forever!",
+      "Tombstones in SwissTables: In Go 1.24+, deleting a key from a group that was once full leaves a 'Deleted (0xFE)' tombstone so linear probing chains aren't broken; tombstones are only cleared on rehash/split.",
+      "Randomized Iteration: 'mapiterinit' uses 'cheaprandn()' to pick a random starting table/bucket and a random slot offset so code never depends on hash function internals."
+    ],
+    practicalRU: "Реальный продакшен-инцидент: сервис хранит активные сессии в `var sessions = make(map[string]Session)`. Во время ночной DDoS-атаки в мапу набилось 10 млн сессий (2 ГБ RAM). Утром сессии протухли и были удалены через `delete(sessions, id)` — в метриках `len(sessions) == 100`, но процесс продолжает жрать 2 ГБ RAM! Лечится периодическим пересозданием: раз в час создавать `newMap := make(map[string]Session, len(oldMap))`, копировать живые ключи и подменять ссылку.",
+    code: `// Reclaiming heap memory from a shrunken map in production:
+func compactMap[K comparable, V any](old map[K]V) map[K]V {
+    fresh := make(map[K]V, len(old))
+    for k, v := range old {
+        fresh[k] = v
+    }
+    return fresh // old huge bucket array can now be collected by GC!
+}`
+  },
+  {
+    id: "c33",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "senior",
+    levelLabel: "🟡 Senior (Runtime)",
+    simId: null,
+    qEN: "Q33: How do empty interfaces (eface / any) and non-empty interfaces (iface) work under the hood (itab caching & dynamic dispatch)?",
+    qRU: "Чем внутри рантайма различаются пустой интерфейс (eface / any) и интерфейс с методами (iface), и как работает кэш таблиц методов itab?",
+    shortEN: "Both interface types are 16-byte (2-word) structs on 64-bit systems. An empty interface ('runtime.eface' / 'any') stores a direct type metadata pointer ('*_type') and a 'data' pointer. A non-empty interface ('runtime.iface') stores an '*itab' pointer (which pairs the interface type, concrete type, and a virtual function table 'fun') and a 'data' pointer.",
+    detailsEN: [
+      "eface (interface{} / any): '{_type *abi.Type, data unsafe.Pointer}'. Used when there are no methods.",
+      "iface (interface with methods): '{tab *itab, data unsafe.Pointer}'. The 'itab' struct is 32+ bytes and ends with a variable-length array 'fun [1]uintptr' holding function pointers for every method of the interface, sorted alphabetically.",
+      "Global itab Hash Table: Computing whether a concrete type implements an interface takes O(M + N) comparisons of sorted method lists, so Go caches computed '*itab' structs in a global lock-free hash table ('itabTable').",
+      "Zero-Allocation Optimization: Assigning small integers (0..255 via 'staticuint64s'), booleans, empty strings, or already-pointer types into an interface does NOT allocate on the heap!"
+    ],
+    practicalRU: "Почему вызов метода через интерфейс (`reader.Read(p)`) медленнее прямого вызова метода структуры? Во-первых, это косвенный переход по адресу из памяти `CALL 24(AX)` (`itab.fun[0]`), но главное — компилятор часто не может заинлайнить вызов через интерфейс, а без инлайнинга буфер `p` не проходит Escape Analysis и убегает в кучу (если только не сработает PGO — Profile-Guided Optimization, девиртуализирующий горячий интерфейс).",
+    code: `// src/runtime/runtime2.go — 16-byte interface headers:
+type eface struct { // empty interface: any / interface{}
+    _type *_type
+    data  unsafe.Pointer
+}
+type iface struct { // interface with methods: io.Reader, error
+    tab  *itab          // caches concrete type + method pointers fun[0..N]
+    data unsafe.Pointer
+}`
+  },
+  {
+    id: "c34",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "base",
+    levelLabel: "🟢 Base (Entry/Mid)",
+    simId: null,
+    qEN: "Q34: Value Receiver vs. Pointer Receiver — why does a pointer type (*T) implement an interface with value receivers, but a value type (T) does NOT implement an interface with pointer receivers?",
+    qRU: "Таблица ресиверов (Value vs. Pointer Receiver): почему указатель *T реализует интерфейс с value-методами, но значение T НЕ реализует интерфейс с pointer-методами?",
+    shortEN: "The method set of a value type 'T' includes ONLY methods declared with a value receiver '(t T)', whereas the method set of a pointer type '*T' includes BOTH '(t T)' and '(t *T)' methods. A value stored inside an interface is not addressable, and copying it would silently discard any mutations made by a pointer receiver.",
+    detailsEN: [
+      "The Method Set Matrix: Value 'T' -> only '(T)' methods. Pointer '*T' -> both '(T)' and '(*T)' methods.",
+      "Why Normal Calls Work ('u.SetName()' on value 'u'): If 'u' is a local variable on the stack, it is addressable, so the compiler automatically rewrites 'u.SetName()' as '(&u).SetName()' as syntactic sugar.",
+      "Why Interface Assignment Fails ('var s Setter = u'): Values packed inside an interface ('iface.data') are treated as non-addressable copies. If Go allowed calling a pointer method on an interface holding a value 'T', the method would mutate a temporary copy and lose all changes!"
+    ],
+    practicalRU: "Смежная ловушка с мапами: `m := map[int]User{1: {Name: \"Alex\"}}`. Попытка вызвать pointer-метод `m[1].SetName(\"Bob\")` или изменить поле `m[1].Name = \"Bob\"` не скомпилируется (`cannot call pointer method on m[1]`), потому что элементы мапы неадресуемы из-за переездов бакетов!",
+    code: `type Speaker interface { Speak() }
+type Dog struct{}
+func (d *Dog) Speak() {} // Pointer receiver!
+
+// var s Speaker = Dog{}  // ❌ COMPILE ERROR: Dog does not implement Speaker (Speak has pointer receiver)
+var s Speaker = &Dog{}    // ✅ OK: *Dog method set includes both (Dog) and (*Dog)`
+  },
+  {
+    id: "c35",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "senior",
+    levelLabel: "🟡 Senior (Runtime)",
+    simId: null,
+    qEN: "Q35: How do defer, panic, and recover work under the hood (Open-Coded Defers, g._defer, and gopanic stack unwinding)?",
+    qRU: "Как работают defer, panic и recover под капотом (Open-Coded Defers через битовую маску, список g._defer и раскрутка стека в gopanic)?",
+    shortEN: "Modern Go (1.14+) compiles most 'defer' statements into zero-allocation Open-Coded Defers: the compiler stores deferred closures in local stack variables, sets a 1-bit flag in a stack bitmask ('deferBits') when each defer is reached, and emits inline calls right before 'RET'. Only defers inside loops fall back to linked-list nodes on 'g._defer'.",
+    detailsEN: [
+      "3 Strategies for defer: 1) Open-Coded Defer (default if <= 8 defers and not in a loop): ~1 ns overhead, inlined directly into function epilogue via a 'deferBits' byte on the stack; 2) Stack-allocated '_defer' (if > 8 defers); 3) Heap-allocated '_defer' (ONLY if 'defer' is placed inside a 'for' loop!).",
+      "Argument Evaluation Rule: Function arguments to 'defer fn(x)' are evaluated EAGERLY at the moment the 'defer' statement is registered, NOT when the surrounding function returns!",
+      "How panic & recover Work: 'gopanic' walks the current goroutine's 'g._defer' chain (and scans stack frames for open-coded defers). If a deferred function calls 'gorecover()', it sets 'p.recovered = true' and uses 'mcall(recovery)' -> 'gogo' to jump RSP/RIP back to the normal return path of the recovering function!"
+    ],
+    practicalRU: "В продакшене `defer mu.Unlock()` на горячем пути стоит практически 0 наносекунд благодаря Open-Coded Defers. Но если написать `for _, file := range files { f, _ := os.Open(file); defer f.Close() }` — компилятор отключит Open-Coded Defer, аллоцирует тысячи структур `_defer` в куче и не закроет ни один файловый дескриптор до конца всей функции, вызвав `too many open files`!",
+    code: `// How the compiler transforms Open-Coded Defer (zero allocations, ~1ns):
+// defer mu.Unlock() compiles into:
+//   deferBits |= 1 << 0        // set bit 0 on stack
+//   ... function body ...
+//   if deferBits & (1<<0) != 0 {
+//       deferBits &^= 1 << 0
+//       mu.Unlock()            // direct call in epilogue before RET!
+//   }`
+  },
+  {
+    id: "c36",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "senior",
+    levelLabel: "🟡 Senior (Runtime)",
+    simId: null,
+    qEN: "Q36: What are weak.Pointer, unique.Make, and runtime.AddCleanup in Go 1.24–1.25+, and why did AddCleanup replace runtime.SetFinalizer?",
+    qRU: "Как работают новые пакеты weak.Pointer, unique.Make и runtime.AddCleanup в Go 1.24–1.25+, и почему старый runtime.SetFinalizer считается устаревшим?",
+    shortEN: "Go 1.24+ introduced 'weak.Pointer[T]' (8-byte indirection blocks that automatically return nil once the target object is collected without preventing GC), 'unique.Make[T]' (global concurrent string/value interning for O(1) pointer comparison), and 'runtime.AddCleanup' (which fixes SetFinalizer's memory leaks on cyclic graphs and doesn't resurrect objects for a second GC cycle).",
+    detailsEN: [
+      "weak.Pointer[T]: Points to a tiny 8-byte indirection word in the runtime rather than the object directly. When GC sweeps the object, it atomically zeroes the indirection word so all copies of the weak pointer yield 'nil' on '.Value()' simultaneously.",
+      "unique.Make[T] (Canonicalization): Interns comparable values in a global concurrent SwissMap backed by weak pointers + cleanup hooks. Comparing two 'unique.Handle[string]' values compares a single pointer in O(1) time instead of byte-by-byte string comparison.",
+      "Why runtime.AddCleanup Beats SetFinalizer: 1) 'SetFinalizer' resurrects the object for an extra full GC cycle; 'AddCleanup' frees the object immediately and passes a separate 'arg' value to the cleanup callback; 2) 'SetFinalizer' permanently leaks cyclic references; 'AddCleanup' handles cycles safely; 3) Multiple cleanups can be attached to the same pointer."
+    ],
+    practicalRU: "В продакшене комбинация `weak.Pointer[T]` + `runtime.AddCleanup` впервые позволяет писать в Go самоочищающиеся in-memory кеши (Memory-Sensitive Caches) и пулы соединений: как только начинается нехватка памяти и срабатывает GC, неиспользуемые элементы кеша автоматически собираются сборщиком мусора, а `AddCleanup` сам удаляет пустые ключи из мапы!",
+    code: `// Modern Go 1.24–1.25+ resource cleanup & weak pointer usage:
+wp := weak.Make(heavyObj) // does NOT prevent GC from collecting heavyObj!
+
+runtime.AddCleanup(heavyObj, func(fd int) {
+    syscall.Close(fd)     // runs after heavyObj is collected; never resurrects heavyObj!
+}, heavyObj.fileDescriptor)`
+  },
+  {
+    id: "c37",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "deep",
+    levelLabel: "🔴 Deep Dive + Prod Cases",
+    simId: "sim1",
+    qEN: "Q37: How do Go 1.23–1.25+ iterators (iter.Seq, iter.Pull) and internal runtime coroutines (runtime.newcoro / coroswitch) work under the hood?",
+    qRU: "Как устроены итераторы в Go (iter.Seq / iter.Pull) и как работают внутренние корутины рантайма (runtime.newcoro / coroswitch) в обход очередей планировщика?",
+    shortEN: "Push iterators ('iter.Seq[V]') are zero-allocation higher-order functions 'func(yield func(V) bool)' where the loop body is compiled into a 'yield' closure. Pull iterators ('iter.Pull') invert control using a dedicated runtime primitive — internal coroutines ('runtime.coro') — which perform direct 1-to-1 context switches ('coroswitch') between two goroutines on the same OS thread M, completely bypassing the P run queues!",
+    detailsEN: [
+      "Push Iterator (iter.Seq): 'for v := range mySeq' compiles the loop body into a 'yield(v) bool' function. Returning 'false' from 'yield' corresponds to 'break'.",
+      "The Problem with Pull Iterators (iter.Pull): If 'next()' used standard channels between two goroutines, every iteration would go through 'hchan.lock' -> 'goready' -> 'P.runnext' -> 'schedule()', costing ~150–300 ns per element.",
+      "Direct Coroutine Handoff (runtime.coroswitch): To make 'iter.Pull' fast, the Go runtime introduced 'runtime.coro' (a locked goroutine pair in status '_Gwaiting'). Calling 'coroswitch' on thread M swaps '_Grunning' directly from caller G1 to iterator G2 on the exact same M and P via 'gogo' in ~25 ns without touching 'LRQ', 'runnext', or 'schedule()'!"
+    ],
+    practicalRU: "Знание разницы между `iter.Seq` (Push) и `iter.Pull` (Pull) критично на код-ревью: обычный `for x := range SliceBackward(s)` через `iter.Seq` инлайнится компилятором и работает со скоростью обычного цикла `for` (0 аллокаций). А вот `next, stop := iter.Pull(seq)` аллоцирует в куче отдельную корутину со стеком 2 КБ и требует обязательного `defer stop()`, иначе корутина утечёт!",
+    code: `// Push iterator (iter.Seq) — 0 allocations, inlined by compiler:
+func Backward[E any](s []E) iter.Seq[E] {
+    return func(yield func(E) bool) {
+        for i := len(s) - 1; i >= 0; i-- {
+            if !yield(s[i]) { return } // false means caller executed 'break'
+        }
+    }
+}`
+  },
+  {
+    id: "c38",
+    mod: "m5",
+    modName: "5. Maps, Interfaces & Go 1.25+",
+    level: "senior",
+    levelLabel: "🟡 Senior (Runtime)",
+    simId: "sim2",
+    qEN: "Q38: What changed in Go 1.25+ regarding container-aware GOMAXPROCS (cgroups v1/v2), synctest, and runtime flight recording?",
+    qRU: "Что нового появилось в рантайме Go 1.25+ (нативный учёт лимитов контейнера cgroups для GOMAXPROCS, пакет testing/synctest и Flight Recorder)?",
+    shortEN: "Go 1.25+ natively makes GOMAXPROCS container-aware by reading Linux cgroup v1/v2 CPU bandwidth quotas (cpu.max) at startup and dynamically adjusting P count if container limits change at runtime. It also introduces 'testing/synctest' (isolated concurrency bubbles with fake virtualized clocks) and 'runtime/trace.FlightRecorder' for low-overhead ring-buffer tracing in production.",
+    detailsEN: [
+      "Container-Aware GOMAXPROCS (Go 1.25+): Previously, 'runtime.NumCPU()' read host core count, forcing everyone in Kubernetes to import 'uber-go/automaxprocs'. Go 1.25+ inspects '/sys/fs/cgroup/cpu.max' directly and periodically updates GOMAXPROCS if K8s Vertical Pod Autoscaler changes CPU limits live.",
+      "testing/synctest (Virtual Time Bubbles): Runs concurrent test code inside an isolated 'bubble'. Once all goroutines inside the bubble are durably blocked (on channels, mutexes, or 'time.Sleep'), the runtime automatically advances the virtual clock to the next timer in 0 nanoseconds — making 10-second timeout tests finish in microseconds with zero flakiness!",
+      "trace.FlightRecorder: Continuously records the last N seconds/megabytes of execution traces in a ring buffer in RAM (~1% CPU overhead) so you can dump a full 'go tool trace' snapshot ONLY when an HTTP request exceeds your p99 SLA."
+    ],
+    practicalRU: "`trace.FlightRecorder` — настоящая киллер-фича для отладки редких фризов в продакшене: раньше нельзя было держать `runtime/trace` включённым постоянно из-за гигабайтов данных. Теперь сервис держит в памяти кольцевой буфер последних 5 секунд трейса и сбрасывает его на диск ТОЛЬКО в тот момент, когда конкретный запрос в middleware превысил 500 мс!",
+    code: `// Go 1.25+ FlightRecorder: dump runtime trace ONLY when a request is slow!
+fr := trace.NewFlightRecorder(trace.FlightRecorderConfig{MinAge: 5 * time.Second})
+fr.Start()
+
+if time.Since(start) > 500*time.Millisecond {
+    f, _ := os.Create("slow_spike.trace")
+    fr.WriteTo(f) // dumps the exact last 5 seconds of GMP/GC/Syscall activity!
+}`
   }
 ];
