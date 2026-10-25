@@ -15,7 +15,7 @@
         <span>Go Runtime Interview Wiki</span>
       </a>
       <nav class="nav-tabs">
-        <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки (14)</a>
+        <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки (28)</a>
         <a href="#/simulators" class="tab-btn" data-route="simulators">2. Диаграммы (3)</a>
         <a href="#/wiki" class="tab-btn" data-route="wiki">3. База знаний (Wiki)</a>
         <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">4. Шпаргалка (Таблица)</a>
@@ -31,29 +31,44 @@
         <div class="progress-row">
           <div>
             <strong>Прогресс заучивания:</strong>
-            <span id="progress-text" class="accent-text">0 / 14 изучено</span>
+            <span id="progress-text" class="accent-text">0 / 28 изучено</span>
           </div>
           <div class="progress-bar-wrap">
             <div id="progress-fill" class="progress-bar-fill"></div>
           </div>
           <button class="btn btn-sm" onclick="resetProgress()">Сбросить прогресс</button>
         </div>
+
+        <!-- Фильтр по модулям -->
         <div class="filter-row">
-          <button class="chip active" data-filter="all" onclick="setFilter('all')">Все (14)</button>
-          <button class="chip" data-filter="m1" onclick="setFilter('m1')">1. Горутины и Стек (4)</button>
-          <button class="chip" data-filter="m2" onclick="setFilter('m2')">2. Планировщик GMP (4)</button>
-          <button class="chip" data-filter="m3" onclick="setFilter('m3')">3. Каналы, Select и CAS (4)</button>
-          <button class="chip" data-filter="m4" onclick="setFilter('m4')">4. Escape Analysis и GC (2)</button>
-          <button class="chip" data-filter="review" onclick="setFilter('review')">На повторение</button>
-          <input type="text" id="search-input" class="search-input" placeholder="Поиск (gogo, sudog, CAS...)" oninput="onSearchInput()" />
+          <span class="filter-label">Модуль:</span>
+          <button class="chip active" data-filter="all" onclick="setFilter('all')">Все (28)</button>
+          <button class="chip" data-filter="m1" onclick="setFilter('m1')">1. Горутины и Стек (6)</button>
+          <button class="chip" data-filter="m2" onclick="setFilter('m2')">2. Планировщик GMP (6)</button>
+          <button class="chip" data-filter="m3" onclick="setFilter('m3')">3. Каналы, Select и Sync (10)</button>
+          <button class="chip" data-filter="m4" onclick="setFilter('m4')">4. Память и GC (6)</button>
+          <button class="chip" data-filter="review" onclick="setFilter('review')">⭐ На повторение</button>
+        </div>
+
+        <!-- Фильтр по уровню сложности + Поиск -->
+        <div class="filter-row">
+          <span class="filter-label">Уровень:</span>
+          <button class="level-chip active" data-level="all" onclick="setLevel('all')">Все уровни</button>
+          <button class="level-chip" data-level="base" onclick="setLevel('base')">🟢 Base (Entry/Mid)</button>
+          <button class="level-chip" data-level="senior" onclick="setLevel('senior')">🟡 Senior (Runtime)</button>
+          <button class="level-chip" data-level="deep" onclick="setLevel('deep')">🔴 Deep Dive + Prod Cases</button>
+          <input type="text" id="search-input" class="search-input" placeholder="Поиск (pprof, gogo, sudog, mutex...)" oninput="onSearchInput()" />
         </div>
       </div>
 
       <div class="flashcard-stage" id="card-stage">
         <div>
           <div class="card-meta">
-            <span class="module-tag" id="card-module">MODULE</span>
-            <span id="card-counter" class="muted-text">Карточка 1 из 14</span>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span class="module-tag" id="card-module">MODULE</span>
+              <span class="level-badge" id="card-level">LEVEL</span>
+            </div>
+            <span id="card-counter" class="muted-text">Карточка 1 из 28</span>
             <span class="status-pill status-unseen" id="card-status">Новая</span>
           </div>
           <div class="question-title" id="card-q-en">Загрузка...</div>
@@ -61,11 +76,18 @@
 
           <div class="answer-box" id="card-answer-box">
             <div class="short-answer">
-              <strong>Short Interview Answer (EN):</strong>
+              <strong>1. Base Interview Answer (EN — чётко и кратко):</strong>
               <div id="card-short-en" style="margin-top: 4px;"></div>
             </div>
-            <strong>Key Details to Mention:</strong>
+
+            <strong>2. Key Technical Details & Under the Hood (EN):</strong>
             <ul class="details-list" id="card-details-en"></ul>
+
+            <div class="practical-box" id="card-practical-wrap">
+              <strong>🛠️ 3. Как это помогает на практике в продакшене (Production Debugging):</strong>
+              <div id="card-practical-ru" style="margin-top: 6px;"></div>
+            </div>
+
             <pre class="code-block" id="card-code"></pre>
             <div id="card-sim-link" style="margin-top: 14px;"></div>
           </div>
@@ -90,14 +112,13 @@
 
     <!-- РАЗДЕЛ 2: ИНТЕРАКТИВНЫЕ СИМУЛЯТОРЫ ДИАГРАММ -->
     <section id="view-simulators" class="route-view hidden">
-      <!-- Симулятор 1 -->
       <div class="sim-card" id="sim1">
         <div class="sim-header">
           <div>
             <h3>Диаграмма 1: От <code>go fn()</code> до регистров CPU (<code>newproc</code> → <code>P.runnext</code> → <code>runtime.gogo</code>)</h3>
             <p class="muted-text">Как создаётся горутина на стеке <code>g0</code>, работает LIFO-слот <code>runnext</code> и подменяются регистры <code>R14</code>, <code>RSP</code> и <code>RIP</code>.</p>
           </div>
-          <a href="#/cards/c4" class="btn btn-sm">Карточка Q4 →</a>
+          <a href="#/cards/c6" class="btn btn-sm">Карточка Q6 →</a>
         </div>
         <div class="sim-steps" id="sim1-steps"></div>
         <div id="sim1-desc" class="short-answer"></div>
@@ -123,14 +144,13 @@
         </div>
       </div>
 
-      <!-- Симулятор 2 -->
       <div class="sim-card" id="sim2">
         <div class="sim-header">
           <div>
             <h3>Диаграмма 2: Каналы (<code>hchan</code>), парковка <code>sudog</code>, <code>sendDirect</code> и гонка <code>selectDone</code></h3>
             <p class="muted-text">Безопасное отпускание лока на <code>g0</code>, прямое копирование из стека в стек и защита от гонки в <code>selectgo</code>.</p>
           </div>
-          <a href="#/cards/c10" class="btn btn-sm">Карточка Q10 →</a>
+          <a href="#/cards/c17" class="btn btn-sm">Карточка Q17 →</a>
         </div>
         <div class="sim-steps" id="sim2-steps"></div>
         <div id="sim2-desc" class="short-answer"></div>
@@ -156,14 +176,13 @@
         </div>
       </div>
 
-      <!-- Симулятор 3 -->
       <div class="sim-card" id="sim3">
         <div class="sim-header">
           <div>
             <h3>Диаграмма 3: Escape Analysis и Трёхцветный сборщик мусора (Tri-Color GC + Write Barrier)</h3>
             <p class="muted-text">Окрашивание графа объектов по алгоритму Дейкстры (White → Grey → Black) и перехват записи указателей.</p>
           </div>
-          <a href="#/cards/c14" class="btn btn-sm">Карточка Q14 →</a>
+          <a href="#/cards/c28" class="btn btn-sm">Карточка Q28 →</a>
         </div>
         <div class="sim-steps" id="sim3-steps"></div>
         <div id="sim3-desc" class="short-answer"></div>
@@ -184,10 +203,10 @@
       </div>
     </section>
 
-    <!-- РАЗДЕЛ 3: БАЗА ЗНАНИЙ (ВСЕ 14 ВОПРОСОВ СПИСКОМ) -->
+    <!-- РАЗДЕЛ 3: БАЗА ЗНАНИЙ (ВСЕ 28 ВОПРОСОВ СПИСКОМ) -->
     <section id="view-wiki" class="route-view hidden">
       <div class="section-top">
-        <h2>Полная база знаний (Все 14 карточек Q&A на одной странице)</h2>
+        <h2>Полная база знаний (Все 28 карточек от Base до Deep Dive + Продакшен-кейсы)</h2>
         <div class="btn-group">
           <button class="btn btn-sm" onclick="toggleAllAccordions(true)">Развернуть все</button>
           <button class="btn btn-sm" onclick="toggleAllAccordions(false)">Свернуть все</button>
