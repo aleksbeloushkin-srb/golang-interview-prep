@@ -315,31 +315,46 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     speechEN: "The 'net/http' server automatically cancels 'r.Context()' the instant the 'ServeHTTP' handler returns. Because the handler exits immediately after spawning the goroutine, 'sendAuditToKafka' receives an already-canceled context. The idiomatic Go 1.21+ fix is 'context.WithoutCancel(r.Context())' wrapped with a dedicated 'context.WithTimeout'."
   },
   {
-    id: "q11",
-    title: "Задача 11: Ловушка time.After внутри высокочастотного цикла select",
-    ru: "Какую проблему с памятью и сборщиком мусора создаёт этот паттерн при потоке 50 000 сообщений в секунду?",
-    en: "What memory and GC issue does time.After cause inside a high-throughput select loop, and what changed in Go 1.23+?",
-    code: `func ConsumeStream(ch <-chan Message) {
-    for {
-        select {
-        case msg := <-ch:
-            handle(msg)
-        case <-time.After(time.Minute):
-            log.Warn("stream idle for 1 minute")
-        }
-    }
-}`,
-    options: [
-      "Функция time.After внутри select переводит текущий процессор P в статус _Psyscall на каждую итерации, порождая тысячи системных потоков ОС для ожидания аппаратного таймера",
-      "При каждом срабатывании ветки case msg := <-ch старый таймер автоматически переиспользуется рантаймом из локального пула P.timerPool без каких-либо аллокаций",
-      "На КАЖДОЙ итерации цикла вызов time.After(time.Minute) аллоцирует в куче новую структуру time.Timer и новый канал: до Go 1.23 они вообще не могли быть собраны GC до истечения полной минуты (вызывая OOM), а в Go 1.23+ собираются GC, но всё равно создают 50 000 мусорных аллокаций в секунду (фикс: time.NewTimer + timer.Reset)",
-      "Вызов time.After захватывает глобальный мьютекс всех таймеров рантайма sched.timerLock на всё время выполнения функции handle(msg), сериализуя работу всех ядер CPU",
-      "Через 61 итерацию цикла планировщик Go принудительно выберет ветку <-time.After(time.Minute) по правилу честности 61-го тика, даже если минута ещё не прошла",
-      "Компилятор Go распознаёт паттерн select с time.After и автоматически выносит инициализацию таймера за пределы цикла for на этапе оптимизации SSA"
+    "id": "q11",
+    "title": "Задача 11: Ожидание следующего сообщения",
+    "ru": "Go 1.25/1.26, go.mod ≥ 1.23, стандартная новая семантика таймеров. idle > 0, handle возвращается. Обязательно ли заменять time.After ради GC? Что измеряет этот таймаут и когда полезно переиспользование?",
+    "en": "With Go 1.25/1.26, go.mod ≥ 1.23 and the new timer semantics, must time.After be replaced for GC safety? Assume idle > 0 and handle returns. What does this timeout measure, and when is reuse useful?",
+    "code": "package example\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"time\"\n)\n\nvar ErrIdle = errors.New(\"idle timeout\")\n\nfunc Consume(ctx context.Context, in <-chan int, idle time.Duration, handle func(int)) error {\n\tfor {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tcase value, ok := <-in:\n\t\t\tif !ok {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\thandle(value)\n\t\tcase <-time.After(idle):\n\t\t\treturn ErrIdle\n\t\t}\n\t}\n}",
+    "options": [
+      "Всегда нужен NewTimer: даже в новой семантике недостижимый After удерживается до истечения срока.",
+      "Таймаут ограничивает время всей Consume: новое сообщение не начинает очередной интервал ожидания.",
+      "GC может собрать забытый таймер; переиспользование выбирают по измерениям. Это таймаут ожидания.",
+      "Каждый After создаёт горутину, поэтому достаточно добавить WaitGroup для освобождения таймеров.",
+      "Вызов After вычисляется лишь при выборе его ветки, поэтому частые сообщения не создают таймеры.",
+      "После закрытия in цикл всегда ждёт idle: чтение закрытого канала заблокировано до таймера."
     ],
-    correct: 2,
-    explanationRU: "Отличный маркер знания современных версий Go на собеседовании: на каждом круге цикла for аргументы веток case вычисляются заново, поэтому time.After создаёт в хипе новый таймер и канал. До Go 1.23 активный таймер хранился в куче таймеров процессора P (P.timers) и удерживал ссылку на канал до самого срабатывания (при 50k RPS за минуту накапливалось 3 миллиона живых таймеров -> OOM!). В Go 1.23+ сборщик мусора научили удалять недостижимые таймеры сразу, но 50 000 бесполезных аллокаций в секунду никуда не делись, поэтому в циклах всегда используют time.NewTimer + timer.Reset.",
-    speechEN: "Every loop iteration evaluates 'time.After(time.Minute)' anew, allocating a fresh 'time.Timer' and 'hchan' on the heap. Before Go 1.23, unstopped timers stayed referenced in the runtime's timer heap until they fired, causing catastrophic OOMs under high RPS. While Go 1.23+ allows GC to collect unreferenced timers early, it still creates massive allocation churn—so you should hoist 'time.NewTimer' outside the loop and call 'timer.Reset'."
+    "correct": 2,
+    "explanationRU": "Нет, ради сборки мусора обязательной замены больше нет: при новой семантике GC может собрать недостижимый таймер до срабатывания. Но time.After вычисляется при каждом входе в select и создаёт новый таймер; в горячем цикле стоимость проверяют benchmark/профилем. NewTimer с Reset может уменьшить выделения, а не исправить любую программу автоматически. Здесь таймаут отсчитывает очередное ожидание после предыдущего handle, а не срок всей функции и не время выполнения handle. Проверка ok завершает чтение закрытого входа; context позволяет прекратить ожидание, но не прерывает сам handle. Если готовы несколько веток, отмена не имеет автоматического приоритета. Ниже вариант с одним таймером: Reset после обработки начинает новый интервал. Для новой семантики перед Reset не нужно Stop/drain; defer Stop явно прекращает ненужное ожидание при выходе. До Go 1.23 или при asynctimerchan=1 действуют старые правила удержания и возможного старого значения в канале. Для самопроверки: как задать общий срок всей операции? Создать context с deadline вне цикла и передавать его также в отменяемую обработку.",
+    "speechEN": "No. With the new semantics, GC can reclaim an unreachable timer before it fires. Each select still evaluates time.After, so I would measure allocation costs before reusing a timer. This is a fresh wait timeout after each handler call, not an overall deadline or a limit on the handler itself. The code handles channel closure and cancellation while waiting. In the reusable version, Reset starts the next wait and cannot leave a stale value under the new semantics. Cancellation does not automatically win when another case is ready. An overall deadline belongs outside the loop and must also reach cancellable work.",
+    "correctedCode": "package example\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"time\"\n)\n\nvar ErrIdle = errors.New(\"idle timeout\")\n\nfunc Consume(ctx context.Context, in <-chan int, idle time.Duration, handle func(int)) error {\n\ttimer := time.NewTimer(idle)\n\tdefer timer.Stop()\n\tfor {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tcase value, ok := <-in:\n\t\t\tif !ok {\n\t\t\t\treturn nil\n\t\t\t}\n\t\t\thandle(value)\n\t\t\ttimer.Reset(idle)\n\t\tcase <-timer.C:\n\t\t\treturn ErrIdle\n\t\t}\n\t}\n}",
+    "versionNote": "Go 1.25 и 1.26 используют одинаковый описанный контракт: новая семантика по умолчанию при go ≥ 1.23 в модуле main; GODEBUG=asynctimerchan=1 возвращает старую, =0 включает новую. Пример с Reset рассчитан на новую. Для Go 1.17 нужны старые правила Stop/drain с учётом состояния и единственного получателя; слепое «если !Stop, то читать канал» может зависнуть после уже прочитанного значения. Это функции пакета; ctx, вход и handle передаёт вызывающий код. AfterFunc имеет другой контракт и здесь не рассматривается.",
+    "sources": [
+      {
+        "title": "time.After / NewTimer / Reset — Go 1.26.1",
+        "url": "https://pkg.go.dev/time@go1.26.1#After"
+      },
+      {
+        "title": "Go 1.23 timer changes: go.mod and GODEBUG",
+        "url": "https://go.dev/wiki/Go123Timer"
+      },
+      {
+        "title": "Specification: evaluation of select operands",
+        "url": "https://go.dev/ref/spec#Select_statements"
+      },
+      {
+        "title": "time: timer implementation — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/time/sleep.go"
+      }
+    ],
+    "cardIds": [
+      "c18",
+      "c27"
+    ]
   },
   {
     id: "q12",

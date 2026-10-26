@@ -1359,8 +1359,13 @@ const SIMULATORS = [
     id: "sim6",
     title: "Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)",
     subtitle: "Выделение памяти без локов из локального кеша P.mcache, классы scan vs noscan и 4 фазы трёхцветной разметки с Гибридным барьером записи.",
-    cardId: "c28",
-    cardLabel: "Карточка Q28 (GC & Write Barrier) →",
+    cardId: "c27",
+    cardLabel: "Карточка Q27 (GC, GOGC и мягкий лимит) →",
+    versionNote: "Учебная схема runtime Go 1.26.1. Цель кучи, порог запуска и мягкий бюджет памяти — разные величины; граф и цвета не являются трассой исполнения или обещанием длительности пауз.",
+    sources: [
+      { title: "GC guide", url: "https://go.dev/doc/gc-guide" },
+      { title: "GC pacer — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcpacer.go" }
+    ],
     steps: [
       {
         title: "1. Escape Analysis и Lock-Free аллокация через P.mcache",
@@ -1385,8 +1390,8 @@ const SIMULATORS = [
           {
             title: "Старт цикла GC: Mark Setup (STW #1)",
             rows: [
-              { k: "Триггер запуска:", v: "Куча удвоилась (GOGC=100) или GOMEMLIMIT", hl: false },
-              { k: "Пауза STW #1 (~20 мкс):", v: "Включается Hybrid Write Barrier", hl: true },
+              { k: "Триггер запуска:", v: "Pacer выбирает trigger раньше heap goal; учитывает GOGC и мягкий лимит", hl: false },
+              { k: "Переход STW #1:", v: "Включается Hybrid Write Barrier", hl: true },
               { k: "Цвета объектов в хипе:", v: "Все объекты A, B, C, D, E стартуют Белыми", hl: false }
             ]
           }
@@ -1394,7 +1399,7 @@ const SIMULATORS = [
       },
       {
         title: "2. Concurrent Mark: Сканирование корней (Roots → Grey)",
-        desc: "Мир снова запущен! Пользовательские горутины работают параллельно с воркерами GC (занимающими 25% ядер GOMAXPROCS). GC сканирует корни (стеки горутин и глобальные переменные) и красит все объекты хипа, на которые есть ссылки со стеков (A и B), в Серый цвет.",
+        desc: "Мир снова запущен! Пользовательские горутины работают параллельно с воркерами GC (фоновая цель — около 25% CPU-мощности GOMAXPROCS, не общий предел GC). GC сканирует корни (стеки горутин и глобальные переменные) и красит все объекты хипа, на которые есть ссылки со стеков (A и B), в Серый цвет.",
         boxes: [
           {
             title: "Статус мира и Корни сканирования",
@@ -1416,7 +1421,7 @@ const SIMULATORS = [
             title: "Контроль скорости аллокаций",
             rows: [
               { k: "Воркеры GC:", v: "Используют ~25% времени GOMAXPROCS", hl: false },
-              { k: "Mark Assist:", v: "Если горутина мусорит быстро → сама красит граф", hl: true },
+              { k: "Mark Assist:", v: "Долг за аллокации → горутина помогает разметке; возможен рост задержки", hl: true },
               { k: "Стеки горутин:", v: "Сжимаются в 2 раза, если заняты менее чем на 25%", hl: false }
             ]
           }
@@ -1454,7 +1459,14 @@ const SIMULATORS = [
       },
       {
         title: "4. Mark Termination (STW #2) и фоновая очистка (Concurrent Sweep)",
-        desc: "Серых объектов больше не осталось! Короткая пауза STW #2 (~10–50 мкс) выключает Write Barrier. Живые объекты (A, B, C, D) стали Чёрными, а оставшийся Белым недостижимый объект E фоново возвращается в битовую карту свободных ячеек mspan без дефрагментации памяти.",
+        descEN: "Mark termination and the transition to sweeping use an STW pause without a fixed duration guarantee. Sweeping reclaims dead slots. For the next cycle, GOGC sets a heap goal and the pacer starts earlier. GOMEMLIMIT constrains a soft runtime budget, not total process memory or container usage.",
+        check: {
+          promptEN: "With 100 MiB live heap, 20 MiB roots and GOGC=100, must GC start at 200 MiB?",
+          promptRU: "При 100 MiB живой кучи, 20 MiB корней и GOGC=100 обязан ли GC начаться на 200 MiB?",
+          answerEN: "No. The simplified goal is 220 MiB; the pacer starts marking earlier. A memory limit may lower the goal, but cannot guarantee that the process avoids OOM.",
+          answerRU: "Нет. Упрощённая цель — 220 MiB; pacer начинает разметку раньше. Лимит памяти может снизить цель, но не гарантирует отсутствие OOM процесса."
+        },
+        desc: "Серых объектов больше не осталось! Пауза STW #2 (без фиксированной гарантии длительности) выключает Write Barrier. Живые объекты (A, B, C, D) стали Чёрными, а оставшийся Белым недостижимый объект E фоново возвращается в битовую карту свободных ячеек mspan без дефрагментации памяти.",
         boxes: [
           {
             title: "Завершение цикла GC",
@@ -1475,8 +1487,9 @@ const SIMULATORS = [
           {
             title: "Расчёт следующей цели (GC Pacer)",
             rows: [
-              { k: "При GOGC = 100:", v: "Следующий GC при росте живой кучи в 2 раза", hl: false },
-              { k: "При GOMEMLIMIT:", v: "Запустит GC раньше, если близко к OOM контейнера", hl: true },
+              { k: "При GOGC = 100:", v: "Цель ≈ live + (live + roots); запуск раньше, не ровно при удвоении", hl: false },
+              { k: "При GOMEMLIMIT:", v: "Мягкий бюджет Sys − HeapReleased; не RSS и не защита от OOM", hl: true },
+              { k: "Проверь на числах:", v: "100 MiB live + 20 MiB roots, GOGC=100 → цель 220 MiB; C-память требует отдельного резерва", hl: false },
               { k: "Возврат памяти ОС:", v: "Фоновый scavenger возвращает страницы через madvise", hl: false }
             ]
           }
@@ -1670,7 +1683,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "9. Аллокатор (mcache) и Трёхцветный GC",
     how: "Классы размеров <code>mspan</code> (<code>scan</code> vs <code>noscan</code>) в локальном <code>P.mcache</code> без локов. Конкурентный <strong>трёхцветный Mark-and-Sweep GC</strong> с <strong>Hybrid Write Barrier</strong>.",
-    markers: "2 паузы STW (&lt;100 мкс), до 25% CPU на разметку + <code>Mark Assist</code>, управляется <strong><code>GOGC=100</code></strong> и <strong><code>GOMEMLIMIT</code></strong>.",
+    markers: "STW-переходы без гарантии микросекунд. <code>GOGC</code> задаёт heap goal, pacer начинает раньше. <code>GOMEMLIMIT</code> — мягкий бюджет <code>Sys − HeapReleased</code>, не защита от OOM; <code>Mark Assist</code> может увеличить задержки.",
     cardId: "c28", simId: "sim6"
   },
   ,
