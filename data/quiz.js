@@ -423,42 +423,43 @@ func ReadBalance(id int) int64 {
   // ЧАСТЬ 3: БОЕВОЙ CODE REVIEW — ПАЙПЛАЙНЫ, ERRGROUP, БД И DEFER (Q15 - Q20)
   // =========================================================================
   {
-    id: "q15",
-    title: "Задача 15: Вечный дедлок в Fan-In / Worker Pool из-за порядка wg.Wait() и чтения канала",
-    ru: "Почему этот классический код параллельной обработки пачки задач зависает намертво, как только len(tasks) становится больше 5?",
-    en: "Why does this worker pattern deadlock as soon as len(tasks) exceeds 5, and how should you structure the coordinator?",
-    code: `func RunAll(tasks []Task) []Result {
-    out := make(chan Result, 5) // Буфер на 5 элементов
-    var wg sync.WaitGroup
-
-    for _, t := range tasks {
-        wg.Add(1)
-        go func(t Task) {
-            defer wg.Done()
-            out <- execute(t)
-        }(t)
-    }
-
-    wg.Wait()  // Ждём завершения всех горутин
-    close(out) // Закрываем канал
-
-    var results []Result
-    for res := range out {
-        results = append(results, res)
-    }
-    return results
-}`,
-    options: [
-      "Вызов close(out) при непустом буфере из 5 элементов блокирует текущую горутину до тех пор, пока буфер не будет прочитан",
-      "Классический Deadlock при len(tasks) > 5: первые 5 горутин заполнят кольцевой буфер канала out и завершатся, но 6-я и последующие горутины заблокируются на записи out <- execute(t) и никогда не дойдут до defer wg.Done(); а основная горутина вечно стоит на wg.Wait(), так и не начав читать из канала out!",
-      "Цикл for res := range out не может вычитать элементы из уже закрытого канала close(out) и зависает в бесконечном ожидании",
-      "Происходит переполнение локальной очереди процессора P.runq[256], из-за чего планировщик теряет уведомления от семафора WaitGroup",
-      "Вызов defer wg.Done() срабатывает ДО завершения записи out <- execute(t), поэтому close(out) закрывает канал в момент записи и роняет программу",
-      "Дедлок возникает из-за того, что переменная wg не защищена мьютексом при вызове wg.Add(1) внутри цикла"
+    "id": "q15",
+    "title": "Задача 15: Собрать результаты параллельных вычислений",
+    "ru": "Вызови RunAll для шести чисел. Других читателей out нет. Завершится ли функция? Как сохранить буфер размера 5 и получить все результаты?",
+    "en": "Call RunAll with six numbers and no other receiver on out. Will it return? How can it collect every result while keeping capacity 5?",
+    "code": "// Function fragment; import \"sync\".\nfunc RunAll(tasks []int) []int {\n\tout := make(chan int, 5)\n\tvar wg sync.WaitGroup\n\tfor _, task := range tasks {\n\t\twg.Add(1)\n\t\tgo func(n int) {\n\t\t\tdefer wg.Done()\n\t\t\tout <- n * n\n\t\t}(task)\n\t}\n\twg.Wait()\n\tclose(out)\n\tvar results []int\n\tfor value := range out {\n\t\tresults = append(results, value)\n\t}\n\treturn results\n}",
+    "options": [
+      "Функция завершится: Wait сам читает значения из out, когда счётчик перестаёт уменьшаться.",
+      "Функция зависнет при close: закрытие непустого канала ждёт, пока буфер будет полностью прочитан.",
+      "Функция завершится: шестая отправка автоматически расширит буфер и освободит последнюю горутину.",
+      "Функция вызовет panic: Wait нельзя вызывать после Add, пока дочерние горутины ещё выполняются.",
+      "Функция зависнет: отправитель ждёт чтения, а читатель ждёт Done. Нужно читать параллельно с ожиданием.",
+      "Функция вернёт пять значений: range перестанет читать, как только изначально заполненный буфер опустеет."
     ],
-    correct: 1,
-    explanationRU: "Чтобы цикл for res := range out внизу начал выгребать данные из канала и освобождать место в 5-элементном буфере, основная горутина должна дойти до этого цикла! Но перед ним стоит синхронный барьер wg.Wait(), который ждёт завершения всех N воркеров. А воркеры с 6-го по N-й стоят заблокированными на строке out <- execute(t) (потому что буфер на 5 мест полон и никто его не читает) и не могут выполнить defer wg.Done()! Решение: обернуть ожидание и закрытие в отдельную фоновую горутину `go func() { wg.Wait(); close(out) }()` ПЕРЕД циклом `for res := range out` (либо сразу выделить буфер `make(chan Result, len(tasks))`).",
-    speechEN: "When 'len(tasks) > 5', the first 5 goroutines fill the channel buffer, and the remaining goroutines block on 'out <- execute(t)', unable to reach 'defer wg.Done()'. Meanwhile, the main goroutine blocks forever on 'wg.Wait()' before ever reaching the 'for range out' consumer loop! Fix it by running 'go func() { wg.Wait(); close(out) }()' in a separate background goroutine right before the range loop."
+    "correct": 4,
+    "explanationRU": "Получается цикл ожидания: RunAll ждёт Done всех горутин; хотя бы одна из шести не может закончить отправку в буфер на пять мест; чтение начинается только после Wait. В исправлении отдельный координатор ждёт завершения отправителей и закрывает out, пока вызывающая горутина читает результаты. Порядок результатов не гарантирован. Буфер len(tasks) тоже достаточен для ровно одной отправки на задачу, но расходует память на всю пачку и связывает корректность с этим условием. Здесь по горутине на задачу — это не ограниченный пул; лимит параллелизма и отмена нужны отдельно для длительной работы. Закрытие не ждёт опустошения буфера, а range читает оставшиеся значения до конца.",
+    "speechEN": "RunAll waits for every sender, but a sender needs buffer space that only RunAll can free. I would receive results while a separate coordinator waits and closes the channel after all senders finish. This removes the wait cycle. Result order is unspecified, and the example still launches one goroutine per task.",
+    "correctedCode": "// Function fragment; import \"sync\".\nfunc RunAll(tasks []int) []int {\n\tout := make(chan int, 5)\n\tvar wg sync.WaitGroup\n\tfor _, task := range tasks {\n\t\twg.Add(1)\n\t\tgo func(n int) {\n\t\t\tdefer wg.Done()\n\t\t\tout <- n * n\n\t\t}(task)\n\t}\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(out)\n\t}()\n\tvar results []int\n\tfor value := range out {\n\t\tresults = append(results, value)\n\t}\n\treturn results\n}",
+    "versionNote": "Пример использует API, доступный в Go 1.17, 1.25 и 1.26. Аргумент n передаётся явно: результат не зависит от изменения loop variables в Go 1.22. Завершение проверяется без Sleep.",
+    "sources": [
+      {
+        "title": "Go pipelines: fan-out, fan-in",
+        "url": "https://go.dev/blog/pipelines"
+      },
+      {
+        "title": "sync.WaitGroup — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync@go1.26.1#WaitGroup"
+      },
+      {
+        "title": "Go specification: close",
+        "url": "https://go.dev/ref/spec#Close"
+      }
+    ],
+    "cardIds": [
+      "c13",
+      "c14",
+      "c12"
+    ]
   },
   {
     id: "q16",
@@ -639,6 +640,43 @@ func WriteReport(path string, payload []byte) (err error) {
       {"title": "bufio.Writer.Flush", "url": "https://pkg.go.dev/bufio@go1.26.1#Writer.Flush"},
       {"title": "csv.Writer.Flush / Error", "url": "https://pkg.go.dev/encoding/csv@go1.26.1#Writer.Flush"},
       {"title": "gzip.Writer.Close", "url": "https://pkg.go.dev/compress/gzip@go1.26.1#Writer.Close"}
+    ]
+  },
+  {
+    "id": "q21",
+    "title": "Задача 21: Срез после передачи через канал",
+    "ru": "Что напечатает программа? Как передать снимок элементов, чтобы последующее изменение values не меняло полученные данные?",
+    "en": "What does this program print? How can it send a snapshot whose elements are unaffected by later changes to values?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan []int, 1)\n\tvalues := []int{1, 2}\n\tch <- values\n\tvalues[0] = 9\n\treceived := <-ch\n\tfmt.Println(received[0])\n}",
+    "options": [
+      "1: канал копирует все элементы массива, поэтому изменение values относится только к исходному срезу.",
+      "9: копия среза ссылается на тот же массив. Для снимка нужно скопировать элементы в отдельный массив.",
+      "1: завершённая отправка замораживает массив до чтения, поэтому запись values[0] откладывается.",
+      "Недетерминированно 1 или 9: само наличие канала заставляет runtime выполнять запись и чтение параллельно.",
+      "Panic при записи 9: после отправки среза канал автоматически запрещает отправителю доступ к массиву.",
+      "0: после отправки рантайм очищает исходный массив, чтобы один буфер не удерживал память другого."
+    ],
+    "correct": 1,
+    "explanationRU": "Программа печатает 9. Все действия здесь последовательны в одной горутине: гонки данных нет. Канал копирует значение среза, а оба значения среза ссылаются на один массив. Чтобы сохранить снимок, скопируй элементы до изменения исходника, например make+copy. Это достаточно для []int; если элементы сами содержат ссылки, такая копия не становится автоматически глубокой. В конкурентной версии изменение исходного массива во время его копирования также требует синхронизации. Альтернатива — передать владение по договорённости и не изменять данные до возврата владения.",
+    "speechEN": "It prints 9. Sending a slice copies the slice value, not its backing array, so both slices still refer to the same elements. There is no data race in this single-goroutine program. For an independent snapshot of these integers, I would copy the elements before sending, or define an ownership protocol for concurrent use.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan []int, 1)\n\tvalues := []int{1, 2}\n\tsnapshot := make([]int, len(values))\n\tcopy(snapshot, values)\n\tch <- snapshot\n\tvalues[0] = 9\n\treceived := <-ch\n\tfmt.Println(received[0])\n}",
+    "versionNote": "Контракты срезов и передачи значений применимы к Go 1.17, 1.25 и 1.26. make+copy совместим с этими версиями; полный пример не требует внешних библиотек.",
+    "sources": [
+      {
+        "title": "Go specification: representation of values",
+        "url": "https://go.dev/ref/spec#Representation_of_values"
+      },
+      {
+        "title": "Go specification: send statements",
+        "url": "https://go.dev/ref/spec#Send_statements"
+      },
+      {
+        "title": "Go specification: copy",
+        "url": "https://go.dev/ref/spec#Appending_and_copying_slices"
+      }
+    ],
+    "cardIds": [
+      "c13"
     ]
   }
 ];

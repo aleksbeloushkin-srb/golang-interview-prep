@@ -3,158 +3,270 @@ const SIMULATORS = [
   // ДИАГРАММА 1: РОЖДЕНИЕ ГОРУТИНЫ, СЛОТ RUNNEXT И РЕГИСТРЫ CPU (GOGO)
   // =========================================================================
   {
-    id: "sim1",
-    title: "Диаграмма 1: От go fn() до регистров CPU (newproc → P.runnext → runtime.gogo)",
-    subtitle: "Как создаётся горутина на системном стеке g0, зачем нужен 1-слотовый LIFO runnext и как подменяются регистры R14, RSP и RIP.",
-    cardId: "c6",
-    cardLabel: "Карточка Q6 (g0 & gogo) →",
-    steps: [
+    "id": "sim1",
+    "title": "Диаграмма 1: Кто выполняется, где стек, откуда продолжить",
+    "subtitle": "Упрощённый путь создания и запуска горутины в Go 1.26.1 на amd64. Адреса обозначены символически. Это не снимок всех регистров и не измерение скорости.",
+    "cardId": "c6",
+    "cardLabel": "Q6: регистры простыми словами →",
+    "learningHint": "Три опоры: R14 — указатель на текущую G; RSP — адрес в активном стеке; RIP — позиция инструкции. Регистр хранит значение или адрес, а не весь стек. При сохранении место продолжения записывается как PC. На arm64 имена и соглашения другие.",
+    "sources": [
       {
-        title: "1. go doWork() → newproc1 на стеке g0",
-        desc: "Горутина G1 вызывает go doWork(). Через systemstack управление переключается на 8 КБ системный стек потока g0. На стеке g0 из локального пула P.gFree берётся структура G2 со стеком 2 КБ в хипе.",
-        boxes: [
+        "title": "Go 1.26.1: ABIInternal",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/abi-internal.md"
+      },
+      {
+        "title": "Go 1.26.1: gogo/mcall",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/asm_amd64.s"
+      },
+      {
+        "title": "Go 1.26.1: newproc1/execute/gfput",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Подготовить G2",
+        "desc": "G1 вызывает go doWork(). Runtime выполняет создание на системном стеке g0 и получает структуру G2: переиспользует доступную или выделяет новую. Нужен пригодный стек; его размер не обязан всегда быть ровно 2 КиБ. G2 ещё не выполняет doWork.",
+        "descEN": "The runtime prepares G2 on the system-stack path, reusing or allocating goroutine state and a suitable stack. Creating it does not mean doWork has started.",
+        "boxes": [
           {
-            title: "Регистры ядра CPU (Поток M)",
-            rows: [
-              { k: "R14 (curg):", v: "g0 (системная горутина)", hl: true },
-              { k: "RSP (Stack Ptr):", v: "0x7fff_8000 (стек g0)", hl: true },
-              { k: "RIP (Instr Ptr):", v: "runtime.newproc1", hl: false }
+            "title": "Регистры amd64: смысл",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "g0",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке g0",
+                "hl": true
+              },
+              {
+                "k": "RIP · какой код",
+                "v": "Код newproc1",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Очереди процессора P",
-            rows: [
-              { k: "P.runnext (LIFO 1):", v: "G_old (предыдущая)", hl: false },
-              { k: "P.runq[256] (FIFO):", v: "[ G3, G4 ] (2 шт.)", hl: false },
-              { k: "P.gFree (Пул G):", v: "Взята свободная G2", hl: true }
-            ]
-          },
-          {
-            title: "Стек горутины G2 в хипе (2 КБ)",
-            rows: [
-              { k: "G2.atomicstatus:", v: "_Gdead → _Grunnable", hl: true },
-              { k: "G2.sched (gobuf):", v: "Инициализация...", hl: false },
-              { k: "Дно стека [0x17f0]:", v: "Подготовка кадра", hl: false }
+            "title": "Подготавливаемая G2",
+            "rows": [
+              {
+                "k": "Структура G",
+                "v": "Переиспользование либо выделение",
+                "hl": true
+              },
+              {
+                "k": "Стек",
+                "v": "Выбирается runtime; размер не фиксирован",
+                "hl": true
+              },
+              {
+                "k": "Пользовательский код",
+                "v": "Ещё не запущен",
+                "hl": true
+              }
             ]
           }
         ]
       },
       {
-        title: "2. Сборка gobuf и трюк с goexit",
-        desc: "На самое дно 2 КБ стека G2 (0xc000_17f0) записывается фейковый адрес возврата runtime.goexit. В структуру G2.sched (gobuf) сохраняются будущий RSP (0xc000_17f0) и будущий RIP (адрес функции doWork).",
-        boxes: [
+        "title": "2. Сохранить стартовый контекст",
+        "desc": "В G2.sched подготавливаются SP и PC для запуска doWork. На amd64 создаётся путь возврата через goexit после завершения функции. Это сохранённые данные будущего запуска; активные регистры пока обслуживают runtime на g0.",
+        "descEN": "G2 receives saved start state, including its stack position and entry PC. The amd64 return path leads to goexit. Saved state in memory is different from registers currently running the runtime.",
+        "boxes": [
           {
-            title: "Регистры ядра CPU (Поток M)",
-            rows: [
-              { k: "R14 (curg):", v: "g0", hl: false },
-              { k: "RSP (Stack Ptr):", v: "0x7fff_8000 (стек g0)", hl: false },
-              { k: "RIP (Instr Ptr):", v: "runtime.newproc1", hl: false }
+            "title": "Регистры amd64: смысл",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "g0",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке g0",
+                "hl": true
+              },
+              {
+                "k": "RIP · какой код",
+                "v": "Код подготовки G2",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Очереди процессора P",
-            rows: [
-              { k: "P.runnext (LIFO 1):", v: "G_old", hl: false },
-              { k: "P.runq[256] (FIFO):", v: "[ G3, G4 ]", hl: false },
-              { k: "P.gFree (Пул G):", v: "Пуст", hl: false }
+            "title": "Данные в G2.sched",
+            "rows": [
+              {
+                "k": "sp",
+                "v": "Начальная позиция стека G2",
+                "hl": true
+              },
+              {
+                "k": "pc",
+                "v": "Точка входа doWork",
+                "hl": true
+              },
+              {
+                "k": "Путь завершения",
+                "v": "Через runtime.goexit",
+                "hl": true
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Is a saved PC already executing?",
+          "promptRU": "Сохранённый PC уже выполняется?",
+          "answerEN": "No. It is an address in saved state until control transfers there.",
+          "answerRU": "Нет. Это адрес в сохранённом состоянии, пока туда не передано управление."
+        }
+      },
+      {
+        "title": "3. Сделать G2 доступной планировщику",
+        "desc": "После подготовки G2 становится runnable. Показан путь постановки через runqput с предпочтением runnext: прежний элемент этого слота может перейти в обычную очередь. Это готовность к запуску, без обещания немедленного выполнения или горячего кеша.",
+        "descEN": "G2 becomes runnable and is queued. The illustrated path requests runnext placement, potentially displacing the previous entry. This does not promise when or on which CPU G2 will execute.",
+        "boxes": [
+          {
+            "title": "Регистры amd64: смысл",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "g0",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке g0",
+                "hl": true
+              },
+              {
+                "k": "RIP · какой код",
+                "v": "Код постановки в очередь",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Стек горутины G2 в хипе (2 КБ)",
-            rows: [
-              { k: "G2.atomicstatus:", v: "_Grunnable", hl: false },
-              { k: "G2.sched (gobuf):", v: "{sp: 0xc00017f0, pc: doWork}", hl: true },
-              { k: "Дно стека [0x17f0]:", v: "*0xc00017f0 = &runtime.goexit", hl: true }
+            "title": "Очередь и состояние",
+            "rows": [
+              {
+                "k": "G2",
+                "v": "RUNNABLE",
+                "hl": true
+              },
+              {
+                "k": "runnext",
+                "v": "Один слот, не отдельный стек",
+                "hl": true
+              },
+              {
+                "k": "Запуск",
+                "v": "Следующее решение планировщика",
+                "hl": true
+              }
             ]
           }
         ]
       },
       {
-        title: "3. Вытеснение в LIFO-слот P.runnext",
-        desc: "Вызывается runqput(P, G2, true). Атомарный CAS ставит свежую G2 в приоритетный LIFO-слот P.runnext (ради горячего кеша L1/L2 ядра), а вытесненная G_old уходит в хвост FIFO-очереди P.runq[256].",
-        boxes: [
+        "title": "4. Восстановить и перейти",
+        "desc": "Когда планировщик выбирает G2, execute переводит её в running, а gogo восстанавливает контекст: текущую G, SP, BP и контекст замыкания, затем переходит к saved PC. JMP меняет поток исполнения; RSP теперь указывает в стек G2. Показаны ключевые действия, не полный листинг.",
+        "descEN": "When G2 is selected, execute marks it running and gogo restores its continuation. The stack pointer now addresses G2’s stack, and a jump transfers execution to its saved PC. More runtime bookkeeping is omitted.",
+        "boxes": [
           {
-            title: "Регистры ядра CPU (Поток M)",
-            rows: [
-              { k: "R14 (curg):", v: "g0", hl: false },
-              { k: "RSP (Stack Ptr):", v: "0x7fff_8000 (стек g0)", hl: false },
-              { k: "RIP (Instr Ptr):", v: "runtime.runqput", hl: false }
+            "title": "Регистры amd64: смысл",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "G2",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке G2",
+                "hl": true
+              },
+              {
+                "k": "RIP · какой код",
+                "v": "doWork после перехода",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Очереди процессора P",
-            rows: [
-              { k: "P.runnext (LIFO 1):", v: "G2 (приоритет L1 cache!)", hl: true },
-              { k: "P.runq[256] (FIFO):", v: "[ G3, G4, G_old ]", hl: true },
-              { k: "P.gFree (Пул G):", v: "Пуст", hl: false }
-            ]
-          },
-          {
-            title: "Стек горутины G2 в хипе (2 КБ)",
-            rows: [
-              { k: "G2.atomicstatus:", v: "_Grunnable (первая на старт)", hl: false },
-              { k: "G2.sched (gobuf):", v: "{sp: 0xc00017f0, pc: doWork}", hl: false },
-              { k: "Дно стека [0x17f0]:", v: "&runtime.goexit", hl: false }
+            "title": "Что меняется",
+            "rows": [
+              {
+                "k": "SP и PC",
+                "v": "Где брать кадры и откуда продолжить",
+                "hl": true
+              },
+              {
+                "k": "g.sched",
+                "v": "Некоторые поля очищаются, не весь объект",
+                "hl": true
+              },
+              {
+                "k": "schedtick",
+                "v": "Зависит от наследования кванта, не всегда +1",
+                "hl": true
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Why is changing only RIP insufficient?",
+          "promptRU": "Почему недостаточно изменить только RIP?",
+          "answerEN": "The resumed code also needs its own stack and current-G context.",
+          "answerRU": "Продолжаемому коду нужны также его стек и контекст текущей G."
+        }
       },
       {
-        title: "4. Ассемблер runtime.gogo (Подмена RSP/RIP)",
-        desc: "Планировщик вызывает schedule() → execute(G2) → runtime.gogo(&G2.sched). За 4 инструкции ассемблера в R14 загружается &G2, в RSP загружается адрес 2 КБ буфера в куче (0xc000_17f0), а JMP перебрасывает RIP в код doWork!",
-        boxes: [
+        "title": "5. Завершить G2",
+        "desc": "После возврата doWork путь goexit вызывает mcall(goexit0). Выполнение переходит на g0; runtime завершает G2 и возвращается к планированию. Структура G может переиспользоваться; сохранение её стека зависит от размера и политики runtime.",
+        "descEN": "After doWork returns, goexit reaches mcall(goexit0) and system-stack cleanup. G2 finishes; its state may be reused. Retaining its stack is a separate runtime policy decision.",
+        "boxes": [
           {
-            title: "Регистры ядра CPU (Поток M)",
-            rows: [
-              { k: "R14 (curg):", v: "G2 (0xc000_0400)", hl: true },
-              { k: "RSP (Stack Ptr):", v: "0xc000_17f0 (2 КБ стек в хипе!)", hl: true },
-              { k: "RIP (Instr Ptr):", v: "main.doWork (ваш код!)", hl: true }
+            "title": "Регистры amd64: смысл",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "g0",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке g0",
+                "hl": true
+              },
+              {
+                "k": "RIP · какой код",
+                "v": "goexit0, затем планирование",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Очереди процессора P",
-            rows: [
-              { k: "P.runnext (LIFO 1):", v: "Пусто (G2 забрана на ядро)", hl: false },
-              { k: "P.runq[256] (FIFO):", v: "[ G3, G4, G_old ]", hl: false },
-              { k: "P.schedtick:", v: "Увеличен на +1", hl: false }
-            ]
-          },
-          {
-            title: "Стек горутины G2 в хипе (2 КБ)",
-            rows: [
-              { k: "G2.atomicstatus:", v: "_Grunning", hl: true },
-              { k: "G2.sched (gobuf):", v: "Очищен (живёт в регистрах CPU)", hl: false },
-              { k: "Дно стека [0x17f0]:", v: "&runtime.goexit", hl: false }
-            ]
-          }
-        ]
-      },
-      {
-        title: "5. Выход RET → goexit → mcall обратно на g0",
-        desc: "Функция doWork завершается инструкцией RET. Процессор снимает со дна стека подложенный адрес runtime.goexit! Вызывается mcall(goexit0): RSP возвращается на стек g0, а G2 со своим 2 КБ стеком кладётся обратно в пул P.gFree.",
-        boxes: [
-          {
-            title: "Регистры ядра CPU (Поток M)",
-            rows: [
-              { k: "R14 (curg):", v: "g0 (возврат в планировщик)", hl: true },
-              { k: "RSP (Stack Ptr):", v: "0x7fff_8000 (стек g0)", hl: true },
-              { k: "RIP (Instr Ptr):", v: "runtime.goexit0 → schedule()", hl: false }
-            ]
-          },
-          {
-            title: "Очереди процессора P",
-            rows: [
-              { k: "P.runnext (LIFO 1):", v: "Пусто", hl: false },
-              { k: "P.runq[256] (FIFO):", v: "Берём следующую G3...", hl: false },
-              { k: "P.gFree (Пул G):", v: "G2 возвращена в пул (0 аллокаций!)", hl: true }
-            ]
-          },
-          {
-            title: "Стек горутины G2 в хипе (2 КБ)",
-            rows: [
-              { k: "G2.atomicstatus:", v: "_Gdead", hl: true },
-              { k: "G2.sched (gobuf):", v: "Сброшен", hl: false },
-              { k: "Дно стека [0x17f0]:", v: "Готов к переиспользованию", hl: false }
+            "title": "Завершившаяся G2",
+            "rows": [
+              {
+                "k": "Статус",
+                "v": "DEAD после очистки",
+                "hl": true
+              },
+              {
+                "k": "Структура",
+                "v": "Может вернуться в пул",
+                "hl": true
+              },
+              {
+                "k": "Стек",
+                "v": "Может сохраниться или освободиться",
+                "hl": true
+              }
             ]
           }
         ]
@@ -299,131 +411,286 @@ const SIMULATORS = [
   // ДИАГРАММА 3: КАНАЛЫ (HCHAN), SUDOG, GOPARK И ПРЯМОЕ КОПИРОВАНИЕ SENDDIRECT
   // =========================================================================
   {
-    id: "sim3",
-    title: "Диаграмма 3: Каналы (hchan), парковка sudog на g0 и прямое копирование между стеками (sendDirect)",
-    subtitle: "Почему горутина оборачивается в sudog, зачем gopark отпускает мьютекс канала только на стеке g0 и как писатель копирует байты прямо в стек читателя.",
-    cardId: "c17",
-    cardLabel: "Карточка Q17 (sendDirect) →",
-    steps: [
+    "id": "sim3",
+    "title": "Диаграмма 3: Канал — от ожидания до продолжения",
+    "subtitle": "Один допустимый путь: G1 первой читает из открытого небуферизованного chan int, G2 позже отправляет 42. Обычная операция без select. Runtime Go 1.25.0/1.26.1; планировщик может вставлять другую работу между показанными событиями.",
+    "cardId": "c17",
+    "cardLabel": "Q17: передача и парковка →",
+    "learningHint": "Как запомнить: проследи отдельно значение 42, запись sudog и состояние G1. Перед следующим шагом ответь на вопрос, затем сравни. После всей схемы закрой её и восстанови цепочку своими словами; позже повтори с буфером и с переданным срезом.",
+    "sources": [
       {
-        title: "1. Читатель G1 вызывает x := <-ch (Упаковка в sudog)",
-        desc: "Горутина G1 захватывает мьютекс канала hchan.lock. Буфер пуст, писателей нет. G1 берёт из кеша P структуру sudog, записывает в sudog.elem прямой адрес своей стековой переменной &x (0x17e0) и кладёт sudog в очередь hchan.recvq.",
-        boxes: [
-          {
-            title: "Читатель G1 (Стек 0xc000_1000)",
-            rows: [
-              { k: "Статус G1:", v: "_Grunning (держит hchan.lock)", hl: false },
-              { k: "Переменная x [0x17e0]:", v: "x = 0 (адрес передан в sudog.elem)", hl: true },
-              { k: "G1.activeStackChans:", v: "true (запрет GC двигать стек!)", hl: true }
-            ]
-          },
-          {
-            title: "Канал runtime.hchan (в хипе)",
-            rows: [
-              { k: "hchan.lock (futex):", v: "ЗАХВАЧЕН (горутиной G1)", hl: true },
-              { k: "hchan.recvq (*sudog):", v: "[ sudog{g: G1, elem: 0x17e0} ]", hl: true },
-              { k: "Кольцевой буфер buf:", v: "Пуст (qcount = 0)", hl: false }
-            ]
-          },
-          {
-            title: "Писатель G2 и Процессор P",
-            rows: [
-              { k: "Писатель G2:", v: "Ещё не подошёл к каналу", hl: false },
-              { k: "Копирование памяти:", v: "Нет", hl: false },
-              { k: "Слот P.runnext:", v: "Пусто", hl: false }
-            ]
-          }
-        ]
+        "title": "chan.go — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/chan.go"
       },
       {
-        title: "2. Безопасная парковка gopark(chanparkcommit) на стеке g0",
-        desc: "Чтобы другой поток не разбудил G1 до того, как она сохранит свои регистры RSP/RIP, G1 вызывает gopark: сначала через mcall(park_m) переходит на системный стек g0, меняет статус на _Gwaiting, и ТОЛЬКО на стеке g0 вызывает chanparkcommit, отпуская hchan.lock!",
-        boxes: [
-          {
-            title: "Читатель G1 (Запаркована)",
-            rows: [
-              { k: "Статус G1:", v: "_Gwaiting (снята с потока M)", hl: true },
-              { k: "G1.sched (gobuf):", v: "RSP и RIP безопасно сохранены", hl: true },
-              { k: "Переменная x [0x17e0]:", v: "Ждёт записи в спящем стеке", hl: false }
-            ]
-          },
-          {
-            title: "Канал runtime.hchan (в хипе)",
-            rows: [
-              { k: "hchan.lock (futex):", v: "СВОБОДЕН (отпущен со стека g0!)", hl: true },
-              { k: "hchan.recvq (*sudog):", v: "[ sudog{g: G1, elem: 0x17e0} ]", hl: false },
-              { k: "Кольцевой буфер buf:", v: "Пуст", hl: false }
-            ]
-          },
-          {
-            title: "Писатель G2 и Процессор P",
-            rows: [
-              { k: "Поток M1:", v: "Ушёл выполнять другую горутину", hl: false },
-              { k: "Писатель G2:", v: "Выполняет ch <- 42", hl: true },
-              { k: "Слот P.runnext:", v: "Пусто", hl: false }
-            ]
-          }
-        ]
+        "title": "chan.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
       },
       {
-        title: "3. Прямое копирование из стека в стек (sendDirect)",
-        desc: "Писатель G2 захватывает hchan.lock, видит спящий sudog в recvq и вызывает sendDirect! Срабатывает барьер записи GC (typeBitsBulkBarrier), и memmove копирует число 42 напрямую из стека G2 по адресу sudog.elem (0x17e0) прямо в стек спящей G1 в обход буфера канала!",
-        boxes: [
+        "title": "stack.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Зарегистрировать ожидание",
+        "desc": "G1 захватила lock, но значения и отправителя нет. В recvq добавлен sudog со ссылкой на G1 и место результата x. Перед gopark установлен parkingOnChan. Это ещё подготовка к парковке: G1 выполняется, lock остаётся захвачен.",
+        "descEN": "The receiver holds the channel lock and finds no value or sender. It registers a sudog and marks that it is about to park. It is still running; the channel has not been unlocked yet.",
+        "scene": {
+          "sender": "Ещё не отправляет",
+          "channel": "recvq: [заявка G1] · cap=0",
+          "receiver": "RUNNING · x ещё не получен",
+          "transfer": "Передачи значения ещё нет."
+        },
+        "boxes": [
           {
-            title: "Читатель G1 (Стек 0xc000_1000)",
-            rows: [
-              { k: "Статус G1:", v: "_Gwaiting (в её стек пишет G2!)", hl: false },
-              { k: "Переменная x [0x17e0]:", v: "x = 42 (скопировано напрямую!)", hl: true },
-              { k: "Барьер GC:", v: "typeBitsBulkBarrier выполнен", hl: true }
+            "title": "Состояние ожидания",
+            "rows": [
+              {
+                "k": "lock",
+                "v": "У G1",
+                "hl": true
+              },
+              {
+                "k": "parkingOnChan",
+                "v": "true",
+                "hl": true
+              },
+              {
+                "k": "activeStackChans",
+                "v": "В этом сценарии ещё false",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Канал runtime.hchan (в хипе)",
-            rows: [
-              { k: "hchan.lock (futex):", v: "ЗАХВАЧЕН (писателем G2)", hl: false },
-              { k: "hchan.recvq (*sudog):", v: "Пусто (sudog извлечён)", hl: true },
-              { k: "Кольцевой буфер buf:", v: "ОБОЙДЁН (0 лишних копирований!)", hl: true }
-            ]
-          },
-          {
-            title: "Писатель G2 (Стек 0xc000_2000)",
-            rows: [
-              { k: "Действие G2:", v: "sendDirect(sg.elem, &val, 8)", hl: true },
-              { k: "Траектория memmove:", v: "Стек G2 [0x27e0] → Стек G1 [0x17e0]", hl: true },
-              { k: "Слот P.runnext:", v: "Готовится принять G1", hl: false }
+            "title": "Связи",
+            "rows": [
+              {
+                "k": "recvq → sudog",
+                "v": "G1 и место x",
+                "hl": true
+              },
+              {
+                "k": "sudog → G1",
+                "v": "Одна ожидающая операция",
+                "hl": false
+              },
+              {
+                "k": "Буфер",
+                "v": "Нет ячеек",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Why not unlock before parking is committed?",
+          "promptRU": "Почему нельзя просто отпустить lock до завершения протокола парковки?",
+          "answerEN": "Another goroutine could transfer a value and ready the receiver before its waiting state is safely established. The parking protocol coordinates this handoff.",
+          "answerRU": "Другая горутина могла бы передать значение и подготовить получателя к запуску до безопасного оформления ожидания. Протокол парковки согласует эту передачу управления."
+        }
       },
       {
-        title: "4. Пробуждение goready(G1) в приоритетный слот P.runnext",
-        desc: "Писатель G2 отпускает hchan.lock и вызывает goready(G1). На стеке g0 статус G1 меняется с _Gwaiting на _Grunnable, и она помещается в приоритетный LIFO-слот P.runnext, чтобы запуститься следующей с горячим кешем L1!",
-        boxes: [
+        "title": "2. Безопасно припарковаться",
+        "desc": "Путь park_m на системном стеке переводит G1 в waiting. chanparkcommit устанавливает activeStackChans, снимает parkingOnChan и только затем отпускает lock. Теперь копирование стека должно согласовываться с каналом; стек не закреплён навсегда.",
+        "descEN": "On the system-stack parking path, the receiver becomes waiting. chanparkcommit sets activeStackChans, clears parkingOnChan and unlocks. Stack copying must now coordinate with the channel; the stack is not permanently pinned.",
+        "scene": {
+          "sender": "Может подойти к каналу",
+          "channel": "recvq: [заявка G1] · lock свободен",
+          "receiver": "WAITING · x ещё не получен",
+          "transfer": "G1 ждёт; значение 42 ещё не передано."
+        },
+        "boxes": [
           {
-            title: "Читатель G1 (Разбужена)",
-            rows: [
-              { k: "Статус G1:", v: "_Grunnable (готова к запуску!)", hl: true },
-              { k: "Переменная x [0x17e0]:", v: "x = 42 (уже в кеше L1 ядра)", hl: true },
-              { k: "sudog:", v: "Возвращён в кеш P.sudogcache", hl: false }
+            "title": "Порядок действий",
+            "rows": [
+              {
+                "k": "1. activeStackChans",
+                "v": "true",
+                "hl": true
+              },
+              {
+                "k": "2. parkingOnChan",
+                "v": "false",
+                "hl": true
+              },
+              {
+                "k": "3. lock",
+                "v": "Отпущен после флагов",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Канал runtime.hchan (в хипе)",
-            rows: [
-              { k: "hchan.lock (futex):", v: "СВОБОДЕН", hl: false },
-              { k: "hchan.recvq (*sudog):", v: "Пусто", hl: false },
-              { k: "Кольцевой буфер buf:", v: "Пуст", hl: false }
-            ]
-          },
-          {
-            title: "Писатель G2 и Процессор P",
-            rows: [
-              { k: "Писатель G2:", v: "Продолжает работу без блокировки", hl: false },
-              { k: "Вызов рантайма:", v: "goready(G1) → runqput(P, G1, true)", hl: true },
-              { k: "Слот P.runnext:", v: "G1 (встала первой в очередь!)", hl: true }
+            "title": "Что это означает",
+            "rows": [
+              {
+                "k": "Стек G1",
+                "v": "Доступ согласуется с каналом",
+                "hl": false
+              },
+              {
+                "k": "Поток ОС",
+                "v": "Ожидание канала не закрепляет за G1 поток",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does activeStackChans mean the stack can never move?",
+          "promptRU": "Значит ли activeStackChans, что стек больше нельзя двигать?",
+          "answerEN": "No. The runtime can coordinate with the channel locks and adjust sudog pointers while copying the stack.",
+          "answerRU": "Нет. Runtime согласует копирование с блокировками каналов и поправляет указатели sudog."
+        }
+      },
+      {
+        "title": "3. Передать значение",
+        "desc": "G2 захватывает lock и извлекает sudog G1 из recvq. Для выбранного пути sendDirect копирует 42 в место x, минуя буфер. G1 ещё ждёт. Для int нет переносимых указателей; барьерный помощник учитывает тип, а его наличие не означает работу GC над указателями у каждого значения.",
+        "descEN": "The sender locks the channel, removes the receiver’s waiter and copies 42 to the receive destination. The receiver is still waiting. The type-aware transfer supports pointers, but this int contains none.",
+        "scene": {
+          "sender": "RUNNING · отправляет 42",
+          "channel": "recvq: [] · lock у G2",
+          "receiver": "WAITING · в месте x уже 42",
+          "transfer": "Копирование: G2 → место x у G1. Промежуточного буфера нет."
+        },
+        "boxes": [
+          {
+            "title": "Значение и заявка",
+            "rows": [
+              {
+                "k": "Значение",
+                "v": "Скопировано в место результата",
+                "hl": true
+              },
+              {
+                "k": "sudog",
+                "v": "Извлечён, но ещё не освобождён",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Граница модели",
+            "rows": [
+              {
+                "k": "Источник значения",
+                "v": "Не обязан всегда быть на стеке",
+                "hl": false
+              },
+              {
+                "k": "Копирование",
+                "v": "Это не передача владения объектами по ссылкам",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "The value is copied. Has G1 executed the next statement?",
+          "promptRU": "Значение скопировано. Выполнила ли G1 следующую строку?",
+          "answerEN": "No. In this snapshot it is still waiting; copying data and running the receiving code are separate events.",
+          "answerRU": "Нет. В этом снимке она ещё ждёт: запись данных и выполнение кода получателя — разные события."
+        }
+      },
+      {
+        "title": "4. Разрешить запуск",
+        "desc": "G2 отпускает lock, затем вызывает goready для G1. G1 становится runnable. На этом снимке планировщик ещё не возобновил её код; такой промежуток может быть очень коротким. Не обещаются немедленный запуск, конкретное ядро или горячий L1.",
+        "descEN": "The sender unlocks before making the receiver runnable. This snapshot is before the receiver resumes; the gap may be very short. Readiness does not promise immediate execution or a particular CPU.",
+        "scene": {
+          "sender": "Отправка завершена",
+          "channel": "recvq: [] · lock свободен",
+          "receiver": "RUNNABLE · в месте x уже 42",
+          "transfer": "Значение уже на месте; теперь G1 разрешено продолжить."
+        },
+        "boxes": [
+          {
+            "title": "Два разных события",
+            "rows": [
+              {
+                "k": "goready",
+                "v": "Готовность к выполнению",
+                "hl": true
+              },
+              {
+                "k": "Запуск G1",
+                "v": "Решение планировщика",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "Запись ожидания",
+            "rows": [
+              {
+                "k": "sudog",
+                "v": "Ещё связан с возобновляемой операцией",
+                "hl": true
+              },
+              {
+                "k": "Освобождение",
+                "v": "После продолжения G1",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "What extra event proves that processing after receive is finished?",
+          "promptRU": "Какое дополнительное событие подтвердит завершение обработки после чтения?",
+          "answerEN": "An explicit acknowledgement after processing, such as closing a separate done channel. Completion of the send alone is not that acknowledgement.",
+          "answerRU": "Явное подтверждение после обработки, например закрытие отдельного done-канала. Само завершение отправки таким подтверждением не является."
+        }
+      },
+      {
+        "title": "5. Продолжить и освободить запись",
+        "desc": "Планировщик возобновляет G1. Путь чтения очищает состояние ожидания, сбрасывает activeStackChans и возвращает sudog через releaseSudog. Затем пользовательский код получает x=42 и может продолжить обработку. Именно это отдельное событие отсутствовало в прежней схеме.",
+        "descEN": "When scheduled, the receiver resumes, clears its waiting state and releases its sudog. The receive then completes with x=42, and user code can continue.",
+        "scene": {
+          "sender": "Может выполнять другую работу",
+          "channel": "recvq: [] · заявка освобождена",
+          "receiver": "RUNNING · чтение вернуло 42",
+          "transfer": "G1 продолжает код после чтения. Обработка 42 ещё может занимать время."
+        },
+        "boxes": [
+          {
+            "title": "Завершение ожидания",
+            "rows": [
+              {
+                "k": "waiting / activeStackChans",
+                "v": "Очищены для этой операции",
+                "hl": true
+              },
+              {
+                "k": "sudog",
+                "v": "Возвращён через releaseSudog",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Восстанови по памяти",
+            "rows": [
+              {
+                "k": "Три события",
+                "v": "Копия → готовность → выполнение",
+                "hl": true
+              },
+              {
+                "k": "Сравни с буфером",
+                "v": "Где окажется значение, если получателя нет?",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Capacity is now 1 and no receiver is waiting. Where can the first sent value go?",
+          "promptRU": "Теперь ёмкость 1, а ожидающего получателя нет. Куда может попасть первое значение?",
+          "answerEN": "Into the free buffer slot. If a receiver is already waiting, the checked runtime can still transfer directly. Capacity alone does not determine the path.",
+          "answerRU": "В свободную ячейку буфера. Если получатель уже ждёт, проверенный runtime всё ещё может передать значение напрямую. Одна ёмкость не определяет путь."
+        }
       }
     ]
   },
@@ -565,131 +832,238 @@ const SIMULATORS = [
   // ДИАГРАММА 5: АТОМИКИ CAS (LOCK CMPXCHG / MESI) И SYNC.MUTEX STARVATION
   // =========================================================================
   {
-    id: "sim5",
-    title: "Диаграмма 5: Аппаратный CAS (LOCK CMPXCHG / протокол MESI) и режимы sync.Mutex",
-    subtitle: "Как два ядра процессора конкурируют за 64-байтную кэш-линию L1 при выполнении CAS и как sync.Mutex переключается между Normal и Starvation Mode (1 мс).",
-    cardId: "c20",
-    cardLabel: "Карточка Q20 (CAS & Mutex) →",
-    steps: [
+    "id": "sim5",
+    "title": "Диаграмма 5: CAS — сравнить и заменить одним действием",
+    "subtitle": "Сначала смысл на одном state, затем пример регистров amd64. Две горутины пробуют переход 0 → 1; никто не возвращает state в 0.",
+    "cardId": "c20",
+    "cardLabel": "Q20: CAS и его границы →",
+    "learningHint": "CAS = Compare-And-Swap. Три входа: адрес, ожидаемое old, предлагаемое new. Результат true/false говорит, выполнена ли замена. Это условная запись, а не обмен двух переменных местами.",
+    "sources": [
       {
-        title: "1. Одновременное чтение в регистры EAX двух ядер",
-        desc: "Два потока на Ядре 1 и Ядре 2 одновременно читают переменную state = 0. В обоих ядрах в аккумулятор EAX загружается expected old = 0, а 64-байтная кэш-линия L1 находится в разделяемом статусе Shared (S) по протоколу MESI.",
-        boxes: [
-          {
-            title: "Ядро CPU 1 (Поток M1)",
-            rows: [
-              { k: "Регистр EAX (old):", v: "0 (ожидаемое значение)", hl: false },
-              { k: "Регистр ECX (new):", v: "1 (хочет записать 1)", hl: false },
-              { k: "Кэш-линия L1 (MESI):", v: "Shared (S) — чтение разрешено всем", hl: true }
-            ]
-          },
-          {
-            title: "Память и Шина когерентности",
-            rows: [
-              { k: "Адрес переменной:", v: "0xc000_0800 (64-байтная кэш-линия)", hl: false },
-              { k: "Текущее значение:", v: "state = 0", hl: true },
-              { k: "Шина MESI:", v: "Спокойна", hl: false }
-            ]
-          },
-          {
-            title: "Ядро CPU 2 (Поток M2)",
-            rows: [
-              { k: "Регистр EAX (old):", v: "0 (ожидаемое значение)", hl: false },
-              { k: "Регистр ECX (new):", v: "1 (хочет записать 1)", hl: false },
-              { k: "Кэш-линия L1 (MESI):", v: "Shared (S)", hl: true }
-            ]
-          }
-        ]
+        "title": "sync/atomic — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync/atomic@go1.26.1"
       },
       {
-        title: "2. Ядро 1 выполняет LOCK CMPXCHG (Инвалидация кеша Ядра 2)",
-        desc: "Ядро 1 на наносекунду раньше выполняет инструкцию LOCK CMPXCHGL CX, (BX). Префикс LOCK переводит 64-байтную кэш-линию Ядра 1 в монопольный статус Modified (M), посылает сигнал Invalidate в кеш Ядра 2, сравнивает EAX (0) == state (0), записывает 1 и ставит флаг нуля ZF = 1!",
-        boxes: [
-          {
-            title: "Ядро CPU 1 (Победитель гонки CAS)",
-            rows: [
-              { k: "Инструкция:", v: "LOCK CMPXCHGL CX, 0(BX)", hl: true },
-              { k: "Сравнение и Флаг ZF:", v: "EAX (0) == Mem (0) → ZF = 1 (TRUE!)", hl: true },
-              { k: "Кэш-линия L1 (MESI):", v: "Modified (M) — монопольное владение!", hl: true }
-            ]
-          },
-          {
-            title: "Память и Шина когерентности",
-            rows: [
-              { k: "Сигнал по шине:", v: "Invalidate → сбросить кэш-линию Ядра 2!", hl: true },
-              { k: "Новое значение:", v: "state = 1 (обновлено атомарно)", hl: true },
-              { k: "Store Buffer:", v: "Принудительно сброшен (Full Memory Fence)", hl: false }
-            ]
-          },
-          {
-            title: "Ядро CPU 2 (Кеш инвалидирован)",
-            rows: [
-              { k: "Регистр EAX (old):", v: "Всё ещё держит старый 0", hl: false },
-              { k: "Кэш-линия L1 (MESI):", v: "Invalid (I) — данные устарели!", hl: true },
-              { k: "Статус:", v: "Ждёт чтения актуальной кэш-линии от Ядра 1", hl: false }
-            ]
-          }
-        ]
+        "title": "CAS amd64 — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/atomic/atomic_amd64.s"
       },
       {
-        title: "3. Отказ CAS на Ядре 2 (ZF = 0) и переход к Spinning",
-        desc: "Ядро 2 подтягивает обновлённую кэш-линию (state = 1) и выполняет свой LOCK CMPXCHG. Процессор видит, что EAX (0) != state (1): запись отменяется, в EAX копируется 1, а флаг нуля сбрасывается в ZF = 0 (CAS вернул false).",
-        boxes: [
+        "title": "CAS arm64 — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/atomic/atomic_arm64.s"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Что хотим сделать",
+        "desc": "state=0 означает «ещё никто не занял», 1 — «уже занято». G1 и G2 хотят CAS(0, 1): записать 1 только при текущем 0. Успех сообщает, кто получил право действовать. Обычный if с отдельной записью оставляет промежуток для конкурента.",
+        "descEN": "Both goroutines want to claim state by replacing 0 with 1. CAS checks and conditionally writes atomically; a separate check followed by a store leaves a race in the decision.",
+        "boxes": [
           {
-            title: "Ядро CPU 1 (Владелец ресурса)",
-            rows: [
-              { k: "Действие M1:", v: "Выполняет критическую секцию кода", hl: false },
-              { k: "Задержка:", v: "Быстрый путь занял ~15 наносекунд", hl: false },
-              { k: "Кэш-линия L1:", v: "Shared (отдана для чтения Ядру 2)", hl: false }
+            "title": "Три входа CAS",
+            "rows": [
+              {
+                "k": "Адрес",
+                "v": "Место переменной state",
+                "hl": true
+              },
+              {
+                "k": "old",
+                "v": "0 — ожидаемое значение",
+                "hl": true
+              },
+              {
+                "k": "new",
+                "v": "1 — предлагаемая замена",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Результат CMPXCHG на Ядре 2",
-            rows: [
-              { k: "Проверка:", v: "EAX (0) != Mem (1) → Проигрыш!", hl: true },
-              { k: "Флаг нуля ZF:", v: "ZF = 0 → SETEQ возвращает false", hl: true },
-              { k: "Проблема False Sharing:", v: "Частые LOCK бьют по кэш-линии всех ядер", hl: false }
-            ]
-          },
-          {
-            title: "Ядро CPU 2 (Реакция sync.Mutex)",
-            rows: [
-              { k: "Шаг 1 (Spinning):", v: "Крутит 4 итерации по 30 инструкций PAUSE", hl: true },
-              { k: "Шаг 2 (Семафор):", v: "Если лок не освободился → runtime_Semacquire", hl: false },
-              { k: "Парковка:", v: "Уходит в gopark в дерево ожидания semtable", hl: false }
+            "title": "Правило результата",
+            "rows": [
+              {
+                "k": "Совпало",
+                "v": "Записать new, вернуть true",
+                "hl": true
+              },
+              {
+                "k": "Не совпало",
+                "v": "Не записывать new, вернуть false",
+                "hl": true
+              },
+              {
+                "k": "state сейчас",
+                "v": "0",
+                "hl": true
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Could both calls succeed without any reset?",
+          "promptRU": "Могут ли обе попытки пройти без сброса state?",
+          "answerEN": "No. Once one changes 0 to 1, the other no longer matches 0.",
+          "answerRU": "Нет. После замены 0 на 1 второй вызов больше не совпадает с ожидаемым 0."
+        }
       },
       {
-        title: "4. sync.Mutex: Normal Mode против Starvation Mode (> 1 мс)",
-        desc: "В Normal Mode разбуженная из очереди горутина соревнуется за CAS с новыми горутинами, которые уже крутятся на ядрах CPU (и часто проигрывает). Если любая горутина прождала в очереди > 1 мс, мьютекс включает Starvation Mode: теперь Unlock передаёт лок НАПРЯМУЮ первой горутине из очереди!",
-        boxes: [
+        "title": "2. Первая попытка успешна",
+        "desc": "В показанном порядке первой выполняется CAS горутины G1. Текущее значение равно old=0: операция записывает 1 и возвращает true. Сравнение и запись неделимы относительно других атомарных операций; это свойство операции, а не удачный тайминг.",
+        "descEN": "In this ordering G1’s CAS sees the expected 0, stores 1 and returns true. The comparison and update are indivisible relative to other atomic operations.",
+        "boxes": [
           {
-            title: "Normal Mode (По умолчанию)",
-            rows: [
-              { k: "При Unlock():", v: "Будит ждущую G1, но лок открыт для всех", hl: false },
-              { k: "Кто выигрывает CAS:", v: "Новая G2 на горячем CPU обгоняет G1!", hl: true },
-              { k: "Плюс / Минус:", v: "Макс. пропускная способность / риск хвостов p99", hl: false }
+            "title": "G1",
+            "rows": [
+              {
+                "k": "Ожидала",
+                "v": "0",
+                "hl": true
+              },
+              {
+                "k": "Предлагала",
+                "v": "1",
+                "hl": true
+              },
+              {
+                "k": "Получила",
+                "v": "true",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Триггер переключения (Порог 1 мс)",
-            rows: [
-              { k: "Условие:", v: "Ждущая горутина G1 не смогла взять лок > 1 мс", hl: true },
-              { k: "Бит состояния:", v: "m.state |= mutexStarving (бит голодания)", hl: true },
-              { k: "Spinning (вращение):", v: "Полностью ОТКЛЮЧАЕТСЯ для новых горутин", hl: true }
-            ]
-          },
-          {
-            title: "Starvation Mode (Режим голодания)",
-            rows: [
-              { k: "При Unlock():", v: "Прямая передача лока (Handoff) горутине G1!", hl: true },
-              { k: "Новые горутины:", v: "Не делают CAS, сразу встают в хвост FIFO", hl: true },
-              { k: "Выход в Normal Mode:", v: "Когда очередь пуста или ожидание < 1 мс", hl: false }
+            "title": "Общее состояние",
+            "rows": [
+              {
+                "k": "До CAS",
+                "v": "0",
+                "hl": true
+              },
+              {
+                "k": "После CAS",
+                "v": "1",
+                "hl": true
+              },
+              {
+                "k": "G2",
+                "v": "Ещё не выполнила свой CAS",
+                "hl": true
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "If G2 ran first instead, would the rule change?",
+          "promptRU": "Если бы первой была G2, изменилось бы правило?",
+          "answerEN": "No. The winner can differ, but only one succeeds under the stated no-reset condition.",
+          "answerRU": "Нет. Победитель может быть другим, но при условии отсутствия сброса успешен только один."
+        }
+      },
+      {
+        "title": "3. Вторая попытка не проходит",
+        "desc": "G2 всё ещё ожидает old=0, но в state уже 1. CAS возвращает false, не записывая предлагаемое значение. Сам CAS не ставит G2 в очередь, не засыпает до освобождения и не запускает повторную попытку. Это решает вызывающий алгоритм.",
+        "descEN": "G2 expects 0 but finds 1, so CAS returns false without the proposed update. Waiting, retrying or giving up is the caller’s policy, not an automatic effect of CAS.",
+        "boxes": [
+          {
+            "title": "G2",
+            "rows": [
+              {
+                "k": "Ожидала",
+                "v": "0",
+                "hl": true
+              },
+              {
+                "k": "Нашла",
+                "v": "1",
+                "hl": true
+              },
+              {
+                "k": "Получила",
+                "v": "false",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Что дальше",
+            "rows": [
+              {
+                "k": "state",
+                "v": "Остаётся 1",
+                "hl": true
+              },
+              {
+                "k": "Повторить?",
+                "v": "Только если это предусмотрено алгоритмом",
+                "hl": true
+              },
+              {
+                "k": "Гарантия",
+                "v": "Один CAS не защищает произвольный набор полей",
+                "hl": true
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Can separate atomic Load and Store calls replace this CAS?",
+          "promptRU": "Можно ли заменить этот CAS отдельными атомарными Load и Store?",
+          "answerEN": "Not for the same claim guarantee: both goroutines can load 0 before either stores 1.",
+          "answerRU": "Для той же гарантии — нет: обе горутины могут прочитать 0 до первой записи 1."
+        }
+      },
+      {
+        "title": "4. Как это связано с регистрами",
+        "desc": "В показанной 32-битной реализации CAS на amd64 BX хранит адрес, AX — ожидаемое old, CX — новое значение. LOCK CMPXCHGL выполняет атомарное сравнение и условную запись; SETEQ формирует bool из признака равенства. Это конкретный листинг, а не универсальное распределение регистров у любого вызова Go.",
+        "descEN": "In this amd64 implementation, BX holds the address, AX the expected value and CX the replacement. LOCK CMPXCHGL performs the atomic operation; SETEQ produces the Boolean result. Other architectures and compiled call sites can differ.",
+        "boxes": [
+          {
+            "title": "Роли в листинге amd64",
+            "rows": [
+              {
+                "k": "BX · куда",
+                "v": "Адрес state, не значение state",
+                "hl": true
+              },
+              {
+                "k": "AX · с чем сравнить",
+                "v": "old, используются младшие 32 бита",
+                "hl": true
+              },
+              {
+                "k": "CX · что записать",
+                "v": "new, используются младшие 32 бита",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "За пределами листинга",
+            "rows": [
+              {
+                "k": "arm64",
+                "v": "LSE CAS или exclusive load/store путь",
+                "hl": true
+              },
+              {
+                "k": "Кеши",
+                "v": "Не универсальный сценарий «64 байта и один такт»",
+                "hl": true
+              },
+              {
+                "k": "Mutex",
+                "v": "CAS может быть быстрым путём; ожидание — отдельный протокол",
+                "hl": true
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Does CAS success prove the value never changed earlier?",
+          "promptRU": "Доказывает ли успех CAS, что значение раньше не менялось?",
+          "answerEN": "No. A → B → A can match A again. CAS compares the current value, not its history.",
+          "answerRU": "Нет. После A → B → A сравнение с A снова может пройти. CAS проверяет текущее значение, а не историю."
+        }
       }
     ]
   },
@@ -994,7 +1368,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "6. Канал (hchan), sudog и sendDirect",
     how: "<code>*runtime.hchan</code> в хипе: кольцевой <code>buf</code>, очереди <code>sendq</code>/<code>recvq</code> из <code>sudog</code> и мьютекс <code>lock</code>. Парковка через <code>gopark(chanparkcommit)</code> на <code>g0</code>.",
-    markers: "Если ждёт читатель — прямое копирование <strong>из стека в стек</strong> (<code>sendDirect</code> + <code>typeBitsBulkBarrier</code>) в обход буфера.",
+    markers: "Ожидающему читателю значение может передаваться напрямую через <code>sendDirect</code>. Сначала копирование, затем <code>goready</code>, позже продолжение получателя и освобождение <code>sudog</code>. Готовность не означает немедленного запуска.",
     cardId: "c17", simId: "sim3"
   },
   {
@@ -1004,10 +1378,10 @@ const CHEATSHEET_ROWS = [
     cardId: "c19", simId: "sim4"
   },
   {
-    topic: "8. Атомики CAS (MESI) и sync.Mutex",
-    how: "Интринсик компилятора → <code>LOCK CMPXCHGL</code>. В <code>sync.Mutex</code>: быстрый CAS → 4 итерации spinning (PAUSE) → семафор.",
-    markers: "Блокирует <strong>64-байтную кэш-линию L1/L2</strong> по протоколу <strong>MESI</strong>. При ожидании <strong>&gt; 1 мс</strong> мьютекс переходит в <strong>Starvation Mode</strong>.",
-    cardId: "c21", simId: "sim5"
+    topic: "8. CAS: условное атомарное обновление",
+    how: "<code>CAS(old, new)</code>: сравнить текущее значение с old и условно записать new одной атомарной операцией. Возвращает true/false; ожидание и повтор — отдельная политика.",
+    markers: "На amd64 в проверенном пути — <code>LOCK CMPXCHG</code>; arm64 имеет другие пути. Атомарность одного значения не делает весь алгоритм атомарным. Детали Mutex — в карточке Q21.",
+    cardId: "c20", simId: "sim5"
   },
   {
     topic: "9. Аллокатор (mcache) и Трёхцветный GC",
