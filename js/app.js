@@ -83,7 +83,13 @@ function practiceHtml(card) {
   </details>`;
 }
 
-// Автоматическая привязка карточек к 6 диаграммам
+function relatedQuizHtml(cardId) {
+  const questions = QUIZ_QUESTIONS.filter(q => (q.cardIds || []).includes(cardId));
+  if (!questions.length) return "";
+  return `<nav class="related-links" aria-label="Задачи по теме">${questions.map(q => `<a href="#/quiz/${q.id}">${escapeHtml(q.title)}</a>`).join("")}</nav>`;
+}
+
+// Links between cards and diagrams.
 const CARD_TO_SIM = {
   c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
   c7: "sim2", c8: "sim2", c9: "sim2", c10: "sim2", c11: "sim1",
@@ -227,6 +233,7 @@ function renderCard() {
   } else {
     simLinkWrap.innerHTML = "";
   }
+  simLinkWrap.insertAdjacentHTML("beforeend", relatedQuizHtml(card.id));
 
   const st = state.progress[card.id] || "unseen";
   const pill = document.getElementById("card-status");
@@ -299,7 +306,7 @@ function onSearchInput() {
   renderCard();
 }
 
-/* --- УНИВЕРСАЛЬНЫЙ ДВИЖОК ВСЕХ 6 СИМУЛЯТОРОВ --- */
+/* --- SIMULATORS --- */
 function initSimulators() {
   const container = document.getElementById("simulators-list");
   if (!container || typeof SIMULATORS === "undefined") return;
@@ -322,24 +329,64 @@ function initSimulators() {
         </div>
         <a href="#/cards/${sim.cardId}" class="btn btn-sm">${escapeHtml(sim.cardLabel)}</a>
       </div>
+      ${sim.learningHint ? `<p class="learning-hint">${escapeHtml(sim.learningHint)}</p>` : ""}
       <div class="sim-steps" id="${sim.id}-steps">${stepsHtml}</div>
+      <p id="${sim.id}-status" class="muted-text sim-step-start" tabindex="-1" aria-live="polite"></p>
       <div id="${sim.id}-desc" class="short-answer"></div>
+      <div id="${sim.id}-scene"></div>
       <div class="sim-grid" id="${sim.id}-grid"></div>
+      <div id="${sim.id}-recall"></div>
+      <div class="sim-navigation">
+        <button type="button" class="btn btn-sm" data-step-direction="-1">← Шаг назад</button>
+        <button type="button" class="btn btn-sm" data-step-direction="1">Следующий шаг →</button>
+      </div>
+      ${referencesHtml(sim)}
     `;
     container.appendChild(card);
+    card.querySelectorAll("[data-step-direction]").forEach(button => {
+      button.addEventListener("click", () => {
+        const next = Number(card.dataset.step) + Number(button.dataset.stepDirection);
+        renderSimStep(simIdx, next);
+        const status = document.getElementById(`${sim.id}-status`);
+        status.focus({ preventScroll: true });
+        status.scrollIntoView({ behavior: "auto", block: "start" });
+      });
+    });
     renderSimStep(simIdx, 0);
   });
 }
 
 function renderSimStep(simIdx, stepIdx) {
   const sim = SIMULATORS[simIdx];
+  if (!sim || stepIdx < 0 || stepIdx >= sim.steps.length) return;
   const step = sim.steps[stepIdx];
+  const card = document.getElementById(sim.id);
+  card.dataset.step = stepIdx;
+  card.querySelector('[data-step-direction="-1"]').disabled = stepIdx === 0;
+  card.querySelector('[data-step-direction="1"]').disabled = stepIdx === sim.steps.length - 1;
 
   document.querySelectorAll(`#${sim.id}-steps .step-pill`).forEach((btn, i) => {
     btn.classList.toggle("active", i === stepIdx);
+    btn.setAttribute("aria-pressed", String(i === stepIdx));
   });
 
+  document.getElementById(`${sim.id}-status`).textContent = `Шаг ${stepIdx + 1} из ${sim.steps.length}: ${step.title.replace(/^\d+\.\s*/, "")}`;
   document.getElementById(`${sim.id}-desc`).textContent = step.desc;
+  document.getElementById(`${sim.id}-scene`).innerHTML = step.scene ? `
+    <div class="channel-scene" aria-label="Состояние участников передачи">
+      <div class="channel-part channel-sender"><h4>Отправитель G2</h4><p>${escapeHtml(step.scene.sender)}</p></div>
+      <div class="channel-part channel-state"><h4>Канал ch</h4><p>${escapeHtml(step.scene.channel)}</p></div>
+      <div class="channel-part channel-receiver"><h4>Получатель G1</h4><p>${escapeHtml(step.scene.receiver)}</p></div>
+    </div><p class="channel-transfer">${escapeHtml(step.scene.transfer)}</p>` : "";
+  document.getElementById(`${sim.id}-recall`).innerHTML = `
+    ${step.descEN ? `<details class="translated-answer"><summary>Explain this step in English</summary><p lang="en">${escapeHtml(step.descEN)}</p></details>` : ""}
+    ${step.check ? `<div class="step-recall">
+      <h4>Проверь себя перед следующим шагом</h4>
+      <p lang="en">${escapeHtml(step.check.promptEN)}</p><p lang="ru">${escapeHtml(step.check.promptRU)}</p>
+      <details class="translated-answer"><summary>Сверить объяснение</summary>
+        <p lang="en">${escapeHtml(step.check.answerEN)}</p><p lang="ru">${escapeHtml(step.check.answerRU)}</p>
+      </details>
+    </div>` : ""}`;
 
   const grid = document.getElementById(`${sim.id}-grid`);
   grid.innerHTML = step.boxes
@@ -392,6 +439,7 @@ function initWikiAndCheatsheet() {
           ${pracHtml}
           ${referencesHtml(c)}
           <pre class="code-block">${escapeHtml(c.code)}</pre>
+          ${relatedQuizHtml(c.id)}
           <div class="btn-group" style="margin-top: 12px;">
             <a href="#/cards/${c.id}" class="btn btn-sm">Открыть в тренажёре (${c.id.toUpperCase()}) →</a>
             ${simBtn}
@@ -444,6 +492,7 @@ function initQuiz() {
   QUIZ_QUESTIONS.forEach(q => {
     const card = document.createElement("div");
     card.className = "sim-card";
+    card.id = q.id;
     card.style.marginBottom = "20px";
 
     const optionsHtml = q.options
@@ -467,6 +516,7 @@ function initQuiz() {
         <p style="margin-top:8px; font-size:0.92rem; color:#cbd5e1;"><strong>🇬🇧 How to answer in English:</strong> <span id="${q.id}-exp-en" lang="en"></span></p>
         ${q.correctedCode ? `<details class="translated-answer"><summary>Исправленный пример</summary><pre class="code-block">${escapeHtml(q.correctedCode)}</pre></details>` : ""}
         ${referencesHtml(q)}
+        ${(q.cardIds || []).length ? `<nav class="related-links" aria-label="Разобрать тему">${q.cardIds.map(id => `<a href="#/cards/${escapeHtml(id)}">Карточка ${escapeHtml(id.toUpperCase())} →</a>`).join("")}</nav>` : ""}
       </div>
     `;
     container.appendChild(card);
@@ -539,6 +589,10 @@ function handleRoute() {
     if (targetSim) {
       setTimeout(() => targetSim.scrollIntoView({ behavior: "auto", block: "start" }), 60);
     }
+  }
+  if (activeRoute === "quiz" && param) {
+    const question = QUIZ_QUESTIONS.find(q => q.id === param);
+    if (question) document.getElementById(question.id).scrollIntoView({ behavior: "auto", block: "start" });
   }
 }
 

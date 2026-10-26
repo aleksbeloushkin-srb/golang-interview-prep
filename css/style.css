@@ -647,3 +647,22 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .practice-box summary { cursor: pointer; padding: 8px 0; color: var(--accent); }
 .practice-box p { margin: 10px 0; }
 .practice-solution { margin-top: 16px; border-top: 1px solid var(--border); }
+
+.learning-hint, .step-recall { margin: 16px 0; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+.channel-scene { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.channel-part { min-width: 0; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 10px; }
+.channel-sender { border-top-color: var(--amber); }
+.channel-state { border-top-color: var(--green); }
+.channel-part h4 { margin-bottom: 8px; }
+.channel-transfer { margin-top: 12px; padding: 12px; border-left: 3px solid var(--accent); }
+.step-recall p, .step-recall details { margin-top: 10px; }
+.sim-navigation { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.sim-navigation .btn { flex: 1 1 150px; white-space: normal; }
+.sim-step-start { scroll-margin-top: 140px; }
+.sim-step-start:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
+.related-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.related-links a { color: var(--accent); text-underline-offset: 3px; padding: 10px 0; }
+#quiz-container > .sim-card { scroll-margin-top: 140px; }
+@media (max-width: 600px) {
+  .channel-scene { grid-template-columns: minmax(0, 1fr); }
+}

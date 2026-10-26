@@ -143,29 +143,62 @@ CMPQ SP, 16(R14)       // compare RSP against g.stackguard0 (R14 holds *g)
 JLS  morestack_noctxt  // if RSP <= stackguard0 -> switch to g0 & double stack`
   },
   {
-    id: "c6",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim1",
-    qEN: "Q6: How does an OS thread (M) start executing a goroutine and switch CPU registers via g0, runtime.gogo, and runtime.mcall?",
-    qRU: "Как физически поток M запускает горутину из очереди и подменяет регистры CPU через стек g0, runtime.gogo и runtime.mcall?",
-    shortEN: "Each OS thread (M) runs scheduler logic on a dedicated 8 KB system stack belonging to a special goroutine called g0. When schedule() selects a runnable goroutine G, the assembly function runtime.gogo overwrites R14 with &G, loads G.sched.sp into RSP, and executes an unconditional JMP to G.sched.pc (RIP).",
-    detailsEN: [
-      "Why g0 Exists: User goroutine stacks are only 2 KB and cannot safely run scheduler, stack-growth, or GC logic without overflowing. Every M has its own g0 with a large OS-allocated stack.",
-      "runtime.gobuf (g.sched): Holds the minimal paused context of a goroutine: sp (RSP), pc (RIP), bp (RBP), ctxt (closure pointer RDX), and g (R14).",
-      "gogo(&g.sched) [g0 -> G]: Restores R14, RSP, and RBP from gobuf, zeroes out gobuf fields for GC safety, and jumps (JMP) to G's instruction pointer.",
-      "mcall(fn) [G -> g0]: The inverse of gogo. Saves the running G's caller PC and RSP into g.sched, switches RSP to g0.sched.sp, and invokes fn(g) on the system stack."
+    "id": "c6",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim1",
+    "qEN": "Q6: What must the runtime restore to resume a goroutine?",
+    "qRU": "Что runtime восстанавливает, чтобы продолжить выполнение горутины?",
+    "shortEN": "To resume a goroutine, the runtime restores where its stack is and where execution should continue. On amd64, RSP points into the active stack, RIP identifies the instruction position, and Go uses R14 for the current goroutine. These roles are easier to understand before memorizing assembly instructions.",
+    "shortRU": "Чтобы продолжить горутину, runtime восстанавливает положение её стека и место продолжения кода. На amd64 RSP указывает в активный стек, RIP задаёт позицию инструкции, а Go использует R14 для текущей горутины. Сначала полезно понять эти роли, а затем читать ассемблер.",
+    "detailsEN": [
+      "A register is a small CPU storage location used during execution. RSP is an address, not the stack itself; R14 is a pointer to Go runtime metadata, not the whole goroutine. RIP changes as instructions and control transfers execute.",
+      "Each M has a g0 used for system-stack work. In the checked amd64 gogo path, the runtime installs the current G, restores SP, BP and closure context, clears selected saved fields, and jumps to the saved PC. It is not a fixed four-instruction operation.",
+      "mcall saves the caller’s continuation and switches to g0 to call a runtime function. g.sched is saved continuation state, not a dump of every CPU register. Switching goroutines is distinct from an OS thread context switch.",
+      "Register names and conventions are architecture-dependent. This diagram uses amd64; on arm64 Go uses R28 for the current G. Neither the g0 stack nor every goroutine stack has one universally fixed size."
     ],
-    practicalRU: "Когда ты анализируешь крэш-дамп (core dump в Delve/GDB) или системный стектрейс при панике в рантайме (например, при Cgo или инвалидном указателе), ты часто видишь 'runtime.systemstack' или 'runtime.mcall'. Понимание разницы между стеком g0 и стеком G позволяет мгновенно понять, упал ли пользовательский код горутины или сам рантайм во время переключения контекста / Cgo-вызова.",
-    code: `// src/runtime/asm_amd64.s — runtime.gogo(buf *gobuf)
-MOVQ gobuf_g(BX), DX
-MOVQ DX, R14            // 1. Load *G into hardware register R14
-MOVQ gobuf_sp(BX), SP   // 2. Swap CPU Stack Pointer RSP to G's 2KB heap stack
-MOVQ gobuf_bp(BX), BP   // 3. Restore frame pointer RBP
-MOVQ gobuf_pc(BX), BX
-JMP  BX                 // 4. Jump RIP into goroutine's code!`
+    "detailsRU": [
+      "Регистр — небольшое хранилище процессора, используемое при выполнении. RSP содержит адрес, а не сам стек; R14 — указатель на данные runtime, а не всю горутину. RIP меняется при выполнении инструкций и переходов.",
+      "У каждого M есть g0 для работы на системном стеке. В проверенном пути gogo для amd64 runtime устанавливает текущую G, восстанавливает SP, BP и контекст замыкания, очищает часть сохранённых полей и переходит к сохранённому PC. Это не операция ровно из четырёх инструкций.",
+      "mcall сохраняет место продолжения вызывающей стороны и переключается на g0 для вызова функции runtime. g.sched — сохранённое состояние продолжения, а не снимок всех регистров CPU. Переключение горутин отличается от переключения потоков ОС.",
+      "Имена регистров и соглашения зависят от архитектуры. Эта схема — про amd64; на arm64 Go использует R28 для текущей G. Размер стека g0 и каждой пользовательской горутины не является одной универсальной константой."
+    ],
+    "practicalRU": "Опора для памяти: «кто выполняется — где стек — откуда продолжить». Для amd64 это R14, RSP и сохранённый PC с переходом в RIP. По одному кадру systemstack или mcall нельзя установить причину сбоя: нужен стек вызовов и контекст.",
+    "versionNote": "Схема runtime/ABI для Go 1.26.1, amd64; сравнение роли текущей G на arm64. ABIInternal может меняться. Условные адреса и сокращённые действия не являются готовым ассемблером или обещанием времени переключения.",
+    "sources": [
+      {
+        "title": "Go 1.26.1: internal ABI",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/abi-internal.md"
+      },
+      {
+        "title": "Go 1.26.1: gogo / mcall on amd64",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/asm_amd64.s"
+      },
+      {
+        "title": "Go 1.26.1: scheduler",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни без ассемблера",
+      "promptEN": "The scheduler selects another goroutine. Why is changing only the instruction address insufficient?",
+      "promptRU": "Планировщик выбрал другую горутину. Почему недостаточно поменять только адрес инструкции?",
+      "pointsEN": [
+        "The code must use the selected goroutine’s stack and continuation state.",
+        "Go must also know which G is current; on this amd64 path that includes R14.",
+        "The actual runtime restores more state than these three memory cues describe."
+      ],
+      "pointsRU": [
+        "Код должен использовать стек и сохранённое состояние выбранной горутины.",
+        "Go также должен знать текущую G; в этом amd64-пути для неё используется R14.",
+        "Реальный runtime восстанавливает больше состояния, чем описывают три опорных вопроса."
+      ],
+      "followUpEN": "Is the numeric value in RSP the size of the stack, or an address within it?",
+      "followUpRU": "Число в RSP — размер стека или адрес внутри него?"
+    },
+    "code": "// Conceptual amd64 continuation, not executable assembly.\ncurrentG = saved.g\nstackPointer = saved.sp\nframePointer = saved.bp\nclosureContext = saved.ctxt\njumpTo(saved.pc)\n// The real runtime also updates TLS and clears selected saved fields."
   },
 
   // ==========================================
@@ -344,23 +377,68 @@ func Await(ctx context.Context, work func(context.Context) error) error {
   // МОДУЛЬ 3: КАНАЛЫ (HCHAN), SELECT, CAS И SYNC (Q13 - Q22)
   // ==========================================
   {
-    id: "c13",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim2",
-    qEN: "Q13: What is a channel in Go, and how do unbuffered and buffered channels differ?",
-    qRU: "Что такое канал в Go и чем небуферизованный канал отличается от буферизованного (в коде и в памяти)?",
-    shortEN: "A channel is a typed, thread-safe conduit for communication and synchronization between goroutines. Unbuffered channels ('make(chan T)') have zero capacity and enforce synchronous rendezvous (sender blocks until receiver is ready), whereas buffered channels ('make(chan T, N)') decouple senders and receivers using a circular array until the buffer is full or empty.",
-    detailsEN: [
-      "Unbuffered ('make(chan T)'): Capacity is 0 (no backing array allocated). Every transfer is a direct stack-to-stack memory copy ('sendDirect') accompanied by goroutine parking/waking.",
-      "Buffered ('make(chan T, N)'): Allocates a circular buffer of N elements. Senders don't block while qcount < dataqsiz. If element type T contains no pointers and buffer < 64 KB, Go allocates both the hchan header and the buffer in a single contiguous heap block."
+    "id": "c13",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "simId": "sim3",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "qEN": "Q13: What does a channel buffer change, and what does it not change?",
+    "qRU": "Что меняет буфер канала, а что остаётся прежним?",
+    "shortEN": "A channel transfers typed values and synchronizes sends with receives. An unbuffered send needs a matching receiver. A buffer lets sends complete while capacity is available, but it does not remove backpressure or make referenced data private to the receiver.",
+    "shortRU": "Канал передаёт типизированные значения и синхронизирует отправку с чтением. Небуферизованной отправке нужен получатель. Буфер позволяет отправлять, пока есть место, но не устраняет обратное давление и не делает данные по ссылкам частной копией получателя.",
+    "detailsEN": [
+      "For an open channel in the checked runtime, a waiting receiver can take a value directly, even if the channel has buffer capacity. Otherwise, a sender uses a free buffer slot or waits. With select and default, an operation that cannot proceed can be skipped instead of waiting.",
+      "A send copies the element value. A slice value still refers to its backing array, and a pointer still refers to the same object. Copy the data or agree on ownership and synchronization before either side mutates shared data.",
+      "In makechan, the limit below 64 KiB is on one element, not the total buffer. For a nonzero buffer of pointer-free elements, the checked runtime allocates hchan and buffer together; pointer-containing elements use a separately allocated buffer. This layout is not a language guarantee.",
+      "Choose capacity from the amount of work allowed in flight. A larger buffer may absorb a burst, but cannot fix a permanently slower consumer. Measure throughput, waiting and retained memory for the actual workload."
     ],
-    practicalRU: "Частая ошибка: делать огромный буфер 'make(chan Job, 100000)' «чтобы работало быстрее». На практике небуферизованный или маленький канал часто быстрее при пинг-понге, так как 'sendDirect' копирует данные напрямую из стека в стек без промежуточной записи в массив кучи, а большой буфер раздувает память и скрывает backpressure при падении БД.",
-    code: `chSync  := make(chan int)     // Unbuffered: dataqsiz == 0, synchronous stack-to-stack copy
-chAsync := make(chan int, 64) // Buffered:   dataqsiz == 64, ring buffer in heap`
+    "detailsRU": [
+      "Для открытого канала в проверенной реализации ожидающий получатель может получить значение напрямую, даже если канал имеет буфер. Иначе отправитель использует свободную ячейку или ждёт. В select с default неготовую операцию можно пропустить вместо ожидания.",
+      "Отправка копирует значение элемента. Значение среза продолжает ссылаться на исходный массив, а указатель — на тот же объект. До изменения общих данных нужна копия либо договорённость о владении и синхронизации.",
+      "В makechan ограничение меньше 64 КиБ относится к одному элементу, а не ко всему буферу. Ненулевой буфер элементов без указателей выделяется вместе с hchan; для элементов с указателями буфер выделяется отдельно. Такое размещение не гарантировано языком.",
+      "Выбирай ёмкость по допустимому объёму незавершённой работы. Большой буфер может поглотить всплеск, но не исправит постоянно более медленного потребителя. Измеряй пропускную способность, ожидание и удерживаемую память на своей нагрузке."
+    ],
+    "practicalRU": "Опора для памяти: «получатель → место → ожидание» для отправки в открытый канал. Отдельный вопрос: что именно копируется? Применение: q15 проверяет ожидание, q21 — общие данные после передачи среза.",
+    "versionNote": "Контракт передачи значений применим к Go 1.17/1.25/1.26. Внутренние ветки makechan и chansend сверены по Go 1.25.0 и 1.26.1; устройство памяти и производительность не являются контрактом языка.",
+    "sources": [
+      {
+        "title": "Go specification: channel types",
+        "url": "https://go.dev/ref/spec#Channel_types"
+      },
+      {
+        "title": "Go memory model: channels",
+        "url": "https://go.dev/ref/mem#chan"
+      },
+      {
+        "title": "chan.go — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/chan.go"
+      },
+      {
+        "title": "chan.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
+      }
+    ],
+    "practice": {
+      "kind": "Предскажи ожидание",
+      "promptEN": "A channel has capacity 2 and no receiver. Two sends completed. Can a third send complete? What changes if you add a default case?",
+      "promptRU": "Ёмкость канала — 2, получателя нет. Две отправки завершились. Завершится ли третья? Что изменит default?",
+      "pointsEN": [
+        "The third ordinary send waits because the buffer is full.",
+        "In a select with default, default runs if the send cannot proceed.",
+        "A larger buffer postpones this point; it does not create a consumer."
+      ],
+      "pointsRU": [
+        "Третья обычная отправка ждёт: буфер полон.",
+        "В select с default выполнится default, если отправка не готова.",
+        "Больший буфер отодвигает этот момент, но не создаёт потребителя."
+      ],
+      "followUpEN": "What if a receiver drains one value? Explain which operation can now proceed.",
+      "followUpRU": "Что изменится, если получатель прочитает одно значение? Какая операция сможет продолжиться?"
+    },
+    "code": "// Function fragment. No receiver is needed for these two sends.\nfunc BufferFull() bool {\n\tch := make(chan int, 2)\n\tch <- 10\n\tch <- 20\n\tselect {\n\tcase ch <- 30:\n\t\treturn false\n\tdefault:\n\t\treturn true\n\t}\n}"
   },
+
   {
     id: "c14",
     mod: "m3",
@@ -449,52 +527,123 @@ func Drain(a, b <-chan int, consume func(int)) {
 // 2. Protecting struct state / in-memory cache      -> sync.Mutex / sync.RWMutex`
   },
   {
-    id: "c16",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim2",
-    qEN: "Q16: What is inside the runtime.hchan struct, and why do channel wait queues hold runtime.sudog instead of runtime.g?",
-    qRU: "Из чего состоит структура канала runtime.hchan и зачем в очередях ожидания лежит обёртка runtime.sudog вместо самой горутины runtime.g?",
-    shortEN: "Calling make(chan T) allocates a runtime.hchan struct on the heap (returning a pointer *hchan). It contains a circular buffer (buf), two wait queues (sendq and recvq) of runtime.sudog nodes, and an internal mutex (lock). sudog decouples goroutines from queues so a single goroutine can wait on multiple channels simultaneously inside a select statement.",
-    detailsEN: [
-      "Reference Semantics: Because make(chan T) returns *hchan under the hood, passing a channel by value to a function only copies an 8-byte pointer.",
-      "The 4 Components of hchan: 1) Ring buffer (buf, dataqsiz, qcount, sendx, recvx); 2) Wait queues (sendq, recvq); 3) Runtime mutex (lock); 4) Closed flag and element type metadata.",
-      "Why sudog Exists (M:N Relationship): Inside a 3-case 'select', one goroutine G must sit in three different channel wait queues at the same time. Therefore, G cannot be linked directly into one queue; instead, it grabs three 'runtime.sudog' wrappers from P's local cache (acquireSudog), each holding a pointer to G and a pointer ('elem') to the stack variable."
+    "id": "c16",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "simId": "sim3",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "qEN": "Q16: Why does a channel wait queue contain sudog records instead of just goroutines?",
+    "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
+    "shortEN": "The channel owns the buffer and wait queues. A sudog records one waiting operation and links it to a goroutine. A blocked select may need several such records for one goroutine, so a queue entry and a goroutine are different things.",
+    "shortRU": "Канал хранит буфер и очереди ожидания. Sudog описывает одну ожидающую операцию и связывает её с горутиной. Заблокированному select может понадобиться несколько записей для одной горутины, поэтому запись очереди и горутина — разные сущности.",
+    "detailsEN": [
+      "The checked hchan contains buffer capacity and occupancy, send/receive indices, wait queues, closed state, type information and an internal runtime lock. The lock implementation depends on the platform; it is not a universal synonym for futex.",
+      "A channel value refers to the same channel when copied or passed to a function. The checked implementation represents it with a pointer, typically 8 bytes on a 64-bit target. The Go API does not expose hchan fields.",
+      "A waiting sudog links the goroutine, the channel and the send/receive storage when needed. A blocking select registers its participating non-nil channel cases; it does not create a new goroutine for each case.",
+      "In an ordinary blocked receive, a sender removes the waiter from recvq, transfers the value and makes the receiver runnable. The receiver releases its sudog after it resumes. An allocation profile alone does not prove why many waiters were needed."
     ],
-    practicalRU: "Если в профиле памяти (heap pprof) ты вдруг видишь тысячи аллокаций 'runtime.acquireSudog' — это верный признак того, что огромное число горутин одновременно блокируется на каналах (или в гигантских select), переполняя локальный кеш 'P.sudogcache' процессоров.",
-    code: `type hchan struct {
-    qcount, dataqsiz uint
-    buf              unsafe.Pointer // ring buffer in heap
-    sendx, recvx     uint
-    recvq, sendq     waitq          // doubly-linked list of *runtime.sudog
-    lock             mutex          // internal runtime mutex (futex)
-}`
+    "detailsRU": [
+      "В проверенном hchan находятся ёмкость и заполнение буфера, индексы отправки/чтения, очереди, состояние закрытия, информация о типе и внутренний runtime lock. Реализация блокировки зависит от платформы; она не всегда равнозначна futex.",
+      "Копирование значения канала или передача в функцию сохраняет ссылку на тот же канал. В проверенной реализации это указатель, обычно 8 байт на 64-битной платформе. Поля hchan не являются частью Go API.",
+      "Запись sudog связывает горутину, канал и при необходимости место отправляемого/получаемого значения. Блокирующий select регистрирует участвующие ветки с ненулевыми каналами, а не создаёт новую горутину для каждой ветки.",
+      "При обычном заблокированном чтении отправитель извлекает ожидающего из recvq, передаёт значение и делает получателя готовым к запуску. Получатель освобождает свой sudog после продолжения работы. Один профиль аллокаций не объясняет, почему понадобилось много ожидающих."
+    ],
+    "practicalRU": "Опора для памяти: канал — состояние, sudog — заявка на операцию, G — исполнитель. Нарисуй одну G с тремя заявками в разных очередях. Затем объясни, почему выбранная ветка select должна снять остальные заявки.",
+    "versionNote": "hchan/sudog — детали runtime, сверенные для Go 1.25.0/1.26.1. Размер указателя зависит от архитектуры. Показанный псевдокод не является полным layout или публичным API.",
+    "sources": [
+      {
+        "title": "chan.go — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/chan.go"
+      },
+      {
+        "title": "chan.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
+      }
+    ],
+    "practice": {
+      "kind": "Нарисуй связи",
+      "promptEN": "One goroutine blocks in a select receiving from three distinct non-nil channels. With no default and no ready case, how many goroutines and waiting records does this need?",
+      "promptRU": "Одна горутина блокируется в select с чтением из трёх разных ненулевых каналов. Нет default и готовых веток. Сколько здесь горутин и записей ожидания?",
+      "pointsEN": [
+        "There is still one waiting goroutine, not three.",
+        "The general select path registers one sudog for each of the three participating cases.",
+        "One case wins; the runtime removes the remaining registrations before returning from select."
+      ],
+      "pointsRU": [
+        "Ожидающая горутина по-прежнему одна.",
+        "Общий путь select регистрирует по sudog для каждой из трёх участвующих веток.",
+        "Выигрывает одна ветка; остальные регистрации снимаются до возврата из select."
+      ],
+      "followUpEN": "What changes if one of those channel variables is nil?",
+      "followUpRU": "Что изменится, если одна переменная канала равна nil?"
+    },
+    "code": "// Pseudocode: relationships, not the actual runtime layout.\nchannel: buffer + sendq + recvq + closed + lock\nwaiter:  goroutine + channel + element storage\n\nG1 -> waiter A -> channel A.recvq\nG1 -> waiter B -> channel B.recvq\nG1 -> waiter C -> channel C.recvq"
   },
+
   {
-    id: "c17",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim2",
-    qEN: "Q17: Walk through channel send/receive under the hood: how do sendDirect (stack-to-stack copy) and gopark(chanparkcommit) work safely?",
-    qRU: "Как под капотом работают запись и чтение из канала: почему sendDirect пишет прямо в чужой стек и зачем gopark отпускает мьютекс только на стеке g0?",
-    shortEN: "When sending to a channel under hchan.lock, if a receiver is already waiting in recvq, the sender bypasses the ring buffer completely and copies the value directly from its own stack into the parked receiver's stack via sendDirect, then wakes it via goready. If blocking is required, gopark switches to the g0 stack BEFORE unlocking hchan.lock via chanparkcommit to prevent wakeup race conditions.",
-    detailsEN: [
-      "The 3 Paths of chansend: 1) Waiting receiver in recvq -> sendDirect + goready (puts receiver in P.runnext); 2) Space in buffer -> copy to buf[sendx]; 3) Buffer full -> enqueue sudog in sendq + gopark.",
-      "Why sendDirect Needs a GC Barrier: Because sendDirect is the ONLY place in Go where one goroutine writes directly into another goroutine's stack (dst = sg.elem), it explicitly fires 'typeBitsBulkBarrier' before 'memmove' so the tri-color GC tracks transferred pointers, and 'g.activeStackChans' prevents GC from shrinking the receiver's stack mid-copy.",
-      "Why gopark Unlocks on g0 (chanparkcommit): If G1 unlocked hchan.lock while still executing on its own stack, another CPU core could immediately dequeue G1's sudog and call gogo(G1) while Core 1 is still using G1's stack! Switching RSP to g0 first makes the handoff 100% race-free."
+    "id": "c17",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "simId": "sim3",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "qEN": "Q17: How does a channel safely hand a value to a waiting receiver?",
+    "qRU": "Как канал безопасно передаёт значение ожидающему получателю?",
+    "shortEN": "The sender transfers the value while holding the channel lock, releases the lock, and makes the receiver runnable. Runnable does not mean already running. Parking and stack copying follow a coordinated protocol so the waiting receiver’s storage stays valid.",
+    "shortRU": "Отправитель передаёт значение под блокировкой канала, отпускает её и делает получателя готовым к запуску. Готовность ещё не означает выполнение. Парковка и копирование стека согласованы так, чтобы место для результата оставалось корректным.",
+    "detailsEN": [
+      "For an open channel, chansend first checks for a waiting receiver under the lock. It can bypass the buffer and copy to the receive destination with sendDirect. The source may be on the stack or heap; a discarded receive needs no destination copy.",
+      "When a receive must wait, it registers a sudog and sets parkingOnChan before gopark. On the system-stack parking path, chanparkcommit sets activeStackChans, clears parkingOnChan and then unlocks the channel.",
+      "activeStackChans does not permanently pin the stack. Stack copying coordinates with the channels and adjusts sudog pointers. sendDirect uses a type-aware barrier for pointer transfers and avoids preemption between reading the destination pointer and using it. recvDirect is a related direct-transfer path.",
+      "After the copy, the sender unlocks before goready. The receiving goroutine later resumes, clears its waiting state and releases its sudog. Neither immediate execution nor a particular CPU cache state is promised."
     ],
-    practicalRU: "Обрати внимание: даже при 'sendDirect' данные всегда КОПИРУЮТСЯ по значению через 'memmove(dst, src, size)'. Если передавать по каналу по значению тяжеловесную структуру в 4 КБ (вместо указателя '*BigStruct'), то каждый 'ch <- val' будет копировать 4 КБ под захваченным мьютексом канала 'hchan.lock', блокируя остальные горутины.",
-    code: `// src/runtime/chan.go — direct stack-to-stack copy bypassing ring buffer:
-func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
-    dst := sg.elem // address of variable x directly inside parked G1's 2KB stack!
-    typeBitsBulkBarrier(t, uintptr(dst), uintptr(src), t.Size_)
-    memmove(dst, src, t.Size_)
-}`
+    "detailsRU": [
+      "Для открытого канала chansend сначала проверяет ожидающего получателя под блокировкой. Значение может пройти мимо буфера к месту результата через sendDirect. Источник может быть на стеке или в куче; при отбрасывании результата копия в место назначения не нужна.",
+      "Если чтению нужно ждать, оно регистрирует sudog и устанавливает parkingOnChan перед gopark. На пути парковки через системный стек chanparkcommit устанавливает activeStackChans, снимает parkingOnChan и затем отпускает блокировку.",
+      "activeStackChans не закрепляет стек навсегда. Копирование стека согласуется с каналами и поправляет указатели sudog. sendDirect использует барьер с учётом типа для переноса указателей и исключает вытеснение между чтением адреса назначения и его использованием. Есть и связанный путь recvDirect.",
+      "После копирования отправитель отпускает блокировку перед goready. Позже получатель продолжает работу, очищает состояние ожидания и освобождает sudog. Немедленное выполнение и определённое состояние кеша CPU не гарантированы."
+    ],
+    "practicalRU": "Опора для памяти: «значение передано → запуск разрешён → код продолжился». В диаграмме это отдельные состояния. При передаче больших структур измеряй стоимость копирования; переход на указатель требует явного владения данными и может изменить нагрузку на GC.",
+    "versionNote": "Учебный путь обычной блокирующей операции без select/таймеров; runtime Go 1.25.0 и 1.26.1. Имена внутренних полей и доступ к ним могут меняться. Диаграмма показывает один допустимый порядок, а не гарантированный график планировщика.",
+    "sources": [
+      {
+        "title": "chan.go — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/chan.go"
+      },
+      {
+        "title": "chan.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
+      },
+      {
+        "title": "stack.go — Go 1.26.1: syncadjustsudogs/copystack",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "proc.go — Go 1.26.1: park_m",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Раздели события",
+      "promptEN": "A sender has copied 42 into a waiting receiver’s destination and called goready. Has the receiver already executed the statement after its receive?",
+      "promptRU": "Отправитель скопировал 42 в место результата ожидающего получателя и вызвал goready. Выполнил ли получатель следующую после чтения строку?",
+      "pointsEN": [
+        "Not necessarily: becoming runnable only makes execution possible.",
+        "The scheduler must run the receiver before that goroutine can continue.",
+        "The receiver releases its waiting record when it resumes, not merely when the sender dequeues it."
+      ],
+      "pointsRU": [
+        "Не обязательно: готовность лишь делает выполнение возможным.",
+        "Чтобы горутина продолжилась, планировщик должен её запустить.",
+        "Получатель освобождает запись ожидания после продолжения, а не просто при извлечении записи отправителем."
+      ],
+      "followUpEN": "How could the sender wait until processing is finished, not merely until the value is received?",
+      "followUpRU": "Как отправителю дождаться завершения обработки, а не только получения значения?"
+    },
+    "code": "// Pseudocode: ordinary send to a waiting receiver.\nlock(channel)\nwaiter = dequeue(receiverQueue)\ncopyValueToReceiver(waiter, value)\nunlock(channel)\nmakeRunnable(waiter.goroutine)\n// Later, when scheduled: receiver resumes and releases waiter."
   },
+
   {
     id: "c18",
     mod: "m3",
@@ -612,27 +761,68 @@ if sgp.isSelect && !sgp.g.selectDone.CompareAndSwap(0, 1) {
 }`
   },
   {
-    id: "c20",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim2",
-    qEN: "Q20: How does Compare-And-Swap (CAS) work in Go assembly (LOCK CMPXCHG) and CPU caches (MESI), and what is False Sharing?",
-    qRU: "Как работает CAS в Go на уровне ассемблера (LOCK CMPXCHG) и кэш-линий процессора (протокол MESI), и что такое False Sharing?",
-    shortEN: "In Go, atomic.CompareAndSwap is a compiler intrinsic that emits a hardware LOCK CMPXCHG instruction on amd64 (or CASAL on ARM64). The CPU core locks the target 64-byte L1/L2 cache line in Exclusive/Modified state via the MESI cache coherency protocol, flushes its store buffer, and atomically updates the value if it matches old.",
-    detailsEN: [
-      "Hardware Execution: Loads 'old' into EAX and 'new' into ECX. 'LOCK CMPXCHGL CX, 0(BX)' compares EAX with memory, writes ECX if equal, sets the Zero Flag (ZF = 1), and acts as a full memory barrier.",
-      "Where Go Runtime Uses CAS: Goroutine status changes (casgstatus), P.runnext, P.runqhead (lock-free Work Stealing), g.selectDone, and the fast-path of sync.Mutex.",
-      "The ABA Problem: If a value changes A -> B -> A, CAS succeeds unaware of intermediate mutations (solved with monotonic version counters)."
+    "id": "c20",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim5",
+    "qEN": "Q20: What does compare-and-swap do, and why is a separate check and store different?",
+    "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
+    "shortEN": "Compare-and-swap means: replace this value only if it still equals the value I expect. The comparison and conditional update are one atomic operation. It returns true if the update happened and false otherwise, so competing goroutines can tell who changed the state.",
+    "shortRU": "Compare-and-swap означает: замени это значение, только если оно всё ещё равно ожидаемому. Проверка и условная запись выполняются одной атомарной операцией. Результат true означает успешную замену, false — несовпадение; так конкурирующие горутины узнают, кто изменил состояние.",
+    "detailsEN": [
+      "Think of three inputs: the location, expected old value and proposed new value. If state starts at 0 and two goroutines each try CAS(0, 1), only one can succeed as long as nothing resets state. A failure does not wait or retry by itself.",
+      "Separate atomic Load and Store calls do not make a combined check-and-update atomic. Both callers can load 0 before either stores 1. CAS closes this gap for the one value it operates on; it does not make an entire multi-field algorithm atomic.",
+      "Go atomics behave as if in a sequentially consistent order. The checked amd64 implementation uses LOCK CMPXCHG; arm64 has LSE and load/store-exclusive paths. Cache coherence is part of the hardware implementation, not a promise of one latency, one cache-line size or identical instructions on every CPU.",
+      "CAS compares the current value, not its history: A → B → A can still match A. A state/version design needs its own correctness argument. Start with a mutex for compound invariants unless an atomic design has a concrete benefit."
     ],
-    practicalRU: "Практический кейс деградации производительности в 10 раз (False Sharing / Cache-Line Ping-Pong): если у тебя в структуре подряд лежат два атомарных счётчика (`type Metrics struct { reqs atomic.Uint64; errs atomic.Uint64 }`), они попадают в одну и ту же 64-байтную кэш-линию CPU! Когда 16 ядер инкрементят `reqs` и `errs` через LOCK, ядра постоянно инвалидируют кэш L1 друг друга по шине MESI. Лечится выравниванием (padding `[56]byte` или `cpu.CacheLinePad`) либо шардированием счётчиков по ядрам.",
-    code: `// Preventing False Sharing across 64-byte CPU cache lines:
-type PaddedCounter struct {
-    val atomic.Uint64
-    _   [56]byte // 8 + 56 = 64 bytes (fits on its own dedicated L1/L2 cache line!)
-}`
+    "detailsRU": [
+      "Запомни три входа: место в памяти, ожидаемое старое значение, предлагаемое новое. Если state сначала 0 и две горутины пробуют CAS(0, 1), успешной будет только одна, пока никто не сбрасывает state. Неудачный CAS сам не ждёт и не повторяется.",
+      "Отдельные атомарные Load и Store не делают всю проверку с изменением атомарной. Оба участника могут прочитать 0 до первой записи 1. CAS закрывает этот промежуток для одного значения, но не превращает весь алгоритм с несколькими полями в атомарный.",
+      "Атомики Go ведут себя как операции в едином последовательном порядке. В проверенной реализации amd64 используется LOCK CMPXCHG; у arm64 есть пути LSE и exclusive load/store. Когерентность кешей относится к аппаратной реализации, а не к гарантии одной задержки, размера cache line или инструкции для всех CPU.",
+      "CAS сравнивает текущее значение, а не историю: после A → B → A сравнение с A может пройти. Для схемы с версией состояния всё равно нужно обоснование корректности. Для составного инварианта начни с мьютекса, если у атомарной схемы нет конкретной пользы."
+    ],
+    "practicalRU": "Опора для памяти: «ожидаю 0 → предлагаю 1 → получилось?» Для false sharing отдельно проверь, делят ли часто изменяемые независимые данные одну cache line. Соседние поля не всегда попадают в одну линию; padding увеличивает расстояние, но сам по себе не гарантирует выравнивания объекта. Измеряй эффект на целевой архитектуре.",
+    "versionNote": "Пример с atomic.Int32 требует Go 1.19+, подходит для 1.25/1.26. В Go 1.17 используй var state int32 и atomic.CompareAndSwapInt32(&state, 0, 1), а для конкурентного чтения — atomic.LoadInt32. Ассемблерные детали сверены по Go 1.26.1 отдельно для amd64 и arm64.",
+    "sources": [
+      {
+        "title": "sync/atomic — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync/atomic@go1.26.1"
+      },
+      {
+        "title": "CAS amd64 — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/atomic/atomic_amd64.s"
+      },
+      {
+        "title": "CAS arm64 — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/atomic/atomic_arm64.s"
+      },
+      {
+        "title": "Typed atomics: Go 1.19",
+        "url": "https://go.dev/doc/go1.19"
+      }
+    ],
+    "practice": {
+      "kind": "Предскажи победителя",
+      "promptEN": "Two goroutines call state.CompareAndSwap(0, 1) once. state starts at 0 and nobody resets it. What outcomes are possible?",
+      "promptRU": "Две горутины по одному разу вызывают state.CompareAndSwap(0, 1). Изначально state=0, сброса нет. Какие результаты возможны?",
+      "pointsEN": [
+        "Exactly one call returns true and the other returns false.",
+        "Which goroutine succeeds is unspecified. The final state is 1.",
+        "Separate Load and Store calls can let both goroutines believe they won; each atomic call alone is not enough."
+      ],
+      "pointsRU": [
+        "Ровно один вызов вернёт true, другой — false.",
+        "Какая горутина победит, не определено. Итоговое значение — 1.",
+        "Отдельные Load и Store могут дать обоим участникам считать себя победителями; атомарности каждого отдельного вызова недостаточно."
+      ],
+      "followUpEN": "What changes if a third goroutine can reset state to 0 between the attempts?",
+      "followUpRU": "Что изменится, если третья горутина может вернуть state в 0 между попытками?"
+    },
+    "code": "// Function fragment; import \"sync/atomic\". Go 1.19+.\nfunc Claim(state *atomic.Int32) bool {\n\treturn state.CompareAndSwap(0, 1)\n}\n// false means the expected value did not match. No automatic retry.\n// Use atomic access consistently for concurrent access to state."
   },
+
   {
     id: "c21",
     mod: "m3",

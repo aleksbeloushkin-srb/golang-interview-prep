@@ -3,7 +3,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/)
 [![Flashcards](https://img.shields.io/badge/Flashcards-38_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)
 [![Simulators](https://img.shields.io/badge/Simulators-7_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-20_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-21_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
 Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
@@ -18,7 +18,7 @@
 * 🔬 **[2. Интерактивные диаграммы рантайма (7 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[3. Полная база знаний (Wiki — все 38 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[5. Code Traps & Production Code Review Quiz (20 задач)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском.
+* 🧠 **[5. Code Traps & Production Code Review Quiz (21 задача)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском.
 
 ---
 
@@ -29,19 +29,19 @@
   2. `Under the Hood Details (EN)` — низкоуровневая механика рантайма и вырезки из исходников Go (`proc.go`, `chan.go`, `select.go`, `asm_amd64.s`).
   3. `🛠️ Production Debugging (RU)` — как знание этого механизма помогает расследовать реальные проблемы в продакшене (CPU throttling в K8s, утечки горутин, `False Sharing` кэш-линий, `noscan mspan`, `GOMEMLIMIT`).
 * **7 интерактивных пошаговых симуляторов (`#/simulators`):**
-  * **Sim 1:** Путь от `go fn()` до регистров CPU (`newproc1` на стеке `g0` $\rightarrow$ `runtime.goexit` $\rightarrow$ LIFO-слот `P.runnext` $\rightarrow$ `runtime.gogo` и регистры `R14`, `RSP`, `RIP`).
+  * **Sim 1:** Создание, запуск и завершение горутины; роли `R14`, `RSP` и `RIP` на amd64 простыми словами, сохранённое состояние и переход через `gogo`/`mcall`.
   * **Sim 2:** Планировщик GMP, правило 61-го тика, асинхронное вытеснение (`sysmon` + `SIGURG` каждые 10 мс), `Work Stealing` (50% очереди) и `Syscall Handoff` против `netpoller`.
-  * **Sim 3:** Каналы (`runtime.hchan`), безопасная парковка `sudog` через `gopark(chanparkcommit)` на стеке `g0` и прямое копирование между стеками (`sendDirect`).
+  * **Sim 3:** Пять шагов передачи значения: регистрация ожидания, парковка, копирование, готовность и продолжение. Постоянные обозначения отправителя/канала/получателя и вопросы для самопроверки.
   * **Sim 4:** Оператор `select` (`runtime.selectgo`): перемешивание `pollorder` (Фишер — Йетс), сортировка адресов `lockorder` против AB-BA дедлока и атомарная гонка пробуждений `g.selectDone`.
-  * **Sim 5:** Аппаратный `CAS` (`LOCK CMPXCHGL`), протокол когерентности кэшей `MESI` и переключение `sync.Mutex` между `Normal Mode` и `Starvation Mode` (> 1 мс).
+  * **Sim 5:** CAS от смысла «замени, если совпало» до успеха/неуспеха и ролей регистров в конкретном листинге amd64. Различия архитектур и ограничения атомарности.
   * **Sim 6:** Аллокатор памяти (`mcache` / `mcentral` / `mheap`, спаны `scan` vs `noscan`) и 4 фазы трёхцветного GC с `Hybrid Write Barrier`.
   * **Sim 7:** Эволюция `map` в Go: классическая `hmap`/`bmap` против новой **SwissTable (Go 1.24+)** (`ctrl` мета-слово, `H1`/`H2` хеш, `SIMD/SWAR` побитовый поиск за 1 такт и `Extendible Hashing`).
-* **20 боевых задач на Code Review (`#/quiz`):**
+* **21 задача на Code Review (`#/quiz`):**
   * Каждая задача содержит реальный сниппет кода, **6 сложных вариантов ответа** (с разбором популярных полу-мифов), объяснение корневой причины в рантайме на русском и готовую речь для интервью на английском (`Ready-to-Speak English Answer`).
 
 ---
 
-## 📚 Содержание модулей (38 карточек + 20 задач)
+## 📚 Содержание модулей (38 карточек + 21 задача)
 
 ### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
 * Горутина против потока ОС (стек 2 КБ vs 2 МБ, переключение ~15 нс vs ~1–2 мкс).
@@ -97,7 +97,7 @@ golang-runtime-prep/
 ├── data/
 │   ├── cards.js        # База из 38 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
 │   ├── simulators.js   # Пошаговые состояния для 7 диаграмм и сводной таблицы
-│   └── quiz.js         # 20 задач на Production Code Review (по 6 вариантов ответа)
+│   └── quiz.js         # 21 задача на Production Code Review (по 6 вариантов ответа)
 └── js/
     └── app.js          # Hash-роутер (#/cards, #/simulators, #/wiki, #/quiz), фильтры и localStorage
 
@@ -127,7 +127,7 @@ open index.html
 
 Полный аудит исходного состояния и план: [AUDIT_AND_PLAN_RU.md](AUDIT_AND_PLAN_RU.md), реестр Go-материала: [GO_CONTENT_AUDIT_RU.md](GO_CONTENT_AUDIT_RU.md). Выполненные изменения и проверки: [CHANGE_LOG_RU.md](CHANGE_LOG_RU.md). Материал проходит поэтапную редакцию; наличие темы в каталоге выше не означает, что все замечания аудита уже исправлены.
 
-Полные согласованные EN/RU объяснения подготовлены для пяти тем: c2 (гонки), c12 (утечки горутин), c14 (состояния каналов), c18/c19 (select). В подборке «С практикой» после основного ответа можно раскрыть упражнение: сначала объясни решение своими словами, затем открой «Сверить рассуждение». Русские переводы раскрываются отдельно; ответить для понимания можно по-русски, затем повторить объяснение по-английски. Сайт пока не записывает устные ответы и не оценивает их автоматически.
+Полные согласованные EN/RU объяснения подготовлены для десяти тем: c2 (гонки), c6 (регистры), c12 (утечки), c13/c14/c16/c17 (каналы), c18/c19 (select), c20 (CAS). В подборке «С практикой» после основного ответа можно раскрыть упражнение: сначала объясни решение своими словами, затем открой «Сверить рассуждение». Русские переводы раскрываются отдельно; ответить для понимания можно по-русски, затем повторить объяснение по-английски. Сайт пока не записывает устные ответы и не оценивает их автоматически. У связанных карточек есть переходы к q15/q21 и обратно. В диаграммах доступны предыдущий/следующий шаг; в обновлённых схемах — EN-пояснения и скрытые ответы для самопроверки.
 
 Основания учебных приёмов и дальнейший план: [LEARNING_DESIGN_RU.md](LEARNING_DESIGN_RU.md). Отчёты браузерных проверок: [опубликованная версия](docs/verification/2026-10-26-live.json) и [локальная порция с упражнениями](docs/verification/2026-10-26-learning.json).
 

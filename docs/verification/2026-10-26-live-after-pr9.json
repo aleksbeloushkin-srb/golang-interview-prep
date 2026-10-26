@@ -1,0 +1,43 @@
+{
+  "checkedDate": "2026-10-26",
+  "mergedRevision": "e67fbcb",
+  "site": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 10289
+    },
+    {
+      "path": "css/style.css",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 13957
+    },
+    {
+      "path": "js/app.js",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 25576
+    },
+    {
+      "path": "data/cards.js",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 113967
+    },
+    {
+      "path": "data/quiz.js",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 80100
+    },
+    {
+      "path": "data/simulators.js",
+      "status": 200,
+      "matchesMerged": true,
+      "bytes": 69857
+    }
+  ]
+}
