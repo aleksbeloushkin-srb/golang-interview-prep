@@ -969,26 +969,80 @@ func parseFast(n int) {
 // Sweep all remaining WHITE slots back to mspan free lists.`
   },
   {
-    id: "c27",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim3",
-    qEN: "Q27: What are the 4 phases of a Go GC cycle, what is Mark Assist, and how do GOGC and GOMEMLIMIT control GC?",
-    qRU: "Каковы 4 фазы цикла GC в Go, что такое Mark Assist и как GOGC и GOMEMLIMIT управляют частотой сборок?",
-    shortEN: "A GC cycle runs in 4 phases: Mark Setup (STW #1), Concurrent Mark (using ~25% CPU plus Mark Assist), Mark Termination (STW #2), and Concurrent Sweep. Collection is triggered by the GC Pacer based on GOGC (default 100% heap doubling) and GOMEMLIMIT (soft memory cap introduced in Go 1.19).",
-    detailsEN: [
-      "4 Phases: 1) Mark Setup (STW #1, enables Write Barrier); 2) Concurrent Mark (background workers use 25% of GOMAXPROCS); 3) Mark Termination (STW #2, disables Write Barrier); 4) Concurrent Sweep (reclaims white mspan slots lazily).",
-      "What is Mark Assist: If user goroutines allocate memory faster than background GC workers can mark the heap, the runtime forces the allocating goroutine itself to pause its business logic and help scan objects ('gcAssistAlloc') as backpressure.",
-      "GOGC vs. GOMEMLIMIT: GOGC=100 triggers GC when the heap doubles relative to the previous live heap. GOMEMLIMIT sets a soft ceiling on total Go runtime memory to prevent container OOM kills."
+    "id": "c27",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim6",
+    "qEN": "Q27: How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?",
+    "qRU": "Как фазы GC, mark assist, GOGC и GOMEMLIMIT влияют на память и задержки?",
+    "shortEN": "GOGC sets a heap growth goal; the pacer starts marking early enough to aim for that goal. GOMEMLIMIT is a soft budget for memory managed by Go, not an OOM shield. GC mostly works alongside the program, but brief stop-the-world transitions and allocation assists can still affect latency.",
+    "detailsEN": [
+      "A useful four-stage model is mark setup during STW, concurrent marking, mark termination during STW, then concurrent sweeping. Sweep termination precedes setup. Sweeping reclaims dead slots; returning pages to the OS is separate scavenger work. No fixed pause duration is guaranteed.",
+      "Mark assists make allocating goroutines contribute tracing work according to allocation debt. This can add request latency. In Go 1.26.1 the background marking target is about 25% of GOMAXPROCS CPU capacity during marking, not a cap on all GC CPU usage.",
+      "For estimates, heap goal = live heap + (live heap + roots) × GOGC / 100. With 100 MiB live and 20 MiB roots, GOGC=100 gives 220 MiB, not 200 MiB. The trigger is earlier than the goal; minimums, pacing and the memory limit affect the actual target.",
+      "GOMEMLIMIT accounts for runtime memory as MemStats.Sys − MemStats.HeapReleased. This includes more than the heap but excludes C allocations, manually mmap-ed memory and the executable. It is neither process RSS nor a container limit. The runtime adjusts GC and memory release; it may exceed the budget to preserve progress.",
+      "If reachable data cannot fit, collecting more often cannot remove it. Leave measured headroom for memory outside Go and workload spikes. Even with GOGC=off, a finite memory limit can drive GC. A lower limit can increase collection work rather than solve a leak."
     ],
-    practicalRU: "Два важнейших продакшен-кейса: 1) Если у твоего пода в K8s лимит памяти 4 ГБ, а живая куча выросла до 2.5 ГБ, то при дефолтном `GOGC=100` следующий GC запустится только на 5 ГБ — и Linux OOM Killer убьёт под! Всегда выставляй `GOMEMLIMIT=3600MiB` (85–90% от лимита контейнера). 2) Если в pprof или `go tool trace` твои HTTP-хендлеры проводят много времени в `runtime.gcAssistAlloc` (Mark Assist) — значит, сервис аллоцирует память быстрее, чем GC успевает её размечать (помогает `sync.Pool`).",
-    code: `// Production Kubernetes deployment best practice (for a 4GiB container limit):
-// Env vars:
-// GOGC=100
-// GOMEMLIMIT=3600MiB  <-- Prevents OOM kill when live heap exceeds 50% of container RAM!
-// GODEBUG=gctrace=1   <-- Logs every GC cycle duration, STW pauses, and heap size`
+    "practicalRU": "Сначала сравни память runtime, RSS/память контейнера, живую кучу, скорость аллокаций и GC CPU. Затем найди удержание данных и горячие выделения через профили и trace. Для контейнера 4 GiB значение 3600 MiB может быть лишь стартовой гипотезой после оценки резерва; оно не гарантирует отсутствие OOM. Снижай ненужные выделения и ограничивай кеши/конкурентность. sync.Pool рассматривай только для измеренного переиспользования: он не задаёт предел памяти и не гарантирует сохранение объектов. Опора для памяти: «цель — когда начать — что учитывает бюджет».",
+    "code": "// Conceptual estimates, not executable Go or an exact pacer trace.\nheapGoal ≈ liveHeap + (liveHeap + roots) * GOGC / 100\n100 MiB + (100 MiB + 20 MiB) * 100 / 100 = 220 MiB\n// Marking starts before the goal; the limit may lower the goal.\nruntimeMemory = MemStats.Sys - MemStats.HeapReleased\n// runtimeMemory != process RSS != container memory usage",
+    "shortRU": "GOGC задаёт цель роста кучи; pacer начинает разметку заранее, чтобы стремиться к этой цели. GOMEMLIMIT — мягкий бюджет памяти под управлением Go, а не защита от любого OOM. GC в основном работает вместе с программой, но переходы stop-the-world и помощь при аллокациях влияют на задержки.",
+    "detailsRU": [
+      "Полезная модель из четырёх этапов: подготовка разметки в STW, конкурентная разметка, завершение разметки в STW и конкурентная очистка. Перед подготовкой завершается предыдущая очистка. Sweep освобождает мёртвые ячейки; возврат страниц ОС — отдельная работа scavenger. Фиксированная длительность паузы не гарантируется.",
+      "Mark assist заставляет выделяющую память горутину выполнить часть обхода соразмерно долгу за аллокации. Это может увеличить задержку запроса. В Go 1.26.1 цель фоновой разметки — около 25% CPU-мощности GOMAXPROCS во время marking, а не предел всех затрат GC.",
+      "Для оценки: цель кучи = живая куча + (живая куча + корни) × GOGC / 100. При 100 MiB живых данных, 20 MiB корней и GOGC=100 получится 220 MiB, а не 200 MiB. Запуск происходит раньше достижения цели; минимумы, pacer и лимит памяти влияют на фактическую цель.",
+      "GOMEMLIMIT учитывает память runtime как MemStats.Sys − MemStats.HeapReleased. Это больше, чем одна куча, но сюда не входят C-аллокации, ручной mmap и исполняемый файл. Это не RSS процесса и не лимит контейнера. Runtime регулирует GC и возврат памяти, но может превысить бюджет ради продолжения работы.",
+      "Если достижимые данные не помещаются, более частый GC не сможет их удалить. Нужен измеренный запас для памяти вне Go и всплесков нагрузки. Даже при GOGC=off конечный лимит памяти может запускать GC. Снижение лимита способно увеличить работу сборщика вместо устранения утечки."
+    ],
+    "versionNote": "Go 1.17: в формуле ещё нет учёта корней, GOMEMLIMIT отсутствует. Корни включены с 1.18, мягкий лимит — с 1.19. В 1.25 Green Tea экспериментальный; в 1.26 включён по умолчанию и меняет организацию marking/scanning, но не превращает GOMEMLIMIT в жёсткий предел. Детали pacer проверены по Go 1.26.1; формула — учебная оценка, не точная трасса runtime.",
+    "sources": [
+      {
+        "title": "Go GC guide: goals, memory limit and diagnostics",
+        "url": "https://go.dev/doc/gc-guide"
+      },
+      {
+        "title": "debug.SetMemoryLimit — Go 1.26.1",
+        "url": "https://pkg.go.dev/runtime/debug@go1.26.1#SetMemoryLimit"
+      },
+      {
+        "title": "GC phases — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgc.go"
+      },
+      {
+        "title": "GC pacer — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcpacer.go"
+      },
+      {
+        "title": "Go 1.18: roots in GC pacing",
+        "url": "https://go.dev/doc/go1.18#runtime"
+      },
+      {
+        "title": "Go 1.26: Green Tea default, previously experimental in 1.25",
+        "url": "https://go.dev/doc/go1.26#runtime"
+      },
+      {
+        "title": "sync.Pool contract — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync@go1.26.1#Pool"
+      }
+    ],
+    "practice": {
+      "kind": "Раздели цель и лимит",
+      "promptEN": "A service has 100 MiB of live heap and 20 MiB of roots. With GOGC=100, is 220 MiB the point where GC must start? Will a 4 GiB GOMEMLIMIT protect a 4 GiB container when a C library allocates another 1 GiB?",
+      "promptRU": "У сервиса 100 MiB живой кучи и 20 MiB корней. При GOGC=100 обязан ли GC начаться ровно на 220 MiB? Защитит ли GOMEMLIMIT=4GiB контейнер 4 GiB, если C-библиотека выделяет ещё 1 GiB?",
+      "pointsEN": [
+        "220 MiB is the simplified heap goal, not the start trigger.",
+        "C memory is outside the runtime budget; equal limits leave no allowance for it.",
+        "Choose headroom from measurements and reduce live data or workload if it cannot fit."
+      ],
+      "pointsRU": [
+        "220 MiB — упрощённая цель кучи, а не порог запуска.",
+        "Память C не входит в бюджет runtime; равные лимиты не оставляют для неё запаса.",
+        "Резерв выбирают по измерениям; если живые данные не помещаются, нужно уменьшить их или нагрузку."
+      ],
+      "followUpEN": "If GOGC is off but GOMEMLIMIT is finite, can automatic collection still happen?",
+      "followUpRU": "Если GOGC выключен, но GOMEMLIMIT конечен, возможна ли автоматическая сборка?"
+    }
   },
   {
     id: "c28",
