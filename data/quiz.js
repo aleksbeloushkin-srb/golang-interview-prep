@@ -229,11 +229,12 @@ func (c *SafeCounter) Log() {
   // =========================================================================
   {
     id: "q9",
-    title: "Задача 9: Утечка горутины при таймауте RPC-вызова (Unbuffered Channel Timeout Leak)",
-    ru: "Ревью продакшен-кода: что произойдёт с этим хендлером под нагрузкой, когда внешний RPC начнёт отвечать медленнее таймаута контекста?",
-    en: "Production Code Review: What happens to this service under load when doSlowRPC responds slower than ctx.Done()?",
-    code: `func handleRequest(ctx context.Context, req Req) (Resp, error) {
-    ch := make(chan Resp) // Небуферизованный канал!
+    title: "Задача 9: Результат после отмены запроса",
+    ru: "Хендлер уже вернулся по ctx.Done(). RPC затем завершился. Что произойдёт с дочерней горутиной и что исправляет буфер на один элемент?",
+    en: "The handler has already returned through ctx.Done(), and the RPC then finishes. What happens to the child goroutine, and what does a one-element buffer fix?",
+    code: `// Fragment: Req, Resp and doSlowRPC are application-defined.
+func handleRequest(ctx context.Context, req Req) (Resp, error) {
+    ch := make(chan Resp)
     go func() {
         ch <- doSlowRPC(req)
     }()
@@ -242,20 +243,25 @@ func (c *SafeCounter) Log() {
     case res := <-ch:
         return res, nil
     case <-ctx.Done():
-        return Resp{}, ctx.Err() // Выходим по таймауту раньше!
+        return Resp{}, ctx.Err()
     }
 }`,
     options: [
-      "Всё безопасно: как только функция handleRequest завершится по ветке <-ctx.Done(), переменная ch выйдет из области видимости, и сборщик мусора автоматически соберёт канал вместе с дочерней горутиной",
-      "Когда doSlowRPC наконец завершится, запись ch <- resp вызовет неперехватываемую панику, так как читающая сторона select уже покинула стековый кадр",
-      "Критический Goroutine Leak: после выхода хендлера по <-ctx.Done() дочерняя горутина попытается записать ответ в небуферизованный канал без читателя, запаркуется через gopark в очереди ch.sendq (_Gwaiting) и останется висеть в памяти до OOM (фикс: make(chan Resp, 1))",
-      "Каждая зависшая в ch <- doSlowRPC горутина навсегда заблокирует свой системный поток ОС (M), и через 10 000 таймаутов сервис упадёт с превышением лимита потоков ядра",
-      "Сработает механизм очистки брошенных каналов в фоновом мониторе sysmon: через 2 минуты простоя горутина получит сигнал SIGURG и принудительно завершится через runtime.goexit",
-      "Утечки горутины не произойдёт, потому что оператор select при выходе из функции автоматически закрывает все созданные внутри локального кадра каналы"
+      "Горутина завершится: при выходе хендлера рантайм закрывает локальный канал и принимает последнее значение.",
+      "Отправка вызовет panic: отсутствие получателя означает, что канал автоматически стал закрытым.",
+      "Горутина зависнет на отправке. Буфер на один результат устранит это ожидание, но не отменит сам RPC.",
+      "Буфер на один элемент решит обе проблемы: освободит отправителя и автоматически отменит медленный RPC.",
+      "Горутина удержит поток ОС до появления читателя, поэтому здесь обязательно нужен отдельный пул потоков.",
+      "Канал и горутина будут собраны GC: локальная переменная ch больше не доступна завершившемуся хендлеру."
     ],
     correct: 2,
-    explanationRU: "Обрати внимание, почему вариант №4 неверный, а №3 — точный: блокировка на канале паркует только саму горутину G через gopark (переводя её в _Gwaiting и освобождая поток M для других задач), поэтому потоки ОС не текут. Но сама структура runtime.g, её 2+ КБ стек, структура sudog и весь ответ Resp навечно зависают в куче (GC не может удалить спящую горутину!). Буфер в 1 элемент make(chan Resp, 1) позволяет горутине положить результат в кольцевой буфер без читателя и штатно завершиться.",
-    speechEN: "This is a classic Goroutine Leak. When 'ctx.Done()' fires first, 'handleRequest' returns and nobody is left to read from the unbuffered channel 'ch'. Once 'doSlowRPC' finishes, the child goroutine blocks forever on 'ch <- resp' in '_Gwaiting' inside 'ch.sendq', permanently leaking its stack and heap references. Fix it by using a buffered channel 'make(chan Resp, 1)'."
+    explanationRU: "Отправитель останется ждать: хендлер ушёл, а другого читателя у этого небуферизованного канала нет. Буфер на один элемент достаточен для единственной отправки результата. Он не отменяет RPC; для этого нужно передать context в поддерживающую отмену операцию. Если операция игнорирует отмену или не возвращается, горутина всё ещё может жить дольше запроса. Также стоит ограничить число одновременных вызовов. Ожидание на канале само по себе не закрепляет за горутиной отдельный поток ОС.",
+    speechEN: "The sender remains blocked because the handler has returned and nobody else receives from this unbuffered channel. A one-element buffer lets this single result be sent. It does not cancel the RPC, so I would also propagate context to an operation that supports cancellation and bound concurrency. A channel wait does not by itself occupy a dedicated OS thread.",
+    versionNote: "Предпосылка задачи — хендлер уже выбрал отмену. Если обе ветки готовы до выбора select, результат недетерминирован. Основной вывод одинаков для Go 1.17, 1.25 и 1.26.",
+    sources: [
+      {"title": "Go pipelines: stopping short", "url": "https://go.dev/blog/pipelines"},
+      {"title": "context.Context — Go 1.26.1", "url": "https://pkg.go.dev/context@go1.26.1#Context"}
+    ]
   },
   {
     id: "q10",

@@ -1,0 +1,150 @@
+{
+  "checks": [
+    "no page overflow 1440 cards",
+    "question visible 1440",
+    "no page overflow 1440 simulators",
+    "no page overflow 1440 wiki",
+    "no page overflow 1440 cheatsheet",
+    "no page overflow 1440 quiz",
+    "no page overflow 390 cards",
+    "question visible 390",
+    "no page overflow 390 simulators",
+    "no page overflow 390 wiki",
+    "no page overflow 390 cheatsheet",
+    "no page overflow 390 quiz",
+    "no page overflow 320 cards",
+    "question visible 320",
+    "no page overflow 320 simulators",
+    "no page overflow 320 wiki",
+    "no page overflow 320 cheatsheet",
+    "no page overflow 320 quiz",
+    "no page overflow 430 cards",
+    "question visible 430",
+    "no page overflow 430 simulators",
+    "no page overflow 430 wiki",
+    "no page overflow 430 cheatsheet",
+    "no page overflow 430 quiz",
+    "review keeps next card",
+    "review finished",
+    "search hides answer",
+    "deep link clears search",
+    "space activates focused next",
+    "wiki keyboard toggle",
+    "wiki expand all",
+    "legacy progress validated",
+    "corrupt storage usable",
+    "unavailable storage usable",
+    "failed write keeps session",
+    "translation c18 320",
+    "translated page fits c18 320",
+    "source links c18",
+    "translation c19 320",
+    "translated page fits c19 320",
+    "source links c19",
+    "q20 wrong feedback 320",
+    "q20 correct feedback 320",
+    "q20 expanded fits 320",
+    "translation c18 390",
+    "translated page fits c18 390",
+    "source links c18",
+    "translation c19 390",
+    "translated page fits c19 390",
+    "source links c19",
+    "q20 wrong feedback 390",
+    "q20 correct feedback 390",
+    "q20 expanded fits 390",
+    "translation c18 1440",
+    "translated page fits c18 1440",
+    "source links c18",
+    "translation c19 1440",
+    "translated page fits c19 1440",
+    "source links c19",
+    "q20 wrong feedback 1440",
+    "q20 correct feedback 1440",
+    "q20 expanded fits 1440",
+    "all steps sim1",
+    "all steps sim2",
+    "all steps sim3",
+    "all steps sim4",
+    "all steps sim5",
+    "all steps sim6",
+    "all steps sim7",
+    "wiki translation",
+    "user mark survives reload",
+    "reset cancellation preserves progress",
+    "confirmed reset persists",
+    "browser back restores card route",
+    "browser forward restores wiki route",
+    "large text fits cards",
+    "large text fits wiki",
+    "large text fits simulators",
+    "large text fits quiz",
+    "landscape fits",
+    "no JavaScript exceptions"
+  ],
+  "layouts": [
+    {
+      "width": 1440,
+      "questionTop": 376.421875,
+      "header": 119
+    },
+    {
+      "width": 390,
+      "questionTop": 418.515625,
+      "header": 117
+    },
+    {
+      "width": 320,
+      "questionTop": 462.109375,
+      "header": 117
+    },
+    {
+      "width": 430,
+      "questionTop": 383.328125,
+      "header": 117
+    }
+  ],
+  "errors": [],
+  "assets": [
+    {
+      "path": "index.html",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 10115
+    },
+    {
+      "path": "css/style.css",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 13656
+    },
+    {
+      "path": "js/app.js",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 23540
+    },
+    {
+      "path": "data/cards.js",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 98496
+    },
+    {
+      "path": "data/quiz.js",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 80339
+    },
+    {
+      "path": "data/simulators.js",
+      "status": 200,
+      "matchesLocal": true,
+      "bytes": 69857
+    }
+  ],
+  "site": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+  "checkedDate": "2026-10-26",
+  "mergedRevision": "80551fd",
+  "browser": "Chrome, isolated test profile, emulated viewport widths"
+}
