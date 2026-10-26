@@ -122,8 +122,8 @@ func main() {
       "При выходе из функции сработает Hybrid Write Barrier, который переведёт массив buf в Чёрный список корней навечно из-за смены размера возвращаемого среза"
     ],
     correct: 3,
-    explanationRU: "Обрати внимание на частый миф в варианте №3: даже если написать buf[:16:16] (ограничив capacity до 16), это защитит только от перезаписи при последующем append, но НЕ освободит 100 МБ! Аллокатор Go выделяет и освобождает неделимые блоки памяти (mspan). Пока хотя бы один указатель ссылается на начало этого блока, весь 100-мегабайтный объект считается достижимым. Единственное лечение — скопировать 16 байт в новый срез через bytes.Clone(buf[:16]) или make+copy.",
-    speechEN: "The returned 24-byte slice header still points to the base address of the 100 MB heap allocation. Because Go's allocator tracks whole memory spans rather than byte ranges (even if you cap it with 'buf[:16:16]'), the GC must keep the entire 100 MB block alive. The fix is to copy the 16 bytes into a fresh allocation via 'bytes.Clone(buf[:16])'."
+    explanationRU: "Обрати внимание на частый миф в варианте №3: даже если написать buf[:16:16] (ограничив capacity до 16), это защитит только от перезаписи при последующем append, но НЕ освободит 100 МБ! GC отслеживает достижимость выделенного объекта, а не только len возвращённого среза. Объект и mspan — не одно и то же: один span небольших объектов содержит много отдельных ячеек. Здесь срез удерживает большой backing array; даже ссылка внутрь массива может сохранять его достижимым. Чтобы вернуть независимые 16 байт, скопируй их через bytes.Clone(buf[:16]) или make+copy; bytes.Clone доступен с Go 1.20.",
+    speechEN: "The returned slice retains the large backing array, even if its length and capacity are restricted to 16. Reachability is tracked for the allocated object, not just the visible byte range; an interior pointer can also keep that object alive. A span and an object are different concepts: a small-object span contains many slots. To return independent bytes, copy the prefix with bytes.Clone, available since Go 1.20, or make plus copy."
   },
   {
     id: "q5",
