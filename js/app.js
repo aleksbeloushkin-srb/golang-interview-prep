@@ -377,7 +377,13 @@ function renderSimStep(simIdx, stepIdx) {
       <div class="channel-part channel-sender"><h4>Отправитель G2</h4><p>${escapeHtml(step.scene.sender)}</p></div>
       <div class="channel-part channel-state"><h4>Канал ch</h4><p>${escapeHtml(step.scene.channel)}</p></div>
       <div class="channel-part channel-receiver"><h4>Получатель G1</h4><p>${escapeHtml(step.scene.receiver)}</p></div>
-    </div><p class="channel-transfer">${escapeHtml(step.scene.transfer)}</p>` : "";
+    </div><p class="channel-transfer">${escapeHtml(step.scene.transfer)}</p>` : step.routes ? `
+    <ol class="select-paths" aria-label="Пути компиляции select">
+      ${step.routes.map(route => `<li class="select-path">
+        <code>${escapeHtml(route.form)}</code><span class="select-path-arrow" aria-hidden="true">→</span>
+        <div><strong>${escapeHtml(route.target)}</strong><p>${escapeHtml(route.note)}</p></div>
+      </li>`).join("")}
+    </ol>` : "";
   document.getElementById(`${sim.id}-recall`).innerHTML = `
     ${step.descEN ? `<details class="translated-answer"><summary>Explain this step in English</summary><p lang="en">${escapeHtml(step.descEN)}</p></details>` : ""}
     ${step.check ? `<div class="step-recall">

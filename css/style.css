@@ -650,6 +650,15 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 
 .learning-hint, .step-recall { margin: 16px 0; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
 .channel-scene { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.select-paths { list-style: none; padding: 0; display: grid; gap: 10px; margin: 16px 0; }
+.select-path { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+.select-path code, .select-path strong { overflow-wrap: anywhere; }
+.select-path p { margin: 6px 0 0; }
+.select-path-arrow { color: var(--accent); font-size: 1.4rem; }
+@media (max-width: 600px) {
+  .select-path { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .select-path-arrow { transform: rotate(90deg); justify-self: start; }
+}
 .channel-part { min-width: 0; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 10px; }
 .channel-sender { border-top-color: var(--amber); }
 .channel-state { border-top-color: var(--green); }

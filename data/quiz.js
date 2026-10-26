@@ -493,31 +493,37 @@ func ReadBalance(id int) int64 {
     speechEN: "Inside 'x/sync/errgroup', 'g.Wait()' unconditionally calls 'g.cancel()' before returning—even when all goroutines succeed with zero errors—to prevent context leaks. Because line 3 shadowed the parent 'ctx' variable ('g, ctx := errgroup.WithContext(ctx)'), 'saveOrderToDB(ctx)' receives an already-canceled context! Always name the group's context 'gCtx' and pass the original parent 'ctx' to downstream calls after 'g.Wait()'."
   },
   {
-    id: "q17",
-    title: "Задача 17: Жадное вычисление выражений в ветках select (Eager Evaluation in Select Send)",
-    ru: "Почему функция fetchNextJobFromDB() вызывается на каждой итерации и тормозит сервис, даже когда канал workerCh полностью забит и воркеры заняты?",
-    en: "Why is fetchNextJobFromDB() executed even when workerCh is completely full and unable to accept a message?",
-    code: `func Dispatcher(ctx context.Context, workerCh chan<- Job) {
-    for {
-        select {
-        case <-ctx.Done():
-            return
-        case workerCh <- fetchNextJobFromDB(): // Долгий синхронный запрос в БД!
-            log.Info("job dispatched")
-        }
-    }
-}`,
-    options: [
-      "Планировщик Go сначала резервирует пустой слот в кольцевом буфере workerCh и только после этого вызывает fetchNextJobFromDB() внутри мьютекса канала",
-      "По спецификации Go все выражения справа от оператора отправки в канал (а также сами каналы) во ВСЕХ ветках case вычисляются синхронно ДО входа в runtime.selectgo! Поэтому fetchNextJobFromDB() вызывается безусловно перед каждой проверкой готовности workerCh, блокируя даже проверку <-ctx.Done() (и теряя вычитанную из БД задачу при отмене контекста!)",
-      "Функция fetchNextJobFromDB() вызывается лениво только тогда, когда в очереди workerCh.recvq появляется свободный sudog читателя, но из-за бага в драйвере БД соединение не закрывается",
-      "Ветка отправки в канал внутри select всегда имеет более высокий приоритет в массиве pollorder, чем ветка чтения из <-ctx.Done()",
-      "Компилятор Go выносит вызов fetchNextJobFromDB() в отдельную фоновую горутину для каждой итерации select, создавая утечку горутин",
-      "Проблема возникает только для небуферизованных каналов workerCh, а при буфере > 0 компилятор откладывает вызов функции до освобождения места"
+    "id": "q17",
+    "title": "Задача 17: Заполненный канал и сигнал остановки",
+    "ru": "Что напечатает программа? Когда вызывается build()?",
+    "en": "What does this program print, and when is build() called?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tout := make(chan int, 1)\n\tout <- 7\n\tdone := make(chan struct{})\n\tclose(done)\n\tcalls := 0\n\tbuild := func() int { calls++; return 42 }\n\tselect {\n\tcase out <- build():\n\t\tfmt.Println(\"sent\")\n\tcase <-done:\n\t\tfmt.Println(\"cancelled\")\n\t}\n\tfmt.Println(calls)\n}",
+    "options": [
+      "cancelled, затем 0: сначала выбирается готовая ветка, потом вычисляются только её выражения.",
+      "cancelled, затем 1: отправляемое значение вычисляется до выбора, хотя отправка не готова.",
+      "sent, затем 1: вычисление build() резервирует место и вытесняет старое значение из буфера.",
+      "cancelled или sent, затем 1: наличие двух веток делает обе операции готовыми к выбору.",
+      "Программа зависнет: заполненная отправка блокирует проверку следующей ветки с done.",
+      "Будет panic: закрытый done нельзя читать внутри select одновременно с отправкой."
     ],
-    correct: 1,
-    explanationRU: "Золотое правило оператора select в Go: перед тем как вызвать runtime.selectgo (который проверит, готов ли канал workerCh принять данные или сработал ли ctx.Done()), компилятор обязан вычислить все каналы и ВСЕ отправляемые значения (правую часть `ch <- expr`) сверху вниз! В результате: 1) даже если все воркеры заняты или контекст уже отменён, мы синхронно идём в БД; 2) если пока мы ждали в select, сработал `<-ctx.Done()`, то уже вычитанный из БД `Job` просто выбрасывается в мусор и теряется!",
-    speechEN: "In Go, all channel expressions and all right-hand-side values in 'send' cases ('workerCh <- expr') are evaluated EAGERLY from top to bottom BEFORE entering 'runtime.selectgo'! As a result, 'fetchNextJobFromDB()' runs unconditionally on every loop iteration even if 'workerCh' is blocked, and if 'ctx.Done()' wins the select, the fetched DB job is silently dropped and lost!"
+    "correct": 1,
+    "explanationRU": "Программа печатает cancelled и 1. Канал out заполнен, а закрытый done готов к чтению. Но build() вычисляется один раз до выбора ветки, поэтому calls увеличивается. Это правило языка для всех форм select; вызов selectgo нужен не всегда. Default и nil-канал также не откладывают вычисление отправляемого значения. Для долгой подготовки передай context в саму функцию и обрабатывай отмену внутри неё. Предварительный ctx.Err() помогает при уже видимой отмене, но не закрывает гонку с последующей работой. Если подготовка читает задачу из БД, сохранность зависит от транзакции и протокола подтверждения: нельзя автоматически объявлять любую прочитанную задачу потерянной.",
+    "speechEN": "It prints cancelled and then 1. The send cannot proceed because out is full, while the closed done channel is ready to receive. However, build runs before case selection, so calls is incremented. This evaluation rule applies even to specialized select paths. For expensive preparation, I would pass context into the operation itself and define how reserved work is acknowledged or returned on cancellation.",
+    "versionNote": "Правило вычисления операндов действует в Go 1.17, 1.25 и 1.26. Полная программа проверена на Go 1.26.1; старые toolchain не запускались.",
+    "sources": [
+      {
+        "title": "Go specification: select",
+        "url": "https://go.dev/ref/spec#Select_statements"
+      },
+      {
+        "title": "Compiler select lowering — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/select.go"
+      }
+    ],
+    "cardIds": [
+      "c18",
+      "c19"
+    ]
   },
   {
     id: "q18",
@@ -677,6 +683,44 @@ func WriteReport(path string, payload []byte) (err error) {
     ],
     "cardIds": [
       "c13"
+    ]
+  },
+  {
+    "id": "q22",
+    "title": "Задача 22: Чтение с запасной веткой",
+    "ru": "Что напечатает этот select? Перейдёт ли он в default при ok=false?",
+    "en": "What does this select print? Does ok=false cause the default branch to run?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tclose(ch)\n\tselect {\n\tcase value, ok := <-ch:\n\t\tfmt.Println(value, ok)\n\tdefault:\n\t\tfmt.Println(\"default\")\n\t}\n}",
+    "options": [
+      "default: отсутствие значения делает чтение неготовым, даже если канал уже закрыт.",
+      "0 true: чтение выбрано, поэтому переменная ok обязательно содержит true.",
+      "Panic: чтение закрытого канала запрещено так же, как отправка в закрытый канал.",
+      "0 false: закрытое чтение готово; ok сообщает, получено ли ранее отправленное значение.",
+      "Случайно default или 0 false: default конкурирует наравне с готовым чтением.",
+      "Программа зависнет: небуферизованный канал всегда требует живого отправителя."
+    ],
+    "correct": 3,
+    "explanationRU": "Вывод — 0 false. Закрытый опустошённый канал готов к чтению: возвращается нулевое значение типа и ok=false. Default нужен только при отсутствии готовых операций. Компилятор Go 1.26.1 использует selectnbrecv: его selected=true выбирает case, а received=false записывается в ok. Эти флаги отвечают на разные вопросы. Если перед закрытием в буфере осталось значение, сначала вернётся оно с ok=true. Если ch=nil, чтение не готово и выполнится default.",
+    "speechEN": "It prints zero and false. Receiving from a closed, drained channel is ready, so the receive case runs. The ok value tells us whether a value sent before closure was received; it does not tell us whether the case was selected. Internally, the non-blocking receive helper returns selected=true and received=false. A nil channel would instead lead to default.",
+    "versionNote": "Семантика применима к Go 1.17/1.25/1.26. Имя helper и его флаги сверены по Go 1.26.1; программа выполнена на этой версии.",
+    "sources": [
+      {
+        "title": "Go specification: select",
+        "url": "https://go.dev/ref/spec#Select_statements"
+      },
+      {
+        "title": "Compiler select lowering — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/select.go"
+      },
+      {
+        "title": "Channel helpers — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
+      }
+    ],
+    "cardIds": [
+      "c14",
+      "c18",
+      "c19"
     ]
   }
 ];
