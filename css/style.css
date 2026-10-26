@@ -675,3 +675,50 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 @media (max-width: 600px) {
   .channel-scene { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* --- План 13 недель (#/plan) --- */
+.plan-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.plan-today { padding: 10px 12px; border-left: 4px solid var(--accent); background: rgba(56, 189, 248, 0.08); border-radius: 6px; }
+.plan-today a { color: var(--accent); }
+.plan-weeks { display: flex; flex-wrap: wrap; gap: 8px; }
+.plan-chip { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; min-width: 64px; justify-content: center; }
+.plan-chip.is-current { border-color: var(--amber); }
+.plan-chip-count { font-size: 0.75rem; color: var(--muted); }
+.plan-settings-row { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; min-width: 0; }
+.plan-settings-row input[type="date"] { max-width: 100%; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-height: 44px; }
+.plan-file { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none; }
+.plan-file:focus-visible + .btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.plan-week h2 { margin: 4px 0 12px; }
+.plan-week h2:focus { outline: none; }
+.plan-week > p { margin-bottom: 8px; }
+.plan-day { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); }
+.plan-day.is-today h3 { color: var(--amber); }
+.plan-day h3, .plan-block h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.plan-tasks { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.plan-task { min-width: 0; }
+.plan-task { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.plan-task.is-optional { border-style: dashed; }
+.plan-task-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+.plan-task-row input[type="checkbox"] { width: 22px; height: 22px; margin-top: 2px; flex: 0 0 auto; accent-color: var(--green); }
+.plan-task-row label { flex: 1 1 220px; cursor: pointer; }
+.plan-task input:checked + label { color: var(--muted); text-decoration: line-through; }
+.plan-optional { font-size: 0.75rem; color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 999px; padding: 0 8px; margin-left: 6px; white-space: nowrap; }
+.plan-links { margin-top: 6px; gap: 4px 14px; font-size: 0.9rem; }
+.plan-links a { overflow-wrap: anywhere; }
+.plan-hint summary, .plan-talk summary { font-size: 0.9rem; }
+.plan-talk-body p { margin: 6px 0; }
+.plan-dialog-them { color: var(--muted); }
+.plan-block { margin-top: 24px; }
+.plan-block ul { padding-left: 20px; }
+.plan-block a { color: var(--accent); overflow-wrap: anywhere; }
+.plan-materials-group h4 { margin: 10px 0 4px; font-size: 0.95rem; color: var(--muted); }
+.plan-predict-list { padding-left: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.plan-predict { min-width: 0; }
+.plan-answer { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font: inherit; margin-top: 4px; }
+.plan-pager { margin-top: 24px; justify-content: space-between; }
+.plan-rules { margin-top: 12px; }
+.plan-chip.active .plan-chip-count { color: inherit; opacity: 0.85; }
+.plan-secondary { font-size: 0.72rem; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; text-decoration: none; display: inline-block; }
+.plan-unreviewed { font-size: 0.72rem; color: var(--amber); border: 1px dashed rgba(245, 158, 11, 0.6); border-radius: 999px; padding: 0 6px; margin-left: 6px; white-space: nowrap; }
+.plan-link { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; min-width: 0; }
+.plan-start-note { margin-top: 8px; color: var(--amber); }

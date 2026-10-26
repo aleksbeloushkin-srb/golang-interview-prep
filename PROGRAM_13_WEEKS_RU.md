@@ -1,0 +1,1239 @@
+# Программа подготовки к интервью Senior Go: 13 недель
+
+Цель: Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET. Старт 12.10.2026, ~10 ч в неделю: 4 вечера по 1,5 ч и 4 ч в субботу; пятница и воскресенье — резерв. Бюджет — ориентир, а не обещание; внешний результат (оффер) план не гарантирует.
+
+Пометки: *(по желанию)* — не входит в обязательный объём недели; *(на редакции)* — материал сайта ещё не прошёл полную проверку источников и двуязычную редакцию. Опорные английские тексты — редакционные наброски, по рубрике не проверены.
+
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-26b.
+
+## Фазы
+
+| Фаза | Недели |
+| --- | --- |
+| Go: язык и конкурентность | 1, 2, 3, 4 |
+| Проект-портфолио: ledger-сервис | 5, 6, 7, 8 |
+| Собеседования и рынок | 9, 10, 11, 12, 13 |
+
+## Обзор
+
+| Нед. | Даты | Тема | Готово, когда |
+| --- | --- | --- | --- |
+| 1 | 12.10–18.10 | Идиомы Go I: типы, интерфейсы, ошибки | Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок. |
+| 2 | 19.10–25.10 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены. |
+| 3 | 26.10–01.11 | Конкурентность I: горутины, каналы, select, sync | W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
+| 4 | 02.11–08.11 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding. |
+| 5 | 09.11–15.11 | Проект I: каркас ledger-сервиса | Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском. |
+| 6 | 16.11–22.11 | Проект II: транзакции, идемпотентность, outbox → Kafka | Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат. |
+| 7 | 23.11–29.11 | Проект III: gRPC, тесты, бенчмарки | Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов. |
+| 8 | 30.11–06.12 | Проект IV: production-readiness, CV | Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском. |
+| 9 | 07.12–13.12 | Take-home, code review, первая волна откликов | Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1. |
+| 10 | 14.12–20.12 | System Design I | 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников. |
+| 11 | 21.12–27.12 | System Design II: event-driven и предметные дизайны | Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов. |
+| 12 | 28.12–03.01 | Behavioral, легенда, CV | Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании. |
+| 13 | 04.01–10.01 | Моки и пик откликов | 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал. |
+
+## Как проговаривать задачи по-английски
+
+1. **Clarify** — Уточнить условие и входные данные. *Before I start, let me clarify a few things.*
+2. **Approach** — Идея решения до кода: brute force, затем лучше. *The brute-force approach would be… We can do better with…*
+3. **Complexity** — Время и память. *This runs in O(n) time and O(n) extra space.*
+4. **Edge cases & tests** — Что проверить, как тест. *Edge cases: an empty input, a single element… I'd turn these into a table-driven test.*
+
+Если завис: *Let me think out loud for a second.* · *I'm not sure yet, but my first idea is…* · *Let me step back and reconsider.* · *Can I assume…? If not, I'd handle it by…*
+
+## Неделя 1. Идиомы Go I: типы, интерфейсы, ошибки (12.10–18.10)
+
+**Цель:** Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.
+
+**Готово, когда:** Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок.
+
+### Пн · 90 мин
+
+- [ ] Tour of Go: Basics — packages, variables, functions, flow control, defer — [Tour of Go](https://go.dev/tour/)
+- [ ] Завести репозиторий go-prep, go mod init, папка week1
+- [ ] LeetCode 49. Group Anagrams + проговор — [LC 49. Group Anagrams](https://leetcode.com/problems/group-anagrams/), проговор: «LC 49. Group Anagrams»
+
+### Вт · 90 мин
+
+- [ ] Tour: pointers, structs, arrays, slices, maps, function values, closures
+- [ ] Go by Example от Values до Closures — набрать руками, не копировать — [Go by Example](https://gobyexample.com/)
+- [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — проговор: «W1-1. Money»
+
+### Ср · 90 мин
+
+- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors
+- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34) (на редакции), [C33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33) (на редакции)
+- [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — проговор: «W1-2. Account и W1-3. ValidationError»
+- [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
+
+### Чт · 90 мин
+
+- [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
+- [ ] defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35) (на редакции), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2) (на редакции), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3) (на редакции), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5) (на редакции)
+- [ ] 100 Go Mistakes: разделы Functions and Methods, Error Management — [100go.co](https://100go.co/)
+- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — проговор: «W1-5. SafeDiv»
+
+### Сб · 240 мин
+
+- [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34) (на редакции), проговор: «W1-6. Method sets»
+- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость
+- [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
+- [ ] Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами — [LC 1. Two Sum](https://leetcode.com/problems/two-sum/), проговор: «LC 1. Two Sum — полный диалог с интервьюером»
+- [ ] Повторный проговор LC 49 и LC 347 без подсказок
+- [ ] Самопроверка недели вслух по-английски (ниже)
+
+**LeetCode недели:** [1. Two Sum](https://leetcode.com/problems/two-sum/) (Hash map), [49. Group Anagrams](https://leetcode.com/problems/group-anagrams/) (Hash map), [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/) (Hash map + buckets), [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) (Prefix/suffix), [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) (Stack)
+
+**Проговорить по-английски:**
+
+- *How does error handling in Go differ from exceptions in Kotlin or Java?*
+- *What is a zero value and why does it matter?*
+- *When do you use a pointer receiver?*
+- *Why can a nil pointer returned as an error be non-nil?*
+- *Tell me about yourself — version 0, 60–90 seconds.*
+
+**Самопроверка:**
+
+- Zero values у int, string, *T, []T, map[K]V, chan T, error?
+- Чем errors.Is отличается от errors.As?
+- Когда метод объявлять на pointer receiver?
+- Почему nil-указатель, возвращённый как error, даёт err != nil?
+- Порядок отложенных вызовов и когда вычисляются их аргументы?
+
+**Материал сайта:**
+
+- [C34 Value Receiver vs. Pointer Receiver — why does a pointer type (*T) implement an interface with value receivers, but a value type (T) does NOT implement an interface with pointer receivers?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34)
+- [C33 How do empty interfaces (eface / any) and non-empty interfaces (iface) work under the hood (itab caching & dynamic dispatch)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33)
+- [C35 How do defer, panic, and recover work under the hood (Open-Coded Defers, g._defer, and gopanic stack unwinding)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35)
+- [Q2 Классическая ловушка интерфейса (Typed nil != nil)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
+- [Q3 Именованный return и модификация в defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
+- [Q5 Паника в дочерней горутине и область действия recover()](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
+
+**Чего пока нет на сайте:**
+
+- На сайте нет карточек по идиомам для JVM-разработчика: ошибки как значения, %w/Is/As, embedding vs наследование, видимость пакетов.
+- Нет режима проговора задач (Clarify → Approach → Complexity → Edge) с таймером и самооценкой.
+
+## Неделя 2. Идиомы Go II: slice, map, строки, generics, тесты (19.10–25.10)
+
+**Цель:** Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.
+
+**Готово, когда:** 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены.
+
+### Пн · 90 мин
+
+- [ ] Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c] — [C29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29) (на редакции), [Go Slices: usage and internals](https://go.dev/blog/slices-intro), [The mechanics of append](https://go.dev/blog/slices)
+- [ ] Ловушки aliasing и удержания памяти — сначала ответ без вариантов — [Q6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6) (на редакции), [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4) (на редакции)
+- [ ] LeetCode 3. Longest Substring Without Repeating Characters + проговор — [LC 3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/), проговор: «LC 3. Longest Substring Without Repeating Characters»
+
+### Вт · 90 мин
+
+- [ ] Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает — [C30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30) (на редакции), [C32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32) (на редакции), [Spec: Map types](https://go.dev/ref/spec#Map_types), [Go maps in action](https://go.dev/blog/maps)
+- [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31) (на редакции), [SIM7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
+- [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
+- [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — проговор: «W2-1. Remove»
+
+### Ср · 90 мин
+
+- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered — [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
+- [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — проговор: «W2-3. Generics vs interfaces»
+- [ ] LeetCode 15. 3Sum + проговор — [LC 15. 3Sum](https://leetcode.com/problems/3sum/), проговор: «LC 15. 3Sum»
+
+### Чт · 90 мин
+
+- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/
+- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы — [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
+- [ ] Покрыть тестами W1-2 и W2-2
+- [ ] Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению — проговор: ««Что выведет код»: как объяснять»
+
+### Сб · 240 мин
+
+- [ ] «Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка — [Q1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1) (на редакции)
+- [ ] Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией) *(по желанию)* — [39 вопросов (Нияз)](https://t.me/niyaz_golang/758), [ТОП-12 Ozon](https://t.me/niyaz_golang/672)
+- [ ] W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — проговор: «W2-4. txsum CLI»
+- [ ] LeetCode 739. Daily Temperatures + проговор (записать) — [LC 739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/), проговор: «LC 739. Daily Temperatures»
+- [ ] Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache *(по желанию)* — [LC 146. LRU Cache](https://leetcode.com/problems/lru-cache/), проговор: «LC 146. LRU Cache»
+- [ ] Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией *(по желанию)* — [Habr: «Коллеги, вы меня огорчаете»](https://habr.com/ru/articles/521582)
+- [ ] Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов» — [Q1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1) (на редакции), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2) (на редакции), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3) (на редакции), [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4) (на редакции), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5) (на редакции), [Q6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6) (на редакции)
+
+**LeetCode недели:** [3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/) (Sliding window), [15. 3Sum](https://leetcode.com/problems/3sum/) (Two pointers), [739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/) (Monotonic stack), [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/) (Intervals), [146. LRU Cache](https://leetcode.com/problems/lru-cache/) (Design: map + list)
+
+**Проговорить по-английски:**
+
+- *How does append work and when does it reallocate?*
+- *Are Go maps safe for concurrent use?*
+- *When would you use generics, and when would you avoid them?*
+- *How do you structure tests in Go?*
+- *Tell me about yourself — version 1, with one concrete story and a number.*
+
+**Самопроверка:**
+
+- Что происходит при append, когда len == cap? И когда len < cap?
+- Почему нельзя написать &m["k"]?
+- Три способа безопасно использовать map из нескольких горутин?
+- Чем []byte(s) отличается от []rune(s), что возвращает len(s)?
+- Как выглядит table-driven тест и зачем t.Helper()?
+
+**Материал сайта:**
+
+- [C29 How are slices and strings represented in memory, and how does slice growth (runtime.growslice) work?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29)
+- [Q6 Мутация общего базового массива при append (Slice Aliasing Trap)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6)
+- [Q4 Скрытая утечка памяти через саб-слайс (Sub-slice Memory Retention)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
+- [C30 How did the classic Go map (hmap / bmap before Go 1.24) work under the hood, and how did incremental evacuation work?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30)
+- [C32 Why does deleting keys from a Go map NOT free memory (Map Memory Leak), and why is map iteration order randomized?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32)
+- [C31 How do SwissTable maps work in Go 1.24+ under the hood (ctrl metadata bytes, H1/H2 hash split, SIMD/SWAR probing, and Split-Table growth)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31) *(Deep Dive)*
+- [SIM7 Диаграмма 7: Устройство map в Go — Классическая hmap против новой SwissTable (Go 1.24–1.25+)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
+- [Q1 Замыкание в цикле и горутины (Loop Variable Capture)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
+- [Q2 Классическая ловушка интерфейса (Typed nil != nil)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
+- [Q3 Именованный return и модификация в defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
+- [Q5 Паника в дочерней горутине и область действия recover()](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
+
+**Чего пока нет на сайте:**
+
+- Нет быстрого режима «что выведет код» без вариантов ответа (ввести вывод → сверить → объяснение EN).
+- Нет карточек по generics и тестированию (table-driven, t.Helper, t.Parallel, -race в CI).
+
+## Неделя 3. Конкурентность I: горутины, каналы, select, sync (26.10–01.11)
+
+**Цель:** Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.
+
+**Готово, когда:** W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.
+
+### Пн · 90 мин
+
+- [ ] Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition — [C1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c1) (на редакции), [C2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c2), [The Go Memory Model](https://go.dev/ref/mem), [Data Race Detector](https://go.dev/doc/articles/race_detector)
+- [ ] Go blog: Pipelines and cancellation — [go.dev/blog/pipelines](https://go.dev/blog/pipelines)
+- [ ] LeetCode 155. Min Stack + проговор — [LC 155. Min Stack](https://leetcode.com/problems/min-stack/)
+
+### Вт · 90 мин
+
+- [ ] Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения — [C13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13), [C14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14), [SIM3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
+- [ ] W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — проговор: «W3-1. Worker pool»
+- [ ] W3-2 Pipeline generator → square → sink с остановкой через context
+
+### Ср · 90 мин
+
+- [ ] select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов — [C18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18), [Q22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [ ] W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода
+- [ ] Code review без вариантов: найти баг и исправление, потом открыть разбор — [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12) (на редакции), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), [Q21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
+- [ ] LeetCode 567. Permutation in String + проговор (записать) — [LC 567. Permutation in String](https://leetcode.com/problems/permutation-in-string/)
+
+### Чт · 90 мин
+
+- [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — [C15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15) (на редакции), [C20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21) (на редакции), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22) (на редакции), [SIM5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
+- [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — проговор: «W3-4. Mutex vs atomic vs channel»
+- [ ] Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map — [Q7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7) (на редакции), [Q8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8) (на редакции), [Q13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13) (на редакции), [Q14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14) (на редакции)
+
+### Сб · 240 мин
+
+- [ ] Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения
+- [ ] 100 Go Mistakes: Concurrency Foundations — [100go.co](https://100go.co/)
+- [ ] LeetCode 150. Evaluate Reverse Polish Notation + проговор — [LC 150. Evaluate Reverse Polish Notation](https://leetcode.com/problems/evaluate-reverse-polish-notation/)
+- [ ] Проговор worker pool и «channel vs mutex» по-английски, записать — проговор: «W3-1. Worker pool»
+- [ ] Самопроверка недели вслух
+
+**LeetCode недели:** [155. Min Stack](https://leetcode.com/problems/min-stack/) (Stack), [567. Permutation in String](https://leetcode.com/problems/permutation-in-string/) (Sliding window), [150. Evaluate Reverse Polish Notation](https://leetcode.com/problems/evaluate-reverse-polish-notation/) (Stack)
+
+**Проговорить по-английски:**
+
+- *How does a goroutine differ from an OS thread?*
+- *Can a program have a race condition without a data race?*
+- *What does a channel buffer change, and what does it not change?*
+- *Who should close a channel, and why?*
+- *When would you choose a mutex over a channel?*
+
+**Самопроверка:**
+
+- Что произойдёт при чтении/записи/закрытии nil, открытого и закрытого канала?
+- Почему закрывает канал отправитель, а не получатель?
+- Как ограничить число одновременно работающих горутин?
+- Чем atomic не заменяет mutex для составного инварианта?
+- Как бы ты проверил отсутствие гонок в CI?
+
+**Материал сайта:**
+
+- [C1 What is a goroutine and how does it differ from an OS thread?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c1)
+- [C2 Can a program have a race condition without a data race?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c2)
+- [C13 What does a channel buffer change, and what does it not change?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13)
+- [C14 How do nil, open, and closed channels behave?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14)
+- [SIM3 Диаграмма 3: Канал — от ожидания до продолжения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
+- [C18 How does select choose a case, and can cancellation take priority?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18)
+- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [Q12 Конкурентный append в общий слайс (Concurrent Slice Append & Lost Updates)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
+- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15)
+- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
+- [C15 Channels vs. Mutexes — when should you use a channel and when should you use a sync.Mutex?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15)
+- [C20 What does compare-and-swap do, and why is a separate check and store different?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20)
+- [C21 How does sync.Mutex work under the hood (Fast-path CAS, Spinning, and Normal vs. Starvation Mode)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21)
+- [C22 How do sync.WaitGroup, sync.Once, and context.Context work under the hood (and what are their classic pitfalls)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
+- [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
+- [Q7 Передача sync.WaitGroup по значению (Copying Sync Primitives)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
+- [Q8 Рекурсивный захват sync.Mutex в одной горутине (Non-Reentrant Mutex)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
+- [Q13 Сломанный Double-Checked Locking при работе с sync.RWMutex (TOCTOU Race)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)
+- [Q14 Гонка данных при возврате указателя из защищённой мапы (Pointer Escape from Mutex)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
+
+**Чего пока нет на сайте:**
+
+- Нет практических заданий «напиши паттерн» (worker pool, pipeline, fan-in) с эталонным решением и тестом под -race.
+- Нет английских опорных ответов по шагам для практических паттернов, только для карточек-теории.
+
+## Неделя 4. Конкурентность II и минимум рантайма (02.11–08.11)
+
+**Цель:** Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.
+
+**Готово, когда:** 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding.
+
+### Пн · 90 мин
+
+- [ ] context: отмена, таймауты, WithoutCancel; передача ctx в I/O — [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22) (на редакции), [Q9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10) (на редакции), [package context](https://pkg.go.dev/context)
+- [ ] W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных — [errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup), проговор: «W4-1. ParallelFetch with errgroup»
+- [ ] LeetCode 200. Number of Islands + проговор — [LC 200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
+
+### Вт · 90 мин
+
+- [ ] select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле — [Q16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16) (на редакции), [Q17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17), [Q11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11) (на редакции)
+- [ ] W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор — [x/time/rate](https://pkg.go.dev/golang.org/x/time/rate), проговор: «W4-2. Rate limiter»
+
+### Ср · 90 мин
+
+- [ ] Утечки горутин: как найти и предотвратить — [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
+- [ ] W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров — [http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown), [signal.NotifyContext](https://pkg.go.dev/os/signal#NotifyContext), проговор: «W4-3. Graceful shutdown»
+- [ ] W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof
+- [ ] LeetCode 102. Binary Tree Level Order Traversal + проговор — [LC 102. Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/)
+
+### Чт · 90 мин
+
+- [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7) (на редакции), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8) (на редакции), [C10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10) (на редакции)
+- [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [C23](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23) (на редакции), [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24) (на редакции), [C26](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26) (на редакции), [C27](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27) (на редакции), [SIM6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
+- [ ] W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода
+- [ ] По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы *(по желанию)* — [C3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c3) (на редакции), [C4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c4) (на редакции), [C5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c5) (на редакции), [C6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c6), [C9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c9) (на редакции), [C11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c11) (на редакции), [C16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c16), [C17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c17), [C19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c19), [C25](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c25) (на редакции), [C28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c28) (на редакции), [C36](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c36) (на редакции), [C37](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c37) (на редакции), [SIM1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim1), [SIM4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim4)
+
+### Сб · 240 мин
+
+- [ ] W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list — [Go Diagnostics](https://go.dev/doc/diagnostics)
+- [ ] Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое — [C38](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38) (на редакции)
+- [ ] LeetCode 98. Validate Binary Search Tree + проговор — [LC 98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
+- [ ] Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов» — [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5) (на редакции), [Q7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7) (на редакции), [Q8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8) (на редакции), [Q9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10) (на редакции), [Q11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11) (на редакции), [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12) (на редакции), [Q13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13) (на редакции), [Q14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14) (на редакции), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), [Q16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16) (на редакции), [Q17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17), [Q21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21), [Q22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [ ] Виртуальный live coding (Claude как интервьюер): одна задача на конкурентность, проговор по-английски, разбор
+
+**LeetCode недели:** [200. Number of Islands](https://leetcode.com/problems/number-of-islands/) (Grid DFS/BFS), [102. Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/) (BFS), [98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/) (Tree DFS)
+
+**Проговорить по-английски:**
+
+- *How do you cancel a group of goroutines when one of them fails?*
+- *How would you implement a rate limiter in a single instance, and across many instances?*
+- *How would you find and prevent a goroutine leak?*
+- *Explain the GMP model in 30 seconds.*
+- *Why might a variable escape to the heap, and how do you check it?*
+
+**Самопроверка:**
+
+- Что гарантирует и чего не гарантирует отмена context для уже запущенной работы?
+- Чем errgroup.WithContext отличается от WaitGroup?
+- Порядок действий при graceful shutdown сервиса с фоновыми воркерами?
+- Что ограничивает GOMAXPROCS и почему потоков ОС может быть больше?
+- Что задаёт GOGC и чего не гарантирует GOMEMLIMIT?
+
+**Материал сайта:**
+
+- [C22 How do sync.WaitGroup, sync.Once, and context.Context work under the hood (and what are their classic pitfalls)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
+- [Q9 Результат после отмены запроса](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9)
+- [Q10 Отмена фонового аудита при выходе из HTTP-хендлера (Request Context Lifecycle)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10)
+- [Q16 Ловушка контекста errgroup.WithContext после вызова g.Wait()](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16)
+- [Q17 Заполненный канал и сигнал остановки](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17)
+- [Q11 Ловушка time.After внутри высокочастотного цикла select](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11)
+- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
+- [C7 How does the Go GMP scheduler model work, and what is GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7)
+- [SIM2 Диаграмма 2: Планировщик GMP, вытеснение (sysmon / SIGURG), Work Stealing и Syscall Handoff](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2)
+- [C8 How does goroutine preemption work in Go (Cooperative vs. Asynchronous via sysmon & SIGURG)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8)
+- [C10 How does Go handle network I/O (netpoller) vs. blocking system calls (syscall handoff) and Cgo?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
+- [C23 Stack vs. Heap allocation in Go — why is stack allocation so much faster?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23)
+- [C24 What is Escape Analysis in Go (-gcflags='-m'), and what are the 5 main reasons a variable escapes to the heap?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24)
+- [C26 How does Go's Garbage Collector work at a high level (Tri-Color Mark-and-Sweep)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26)
+- [C27 What are the 4 phases of a Go GC cycle, what is Mark Assist, and how do GOGC and GOMEMLIMIT control GC?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27)
+- [SIM6 Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6)
+- [C3 How is a goroutine created under the hood (runtime.newproc) and why does it have no ID or handle in code?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c3)
+- [C4 Where does a goroutine live in memory? Why is its stack allocated on the heap, and how does the CPU treat it as a stack?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c4)
+- [C5 How does dynamic stack growth and shrinking (morestack, copystack, adjustpointers) work under the hood?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c5) *(Deep Dive)*
+- [C6 What must the runtime restore to resume a goroutine?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c6) *(Deep Dive)*
+- [C9 How does the Go scheduler find runnable goroutines (runtime.findrunnable) and how does Work Stealing work?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c9)
+- [C11 Why does each processor (P) have a 1-element LIFO slot (runnext) alongside its 256-element FIFO queue (runq)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c11) *(Deep Dive)*
+- [C16 Why does a channel wait queue contain sudog records instead of just goroutines?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c16)
+- [C17 How does a channel safely hand a value to a waiting receiver?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c17) *(Deep Dive)*
+- [C19 Does every select call selectgo, and how does the general path work?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c19) *(Deep Dive)*
+- [C25 How does the Go Memory Allocator work under the hood (mspan, mcache, mcentral, mheap, and size classes)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c25)
+- [C28 Why does Go's GC need a Hybrid Write Barrier, and why is Go's GC non-generational and non-compacting?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c28) *(Deep Dive)*
+- [C36 What are weak.Pointer, unique.Make, and runtime.AddCleanup in Go 1.24–1.25+, and why did AddCleanup replace runtime.SetFinalizer?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c36)
+- [C37 How do Go 1.23–1.25+ iterators (iter.Seq, iter.Pull) and internal runtime coroutines (runtime.newcoro / coroswitch) work under the hood?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c37) *(Deep Dive)*
+- [SIM1 Диаграмма 1: Кто выполняется, где стек, откуда продолжить](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim1)
+- [SIM4 Диаграмма 4: select — от компилятора до пробуждения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim4)
+- [C38 What changed in Go 1.25+ regarding container-aware GOMAXPROCS (cgroups v1/v2), synctest, and runtime flight recording?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38)
+- [Q5 Паника в дочерней горутине и область действия recover()](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
+- [Q7 Передача sync.WaitGroup по значению (Copying Sync Primitives)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
+- [Q8 Рекурсивный захват sync.Mutex в одной горутине (Non-Reentrant Mutex)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
+- [Q12 Конкурентный append в общий слайс (Concurrent Slice Append & Lost Updates)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
+- [Q13 Сломанный Double-Checked Locking при работе с sync.RWMutex (TOCTOU Race)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)
+- [Q14 Гонка данных при возврате указателя из защищённой мапы (Pointer Escape from Mutex)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
+- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15)
+- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
+- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+
+**Чего пока нет на сайте:**
+
+- Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 3–4.
+- Нет задач на чтение pprof/trace-вывода и интерпретацию профиля.
+
+## Неделя 5. Проект I: каркас ledger-сервиса (09.11–15.11)
+
+**Цель:** Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.
+
+**Готово, когда:** Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском.
+
+### Пн · 90 мин
+
+- [ ] ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope
+- [ ] Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах
+- [ ] LeetCode 230. Kth Smallest Element in a BST + проговор — [LC 230. Kth Smallest Element in a BST](https://leetcode.com/problems/kth-smallest-element-in-a-bst/)
+
+### Вт · 90 мин
+
+- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id} — [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements)
+- [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)
+
+### Ср · 90 мин
+
+- [ ] PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate) — [pgx](https://pkg.go.dev/github.com/jackc/pgx/v5)
+- [ ] Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений — [Q18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18) (на редакции), [Q19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19) (на редакции)
+- [ ] LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор — [LC 236. Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/)
+
+### Чт · 90 мин
+
+- [ ] log/slog в JSON, request id в контексте; конфиг из переменных окружения — [log/slog](https://pkg.go.dev/log/slog)
+- [ ] Docker Compose: postgres + сервис; healthcheck
+
+### Сб · 240 мин
+
+- [ ] Перевод end-to-end: создание счетов, перевод, проверка балансов через curl
+- [ ] Проговор по-английски: «Walk me through your project structure and why» — проговор: «Рассказ о структуре проекта»
+- [ ] LeetCode 215. Kth Largest Element in an Array (heap) + проговор — [LC 215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/)
+
+**LeetCode недели:** [230. Kth Smallest Element in a BST](https://leetcode.com/problems/kth-smallest-element-in-a-bst/) (Tree DFS), [236. Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/) (Tree DFS), [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/) (Heap)
+
+**Проговорить по-английски:**
+
+- *Walk me through the structure of your service.*
+- *Why int64 minor units instead of float64 for money?*
+- *How do you map domain errors to HTTP status codes?*
+
+**Самопроверка:**
+
+- Где в коде граница транзакции и кто её открывает?
+- Что будет с соединением, если забыть rows.Close?
+- Почему бизнес-логика не зависит от net/http?
+
+**Материал сайта:**
+
+- [Q18 Ранняя оценка аргументов в defer при откате транзакции БД (Eager Defer Argument Trap)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18)
+- [Q19 Исчерпание пула соединений sql.DB из-за defer в цикле и раннего выхода](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19)
+
+**Чего пока нет на сайте:**
+
+- На сайте нет раздела про прикладной бэкенд на Go: net/http, database/sql/pgx, slog, конфигурация.
+- Нет шаблона ADR и примеров «как рассказать про проект» по-английски.
+
+## Неделя 6. Проект II: транзакции, идемпотентность, outbox → Kafka (16.11–22.11)
+
+**Цель:** Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.
+
+**Готово, когда:** Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат.
+
+### Пн · 90 мин
+
+- [ ] Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока — [PostgreSQL: Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
+- [ ] LeetCode 973. K Closest Points to Origin + проговор — [LC 973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/)
+
+### Вт · 90 мин
+
+- [ ] Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка — проговор: «Идемпотентность платежей»
+- [ ] Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»
+
+### Ср · 90 мин
+
+- [ ] Transactional outbox: запись события в той же транзакции, что и перевод — проговор: «Transactional outbox»
+- [ ] Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи — [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22) (на редакции)
+- [ ] LeetCode 621. Task Scheduler + проговор — [LC 621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
+
+### Чт · 90 мин
+
+- [ ] Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу — [Apache Kafka documentation](https://kafka.apache.org/documentation/)
+- [ ] Docker Compose: добавить Kafka
+
+### Сб · 240 мин
+
+- [ ] Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race
+- [ ] Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?» — проговор: «Transactional outbox»
+- [ ] LeetCode 435. Non-overlapping Intervals + проговор — [LC 435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/)
+
+**LeetCode недели:** [973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/) (Heap), [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/) (Greedy / heap), [435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/) (Greedy intervals)
+
+**Проговорить по-английски:**
+
+- *How do you make a payment API idempotent?*
+- *Why use a transactional outbox?*
+- *What delivery guarantee does your consumer have, and how do you handle duplicates?*
+- *How do you prevent deadlocks when two transfers lock the same accounts?*
+
+**Самопроверка:**
+
+- Что произойдёт, если процесс упадёт между commit и публикацией в Kafka без outbox?
+- Почему exactly-once на уровне бизнес-эффекта достигается идемпотентностью потребителя?
+- Какой уровень изоляции выбран для перевода и почему?
+
+**Материал сайта:**
+
+- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
+- [C22 How do sync.WaitGroup, sync.Once, and context.Context work under the hood (and what are their classic pitfalls)?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
+
+**Чего пока нет на сайте:**
+
+- Нет материалов по транзакциям, изоляции, идемпотентности и outbox — это ядро финтех-собесов.
+- Нет раздела про Kafka для Go-разработчика (партиции, группы, ретраи, DLQ).
+
+## Неделя 7. Проект III: gRPC, тесты, бенчмарки (23.11–29.11)
+
+**Цель:** У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.
+
+**Готово, когда:** Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов.
+
+### Пн · 90 мин
+
+- [ ] proto + генерация (buf или protoc); gRPC Transfer и GetBalance — [gRPC Go quick start](https://grpc.io/docs/languages/go/quickstart/)
+- [ ] LeetCode 133. Clone Graph + проговор — [LC 133. Clone Graph](https://leetcode.com/problems/clone-graph/)
+
+### Вт · 90 мин
+
+- [ ] Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы
+- [ ] Проговор: «REST vs gRPC — when would you choose which?» — проговор: «REST vs gRPC»
+
+### Ср · 90 мин
+
+- [ ] Unit-тесты: table-driven, фейки на границах, без sleep для синхронизации
+- [ ] testing/synctest для кода со временем (Go 1.25) — [C38](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38) (на редакции), [testing/synctest](https://pkg.go.dev/testing/synctest)
+- [ ] LeetCode 207. Course Schedule + проговор — [LC 207. Course Schedule](https://leetcode.com/problems/course-schedule/)
+
+### Чт · 90 мин
+
+- [ ] Интеграционные тесты: testcontainers-go для PostgreSQL и Kafka — [testcontainers-go](https://golang.testcontainers.org/)
+- [ ] golangci-lint и go test -race в CI
+
+### Сб · 240 мин
+
+- [ ] Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis — [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24) (на редакции)
+- [ ] Покрытие: где тестов нет намеренно и почему (записать в README)
+- [ ] LeetCode 994. Rotting Oranges + проговор — [LC 994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges/)
+
+**LeetCode недели:** [133. Clone Graph](https://leetcode.com/problems/clone-graph/) (Graph DFS/BFS), [207. Course Schedule](https://leetcode.com/problems/course-schedule/) (Topological sort), [994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges/) (Multi-source BFS)
+
+**Проговорить по-английски:**
+
+- *REST vs gRPC — when would you choose which?*
+- *How do you test code that talks to a database?*
+- *How do you test time-dependent concurrent code without sleeps?*
+
+**Самопроверка:**
+
+- Что тестируется unit-тестом, а что только интеграционным?
+- Как дедлайн клиента gRPC доходит до запроса в PostgreSQL?
+- Что показал бенчмарк и какой вывод ты из него сделал?
+
+**Материал сайта:**
+
+- [C38 What changed in Go 1.25+ regarding container-aware GOMAXPROCS (cgroups v1/v2), synctest, and runtime flight recording?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38)
+- [C24 What is Escape Analysis in Go (-gcflags='-m'), and what are the 5 main reasons a variable escapes to the heap?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24)
+
+**Чего пока нет на сайте:**
+
+- Нет материалов по тестированию на Go и testcontainers.
+- Карточка c38 про synctest — единственная точка про тестирование конкурентного кода.
+
+## Неделя 8. Проект IV: production-readiness, CV (30.11–06.12)
+
+**Цель:** Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.
+
+**Готово, когда:** Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском.
+
+### Пн · 90 мин
+
+- [ ] OpenTelemetry: трассы и метрики для HTTP/gRPC; /healthz и /readyz — [OpenTelemetry Go](https://opentelemetry.io/docs/languages/go/)
+- [ ] LeetCode 210. Course Schedule II + проговор — [LC 210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/)
+
+### Вт · 90 мин
+
+- [ ] Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)
+- [ ] GitHub Actions: lint, test -race, build Docker-образа
+
+### Ср · 90 мин
+
+- [ ] README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше
+- [ ] LeetCode 684. Redundant Connection (union-find) + проговор — [LC 684. Redundant Connection](https://leetcode.com/problems/redundant-connection/)
+
+### Чт · 90 мин
+
+- [ ] Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком
+- [ ] Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации
+
+### Сб · 240 мин
+
+- [ ] Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском — проговор: «Craft Deep-Dive по проекту»
+- [ ] LeetCode 743. Network Delay Time (Dijkstra) + проговор — [LC 743. Network Delay Time](https://leetcode.com/problems/network-delay-time/)
+- [ ] Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки
+
+**LeetCode недели:** [210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/) (Topological sort), [684. Redundant Connection](https://leetcode.com/problems/redundant-connection/) (Union-find), [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) (Dijkstra)
+
+**Проговорить по-английски:**
+
+- *What was the hardest design decision in this project, and what would you change?*
+- *How would you observe this service in production?*
+- *What are the failure modes of your service?*
+
+**Самопроверка:**
+
+- Какие сигналы скажут, что сервис деградирует?
+- Что произойдёт при SIGTERM во время перевода?
+- Какие 3 компромисса ты сознательно принял?
+
+**Чего пока нет на сайте:**
+
+- Нет тренажёра Craft Deep-Dive: вопросы интервьюера по собственному проекту с follow-up.
+
+## Неделя 9. Take-home, code review, первая волна откликов (07.12–13.12)
+
+**Цель:** Сделать take-home в формате EU-компаний и уверенно ревьюить чужой Go-код за 40 минут.
+
+**Готово, когда:** Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1.
+
+### Пн · 90 мин
+
+- [ ] Take-home, часть 1 (≈90 мин): Go-клиент к REST API (create/fetch/delete, ошибки, ретраи, контекст) в формате задания Form3. Общий таймбокс 5–6 ч
+- [ ] Дополнительно: LeetCode 70. Climbing Stairs + проговор *(по желанию)* — [LC 70. Climbing Stairs](https://leetcode.com/problems/climbing-stairs/)
+
+### Вт · 90 мин
+
+- [ ] Take-home, часть 2 (≈90 мин): тесты, README с решениями, без лишних зависимостей
+
+### Ср · 90 мин
+
+- [ ] Code review (≈80 мин): 2 чужих Go-PR по 40 минут, комментарии письменно на английском — [Google: code review practices](https://google.github.io/eng-practices/review/), [Go Code Review Comments](https://go.dev/wiki/CodeReviewComments)
+- [ ] Дополнительно: LeetCode 198. House Robber + проговор *(по желанию)* — [LC 198. House Robber](https://leetcode.com/problems/house-robber/)
+
+### Чт · 90 мин
+
+- [ ] Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа — [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4) (на редакции), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10) (на редакции), [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12) (на редакции), [Q18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18) (на редакции), [Q19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19) (на редакции), [Q20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
+- [ ] Собрать чек-лист ревьюера Go (≈45 мин): ошибки, контекст, горутины, ресурсы, тесты, API
+
+### Сб · 240 мин
+
+- [ ] Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка
+- [ ] Ещё 1 чужой PR в формате 40 минут
+- [ ] Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10
+- [ ] Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв) *(по желанию)* — [LC 322. Coin Change](https://leetcode.com/problems/coin-change/)
+
+**LeetCode недели:** [70. Climbing Stairs](https://leetcode.com/problems/climbing-stairs/) (DP), [198. House Robber](https://leetcode.com/problems/house-robber/) (DP), [322. Coin Change](https://leetcode.com/problems/coin-change/) (DP)
+
+**Проговорить по-английски:**
+
+- *Walk me through the decisions in your take-home.*
+- *What would you change if you had another day?*
+- *How do you give code review feedback that is direct but not harsh?*
+
+**Самопроверка:**
+
+- Какие 5 пунктов ты проверяешь в любом Go-PR первым делом?
+- Как ты поступаешь, если в take-home что-то неоднозначно?
+
+**Материал сайта:**
+
+- [Q4 Скрытая утечка памяти через саб-слайс (Sub-slice Memory Retention)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
+- [Q10 Отмена фонового аудита при выходе из HTTP-хендлера (Request Context Lifecycle)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10)
+- [Q12 Конкурентный append в общий слайс (Concurrent Slice Append & Lost Updates)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
+- [Q18 Ранняя оценка аргументов в defer при откате транзакции БД (Eager Defer Argument Trap)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18)
+- [Q19 Исчерпание пула соединений sql.DB из-за defer в цикле и раннего выхода](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19)
+- [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
+
+**Чего пока нет на сайте:**
+
+- Нет режима code review: показать фрагмент, дать написать комментарии, затем сравнить с эталонным списком замечаний.
+- Quiz сейчас только выбор варианта, а не самостоятельный поиск дефекта.
+
+## Неделя 10. System Design I (14.12–20.12)
+
+**Цель:** По шаблону за 40 минут вести дизайн вслух на английском и в каждом дизайне объяснять, почему Go.
+
+**Готово, когда:** 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников.
+
+### Пн · 90 мин
+
+- [ ] Шаблон ответа: requirements → API → data model → high-level → deep dive → bottlenecks → trade-offs — проговор: «Шаблон System Design»
+- [ ] LeetCode 300. Longest Increasing Subsequence + проговор — [LC 300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/)
+
+### Вт · 90 мин
+
+- [ ] Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый) — [Rate limiter 100K RPS (itvector)](https://itvector.io/articles/rate-limiter-100k-rps)
+
+### Ср · 90 мин
+
+- [ ] Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)
+- [ ] LeetCode 139. Word Break + проговор — [LC 139. Word Break](https://leetcode.com/problems/word-break/)
+
+### Чт · 90 мин
+
+- [ ] Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)
+- [ ] Отклики волны 2 до праздников: Topi, Bolt, Zendesk
+
+### Сб · 240 мин
+
+- [ ] Виртуальный System Design (Claude как интервьюер) по одному из трёх дизайнов, 45 минут
+- [ ] Переслушать запись: где не назвал компромисс или не спросил требования
+- [ ] LeetCode 62. Unique Paths + проговор — [LC 62. Unique Paths](https://leetcode.com/problems/unique-paths/)
+
+**LeetCode недели:** [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/) (DP / binary search), [139. Word Break](https://leetcode.com/problems/word-break/) (DP), [62. Unique Paths](https://leetcode.com/problems/unique-paths/) (DP)
+
+**Проговорить по-английски:**
+
+- *Before I start, can I clarify the functional and non-functional requirements?*
+- *Let me start with a simple design and then scale it.*
+- *The main trade-off here is consistency versus availability…*
+- *Why would Go be a good fit for this service?*
+
+**Самопроверка:**
+
+- Какие 3 вопроса по требованиям ты задаёшь всегда?
+- Где в твоём дизайне единая точка отказа?
+- Как бы ты оценил нагрузку на хранилище по числу запросов?
+
+**Чего пока нет на сайте:**
+
+- На сайте нет раздела System Design: шаблон, разобранные дизайны, вопросы интервьюера.
+- Нет связки «механизм Go → архитектурное решение» (например, горутины и netpoller → почему Go для I/O-bound сервиса).
+
+## Неделя 11. System Design II: event-driven и предметные дизайны (21.12–27.12)
+
+**Цель:** Уверенно вести дизайн event-driven систем и предметные задачи целевых компаний.
+
+**Готово, когда:** Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов.
+
+### Пн · 90 мин
+
+- [ ] Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ — проговор: «Transactional outbox»
+- [ ] LeetCode 33. Search in Rotated Sorted Array + проговор — [LC 33. Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array/)
+
+### Вт · 90 мин
+
+- [ ] Дизайн 4: Dispatch / delivery (назначение курьеров, гео-данные) — под Delivery Hero и Wolt
+
+### Ср · 90 мин
+
+- [ ] Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва
+
+### Чт · 90 мин
+
+- [ ] Дизайн 6: Multi-tenant SaaS (тикеты, как Zendesk): изоляция арендаторов, шардирование, noisy neighbour
+
+### Сб · 240 мин
+
+- [ ] Повторить один дизайн с нуля за 40 минут и записать
+- [ ] 2 повторные задачи LeetCode из слабых тем с проговором
+
+**LeetCode недели:** [33. Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array/) (Binary search)
+
+**Проговорить по-английски:**
+
+- *How do you guarantee ordering for events of the same account?*
+- *What does exactly-once really mean in Kafka-based systems?*
+- *How would you isolate tenants in a shared database?*
+
+**Самопроверка:**
+
+- Saga: оркестрация или хореография — когда что?
+- Что делать с сообщением, которое стабильно падает в обработке?
+- Как избежать overselling при параллельных резервах?
+
+**Чего пока нет на сайте:**
+
+- Нет материалов по event-driven архитектуре и предметным дизайнам целевых компаний.
+
+## Неделя 12. Behavioral, легенда, CV (28.12–03.01)
+
+**Цель:** 8 STAR-историй и рассказ о себе звучат естественно по-английски; CV и LinkedIn готовы.
+
+**Готово, когда:** Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании.
+
+### Пн · 90 мин
+
+- [ ] STAR-истории 1–4: инцидент в проде, конфликт/несогласие, ownership, неопределённость — проговор: «STAR»
+- [ ] LeetCode 981. Time Based Key-Value Store + проговор — [LC 981. Time Based Key-Value Store](https://leetcode.com/problems/time-based-key-value-store/)
+
+### Вт · 90 мин
+
+- [ ] STAR-истории 5–8: менторство, дедлайн, кросс-командная работа, ошибка и вывод — проговор: «STAR»
+
+### Ср · 90 мин
+
+- [ ] «Why Go / why move from JVM?» и «Tell me about yourself» v2 — проговор: «Why Go»
+- [ ] Deep-dive по финтех-опыту без NDA-деталей: что можно говорить, что обобщить
+
+### Чт · 90 мин
+
+- [ ] Финал CV и LinkedIn; позиционирование «Go + Kotlin backend, fintech»
+- [ ] Вопросы к компании: команда, on-call, процесс релизов, рост
+
+### Сб · 240 мин
+
+- [ ] Прогон всех историй вслух с записью, сократить каждую до 2 минут
+- [ ] 2 повторные задачи LeetCode из слабых тем
+
+**LeetCode недели:** [981. Time Based Key-Value Store](https://leetcode.com/problems/time-based-key-value-store/) (Map + binary search)
+
+**Проговорить по-английски:**
+
+- *Tell me about a production incident you handled.*
+- *Tell me about a time you disagreed with a technical decision.*
+- *Why are you moving to Go?*
+- *What would you do differently in your last project?*
+
+**Самопроверка:**
+
+- В каждой истории есть число или измеримый результат?
+- Видна ли в истории твоя роль, а не только команды?
+- Хватает ли 2 минут на историю?
+
+**Чего пока нет на сайте:**
+
+- Нет банка behavioral-вопросов с шаблоном STAR и тренировкой ответа вслух.
+
+## Неделя 13. Моки и пик откликов (04.01–10.01)
+
+**Цель:** Пройти полный цикл интервью в тренировочном режиме и выйти на реальные собеседования.
+
+**Готово, когда:** 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал.
+
+### Пн · 90 мин
+
+- [ ] Мок 1: live coding (Pramp, interviewing.io или знакомые) — [Pramp](https://www.pramp.com/), [interviewing.io](https://interviewing.io/)
+- [ ] LeetCode 1396. Design Underground System + проговор — [LC 1396. Design Underground System](https://leetcode.com/problems/design-underground-system/)
+
+### Вт · 90 мин
+
+- [ ] Мок 2: System Design
+
+### Ср · 90 мин
+
+- [ ] Полный виртуальный собес по плану Delivery Hero: coding + design + hiring manager + bar raiser
+
+### Чт · 90 мин
+
+- [ ] Мок 3: behavioral + Craft Deep-Dive
+- [ ] Отклики волны 3: Delivery Hero, Wolt (с релокацией)
+
+### Сб · 240 мин
+
+- [ ] Журнал интервью: после каждого реального собеса записать вопросы и где запнулся; добавить их на сайт
+- [ ] Вилки и переговоры: подготовить диапазон и ответ на вопрос о зарплатных ожиданиях
+- [ ] 2 задачи LeetCode на время (45 минут, вслух)
+
+**LeetCode недели:** [1396. Design Underground System](https://leetcode.com/problems/design-underground-system/) (Design: maps)
+
+**Проговорить по-английски:**
+
+- *What are your salary expectations?*
+- *Do you have any questions for us?*
+- *Is there anything you would like to add?*
+
+**Самопроверка:**
+
+- Какие темы чаще всего вызывали заминку на моках?
+- Что из этого вернуть в повторение на следующей неделе?
+
+**Чего пока нет на сайте:**
+
+- Нет журнала реальных интервью, связанного с повторением тем на сайте.
+
+## Опорные тексты для проговора
+
+### LC 1. Two Sum — полный диалог с интервьюером
+
+> **Interviewer:** Given an array of integers and a target, return the indices of two numbers that add up to the target.
+>
+> **You:** Before I start, a few questions. Is there always exactly one solution? Can I use the same element twice? Can the numbers be negative?
+>
+> **Interviewer:** Exactly one solution, no reuse, and yes, negatives are possible.
+>
+> **You:** The brute-force approach checks every pair, which is O(n²). We can do better with a hash map from value to index. For each number I compute the complement and check whether I've already seen it. If yes, I return both indices; if not, I store the current number.
+>
+> **You:** I check the complement first and only then insert the current value. That ordering is what prevents using the same element twice.
+>
+> **Interviewer:** What's the complexity?
+>
+> **You:** O(n) time, since map lookups are O(1) on average, and O(n) extra space.
+>
+> **Interviewer:** How would you test it?
+>
+> **You:** Small example: [2, 7, 11, 15] with target 9 returns [0, 1]. In a table-driven test I'd add negative numbers, duplicates like [3, 3] with target 6, and the pair at the very end.
+>
+> **Interviewer:** What if the array were sorted?
+>
+> **You:** Then two pointers, one at each end, give O(1) extra space: move the left pointer if the sum is too small, the right one if too large.
+
+### LC 49. Group Anagrams
+
+- **Clarify:** Are the strings lowercase English letters only? Does the output order matter?
+- **Approach:** Anagrams share the same letter counts, so I build a key per word and group words in a map from key to list. In Go a [26]int array is comparable, so I can use it directly as a map key — no string building needed.
+- **Complexity:** O(n · k) time, where k is the average word length, and O(n · k) space.
+- **Edge cases & tests:** An empty string is a valid group of its own; a single word gives one group.
+
+### LC 347. Top K Frequent Elements
+
+- **Clarify:** Is k always valid? If two numbers have the same frequency, does the order matter?
+- **Approach:** First count frequencies in a map. Then bucket sort: a slice of buckets indexed by frequency, which is at most n. Walk the buckets from the highest frequency and collect k numbers. A min-heap of size k is the alternative.
+- **Complexity:** Buckets give O(n) time and O(n) space; the heap is O(n log k).
+- **Edge cases & tests:** k equals the number of unique elements; all elements are the same.
+
+### LC 238. Product of Array Except Self
+
+- **Clarify:** Division isn't allowed, right? Can there be zeros?
+- **Approach:** Two passes. Left to right I store the product of everything before each index. Right to left I keep a running suffix product and multiply it in. Zeros are handled naturally because I never divide.
+- **Complexity:** O(n) time, O(1) extra space besides the output.
+- **Edge cases & tests:** One zero; two zeros, where every result is zero; negative numbers.
+
+### LC 3. Longest Substring Without Repeating Characters
+
+- **Clarify:** Is the input ASCII, or should I handle Unicode runes? In Go that matters because indexing a string works on bytes.
+- **Approach:** Sliding window. I keep the last index of each character. When I see a repeat inside the window, I move the left edge just past its previous position, and update the best length at each step.
+- **Complexity:** O(n) time; space is O(min(n, alphabet size)).
+- **Edge cases & tests:** An empty string; all characters the same; the whole string unique.
+
+### LC 15. 3Sum
+
+- **Clarify:** Should I return unique triplets only? Does the order matter?
+- **Approach:** Sort the array. Fix the first element, then run two pointers on the rest: if the sum is too small move left forward, if too large move right back. Skip equal neighbours to avoid duplicate triplets.
+- **Complexity:** O(n²) time; sorting is O(n log n) and doesn't change that. O(1) extra space besides the output.
+- **Edge cases & tests:** Fewer than three elements; all zeros; many duplicates.
+
+### LC 739. Daily Temperatures
+
+- **Clarify:** Should days with no warmer day get 0?
+- **Approach:** A monotonic stack of indices with decreasing temperatures. For each day, while today is warmer than the day on top of the stack, I pop it and record the distance. Then I push today.
+- **Complexity:** Each index is pushed and popped once, so O(n) time and O(n) space.
+- **Edge cases & tests:** Strictly decreasing temperatures, where every answer is zero; equal temperatures.
+
+### LC 146. LRU Cache
+
+- **Clarify:** Should Get and Put both be O(1)? On Put with an existing key, do I update it and mark it as most recent?
+- **Approach:** A hash map plus a doubly linked list. The map gives O(1) access to the node; the list keeps the usage order, most recent at the front. Get moves the node to the front; Put inserts or updates at the front and evicts the tail when over capacity. In Go, container/list gives me the list, so the map holds *list.Element.
+- **Complexity:** O(1) for both operations; O(capacity) space.
+- **Edge cases & tests:** Capacity 1; Put on an existing key; Get on a missing key returns -1.
+- **Follow-up:** How would you make it thread-safe? — A sync.Mutex. Even Get mutates the list, so an RWMutex doesn't help much. Under high contention I'd shard the cache by key hash.
+
+### W1-1. Money
+
+- **Approach:** I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats units and cents with the currency code.
+- **Edge cases & tests:** Negative amounts, zero, amounts below one euro like 0.05.
+
+### W1-2. Account и W1-3. ValidationError
+
+- **Approach:** Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.
+- **Edge cases & tests:** errors.Is compares against a specific value; errors.As matches by type and gives me the value.
+
+### W1-5. SafeDiv
+
+- **Approach:** A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.
+- **Edge cases & tests:** In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server.
+
+### W1-6. Method sets
+
+- **Approach:** The method set of T contains only value-receiver methods; the method set of *T contains both. So if Notify has a pointer receiver, only *Service satisfies Notifier, and passing a Service value fails at compile time.
+- **Edge cases & tests:** The rule itself comes from the spec. The rationale: an interface holds a copy of the value, so a pointer method called through it would change that copy, not the caller's variable.
+
+### W2-1. Remove
+
+- **Approach:** The order-preserving version is append(s[:i], s[i+1:]...). The catch is that it writes into the same backing array, so the caller's original slice changes too. The fast version swaps in the last element: O(1), but it loses the order.
+- **Edge cases & tests:** slices.Delete also modifies the shared backing array, and since Go 1.22 it zeroes the vacated tail elements. If the caller still needs the original, I make an independent copy first, for example with slices.Clone.
+
+### W2-3. Generics vs interfaces
+
+- **Approach:** I use generics when the logic is identical for every type, like Map or a Set. I use an interface when each type behaves differently. Rule of thumb: write the concrete version first and generalize when a second use case appears.
+
+### W2-4. txsum CLI
+
+- **Approach:** I read the CSV with encoding/csv, parse each row into a transaction and aggregate balances in a map keyed by account and currency, using int64 minor units. Bad rows don't stop the run: I collect them with line numbers and report at the end, with a non-zero exit code if any failed.
+- **Edge cases & tests:** Table-driven test for the row parser: valid row, missing column, non-numeric amount, unknown currency.
+
+### «Что выведет код»: как объяснять
+
+- P1 slice append into shared array — t has capacity 3, so append writes into the shared backing array and overwrites s[2].
+- P3 nil map — reading returns the zero value, but writing panics: assignment to entry in nil map.
+- P4 defer order — deferred calls run in LIFO order, and their arguments are evaluated when defer executes.
+- P5 named result — return 1 assigns to the named result first, then the deferred function increments it.
+- P6 typed nil — the interface holds the type *E with a nil value, so the interface itself isn't nil.
+- P9 loop variable — since Go 1.22 each iteration has its own variable; before 1.22 all closures shared one.
+
+### W3-1. Worker pool
+
+- **Clarify:** How many workers? Do results need to keep the input order? What happens if one job fails?
+- **Approach:** I start N workers that range over a jobs channel and send to a results channel. The producer closes jobs after the last send; a separate goroutine waits on a WaitGroup for all workers and then closes results, so the consumer's range loop ends. Every goroutine has an owner and a clear exit: the channel closing or ctx.Done().
+- **Complexity:** Concurrency is bounded by N, so memory and connections stay predictable under load.
+- **Edge cases & tests:** Zero jobs; cancellation in the middle; a slow consumer — that's backpressure, the workers block on send instead of buffering unboundedly.
+
+### W3-4. Mutex vs atomic vs channel
+
+- **Approach:** For a single counter an atomic operation is usually the simplest fit; whether it is faster depends on contention, so I'd compare with a benchmark rather than assume. A mutex is right when the invariant spans several fields. A channel fits when I'm transferring ownership of data or coordinating work, not just protecting a variable.
+- **Edge cases & tests:** An atomic protects one value; it doesn't make a check-then-act sequence on two values safe.
+
+### W4-1. ParallelFetch with errgroup
+
+- **Clarify:** Should one failure cancel the rest? Is there a limit on concurrent requests?
+- **Approach:** errgroup.WithContext gives me a context that is cancelled on the first error. SetLimit bounds concurrency. Each fetch uses the group's context, so the other requests stop early. Wait returns the first error.
+- **Edge cases & tests:** The derived context is cancelled after Wait returns, so it must not be used for work after Wait.
+
+### W4-2. Rate limiter
+
+- **Approach:** For a single instance, a token bucket: tokens refill at a fixed rate up to a burst size; a request takes a token or is rejected or waits. In Go I'd use golang.org/x/time/rate rather than hand-roll it. Across many instances the state must be shared — for example Redis with an atomic script — or each instance gets a share of the global limit.
+- **Edge cases & tests:** Burst behaviour; clock skew between instances; what the client sees on rejection — 429 with Retry-After.
+
+### W4-3. Graceful shutdown
+
+- **Approach:** signal.NotifyContext gives me a context cancelled on SIGTERM. I stop accepting new requests with server.Shutdown and a timeout, cancel background workers through their context, and wait for them with a WaitGroup or errgroup before closing the database pool.
+- **Edge cases & tests:** Shutdown order matters: stop intake first, drain in-flight work, then close dependencies. Kubernetes gives a grace period, so the timeout must fit inside it.
+
+### Рассказ о структуре проекта
+
+- **Approach:** cmd/ledger holds the wiring: config, logger, database pool and servers. internal/ledger is the domain — accounts, transfers and the rules — with no dependency on HTTP or SQL. internal/store implements persistence with pgx, and internal/http and internal/grpc are thin adapters. That keeps the domain testable with simple fakes.
+
+### Идемпотентность платежей
+
+- **Clarify:** Single process or several instances? How long do we keep keys? What if the same key comes with a different payload?
+- **Approach:** The client sends an idempotency key. In the same transaction as the transfer I insert the key with a unique constraint and store the response. A retry with the same key returns the stored response; the same key with a different payload is rejected as a client error.
+- **Edge cases & tests:** Two identical requests arriving at once: the unique constraint makes one insert win, so check-then-insert races are avoided.
+
+### Transactional outbox
+
+- **Approach:** Publishing to Kafka after the commit can fail, and then the event is lost. With an outbox I write the event to a table in the same transaction as the business change. A relay publishes pending rows and marks them sent. Delivery becomes at-least-once, so consumers must be idempotent.
+- **Edge cases & tests:** Ordering per account: use the account ID as the Kafka key so its events land in one partition. That alone is not enough: the relay must publish rows in order, and producer retries must not reorder messages (idempotent producer). Each of these needs its own check.
+
+### REST vs gRPC
+
+- **Approach:** gRPC suits internal service-to-service calls: a typed contract, code generation, HTTP/2 streaming and deadlines that propagate. REST with JSON is better for public APIs and browsers, where tooling and readability matter more than efficiency.
+
+### Craft Deep-Dive по проекту
+
+- Start with the problem and constraints, then the design, then one decision you'd change.
+- For each decision: the options, why this one, what it costs.
+- Be honest about limits: what isn't tested, what wouldn't scale and why.
+
+### Шаблон System Design
+
+- Requirements: functional, then non-functional — scale, latency, consistency.
+- API: main endpoints or events.
+- Data model: entities, keys, where the data lives.
+- High-level design: components and data flow.
+- Deep dive: the one or two hardest parts.
+- Bottlenecks and failures: what breaks first and how we notice.
+- Trade-offs: what we chose and what we gave up.
+
+### STAR
+
+- Situation — one or two sentences of context.
+- Task — what you were responsible for.
+- Action — what you did, in first person, with technical detail.
+- Result — a number or a concrete outcome, plus what you learned.
+
+### Why Go
+
+- **Approach:** I've built payment systems on the JVM for years. I'm moving to Go because I value its simplicity and explicitness — errors as values, a small language, fast builds — and its concurrency model fits I/O-heavy backend services. Many fintech and platform teams in Europe build in Go, and I've been practicing on a ledger service with the same problems I solve at work.
+
+## «Что выведет код» (неделя 2)
+
+**P1**
+
+```go
+s := []int{1, 2, 3}
+t := s[:2]
+t = append(t, 99)
+fmt.Println(s)
+```
+
+<details><summary>Ответ</summary>
+
+`[1 2 99]` — t has capacity 3, so append writes into the shared backing array and overwrites s[2].
+
+У t ёмкость 3, поэтому append пишет в общий массив и перезаписывает s[2].
+
+</details>
+
+**P2**
+
+```go
+s := make([]int, 0, 1)
+a := append(s, 1)
+b := append(s, 2)
+fmt.Println(a[0], b[0])
+```
+
+<details><summary>Ответ</summary>
+
+`2 2` — Both appends reuse the same array of capacity 1, so the second write overwrites the first.
+
+Оба append используют один массив ёмкостью 1; вторая запись перезаписывает первую.
+
+</details>
+
+**P3**
+
+```go
+var m map[string]int
+fmt.Println(m["x"], len(m))
+m["x"] = 1
+```
+
+<details><summary>Ответ</summary>
+
+`0 0, then panic` — Reading a nil map returns the zero value, but writing to it panics: assignment to entry in nil map.
+
+Чтение из nil map возвращает нулевое значение, а запись вызывает panic: assignment to entry in nil map.
+
+</details>
+
+**P4**
+
+```go
+for i := 0; i < 3; i++ {
+    defer fmt.Print(i)
+}
+```
+
+<details><summary>Ответ</summary>
+
+`210` — Deferred calls run in LIFO order, and their arguments are evaluated when defer executes.
+
+Отложенные вызовы выполняются в обратном порядке, а их аргументы вычисляются в момент выполнения defer.
+
+</details>
+
+**P5**
+
+```go
+func f() (x int) {
+    defer func() { x++ }()
+    return 1
+}
+
+func main() {
+    fmt.Println(f())
+}
+```
+
+<details><summary>Ответ</summary>
+
+`2` — return 1 assigns to the named result x first, then the deferred function increments it.
+
+return 1 сначала присваивает значение именованному результату x, затем отложенная функция его увеличивает.
+
+</details>
+
+**P6**
+
+```go
+type E struct{}
+
+func (*E) Error() string { return "e" }
+
+func g() error {
+    var p *E
+    return p
+}
+
+func main() {
+    fmt.Println(g() == nil)
+}
+```
+
+<details><summary>Ответ</summary>
+
+`false` — The interface holds the type *E with a nil value, so the interface itself isn't nil.
+
+В интерфейсе лежит тип *E с нулевым указателем, поэтому сам интерфейс не равен nil.
+
+</details>
+
+**P7**
+
+```go
+type P struct{ v int }
+ps := []P{{1}, {2}}
+for _, p := range ps {
+    p.v = 10
+}
+fmt.Println(ps)
+```
+
+<details><summary>Ответ</summary>
+
+`[{1} {2}]` — The range variable is a copy of each element; to modify the slice, use the index.
+
+Переменная range — копия элемента; чтобы изменить срез, нужно обращаться по индексу.
+
+</details>
+
+**P8**
+
+```go
+s := "héllo"
+fmt.Println(len(s), s[1], len([]rune(s)))
+```
+
+<details><summary>Ответ</summary>
+
+`6 195 5` — len counts bytes; the precomposed é (U+00E9) takes two bytes in UTF-8, s[1] is its first byte 0xC3 = 195; there are five runes.
+
+len считает байты; é (составной символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять.
+
+</details>
+
+**P9**
+
+```go
+var fs []func()
+for i := 0; i < 3; i++ {
+    fs = append(fs, func() { fmt.Print(i) })
+}
+for _, f := range fs {
+    f()
+}
+```
+
+<details><summary>Ответ</summary>
+
+`012` — Since Go 1.22 each loop iteration has its own variable. With language version below 1.22 in go.mod (or -lang=go1.21) all closures share one variable and print 333.
+
+С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22, все замыкания разделяют одну переменную и печатают 333.
+
+*Версия:* Зависит от версии языка модуля, а не только от установленного toolchain.
+
+</details>
+
+**P10**
+
+```go
+a := [3]int{1, 2, 3}
+b := a
+b[0] = 100
+fmt.Println(a[0])
+```
+
+<details><summary>Ответ</summary>
+
+`1` — Arrays are values in Go, so assignment copies the whole array, unlike a slice.
+
+Массивы в Go — значения: присваивание копирует весь массив, в отличие от среза.
+
+</details>

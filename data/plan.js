@@ -1,0 +1,1058 @@
+// Программа подготовки к офферу Senior Go в EU-компании: 13 недель, ~10 ч в неделю.
+// Источник данных для раздела #/plan. ID недель и задач стабильны: от них зависит
+// сохранённый прогресс (ключ go_prep_plan_v1). Новые задачи добавлять с новыми ID,
+// не переиспользовать старые.
+// Ссылки на материалы сайта: "c12" — карточка, "q9" — задача quiz, "sim3" — диаграмма.
+// Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
+
+const PLAN = {
+  revision: "2026-10-26b",
+  defaultStart: "2026-10-12",
+  hoursPerWeek: 10,
+  target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
+
+  phases: [
+    { id: "go", title: "Go: язык и конкурентность", weeks: [1, 2, 3, 4] },
+    { id: "project", title: "Проект-портфолио: ledger-сервис", weeks: [5, 6, 7, 8] },
+    { id: "interview", title: "Собеседования и рынок", weeks: [9, 10, 11, 12, 13] }
+  ],
+
+  talkSteps: [
+    { id: "clarify", en: "Clarify", ru: "Уточнить условие и входные данные", phrase: "Before I start, let me clarify a few things." },
+    { id: "approach", en: "Approach", ru: "Идея решения до кода: brute force, затем лучше", phrase: "The brute-force approach would be… We can do better with…" },
+    { id: "complexity", en: "Complexity", ru: "Время и память", phrase: "This runs in O(n) time and O(n) extra space." },
+    { id: "edge", en: "Edge cases & tests", ru: "Что проверить, как тест", phrase: "Edge cases: an empty input, a single element… I'd turn these into a table-driven test." }
+  ],
+
+  stuckPhrases: [
+    "Let me think out loud for a second.",
+    "I'm not sure yet, but my first idea is…",
+    "Let me step back and reconsider.",
+    "Can I assume…? If not, I'd handle it by…"
+  ],
+
+  weeks: [
+    // ───────────────────────────── НЕДЕЛЯ 1 ─────────────────────────────
+    {
+      id: "w1",
+      title: "Идиомы Go I: типы, интерфейсы, ошибки",
+      goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.",
+      done: "Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w1-mon-1", text: "Tour of Go: Basics — packages, variables, functions, flow control, defer", refs: [{ t: "Tour of Go", u: "https://go.dev/tour/" }] },
+            { id: "w1-mon-2", text: "Завести репозиторий go-prep, go mod init, папка week1" },
+            { id: "w1-mon-3", text: "LeetCode 49. Group Anagrams + проговор", lc: 49, talk: "lc49" }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures" },
+            { id: "w1-tue-2", text: "Go by Example от Values до Closures — набрать руками, не копировать", refs: [{ t: "Go by Example", u: "https://gobyexample.com/" }] },
+            { id: "w1-tue-3", text: "W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор", talk: "w1-1" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors" },
+            { id: "w1-wed-2", text: "Сайт: интерфейсы и receivers — только короткий ответ и «как работает»", links: ["c34", "c33"] },
+            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", talk: "w1-2" },
+            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w1-thu-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
+            { id: "w1-thu-2", text: "defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов", links: ["c35", "q2", "q3", "q5"] },
+            { id: "w1-thu-3", text: "100 Go Mistakes: разделы Functions and Methods, Error Management", refs: [{ t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5", talk: "w1-5" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34"], talk: "w1-6" },
+            { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость" },
+            { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать)", lc: 238, talk: "lc238" },
+            { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
+            { id: "w1-sat-5", text: "Повторный проговор LC 49 и LC 347 без подсказок" },
+            { id: "w1-sat-6", text: "Самопроверка недели вслух по-английски (ниже)" }
+          ]
+        }
+      ],
+      leetcode: [1, 49, 347, 238, 20],
+      english: [
+        "How does error handling in Go differ from exceptions in Kotlin or Java?",
+        "What is a zero value and why does it matter?",
+        "When do you use a pointer receiver?",
+        "Why can a nil pointer returned as an error be non-nil?",
+        "Tell me about yourself — version 0, 60–90 seconds."
+      ],
+      selfCheck: [
+        "Zero values у int, string, *T, []T, map[K]V, chan T, error?",
+        "Чем errors.Is отличается от errors.As?",
+        "Когда метод объявлять на pointer receiver?",
+        "Почему nil-указатель, возвращённый как error, даёт err != nil?",
+        "Порядок отложенных вызовов и когда вычисляются их аргументы?"
+      ],
+      gaps: [
+        "На сайте нет карточек по идиомам для JVM-разработчика: ошибки как значения, %w/Is/As, embedding vs наследование, видимость пакетов.",
+        "Нет режима проговора задач (Clarify → Approach → Complexity → Edge) с таймером и самооценкой."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 2 ─────────────────────────────
+    {
+      id: "w2",
+      title: "Идиомы Go II: slice, map, строки, generics, тесты",
+      goal: "Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.",
+      done: "10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w2-mon-1", text: "Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]", links: ["c29"], refs: [{ t: "Go Slices: usage and internals", u: "https://go.dev/blog/slices-intro" }, { t: "The mechanics of append", u: "https://go.dev/blog/slices" }] },
+            { id: "w2-mon-2", text: "Ловушки aliasing и удержания памяти — сначала ответ без вариантов", links: ["q6", "q4"] },
+            { id: "w2-mon-3", text: "LeetCode 3. Longest Substring Without Repeating Characters + проговор", lc: 3, talk: "lc3" }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w2-tue-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c30", "c32"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] },
+            { id: "w2-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c31", "sim7"], optional: true },
+            { id: "w2-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", talk: "w2-1" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered", refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
+            { id: "w2-wed-2", text: "W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить", talk: "w2-3" },
+            { id: "w2-wed-3", text: "LeetCode 15. 3Sum + проговор", lc: 15, talk: "lc15" }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/" },
+            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы", refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
+            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2" },
+            { id: "w2-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w2-sat-1", text: "«Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка", links: ["q1"] },
+            { id: "w2-sat-7", text: "Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией)", optional: true, refs: [{ t: "39 вопросов (Нияз)", u: "https://t.me/niyaz_golang/758" }, { t: "ТОП-12 Ozon", u: "https://t.me/niyaz_golang/672" }] },
+            { id: "w2-sat-2", text: "W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера", talk: "w2-4" },
+            { id: "w2-sat-3", text: "LeetCode 739. Daily Temperatures + проговор (записать)", lc: 739, talk: "lc739" },
+            { id: "w2-sat-4", text: "Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache", lc: 146, talk: "lc146", optional: true },
+            { id: "w2-sat-5", text: "Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией", optional: true, refs: [{ t: "Habr: «Коллеги, вы меня огорчаете»", u: "https://habr.com/ru/articles/521582" }] },
+            { id: "w2-sat-6", text: "Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов»", links: ["q1", "q2", "q3", "q4", "q5", "q6"] }
+          ]
+        }
+      ],
+      leetcode: [3, 15, 739, 56, 146],
+      english: [
+        "How does append work and when does it reallocate?",
+        "Are Go maps safe for concurrent use?",
+        "When would you use generics, and when would you avoid them?",
+        "How do you structure tests in Go?",
+        "Tell me about yourself — version 1, with one concrete story and a number."
+      ],
+      selfCheck: [
+        "Что происходит при append, когда len == cap? И когда len < cap?",
+        "Почему нельзя написать &m[\"k\"]?",
+        "Три способа безопасно использовать map из нескольких горутин?",
+        "Чем []byte(s) отличается от []rune(s), что возвращает len(s)?",
+        "Как выглядит table-driven тест и зачем t.Helper()?"
+      ],
+      gaps: [
+        "Нет быстрого режима «что выведет код» без вариантов ответа (ввести вывод → сверить → объяснение EN).",
+        "Нет карточек по generics и тестированию (table-driven, t.Helper, t.Parallel, -race в CI)."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 3 ─────────────────────────────
+    {
+      id: "w3",
+      title: "Конкурентность I: горутины, каналы, select, sync",
+      goal: "Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.",
+      done: "W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w3-mon-1", text: "Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition", links: ["c1", "c2"], refs: [{ t: "The Go Memory Model", u: "https://go.dev/ref/mem" }, { t: "Data Race Detector", u: "https://go.dev/doc/articles/race_detector" }] },
+            { id: "w3-mon-2", text: "Go blog: Pipelines and cancellation", refs: [{ t: "go.dev/blog/pipelines", u: "https://go.dev/blog/pipelines" }] },
+            { id: "w3-mon-3", text: "LeetCode 155. Min Stack + проговор", lc: 155 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w3-tue-1", text: "Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3"] },
+            { id: "w3-tue-2", text: "W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w3-1" },
+            { id: "w3-tue-3", text: "W3-2 Pipeline generator → square → sink с остановкой через context" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w3-wed-1", text: "select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов", links: ["c18", "q22"] },
+            { id: "w3-wed-2", text: "W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода" },
+            { id: "w3-wed-3", text: "Code review без вариантов: найти баг и исправление, потом открыть разбор", links: ["q12", "q15", "q21"] },
+            { id: "w3-wed-4", text: "LeetCode 567. Permutation in String + проговор (записать)", lc: 567 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS", links: ["c15", "c20", "c21", "c22", "sim5"] },
+            { id: "w3-thu-2", text: "W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex", talk: "w3-4" },
+            { id: "w3-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map", links: ["q7", "q8", "q13", "q14"] }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w3-sat-1", text: "Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения" },
+            { id: "w3-sat-2", text: "100 Go Mistakes: Concurrency Foundations", refs: [{ t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w3-sat-3", text: "LeetCode 150. Evaluate Reverse Polish Notation + проговор", lc: 150 },
+            { id: "w3-sat-4", text: "Проговор worker pool и «channel vs mutex» по-английски, записать", talk: "w3-1" },
+            { id: "w3-sat-5", text: "Самопроверка недели вслух" }
+          ]
+        }
+      ],
+      leetcode: [155, 567, 150],
+      english: [
+        "How does a goroutine differ from an OS thread?",
+        "Can a program have a race condition without a data race?",
+        "What does a channel buffer change, and what does it not change?",
+        "Who should close a channel, and why?",
+        "When would you choose a mutex over a channel?"
+      ],
+      selfCheck: [
+        "Что произойдёт при чтении/записи/закрытии nil, открытого и закрытого канала?",
+        "Почему закрывает канал отправитель, а не получатель?",
+        "Как ограничить число одновременно работающих горутин?",
+        "Чем atomic не заменяет mutex для составного инварианта?",
+        "Как бы ты проверил отсутствие гонок в CI?"
+      ],
+      gaps: [
+        "Нет практических заданий «напиши паттерн» (worker pool, pipeline, fan-in) с эталонным решением и тестом под -race.",
+        "Нет английских опорных ответов по шагам для практических паттернов, только для карточек-теории."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 4 ─────────────────────────────
+    {
+      id: "w4",
+      title: "Конкурентность II и минимум рантайма",
+      goal: "Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.",
+      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
+            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
+            { id: "w4-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w4-tue-1", text: "select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле", links: ["q16", "q17", "q11"] },
+            { id: "w4-tue-2", text: "W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор", talk: "w4-2", refs: [{ t: "x/time/rate", u: "https://pkg.go.dev/golang.org/x/time/rate" }] }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w4-wed-1", text: "Утечки горутин: как найти и предотвратить", links: ["c12"] },
+            { id: "w4-wed-2", text: "W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров", talk: "w4-3", refs: [{ t: "http.Server.Shutdown", u: "https://pkg.go.dev/net/http#Server.Shutdown" }, { t: "signal.NotifyContext", u: "https://pkg.go.dev/os/signal#NotifyContext" }] },
+            { id: "w4-wed-3", text: "W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof" },
+            { id: "w4-wed-4", text: "LeetCode 102. Binary Tree Level Order Traversal + проговор", lc: 102 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w4-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы", links: ["c7", "sim2", "c8", "c10"] },
+            { id: "w4-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
+            { id: "w4-thu-3", text: "W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода" },
+            { id: "w4-thu-4", text: "По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы", links: ["c3", "c4", "c5", "c6", "c9", "c11", "c16", "c17", "c19", "c25", "c28", "c36", "c37", "sim1", "sim4"], optional: true }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w4-sat-1", text: "W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list", refs: [{ t: "Go Diagnostics", u: "https://go.dev/doc/diagnostics" }] },
+            { id: "w4-sat-2", text: "Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое", links: ["c38"] },
+            { id: "w4-sat-3", text: "LeetCode 98. Validate Binary Search Tree + проговор", lc: 98 },
+            { id: "w4-sat-4", text: "Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов»", links: ["q5", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q21", "q22"] },
+            { id: "w4-sat-5", text: "Виртуальный live coding (Claude как интервьюер): одна задача на конкурентность, проговор по-английски, разбор" }
+          ]
+        }
+      ],
+      leetcode: [200, 102, 98],
+      english: [
+        "How do you cancel a group of goroutines when one of them fails?",
+        "How would you implement a rate limiter in a single instance, and across many instances?",
+        "How would you find and prevent a goroutine leak?",
+        "Explain the GMP model in 30 seconds.",
+        "Why might a variable escape to the heap, and how do you check it?"
+      ],
+      selfCheck: [
+        "Что гарантирует и чего не гарантирует отмена context для уже запущенной работы?",
+        "Чем errgroup.WithContext отличается от WaitGroup?",
+        "Порядок действий при graceful shutdown сервиса с фоновыми воркерами?",
+        "Что ограничивает GOMAXPROCS и почему потоков ОС может быть больше?",
+        "Что задаёт GOGC и чего не гарантирует GOMEMLIMIT?"
+      ],
+      gaps: [
+        "Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 3–4.",
+        "Нет задач на чтение pprof/trace-вывода и интерпретацию профиля."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 5 ─────────────────────────────
+    {
+      id: "w5",
+      title: "Проект I: каркас ledger-сервиса",
+      goal: "Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.",
+      done: "Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w5-mon-1", text: "ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope" },
+            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах" },
+            { id: "w5-mon-3", text: "LeetCode 230. Kth Smallest Element in a BST + проговор", lc: 230 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}", refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
+            { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w5-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
+            { id: "w5-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["q18", "q19"] },
+            { id: "w5-wed-3", text: "LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор", lc: 236 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
+            { id: "w5-thu-2", text: "Docker Compose: postgres + сервис; healthcheck" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w5-sat-1", text: "Перевод end-to-end: создание счетов, перевод, проверка балансов через curl" },
+            { id: "w5-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", talk: "proj-structure" },
+            { id: "w5-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
+          ]
+        }
+      ],
+      leetcode: [230, 236, 215],
+      english: [
+        "Walk me through the structure of your service.",
+        "Why int64 minor units instead of float64 for money?",
+        "How do you map domain errors to HTTP status codes?"
+      ],
+      selfCheck: [
+        "Где в коде граница транзакции и кто её открывает?",
+        "Что будет с соединением, если забыть rows.Close?",
+        "Почему бизнес-логика не зависит от net/http?"
+      ],
+      gaps: [
+        "На сайте нет раздела про прикладной бэкенд на Go: net/http, database/sql/pgx, slog, конфигурация.",
+        "Нет шаблона ADR и примеров «как рассказать про проект» по-английски."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 6 ─────────────────────────────
+    {
+      id: "w6",
+      title: "Проект II: транзакции, идемпотентность, outbox → Kafka",
+      goal: "Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.",
+      done: "Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
+            { id: "w6-mon-2", text: "LeetCode 973. K Closest Points to Origin + проговор", lc: 973 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", talk: "idem" },
+            { id: "w6-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", talk: "outbox" },
+            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["c12", "c22"] },
+            { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w6-thu-1", text: "Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу", refs: [{ t: "Apache Kafka documentation", u: "https://kafka.apache.org/documentation/" }] },
+            { id: "w6-thu-2", text: "Docker Compose: добавить Kafka" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race" },
+            { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", talk: "outbox" },
+            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 }
+          ]
+        }
+      ],
+      leetcode: [973, 621, 435],
+      english: [
+        "How do you make a payment API idempotent?",
+        "Why use a transactional outbox?",
+        "What delivery guarantee does your consumer have, and how do you handle duplicates?",
+        "How do you prevent deadlocks when two transfers lock the same accounts?"
+      ],
+      selfCheck: [
+        "Что произойдёт, если процесс упадёт между commit и публикацией в Kafka без outbox?",
+        "Почему exactly-once на уровне бизнес-эффекта достигается идемпотентностью потребителя?",
+        "Какой уровень изоляции выбран для перевода и почему?"
+      ],
+      gaps: [
+        "Нет материалов по транзакциям, изоляции, идемпотентности и outbox — это ядро финтех-собесов.",
+        "Нет раздела про Kafka для Go-разработчика (партиции, группы, ретраи, DLQ)."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 7 ─────────────────────────────
+    {
+      id: "w7",
+      title: "Проект III: gRPC, тесты, бенчмарки",
+      goal: "У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.",
+      done: "Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w7-mon-1", text: "proto + генерация (buf или protoc); gRPC Transfer и GetBalance", refs: [{ t: "gRPC Go quick start", u: "https://grpc.io/docs/languages/go/quickstart/" }] },
+            { id: "w7-mon-2", text: "LeetCode 133. Clone Graph + проговор", lc: 133 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w7-tue-1", text: "Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы" },
+            { id: "w7-tue-2", text: "Проговор: «REST vs gRPC — when would you choose which?»", talk: "grpc-rest" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w7-wed-1", text: "Unit-тесты: table-driven, фейки на границах, без sleep для синхронизации" },
+            { id: "w7-wed-2", text: "testing/synctest для кода со временем (Go 1.25)", links: ["c38"], refs: [{ t: "testing/synctest", u: "https://pkg.go.dev/testing/synctest" }] },
+            { id: "w7-wed-3", text: "LeetCode 207. Course Schedule + проговор", lc: 207 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w7-thu-1", text: "Интеграционные тесты: testcontainers-go для PostgreSQL и Kafka", refs: [{ t: "testcontainers-go", u: "https://golang.testcontainers.org/" }] },
+            { id: "w7-thu-2", text: "golangci-lint и go test -race в CI" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w7-sat-1", text: "Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis", links: ["c24"] },
+            { id: "w7-sat-2", text: "Покрытие: где тестов нет намеренно и почему (записать в README)" },
+            { id: "w7-sat-3", text: "LeetCode 994. Rotting Oranges + проговор", lc: 994 }
+          ]
+        }
+      ],
+      leetcode: [133, 207, 994],
+      english: [
+        "REST vs gRPC — when would you choose which?",
+        "How do you test code that talks to a database?",
+        "How do you test time-dependent concurrent code without sleeps?"
+      ],
+      selfCheck: [
+        "Что тестируется unit-тестом, а что только интеграционным?",
+        "Как дедлайн клиента gRPC доходит до запроса в PostgreSQL?",
+        "Что показал бенчмарк и какой вывод ты из него сделал?"
+      ],
+      gaps: [
+        "Нет материалов по тестированию на Go и testcontainers.",
+        "Карточка c38 про synctest — единственная точка про тестирование конкурентного кода."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 8 ─────────────────────────────
+    {
+      id: "w8",
+      title: "Проект IV: production-readiness, CV",
+      goal: "Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.",
+      done: "Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w8-mon-1", text: "OpenTelemetry: трассы и метрики для HTTP/gRPC; /healthz и /readyz", refs: [{ t: "OpenTelemetry Go", u: "https://opentelemetry.io/docs/languages/go/" }] },
+            { id: "w8-mon-2", text: "LeetCode 210. Course Schedule II + проговор", lc: 210 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)" },
+            { id: "w8-tue-2", text: "GitHub Actions: lint, test -race, build Docker-образа" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше" },
+            { id: "w8-wed-2", text: "LeetCode 684. Redundant Connection (union-find) + проговор", lc: 684 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w8-thu-1", text: "Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком" },
+            { id: "w8-thu-2", text: "Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском", talk: "deep-dive" },
+            { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 },
+            { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" }
+          ]
+        }
+      ],
+      leetcode: [210, 684, 743],
+      english: [
+        "What was the hardest design decision in this project, and what would you change?",
+        "How would you observe this service in production?",
+        "What are the failure modes of your service?"
+      ],
+      selfCheck: [
+        "Какие сигналы скажут, что сервис деградирует?",
+        "Что произойдёт при SIGTERM во время перевода?",
+        "Какие 3 компромисса ты сознательно принял?"
+      ],
+      gaps: [
+        "Нет тренажёра Craft Deep-Dive: вопросы интервьюера по собственному проекту с follow-up."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 9 ─────────────────────────────
+    {
+      id: "w9",
+      title: "Take-home, code review, первая волна откликов",
+      goal: "Сделать take-home в формате EU-компаний и уверенно ревьюить чужой Go-код за 40 минут.",
+      done: "Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w9-mon-1", text: "Take-home, часть 1 (≈90 мин): Go-клиент к REST API (create/fetch/delete, ошибки, ретраи, контекст) в формате задания Form3. Общий таймбокс 5–6 ч" },
+            { id: "w9-mon-2", text: "Дополнительно: LeetCode 70. Climbing Stairs + проговор", lc: 70, optional: true }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w9-tue-1", text: "Take-home, часть 2 (≈90 мин): тесты, README с решениями, без лишних зависимостей" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w9-wed-1", text: "Code review (≈80 мин): 2 чужих Go-PR по 40 минут, комментарии письменно на английском", refs: [{ t: "Google: code review practices", u: "https://google.github.io/eng-practices/review/" }, { t: "Go Code Review Comments", u: "https://go.dev/wiki/CodeReviewComments" }] },
+            { id: "w9-wed-2", text: "Дополнительно: LeetCode 198. House Robber + проговор", lc: 198, optional: true }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w9-thu-1", text: "Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа", links: ["q4", "q10", "q12", "q18", "q19", "q20"] },
+            { id: "w9-thu-2", text: "Собрать чек-лист ревьюера Go (≈45 мин): ошибки, контекст, горутины, ресурсы, тесты, API" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w9-sat-1", text: "Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка" },
+            { id: "w9-sat-2", text: "Ещё 1 чужой PR в формате 40 минут" },
+            { id: "w9-sat-3", text: "Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10" },
+            { id: "w9-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true }
+          ]
+        }
+      ],
+      leetcode: [70, 198, 322],
+      english: [
+        "Walk me through the decisions in your take-home.",
+        "What would you change if you had another day?",
+        "How do you give code review feedback that is direct but not harsh?"
+      ],
+      selfCheck: [
+        "Какие 5 пунктов ты проверяешь в любом Go-PR первым делом?",
+        "Как ты поступаешь, если в take-home что-то неоднозначно?"
+      ],
+      gaps: [
+        "Нет режима code review: показать фрагмент, дать написать комментарии, затем сравнить с эталонным списком замечаний.",
+        "Quiz сейчас только выбор варианта, а не самостоятельный поиск дефекта."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 10 ─────────────────────────────
+    {
+      id: "w10",
+      title: "System Design I",
+      goal: "По шаблону за 40 минут вести дизайн вслух на английском и в каждом дизайне объяснять, почему Go.",
+      done: "3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w10-mon-1", text: "Шаблон ответа: requirements → API → data model → high-level → deep dive → bottlenecks → trade-offs", talk: "sd-template" },
+            { id: "w10-mon-2", text: "LeetCode 300. Longest Increasing Subsequence + проговор", lc: 300 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w10-tue-1", text: "Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый)", refs: [{ t: "Rate limiter 100K RPS (itvector)", u: "https://itvector.io/articles/rate-limiter-100k-rps" }] }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)" },
+            { id: "w10-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)" },
+            { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w10-sat-1", text: "Виртуальный System Design (Claude как интервьюер) по одному из трёх дизайнов, 45 минут" },
+            { id: "w10-sat-2", text: "Переслушать запись: где не назвал компромисс или не спросил требования" },
+            { id: "w10-sat-3", text: "LeetCode 62. Unique Paths + проговор", lc: 62 }
+          ]
+        }
+      ],
+      leetcode: [300, 139, 62],
+      english: [
+        "Before I start, can I clarify the functional and non-functional requirements?",
+        "Let me start with a simple design and then scale it.",
+        "The main trade-off here is consistency versus availability…",
+        "Why would Go be a good fit for this service?"
+      ],
+      selfCheck: [
+        "Какие 3 вопроса по требованиям ты задаёшь всегда?",
+        "Где в твоём дизайне единая точка отказа?",
+        "Как бы ты оценил нагрузку на хранилище по числу запросов?"
+      ],
+      gaps: [
+        "На сайте нет раздела System Design: шаблон, разобранные дизайны, вопросы интервьюера.",
+        "Нет связки «механизм Go → архитектурное решение» (например, горутины и netpoller → почему Go для I/O-bound сервиса)."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 11 ─────────────────────────────
+    {
+      id: "w11",
+      title: "System Design II: event-driven и предметные дизайны",
+      goal: "Уверенно вести дизайн event-driven систем и предметные задачи целевых компаний.",
+      done: "Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", talk: "outbox" },
+            { id: "w11-mon-2", text: "LeetCode 33. Search in Rotated Sorted Array + проговор", lc: 33 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w11-tue-1", text: "Дизайн 4: Dispatch / delivery (назначение курьеров, гео-данные) — под Delivery Hero и Wolt" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w11-wed-1", text: "Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва" }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w11-thu-1", text: "Дизайн 6: Multi-tenant SaaS (тикеты, как Zendesk): изоляция арендаторов, шардирование, noisy neighbour" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w11-sat-1", text: "Повторить один дизайн с нуля за 40 минут и записать" },
+            { id: "w11-sat-2", text: "2 повторные задачи LeetCode из слабых тем с проговором" }
+          ]
+        }
+      ],
+      leetcode: [33],
+      english: [
+        "How do you guarantee ordering for events of the same account?",
+        "What does exactly-once really mean in Kafka-based systems?",
+        "How would you isolate tenants in a shared database?"
+      ],
+      selfCheck: [
+        "Saga: оркестрация или хореография — когда что?",
+        "Что делать с сообщением, которое стабильно падает в обработке?",
+        "Как избежать overselling при параллельных резервах?"
+      ],
+      gaps: [
+        "Нет материалов по event-driven архитектуре и предметным дизайнам целевых компаний."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 12 ─────────────────────────────
+    {
+      id: "w12",
+      title: "Behavioral, легенда, CV",
+      goal: "8 STAR-историй и рассказ о себе звучат естественно по-английски; CV и LinkedIn готовы.",
+      done: "Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w12-mon-1", text: "STAR-истории 1–4: инцидент в проде, конфликт/несогласие, ownership, неопределённость", talk: "star" },
+            { id: "w12-mon-2", text: "LeetCode 981. Time Based Key-Value Store + проговор", lc: 981 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w12-tue-1", text: "STAR-истории 5–8: менторство, дедлайн, кросс-командная работа, ошибка и вывод", talk: "star" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w12-wed-1", text: "«Why Go / why move from JVM?» и «Tell me about yourself» v2", talk: "why-go" },
+            { id: "w12-wed-2", text: "Deep-dive по финтех-опыту без NDA-деталей: что можно говорить, что обобщить" }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w12-thu-1", text: "Финал CV и LinkedIn; позиционирование «Go + Kotlin backend, fintech»" },
+            { id: "w12-thu-2", text: "Вопросы к компании: команда, on-call, процесс релизов, рост" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w12-sat-1", text: "Прогон всех историй вслух с записью, сократить каждую до 2 минут" },
+            { id: "w12-sat-2", text: "2 повторные задачи LeetCode из слабых тем" }
+          ]
+        }
+      ],
+      leetcode: [981],
+      english: [
+        "Tell me about a production incident you handled.",
+        "Tell me about a time you disagreed with a technical decision.",
+        "Why are you moving to Go?",
+        "What would you do differently in your last project?"
+      ],
+      selfCheck: [
+        "В каждой истории есть число или измеримый результат?",
+        "Видна ли в истории твоя роль, а не только команды?",
+        "Хватает ли 2 минут на историю?"
+      ],
+      gaps: [
+        "Нет банка behavioral-вопросов с шаблоном STAR и тренировкой ответа вслух."
+      ]
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 13 ─────────────────────────────
+    {
+      id: "w13",
+      title: "Моки и пик откликов",
+      goal: "Пройти полный цикл интервью в тренировочном режиме и выйти на реальные собеседования.",
+      done: "3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w13-mon-1", text: "Мок 1: live coding (Pramp, interviewing.io или знакомые)", refs: [{ t: "Pramp", u: "https://www.pramp.com/" }, { t: "interviewing.io", u: "https://interviewing.io/" }] },
+            { id: "w13-mon-2", text: "LeetCode 1396. Design Underground System + проговор", lc: 1396 }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w13-tue-1", text: "Мок 2: System Design" }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w13-wed-1", text: "Полный виртуальный собес по плану Delivery Hero: coding + design + hiring manager + bar raiser" }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w13-thu-1", text: "Мок 3: behavioral + Craft Deep-Dive" },
+            { id: "w13-thu-2", text: "Отклики волны 3: Delivery Hero, Wolt (с релокацией)" }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w13-sat-1", text: "Журнал интервью: после каждого реального собеса записать вопросы и где запнулся; добавить их на сайт" },
+            { id: "w13-sat-2", text: "Вилки и переговоры: подготовить диапазон и ответ на вопрос о зарплатных ожиданиях" },
+            { id: "w13-sat-3", text: "2 задачи LeetCode на время (45 минут, вслух)" }
+          ]
+        }
+      ],
+      leetcode: [1396],
+      english: [
+        "What are your salary expectations?",
+        "Do you have any questions for us?",
+        "Is there anything you would like to add?"
+      ],
+      selfCheck: [
+        "Какие темы чаще всего вызывали заминку на моках?",
+        "Что из этого вернуть в повторение на следующей неделе?"
+      ],
+      gaps: [
+        "Нет журнала реальных интервью, связанного с повторением тем на сайте."
+      ]
+    }
+  ],
+
+  // ─────────────────────────── LEETCODE ───────────────────────────
+  // key — короткая идея решения на английском, раскрывается по запросу (сначала попытаться самому).
+  leetcodeIndex: {
+    1: { title: "Two Sum", slug: "two-sum", pattern: "Hash map", key: "Single pass: check the complement before inserting the current value." },
+    3: { title: "Longest Substring Without Repeating Characters", slug: "longest-substring-without-repeating-characters", pattern: "Sliding window", key: "Keep the last index of each character; move the left edge past a repeat." },
+    15: { title: "3Sum", slug: "3sum", pattern: "Two pointers", key: "Sort, fix one element, two pointers on the rest, skip equal neighbours." },
+    20: { title: "Valid Parentheses", slug: "valid-parentheses", pattern: "Stack", key: "Push openers, match closers against the top, stack must end empty." },
+    33: { title: "Search in Rotated Sorted Array", slug: "search-in-rotated-sorted-array", pattern: "Binary search", key: "At each step one half is sorted; check whether the target lies in it." },
+    49: { title: "Group Anagrams", slug: "group-anagrams", pattern: "Hash map", key: "A [26]int count array is comparable, so it can be a map key directly." },
+    56: { title: "Merge Intervals", slug: "merge-intervals", pattern: "Intervals", key: "Sort by start; extend the last merged interval or append a new one." },
+    62: { title: "Unique Paths", slug: "unique-paths", pattern: "DP", key: "Each cell is the sum of the cell above and the cell to the left; one row is enough." },
+    70: { title: "Climbing Stairs", slug: "climbing-stairs", pattern: "DP", key: "Fibonacci with two variables." },
+    98: { title: "Validate Binary Search Tree", slug: "validate-binary-search-tree", pattern: "Tree DFS", key: "Pass down the allowed (low, high) range, not just compare with the parent." },
+    102: { title: "Binary Tree Level Order Traversal", slug: "binary-tree-level-order-traversal", pattern: "BFS", key: "Queue; process exactly len(queue) nodes per level." },
+    133: { title: "Clone Graph", slug: "clone-graph", pattern: "Graph DFS/BFS", key: "Map from original node to its clone prevents infinite loops." },
+    139: { title: "Word Break", slug: "word-break", pattern: "DP", key: "dp[i] is true if some dp[j] is true and s[j:i] is in the dictionary." },
+    146: { title: "LRU Cache", slug: "lru-cache", pattern: "Design: map + list", key: "Map to list elements plus a doubly linked list for recency; container/list in Go." },
+    150: { title: "Evaluate Reverse Polish Notation", slug: "evaluate-reverse-polish-notation", pattern: "Stack", key: "Push numbers; on an operator pop two, mind the operand order." },
+    155: { title: "Min Stack", slug: "min-stack", pattern: "Stack", key: "Store the current minimum alongside each pushed value." },
+    198: { title: "House Robber", slug: "house-robber", pattern: "DP", key: "best(i) = max(best(i-1), best(i-2) + nums[i]) with two variables." },
+    200: { title: "Number of Islands", slug: "number-of-islands", pattern: "Grid DFS/BFS", key: "Scan the grid; on land, flood-fill and count one island." },
+    207: { title: "Course Schedule", slug: "course-schedule", pattern: "Topological sort", key: "Kahn's algorithm: process nodes with zero in-degree; a cycle leaves some unprocessed." },
+    210: { title: "Course Schedule II", slug: "course-schedule-ii", pattern: "Topological sort", key: "Same as 207, but record the processing order." },
+    215: { title: "Kth Largest Element in an Array", slug: "kth-largest-element-in-an-array", pattern: "Heap", key: "Min-heap of size k with container/heap; or quickselect on average O(n)." },
+    230: { title: "Kth Smallest Element in a BST", slug: "kth-smallest-element-in-a-bst", pattern: "Tree DFS", key: "In-order traversal visits values in sorted order; stop at the k-th." },
+    236: { title: "Lowest Common Ancestor of a Binary Tree", slug: "lowest-common-ancestor-of-a-binary-tree", pattern: "Tree DFS", key: "If p and q are found in different subtrees, the current node is the answer." },
+    238: { title: "Product of Array Except Self", slug: "product-of-array-except-self", pattern: "Prefix/suffix", key: "Prefix products left to right, then multiply by a running suffix product." },
+    300: { title: "Longest Increasing Subsequence", slug: "longest-increasing-subsequence", pattern: "DP / binary search", key: "Patience sorting: tails array plus binary search gives O(n log n)." },
+    322: { title: "Coin Change", slug: "coin-change", pattern: "DP", key: "dp[amount] = 1 + min over coins of dp[amount - coin]." },
+    347: { title: "Top K Frequent Elements", slug: "top-k-frequent-elements", pattern: "Hash map + buckets", key: "Count, then bucket by frequency and walk from the highest bucket." },
+    435: { title: "Non-overlapping Intervals", slug: "non-overlapping-intervals", pattern: "Greedy intervals", key: "Sort by end; keep an interval if it starts after the last kept end." },
+    567: { title: "Permutation in String", slug: "permutation-in-string", pattern: "Sliding window", key: "Fixed-size window with letter counts; compare count arrays." },
+    621: { title: "Task Scheduler", slug: "task-scheduler", pattern: "Greedy / heap", key: "The most frequent task defines the frame: (maxCount-1)*(n+1) + number of tasks with maxCount." },
+    684: { title: "Redundant Connection", slug: "redundant-connection", pattern: "Union-find", key: "The first edge whose endpoints are already connected is the answer." },
+    739: { title: "Daily Temperatures", slug: "daily-temperatures", pattern: "Monotonic stack", key: "Stack of indices with decreasing temperatures; pop when today is warmer." },
+    743: { title: "Network Delay Time", slug: "network-delay-time", pattern: "Dijkstra", key: "Dijkstra with container/heap; answer is the max distance if all nodes are reached." },
+    973: { title: "K Closest Points to Origin", slug: "k-closest-points-to-origin", pattern: "Heap", key: "Max-heap of size k on squared distance, no square root needed." },
+    981: { title: "Time Based Key-Value Store", slug: "time-based-key-value-store", pattern: "Map + binary search", key: "Per key, a slice of (timestamp, value) in increasing order; binary search for get." },
+    994: { title: "Rotting Oranges", slug: "rotting-oranges", pattern: "Multi-source BFS", key: "Start BFS from all rotten oranges at once; count minutes by levels." },
+    1396: { title: "Design Underground System", slug: "design-underground-system", pattern: "Design: maps", key: "One map for active check-ins, one for (from, to) → total time and count." }
+  },
+
+  // ─────────────────────────── ПРОГОВОР ───────────────────────────
+  // Опорные английские тексты. Не заучивать: смотреть на скелет, говорить своими словами.
+  talks: {
+    lc1: {
+      title: "LC 1. Two Sum — полный диалог с интервьюером",
+      dialog: [
+        ["Interviewer", "Given an array of integers and a target, return the indices of two numbers that add up to the target."],
+        ["You", "Before I start, a few questions. Is there always exactly one solution? Can I use the same element twice? Can the numbers be negative?"],
+        ["Interviewer", "Exactly one solution, no reuse, and yes, negatives are possible."],
+        ["You", "The brute-force approach checks every pair, which is O(n²). We can do better with a hash map from value to index. For each number I compute the complement and check whether I've already seen it. If yes, I return both indices; if not, I store the current number."],
+        ["You", "I check the complement first and only then insert the current value. That ordering is what prevents using the same element twice."],
+        ["Interviewer", "What's the complexity?"],
+        ["You", "O(n) time, since map lookups are O(1) on average, and O(n) extra space."],
+        ["Interviewer", "How would you test it?"],
+        ["You", "Small example: [2, 7, 11, 15] with target 9 returns [0, 1]. In a table-driven test I'd add negative numbers, duplicates like [3, 3] with target 6, and the pair at the very end."],
+        ["Interviewer", "What if the array were sorted?"],
+        ["You", "Then two pointers, one at each end, give O(1) extra space: move the left pointer if the sum is too small, the right one if too large."]
+      ]
+    },
+    lc49: {
+      title: "LC 49. Group Anagrams",
+      clarify: "Are the strings lowercase English letters only? Does the output order matter?",
+      approach: "Anagrams share the same letter counts, so I build a key per word and group words in a map from key to list. In Go a [26]int array is comparable, so I can use it directly as a map key — no string building needed.",
+      complexity: "O(n · k) time, where k is the average word length, and O(n · k) space.",
+      edge: "An empty string is a valid group of its own; a single word gives one group."
+    },
+    lc347: {
+      title: "LC 347. Top K Frequent Elements",
+      clarify: "Is k always valid? If two numbers have the same frequency, does the order matter?",
+      approach: "First count frequencies in a map. Then bucket sort: a slice of buckets indexed by frequency, which is at most n. Walk the buckets from the highest frequency and collect k numbers. A min-heap of size k is the alternative.",
+      complexity: "Buckets give O(n) time and O(n) space; the heap is O(n log k).",
+      edge: "k equals the number of unique elements; all elements are the same."
+    },
+    lc238: {
+      title: "LC 238. Product of Array Except Self",
+      clarify: "Division isn't allowed, right? Can there be zeros?",
+      approach: "Two passes. Left to right I store the product of everything before each index. Right to left I keep a running suffix product and multiply it in. Zeros are handled naturally because I never divide.",
+      complexity: "O(n) time, O(1) extra space besides the output.",
+      edge: "One zero; two zeros, where every result is zero; negative numbers."
+    },
+    lc3: {
+      title: "LC 3. Longest Substring Without Repeating Characters",
+      clarify: "Is the input ASCII, or should I handle Unicode runes? In Go that matters because indexing a string works on bytes.",
+      approach: "Sliding window. I keep the last index of each character. When I see a repeat inside the window, I move the left edge just past its previous position, and update the best length at each step.",
+      complexity: "O(n) time; space is O(min(n, alphabet size)).",
+      edge: "An empty string; all characters the same; the whole string unique."
+    },
+    lc15: {
+      title: "LC 15. 3Sum",
+      clarify: "Should I return unique triplets only? Does the order matter?",
+      approach: "Sort the array. Fix the first element, then run two pointers on the rest: if the sum is too small move left forward, if too large move right back. Skip equal neighbours to avoid duplicate triplets.",
+      complexity: "O(n²) time; sorting is O(n log n) and doesn't change that. O(1) extra space besides the output.",
+      edge: "Fewer than three elements; all zeros; many duplicates."
+    },
+    lc739: {
+      title: "LC 739. Daily Temperatures",
+      clarify: "Should days with no warmer day get 0?",
+      approach: "A monotonic stack of indices with decreasing temperatures. For each day, while today is warmer than the day on top of the stack, I pop it and record the distance. Then I push today.",
+      complexity: "Each index is pushed and popped once, so O(n) time and O(n) space.",
+      edge: "Strictly decreasing temperatures, where every answer is zero; equal temperatures."
+    },
+    lc146: {
+      title: "LC 146. LRU Cache",
+      clarify: "Should Get and Put both be O(1)? On Put with an existing key, do I update it and mark it as most recent?",
+      approach: "A hash map plus a doubly linked list. The map gives O(1) access to the node; the list keeps the usage order, most recent at the front. Get moves the node to the front; Put inserts or updates at the front and evicts the tail when over capacity. In Go, container/list gives me the list, so the map holds *list.Element.",
+      complexity: "O(1) for both operations; O(capacity) space.",
+      edge: "Capacity 1; Put on an existing key; Get on a missing key returns -1.",
+      followUp: "How would you make it thread-safe? — A sync.Mutex. Even Get mutates the list, so an RWMutex doesn't help much. Under high contention I'd shard the cache by key hash."
+    },
+    "w1-1": {
+      title: "W1-1. Money",
+      approach: "I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats units and cents with the currency code.",
+      edge: "Negative amounts, zero, amounts below one euro like 0.05."
+    },
+    "w1-2": {
+      title: "W1-2. Account и W1-3. ValidationError",
+      approach: "Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.",
+      edge: "errors.Is compares against a specific value; errors.As matches by type and gives me the value."
+    },
+    "w1-5": {
+      title: "W1-5. SafeDiv",
+      approach: "A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.",
+      edge: "In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server."
+    },
+    "w1-6": {
+      title: "W1-6. Method sets",
+      approach: "The method set of T contains only value-receiver methods; the method set of *T contains both. So if Notify has a pointer receiver, only *Service satisfies Notifier, and passing a Service value fails at compile time.",
+      edge: "The rule itself comes from the spec. The rationale: an interface holds a copy of the value, so a pointer method called through it would change that copy, not the caller's variable."
+    },
+    "w2-1": {
+      title: "W2-1. Remove",
+      approach: "The order-preserving version is append(s[:i], s[i+1:]...). The catch is that it writes into the same backing array, so the caller's original slice changes too. The fast version swaps in the last element: O(1), but it loses the order.",
+      edge: "slices.Delete also modifies the shared backing array, and since Go 1.22 it zeroes the vacated tail elements. If the caller still needs the original, I make an independent copy first, for example with slices.Clone."
+    },
+    "w2-3": {
+      title: "W2-3. Generics vs interfaces",
+      approach: "I use generics when the logic is identical for every type, like Map or a Set. I use an interface when each type behaves differently. Rule of thumb: write the concrete version first and generalize when a second use case appears."
+    },
+    "w2-4": {
+      title: "W2-4. txsum CLI",
+      approach: "I read the CSV with encoding/csv, parse each row into a transaction and aggregate balances in a map keyed by account and currency, using int64 minor units. Bad rows don't stop the run: I collect them with line numbers and report at the end, with a non-zero exit code if any failed.",
+      edge: "Table-driven test for the row parser: valid row, missing column, non-numeric amount, unknown currency."
+    },
+    "p1-p10": {
+      title: "«Что выведет код»: как объяснять",
+      lines: [
+        "P1 slice append into shared array — t has capacity 3, so append writes into the shared backing array and overwrites s[2].",
+        "P3 nil map — reading returns the zero value, but writing panics: assignment to entry in nil map.",
+        "P4 defer order — deferred calls run in LIFO order, and their arguments are evaluated when defer executes.",
+        "P5 named result — return 1 assigns to the named result first, then the deferred function increments it.",
+        "P6 typed nil — the interface holds the type *E with a nil value, so the interface itself isn't nil.",
+        "P9 loop variable — since Go 1.22 each iteration has its own variable; before 1.22 all closures shared one."
+      ]
+    },
+    "w3-1": {
+      title: "W3-1. Worker pool",
+      clarify: "How many workers? Do results need to keep the input order? What happens if one job fails?",
+      approach: "I start N workers that range over a jobs channel and send to a results channel. The producer closes jobs after the last send; a separate goroutine waits on a WaitGroup for all workers and then closes results, so the consumer's range loop ends. Every goroutine has an owner and a clear exit: the channel closing or ctx.Done().",
+      complexity: "Concurrency is bounded by N, so memory and connections stay predictable under load.",
+      edge: "Zero jobs; cancellation in the middle; a slow consumer — that's backpressure, the workers block on send instead of buffering unboundedly."
+    },
+    "w3-4": {
+      title: "W3-4. Mutex vs atomic vs channel",
+      approach: "For a single counter an atomic operation is usually the simplest fit; whether it is faster depends on contention, so I'd compare with a benchmark rather than assume. A mutex is right when the invariant spans several fields. A channel fits when I'm transferring ownership of data or coordinating work, not just protecting a variable.",
+      edge: "An atomic protects one value; it doesn't make a check-then-act sequence on two values safe."
+    },
+    "w4-1": {
+      title: "W4-1. ParallelFetch with errgroup",
+      clarify: "Should one failure cancel the rest? Is there a limit on concurrent requests?",
+      approach: "errgroup.WithContext gives me a context that is cancelled on the first error. SetLimit bounds concurrency. Each fetch uses the group's context, so the other requests stop early. Wait returns the first error.",
+      edge: "The derived context is cancelled after Wait returns, so it must not be used for work after Wait."
+    },
+    "w4-2": {
+      title: "W4-2. Rate limiter",
+      approach: "For a single instance, a token bucket: tokens refill at a fixed rate up to a burst size; a request takes a token or is rejected or waits. In Go I'd use golang.org/x/time/rate rather than hand-roll it. Across many instances the state must be shared — for example Redis with an atomic script — or each instance gets a share of the global limit.",
+      edge: "Burst behaviour; clock skew between instances; what the client sees on rejection — 429 with Retry-After."
+    },
+    "w4-3": {
+      title: "W4-3. Graceful shutdown",
+      approach: "signal.NotifyContext gives me a context cancelled on SIGTERM. I stop accepting new requests with server.Shutdown and a timeout, cancel background workers through their context, and wait for them with a WaitGroup or errgroup before closing the database pool.",
+      edge: "Shutdown order matters: stop intake first, drain in-flight work, then close dependencies. Kubernetes gives a grace period, so the timeout must fit inside it."
+    },
+    "proj-structure": {
+      title: "Рассказ о структуре проекта",
+      approach: "cmd/ledger holds the wiring: config, logger, database pool and servers. internal/ledger is the domain — accounts, transfers and the rules — with no dependency on HTTP or SQL. internal/store implements persistence with pgx, and internal/http and internal/grpc are thin adapters. That keeps the domain testable with simple fakes."
+    },
+    idem: {
+      title: "Идемпотентность платежей",
+      clarify: "Single process or several instances? How long do we keep keys? What if the same key comes with a different payload?",
+      approach: "The client sends an idempotency key. In the same transaction as the transfer I insert the key with a unique constraint and store the response. A retry with the same key returns the stored response; the same key with a different payload is rejected as a client error.",
+      edge: "Two identical requests arriving at once: the unique constraint makes one insert win, so check-then-insert races are avoided."
+    },
+    outbox: {
+      title: "Transactional outbox",
+      approach: "Publishing to Kafka after the commit can fail, and then the event is lost. With an outbox I write the event to a table in the same transaction as the business change. A relay publishes pending rows and marks them sent. Delivery becomes at-least-once, so consumers must be idempotent.",
+      edge: "Ordering per account: use the account ID as the Kafka key so its events land in one partition. That alone is not enough: the relay must publish rows in order, and producer retries must not reorder messages (idempotent producer). Each of these needs its own check."
+    },
+    "grpc-rest": {
+      title: "REST vs gRPC",
+      approach: "gRPC suits internal service-to-service calls: a typed contract, code generation, HTTP/2 streaming and deadlines that propagate. REST with JSON is better for public APIs and browsers, where tooling and readability matter more than efficiency."
+    },
+    "deep-dive": {
+      title: "Craft Deep-Dive по проекту",
+      lines: [
+        "Start with the problem and constraints, then the design, then one decision you'd change.",
+        "For each decision: the options, why this one, what it costs.",
+        "Be honest about limits: what isn't tested, what wouldn't scale and why."
+      ]
+    },
+    "sd-template": {
+      title: "Шаблон System Design",
+      lines: [
+        "Requirements: functional, then non-functional — scale, latency, consistency.",
+        "API: main endpoints or events.",
+        "Data model: entities, keys, where the data lives.",
+        "High-level design: components and data flow.",
+        "Deep dive: the one or two hardest parts.",
+        "Bottlenecks and failures: what breaks first and how we notice.",
+        "Trade-offs: what we chose and what we gave up."
+      ]
+    },
+    star: {
+      title: "STAR",
+      lines: [
+        "Situation — one or two sentences of context.",
+        "Task — what you were responsible for.",
+        "Action — what you did, in first person, with technical detail.",
+        "Result — a number or a concrete outcome, plus what you learned."
+      ]
+    },
+    "why-go": {
+      title: "Why Go",
+      approach: "I've built payment systems on the JVM for years. I'm moving to Go because I value its simplicity and explicitness — errors as values, a small language, fast builds — and its concurrency model fits I/O-heavy backend services. Many fintech and platform teams in Europe build in Go, and I've been practicing on a ledger service with the same problems I solve at work."
+    }
+  },
+
+  // ─────────────────────── «ЧТО ВЫВЕДЕТ КОД» ───────────────────────
+  // Для недели 2. Фрагменты: для запуска нужны package main, import "fmt" и func main (у P5/P6 main уже есть).
+  // output — вывод на Go 1.22+ с версией языка модуля ≥ 1.22; why/whyRU — объяснение EN/RU; version — где вывод зависит от версии.
+  predict: [
+    { id: "p1", code: "s := []int{1, 2, 3}\nt := s[:2]\nt = append(t, 99)\nfmt.Println(s)", output: "[1 2 99]", why: "t has capacity 3, so append writes into the shared backing array and overwrites s[2].", whyRU: "У t ёмкость 3, поэтому append пишет в общий массив и перезаписывает s[2]." },
+    { id: "p2", code: "s := make([]int, 0, 1)\na := append(s, 1)\nb := append(s, 2)\nfmt.Println(a[0], b[0])", output: "2 2", why: "Both appends reuse the same array of capacity 1, so the second write overwrites the first.", whyRU: "Оба append используют один массив ёмкостью 1; вторая запись перезаписывает первую." },
+    { id: "p3", code: "var m map[string]int\nfmt.Println(m[\"x\"], len(m))\nm[\"x\"] = 1", output: "0 0, then panic", why: "Reading a nil map returns the zero value, but writing to it panics: assignment to entry in nil map.", whyRU: "Чтение из nil map возвращает нулевое значение, а запись вызывает panic: assignment to entry in nil map." },
+    { id: "p4", code: "for i := 0; i < 3; i++ {\n    defer fmt.Print(i)\n}", output: "210", why: "Deferred calls run in LIFO order, and their arguments are evaluated when defer executes.", whyRU: "Отложенные вызовы выполняются в обратном порядке, а их аргументы вычисляются в момент выполнения defer." },
+    { id: "p5", code: "func f() (x int) {\n    defer func() { x++ }()\n    return 1\n}\n\nfunc main() {\n    fmt.Println(f())\n}", output: "2", why: "return 1 assigns to the named result x first, then the deferred function increments it.", whyRU: "return 1 сначала присваивает значение именованному результату x, затем отложенная функция его увеличивает." },
+    { id: "p6", code: "type E struct{}\n\nfunc (*E) Error() string { return \"e\" }\n\nfunc g() error {\n    var p *E\n    return p\n}\n\nfunc main() {\n    fmt.Println(g() == nil)\n}", output: "false", why: "The interface holds the type *E with a nil value, so the interface itself isn't nil.", whyRU: "В интерфейсе лежит тип *E с нулевым указателем, поэтому сам интерфейс не равен nil." },
+    { id: "p7", code: "type P struct{ v int }\nps := []P{{1}, {2}}\nfor _, p := range ps {\n    p.v = 10\n}\nfmt.Println(ps)", output: "[{1} {2}]", why: "The range variable is a copy of each element; to modify the slice, use the index.", whyRU: "Переменная range — копия элемента; чтобы изменить срез, нужно обращаться по индексу." },
+    { id: "p8", code: "s := \"héllo\"\nfmt.Println(len(s), s[1], len([]rune(s)))", output: "6 195 5", why: "len counts bytes; the precomposed é (U+00E9) takes two bytes in UTF-8, s[1] is its first byte 0xC3 = 195; there are five runes.", whyRU: "len считает байты; é (составной символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять." },
+    { id: "p9", code: "var fs []func()\nfor i := 0; i < 3; i++ {\n    fs = append(fs, func() { fmt.Print(i) })\n}\nfor _, f := range fs {\n    f()\n}", output: "012", why: "Since Go 1.22 each loop iteration has its own variable. With language version below 1.22 in go.mod (or -lang=go1.21) all closures share one variable and print 333.", whyRU: "С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22, все замыкания разделяют одну переменную и печатают 333.", version: "Зависит от версии языка модуля, а не только от установленного toolchain" },
+    { id: "p10", code: "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])", output: "1", why: "Arrays are values in Go, so assignment copies the whole array, unlike a slice.", whyRU: "Массивы в Go — значения: присваивание копирует весь массив, в отличие от среза." }
+  ]
+};
