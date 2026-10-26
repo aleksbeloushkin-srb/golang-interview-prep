@@ -1358,41 +1358,91 @@ const SIMULATORS = [
   {
     id: "sim6",
     title: "Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)",
-    subtitle: "Выделение памяти без локов из локального кеша P.mcache, классы scan vs noscan и 4 фазы трёхцветной разметки с Гибридным барьером записи.",
+    subtitle: "Размещение данных, быстрый путь и пополнение аллокатора, scan/noscan, затем фазы GC. Размер объекта отличается от размера span; отсутствие указателей не отменяет сборку мусора.",
     cardId: "c27",
     cardLabel: "Карточка Q27 (GC, GOGC и мягкий лимит) →",
     versionNote: "Учебная схема runtime Go 1.26.1. Цель кучи, порог запуска и мягкий бюджет памяти — разные величины; граф и цвета не являются трассой исполнения или обещанием длительности пауз.",
     sources: [
       { title: "GC guide", url: "https://go.dev/doc/gc-guide" },
+      { title: "Allocator — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/malloc.go" },
+      { title: "mcentral — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcentral.go" },
       { title: "GC pacer — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcpacer.go" }
     ],
     steps: [
       {
-        title: "1. Escape Analysis и Lock-Free аллокация через P.mcache",
-        desc: "Переменные без возврата указателя наверх остались на стеке. Для сбежавших в хип объектов до 32 КБ горутина берёт свободную ячейку из локального кеша своего процессора P.mcache (разбитого на ~68 классов размеров mspan) — БЕЗ единого мьютекса!",
-        boxes: [
+        "title": "1. Размещение → свободная ячейка → пополнение кеша",
+        "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью.",
+        "descEN": "First the compiler determines lifetimes: storage may be on the stack, in registers or eliminated. For a required heap object, the fast path uses a free slot in the current P’s cached span. Refill may sweep a span or obtain pages from mheap. Pointer-free payloads skip pointer traversal but still need reachability tracking and reclamation.",
+        "check": {
+          "promptEN": "The cached span is full. Can the next small allocation still be described as always lock-free? Is a string descriptor pointer-free?",
+          "promptRU": "В кешированном span закончились ячейки. Можно ли всё ещё обещать следующей небольшой аллокации отсутствие блокировок? А дескриптор строки не содержит указателей?",
+          "answerEN": "No to both. Refill can reach shared structures and sweeping. A string descriptor points to bytes; the byte payload is pointer-free, but the descriptor is not.",
+          "answerRU": "Нет в обоих случаях. Пополнение может обращаться к общим структурам и sweep. Дескриптор строки указывает на байты: сами байты не содержат ссылок, но дескриптор содержит."
+        },
+        "boxes": [
           {
-            title: "Иерархия аллокатора Go (TCMalloc)",
-            rows: [
-              { k: "1. P.mcache (на каждом P):", v: "Lock-Free выделение объектов < 32 КБ!", hl: true },
-              { k: "2. mcentral (общий):", v: "Выдаёт новые 8 КБ спаны в mcache под спинлоком", hl: false },
-              { k: "3. mheap (глобальный):", v: "Аллокация крупных объектов > 32 КБ и стеков", hl: false }
+            "title": "Откуда берётся место для объекта",
+            "rows": [
+              {
+                "k": "1. mcache текущего P:",
+                "v": "Есть свободная ячейка → быстрый путь без блокировки",
+                "hl": true
+              },
+              {
+                "k": "2. Ячеек нет → mcentral:",
+                "v": "Нужен span нужного класса; возможны sweep и синхронизация",
+                "hl": false
+              },
+              {
+                "k": "3. Нужны страницы → mheap:",
+                "v": "Выдаёт области страниц; большой объект обходит кеши малых",
+                "hl": false
+              },
+              {
+                "k": "Страница ≠ span ≠ объект:",
+                "v": "Страница runtime — 8 KiB; span — одна/несколько страниц; малые объекты занимают отдельные ячейки",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Классы спанов: scan против noscan",
-            rows: [
-              { k: "scan mspan:", v: "Объекты с указателями (GC обязан их сканировать)", hl: false },
-              { k: "noscan mspan:", v: "[]byte, строки, числа без указателей", hl: true },
-              { k: "Оптимизация GC:", v: "GC вообще НЕ заходит внутрь noscan спанов!", hl: true }
+            "title": "Где искать указатели",
+            "rows": [
+              {
+                "k": "scan:",
+                "v": "Например, Holder с полями []byte и string содержит указатели в дескрипторах",
+                "hl": false
+              },
+              {
+                "k": "noscan:",
+                "v": "Массив байтов за []byte или string не содержит указателей",
+                "hl": true
+              },
+              {
+                "k": "Что остаётся GC:",
+                "v": "Проверка достижимости, учёт памяти и освобождение; это не «0 ms»",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Старт цикла GC: Mark Setup (STW #1)",
-            rows: [
-              { k: "Триггер запуска:", v: "Pacer выбирает trigger раньше heap goal; учитывает GOGC и мягкий лимит", hl: false },
-              { k: "Переход STW #1:", v: "Включается Hybrid Write Barrier", hl: true },
-              { k: "Цвета объектов в хипе:", v: "Все объекты A, B, C, D, E стартуют Белыми", hl: false }
+            "title": "Дальше — начало разметки GC",
+            "rows": [
+              {
+                "k": "Триггер запуска:",
+                "v": "Pacer выбирает trigger раньше heap goal; учитывает GOGC и мягкий лимит",
+                "hl": false
+              },
+              {
+                "k": "Переход STW #1:",
+                "v": "Завершение предыдущего sweep и включение write barrier",
+                "hl": true
+              },
+              {
+                "k": "Условный граф следующего шага:",
+                "v": "A, B, C, D, E пока не размечены; цвета — модель, не трасса",
+                "hl": false
+              }
             ]
           }
         ]
@@ -1682,7 +1732,7 @@ const CHEATSHEET_ROWS = [
   },
   {
     topic: "9. Аллокатор (mcache) и Трёхцветный GC",
-    how: "Классы размеров <code>mspan</code> (<code>scan</code> vs <code>noscan</code>) в локальном <code>P.mcache</code> без локов. Конкурентный <strong>трёхцветный Mark-and-Sweep GC</strong> с <strong>Hybrid Write Barrier</strong>.",
+    how: "<code>mcache</code> текущего P → пополнение через <code>mcentral</code> → страницы <code>mheap</code>. Только свободная ячейка в кеше даёт быстрый путь без блокировки. <code>noscan</code> исключает обход указателей внутри данных, но не всю работу GC.",
     markers: "STW-переходы без гарантии микросекунд. <code>GOGC</code> задаёт heap goal, pacer начинает раньше. <code>GOMEMLIMIT</code> — мягкий бюджет <code>Sys − HeapReleased</code>, не защита от OOM; <code>Mark Assist</code> может увеличить задержки.",
     cardId: "c28", simId: "sim6"
   },

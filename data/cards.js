@@ -883,68 +883,210 @@ go func() {
   // МОДУЛЬ 4: ПАМЯТЬ, АЛЛОКАТОР И СБОРЩИК МУСОРА (Q23 - Q28)
   // ==========================================
   {
-    id: "c23",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim3",
-    qEN: "Q23: Stack vs. Heap allocation in Go — why is stack allocation so much faster?",
-    qRU: "Стек против Кучи (Stack vs. Heap) в Go — почему выделение памяти на стеке в десятки раз быстрее и дешевле, чем в куче?",
-    shortEN: "Stack allocation and deallocation cost just a single CPU instruction (moving the RSP stack pointer register up or down) and require zero Garbage Collector involvement. Heap allocation requires finding a free memory slot in the allocator and later scanning and sweeping that object during Garbage Collection.",
-    detailsEN: [
-      "Zero Synchronization: Each goroutine owns its stack exclusively — no locks or atomics needed.",
-      "Zero GC Overhead: Variables on the stack are automatically reclaimed the instant the function executes RET. Only pointers living on the stack need to be scanned as GC roots.",
-      "L1 Cache Locality: The top of the stack (RSP) is almost guaranteed to sit in the CPU core's L1 cache."
+    "id": "c23",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim6",
+    "qEN": "Q23: How do stack and heap allocation differ, and how do you compare their cost?",
+    "qRU": "Чем отличаются выделения на стеке и в куче и как сравнивать их стоимость?",
+    "shortEN": "Local storage can often live in a goroutine stack frame or disappear through optimization. Heap storage has allocator and GC costs. That makes avoiding unnecessary heap allocations useful, but neither taking an address nor returning a pointer proves that a particular call allocates. Check the optimized caller and measure the real workload.",
+    "detailsEN": [
+      "The language guarantees that a referenced value remains valid, not a storage location. Stack frames hold local state; Go may grow and move a goroutine stack. Values may also stay in registers or be optimized away.",
+      "Stack allocation is not universally one instruction or zero GC work: frame setup, initialization and stack growth have costs, and stack pointers are scanned as GC roots. Heap objects need allocation and later reclamation; pointer-free objects avoid scanning their contents, not all GC work.",
+      "Value versus pointer is first an API and ownership decision. Copies can cost time; pointers can introduce sharing, indirection and longer lifetimes. Neither is always faster. Inlining and escape analysis can remove an apparent allocation at a call site.",
+      "Use compiler diagnostics (-gcflags=\"-m=2\") to understand placement, and benchmarks with -benchmem plus profiles to assess impact. Disabling inlining is a comparison experiment, not a faithful production benchmark."
     ],
-    practicalRU: "В Go передача небольшой структуры по значению (`func process(u User)`) почти всегда работает БЫСТРЕЕ, чем передача по указателю (`func process(u *User)`): структура копируется прямо на горячем стеке за пару наносекунд, тогда как указатель часто заставляет переменную сбежать в хип и нагружает сборщик мусора.",
-    code: `// Faster (stays on stack, 0 allocs/op):
-func createUserValue() User { return User{ID: 1} }
-
-// Slower (escapes to heap, 1 alloc/op, tracked by GC):
-func createUserPtr() *User  { return &User{ID: 1} }`
+    "practicalRU": "Сначала выбери корректное владение данными, затем сравни эквивалентные вызовы под рабочей версией компилятора. Не добавляй глобальный указатель только ради того, чтобы benchmark «не исчез»: это само меняет время жизни объекта. Сохраняй наблюдаемый результат так, чтобы не навязать лишний escape. Опора: «владение → размещение → измерение».",
+    "code": "package example\n\ntype User struct{ ID int }\n\nfunc NewUserValue(id int) User { return User{ID: id} }\nfunc NewUser(id int) *User     { return &User{ID: id} }\n\nfunc ReadID(id int) int { return NewUser(id).ID }\n\n// Compare the optimized ReadID caller, not just NewUser in isolation.",
+    "shortRU": "Локальные данные часто помещаются в кадре стека горутины или устраняются оптимизацией. У кучи есть расходы аллокатора и GC. Поэтому ненужные выделения в куче полезно сокращать, но ни взятие адреса, ни возврат указателя сами по себе не доказывают аллокацию конкретного вызова. Проверяй оптимизированный вызывающий код и измеряй реальную нагрузку.",
+    "detailsRU": [
+      "Язык гарантирует пригодность значения, пока на него есть ссылки, а не место хранения. Кадр стека содержит локальное состояние; стек горутины может расти и перемещаться. Значения могут остаться в регистрах или вообще исчезнуть после оптимизации.",
+      "Стек — не всегда одна инструкция и не нулевая работа GC: есть подготовка кадра, инициализация, рост стека; указатели в стеке сканируются как корни. Объекты кучи нужно выделять и позже освобождать; отсутствие указателей исключает обход их содержимого, но не всю работу GC.",
+      "Значение или указатель — сначала решение об API и владении. Копирование стоит времени; указатели могут добавлять общее состояние, косвенный доступ и удержание данных. Ни один способ не всегда быстрее. Inlining и escape analysis способны убрать кажущееся выделение в месте вызова.",
+      "Диагностика компилятора (-gcflags=\"-m=2\") объясняет размещение, а benchmark с -benchmem и профили показывают последствия. Выключение inlining — сравнительный эксперимент, а не точная модель production-сборки."
+    ],
+    "versionNote": "Общее различие применимо к Go 1.17/1.25/1.26. Конкретное размещение зависит от версии компилятора, флагов и места вызова. Код — компилируемый пакет с двумя API; он не обещает фиксированных наносекунд или allocs/op.",
+    "sources": [
+      {
+        "title": "Go FAQ: stack or heap",
+        "url": "https://go.dev/doc/faq#stack_or_heap"
+      },
+      {
+        "title": "Escape analysis invariants — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/escape/escape.go"
+      },
+      {
+        "title": "GC guide: allocation costs and profiling",
+        "url": "https://go.dev/doc/gc-guide"
+      }
+    ],
+    "practice": {
+      "kind": "Сравни одинаковую работу",
+      "promptEN": "Both constructors below are immediately used only to read ID. Does NewUser necessarily allocate on the heap, and is copying always faster?",
+      "promptRU": "Оба конструктора ниже сразу используются только для чтения ID. Обязан ли NewUser выделить объект в куче и всегда ли копирование быстрее?",
+      "pointsEN": [
+        "No: an inlined caller may avoid the allocation.",
+        "An escaping stored pointer changes the lifetime and can change placement.",
+        "Compare equivalent ownership and observable results, then measure."
+      ],
+      "pointsRU": [
+        "Нет: после inlining вызывающий код может обойтись без аллокации.",
+        "Сохранённый наружу указатель меняет время жизни и может изменить размещение.",
+        "Сравни одинаковое владение и наблюдаемый результат, затем измеряй."
+      ],
+      "followUpEN": "What changes if the caller saves the returned pointer globally?",
+      "followUpRU": "Что изменится, если вызывающий код сохранит указатель глобально?"
+    }
   },
   {
-    id: "c24",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim3",
-    qEN: "Q24: What is Escape Analysis in Go (-gcflags='-m'), and what are the 5 main reasons a variable escapes to the heap?",
-    qRU: "Что такое Escape Analysis в Go (-gcflags='-m') и каковы 5 главных причин побега переменной в кучу?",
-    shortEN: "Escape Analysis is a compile-time static analysis that determines whether a variable's lifetime is provably confined to its function stack frame. If the compiler cannot prove the variable won't be referenced after the function returns (or if it is too large), it allocates the variable on the shared heap.",
-    detailsEN: [
-      "The Golden Rule (Sharing Down vs. Sharing Up): Passing a pointer DOWN into a callee stays on the stack. Returning a pointer UP ('return &x') always escapes to the heap.",
-      "Top 5 Escape Triggers: 1) Returning a pointer or storing it in a heap/global struct ('Sharing Up'); 2) Passing a value to an interface method (e.g., 'fmt.Println(x)' or 'any') because dynamic dispatch via 'itab' hides whether the implementation keeps the pointer; 3) Capturing a variable by reference inside a closure or 'go func()'; 4) Slices with runtime-variable size ('make([]byte, n)') or objects > 64 KB; 5) Sending a pointer into a channel or storing pointers in a slice/map."
+    "id": "c24",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim6",
+    "qEN": "Q24: How does escape analysis choose storage, and how do you verify a particular allocation?",
+    "qRU": "Как escape analysis определяет размещение и как проверить конкретное выделение памяти?",
+    "shortEN": "Escape analysis follows pointer lifetimes at compile time. A pointer must not outlive its stack storage or be retained in the heap while pointing into that storage. The compiler may inline calls, eliminate objects or choose heap storage for size and other constraints. Syntax alone is not a reliable allocation test.",
+    "detailsEN": [
+      "Passing a pointer down is safe for stack storage only if the callee does not retain it beyond that lifetime. Conversely, returning &x from a small helper need not allocate at an inlined call site that consumes x locally. SaveGlobal below deliberately retains a pointer.",
+      "Interfaces and closures do not automatically allocate. What matters is whether the concrete operation is known, whether captured data is retained, and what the compiler can prove. A goroutine may extend captured data lifetime, but this is not a rule that every closure goes to the heap.",
+      "Dynamic make is version-sensitive. Go 1.25 already has a conditional stack-buffer path for non-escaping slices; Go 1.26 release notes describe further cases. A small runtime capacity can use a stack buffer, while a larger capacity falls back to the heap. Escape of the slice can still require heap storage.",
+      "There is no universal 64 KiB rule. In Go 1.26.1 the checked defaults distinguish explicit stack variables (128 KiB) and implicit allocations (64 KiB); alignment, total-frame constraints and flags also matter. These are implementation limits, not language guarantees.",
+      "Inspect the actual caller with go build -gcflags=\"-m=2\", then benchmark with -benchmem and profile. A message about the helper body does not by itself describe an inlined copy. If replacing make with a fixed array, validate bounds and preserve ownership; returning its slice can move the array to the heap."
     ],
-    practicalRU: "Как ускорить горячий путь (hot path) в продакшене: запусти 'go build -gcflags=\"-m=2\"'. Часто оказывается, что обычный логгер вида 'log.Debugf(\"id=%d\", id)' заставляет переменную 'id' убегать в хип (боксинг в `any`), даже если уровень DEBUG выключен! Или 'make([]byte, size)' убегает в хип, потому что компилятор не знает верхнюю границу `size`. Если выделить буфер константного размера `var buf [1024]byte` на стеке и взять срез `buf[:size]`, аллокации в хипе падают в 0.",
-    code: `// Optimization trick to avoid heap escape for dynamic slices <= 1KB:
-func parseFast(n int) {
-    var stackBuf [1024]byte // allocated on stack (0 heap allocs!)
-    buf := stackBuf[:n]     // use slice backed by stack array
-    _ = buf
-}`
+    "practicalRU": "В примере ReadLocal использует результат сразу, SaveGlobal передаёт адрес функции, которая удерживает его. Sum проверяет диапазон n и реально читает заполненные байты, поэтому пример не сводится к неиспользуемому buf. Проверяй и маленькие, и большие размеры: «не убегает» у динамического make не означает «никогда не выделяет в куче».",
+    "code": "package example\n\nvar Saved *int\n\nfunc makeInt(v int) *int  { return &v }\nfunc retain(p *int)       { Saved = p }\nfunc ReadLocal(v int) int { return *makeInt(v) }\nfunc SaveGlobal(v int)    { retain(&v) }\n\nfunc Sum(n int) (int, bool) {\n\tif n < 0 || n > 1024 {\n\t\treturn 0, false\n\t}\n\tbuf := make([]byte, n)\n\tfor i := range buf {\n\t\tbuf[i] = byte(i)\n\t}\n\tsum := 0\n\tfor _, v := range buf {\n\t\tsum += int(v)\n\t}\n\treturn sum, true\n}",
+    "shortRU": "Escape analysis отслеживает время жизни указателей при компиляции. Указатель не должен пережить своё хранилище в стеке или сохраняться в куче, указывая на это хранилище. Компилятор может встроить вызов, устранить объект или выбрать кучу из-за размера и других ограничений. По одному синтаксису надёжно определить аллокацию нельзя.",
+    "detailsRU": [
+      "Передача указателя вниз совместима со стеком лишь если вызываемая функция не сохраняет его дольше нужного времени жизни. И наоборот, return &x из небольшого помощника не обязательно выделяет память в куче в месте встроенного вызова с локальным использованием. Ниже SaveGlobal намеренно сохраняет указатель.",
+      "Интерфейс и замыкание не означают автоматическую аллокацию. Важны известность конкретной операции, удержание захваченных данных и то, что может доказать компилятор. Горутина способна продлить время жизни захваченного значения, но не каждое замыкание обязано жить в куче.",
+      "Динамический make зависит от версии. В Go 1.25 уже есть условный путь со стековым буфером для неубегающего среза; release notes Go 1.26 описывают дополнительные случаи. Небольшая динамическая capacity может использовать стек, большая — кучу. Если срез уходит наружу, хранение в куче всё ещё может понадобиться.",
+      "Универсального правила 64 KiB нет. В проверенных настройках Go 1.26.1 различаются явные переменные стека (128 KiB) и неявные выделения (64 KiB); влияют также выравнивание, ограничения всего кадра и флаги. Это пределы реализации, а не гарантии языка.",
+      "Проверяй реальное место вызова через go build -gcflags=\"-m=2\", затем benchmark с -benchmem и профиль. Сообщение о теле помощника не описывает автоматически его встроенную копию. Заменяя make фиксированным массивом, проверяй границы и владение: возврат среза может перенести массив в кучу."
+    ],
+    "versionNote": "В исходнике Go 1.17 неконстантный размер в HeapAllocReason исключает стековый make. В тегах 1.25.0 и 1.26.1 проверенный escape/utils.go одинаков и уже содержит гибридный путь; walkMakeSlice проверяет размер во время выполнения. Это не утверждение, что все оптимизации 1.25 и 1.26 одинаковы. Старые toolchain не запускались. Пакет примера использует синтаксис, совместимый с 1.17.",
+    "sources": [
+      {
+        "title": "Escape analysis invariants — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/escape/escape.go"
+      },
+      {
+        "title": "Heap allocation constraints — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/escape/utils.go"
+      },
+      {
+        "title": "Stack limits — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/ir/cfg.go"
+      },
+      {
+        "title": "Dynamic make — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/cmd/compile/internal/walk/builtin.go"
+      },
+      {
+        "title": "Go 1.26 compiler changes",
+        "url": "https://go.dev/doc/go1.26#compiler"
+      },
+      {
+        "title": "Escape analysis — Go 1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/cmd/compile/internal/escape/escape.go"
+      }
+    ],
+    "practice": {
+      "kind": "Проследи время жизни",
+      "promptEN": "ReadLocal uses a returned pointer immediately, while SaveGlobal passes a pointer down to retain. Which call actually requires long-lived storage? Can Sum with n=8 and n=1024 have different allocation counts?",
+      "promptRU": "ReadLocal сразу использует возвращённый указатель, а SaveGlobal передаёт указатель вниз в retain. Где действительно нужно длительное хранение? Может ли число аллокаций Sum различаться для n=8 и n=1024?",
+      "pointsEN": [
+        "SaveGlobal retains a pointer beyond the call; call direction is not the criterion.",
+        "Inlining may eliminate the local helper allocation.",
+        "A conditional stack path can handle the small slice and fall back to the heap for the larger one."
+      ],
+      "pointsRU": [
+        "SaveGlobal сохраняет указатель за пределами вызова; направление вызова не является критерием.",
+        "Inlining может устранить локальное выделение помощника.",
+        "Условный стековый путь может обслужить маленький срез и перейти к куче для большого."
+      ],
+      "followUpEN": "What changes if Sum returns its slice instead of an integer?",
+      "followUpRU": "Что изменится, если Sum вернёт срез вместо числа?"
+    }
   },
   {
-    id: "c25",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q25: How does the Go Memory Allocator work under the hood (mspan, mcache, mcentral, mheap, and size classes)?",
-    qRU: "Как устроен аллокатор памяти в Go под капотом (иерархия mspan, mcache, mcentral, mheap и классы размеров)?",
-    shortEN: "Inspired by Google's TCMalloc, Go's allocator divides memory into 8 KB pages grouped into 'mspan' objects of ~68 fixed size classes, and caches spans across a 3-tier hierarchy: per-P 'mcache' (lock-free), shared 'mcentral' (spinlock per size class), and global 'mheap'.",
-    detailsEN: [
-      "3 Object Size Categories: 1) Tiny (< 16 B, no pointers): packed together into a single 16-byte slot in P.mcache; 2) Small (16 B to 32 KB): allocated lock-free from the current P's 'mcache' using the matching size-class 'mspan'; 3) Large (> 32 KB): allocated directly from the global 'mheap'.",
-      "Zero Lock Contention on Fast Path: Because every logical processor P owns its own 'mcache' and only one goroutine runs on P at a time, small heap allocations require ZERO mutex locks!",
-      "scan vs. noscan Spans: Go separates 'mspan' blocks into 'scan' (objects containing pointers) and 'noscan' (pure data like []byte or strings without pointers). The GC completely skips scanning inside 'noscan' spans!"
+    "id": "c25",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim6",
+    "qEN": "Q25: How do mcache, mcentral, mheap and scan/noscan fit together?",
+    "qRU": "Как связаны mcache, mcentral, mheap и разделение scan/noscan?",
+    "shortEN": "For a small heap allocation, the runtime can take a free slot from a span cached by the current P. If the cache cannot satisfy it, slower paths refill or obtain pages. Pointer-free payloads do not need pointer scanning, but they still occupy memory and must be tracked and reclaimed. A fast path is not a guarantee that every allocation is lock-free.",
+    "detailsEN": [
+      "In the checked runtime a heap page is 8 KiB, independent of the OS page size. An mspan describes a contiguous run of one or more pages. A small-object span holds equal-sized slots; size classes round requests up, so object size and span size are different.",
+      "mcache is owned by a P, not a goroutine. A free slot in its cached span can be allocated without a lock. Refill may need sweeping and shared structures; mcentral manages partial/full, swept/unswept span sets, not one simple spinlock per size. mheap supplies page runs. An allocation can also incur zeroing and GC assist costs.",
+      "Eligible pointer-free objects smaller than 16 bytes may share a 16-byte tiny block. Small size classes extend to 32 KiB, but payload routing must include metadata: the checked generic mallocgc path uses size ≤ 32768−8. Larger requests use the large-object path. These are version-specific details, not public API boundaries.",
+      "scan/noscan depends on whether the allocated object contains GC pointers. The bytes behind a []byte or string contain no pointers; the slice/string descriptor does contain a data pointer. A []string backing array contains string descriptors and therefore pointers. In the code, Blob is pointer-free but Holder is not.",
+      "noscan means no pointer traversal inside that object. The GC still marks its reachability, accounts for it and can reclaim it when unreachable. Compact data and numeric offsets can reduce scanning, but do not make total GC time O(1) or zero; serialization, metadata, retained capacity and lifetime still matter."
     ],
-    practicalRU: "Колоссальный лайфхак для высоконагруженных кешей в Go (BigCache / FreeCache / VictoriaMetrics): если хранить в `map[string]*User` 10 миллионов структур с указателями, они попадут в `scan`-спаны, и сборщик мусора на каждом цикле будет обходить все 10 млн объектов, вызывая дикие скачки CPU и латентности. Но если сериализовать данные в один большой срез `[]byte` и хранить смещения `map[uint64]uint32` (без указателей!) — память попадёт в `noscan mspan`, и время сканирования GC упадёт до 0 миллисекунд!",
-    code: `// Why map[uint64]uint32 is invisible to GC scanning (noscan mspan):
-// ❌ map[string]*User -> 'scan' mspan: GC scans millions of pointers every cycle!
-// ✅ []byte + map[uint64]uint32 -> 'noscan' mspan: O(1) GC overhead regardless of size!`
+    "practicalRU": "Сравни alloc_space, inuse_space и метрики /gc/scan/heap:bytes и /gc/scan/stack:bytes при одинаковой нагрузке. Разделяй объём выделений, удержание и объём сканируемой памяти. Массив байтов может почти не добавлять pointer scanning и одновременно удерживать много RAM. Нельзя считать разные размеры/схемы хранения честным сравнением только по паузе одного GC. Опора: «размер ячейки → откуда берётся span → есть ли внутри ссылки».",
+    "code": "package example\n\ntype Blob [64]byte // The payload has no pointers.\n\ntype Holder struct {\n\tBytes []byte // The descriptor points to a backing array.\n\tText  string // The descriptor points to string bytes.\n}\n\n// A []Holder backing array contains pointers.\n// A []Blob backing array does not; neither is exempt from GC.",
+    "shortRU": "Для небольшого объекта кучи runtime может взять свободную ячейку из span в кеше текущего P. Если кеш не справился, более дорогие пути пополняют его или получают страницы. В данных без указателей не нужно искать ссылки, но они занимают память, учитываются и освобождаются. Быстрый путь не означает, что любая аллокация обходится без блокировок.",
+    "detailsRU": [
+      "В проверенном runtime страница кучи — 8 KiB, независимо от размера страницы ОС. mspan описывает непрерывную область из одной или нескольких страниц. Span небольших объектов содержит ячейки одинакового размера; классы округляют запрос вверх, поэтому размер объекта и span — разные величины.",
+      "mcache принадлежит P, а не горутине. Свободную ячейку его кешированного span можно выделить без блокировки. Пополнение может потребовать sweep и общие структуры; mcentral управляет наборами partial/full и swept/unswept, а не одним простым spinlock на размер. mheap выдаёт области страниц. Возможны также расходы на обнуление и помощь GC.",
+      "Подходящие объекты без указателей размером менее 16 байт могут делить блок 16 байт. Классы небольших объектов доходят до 32 KiB, но при выборе пути нужно учитывать метаданные: проверенный общий mallocgc использует size ≤ 32768−8. Более крупный запрос идёт по пути large object. Это детали версии, а не публичные границы API.",
+      "scan/noscan определяется указателями GC внутри выделенного объекта. Байты за []byte или string указателей не содержат, но дескриптор среза/строки содержит указатель на данные. Массив под []string содержит дескрипторы строк, значит, и указатели. В коде Blob не содержит указателей, а Holder содержит.",
+      "noscan означает отсутствие обхода указателей внутри объекта. GC всё ещё отмечает его достижимость, учитывает память и может освободить её, когда объект недостижим. Компактные данные и числовые смещения сокращают сканирование, но не делают весь GC O(1) или нулевым: остаются сериализация, метаданные, удержанная capacity и время жизни."
+    ],
+    "versionNote": "Числа и внутренние пути приведены для Go 1.26.1 обычной сборки; инструментация и специальные пути могут отличаться. В проверенном mcentral Go 1.25.0 уже есть наборы partial/full с состоянием sweep. Стековые оптимизации компилятора и аллокатор кучи — разные уровни; noscan не отменяет достижимость. Пример — компилируемые объявления типов, не тест производительности.",
+    "sources": [
+      {
+        "title": "Heap allocator — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/malloc.go"
+      },
+      {
+        "title": "Size classes — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/gc/sizeclasses.go"
+      },
+      {
+        "title": "mcache — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcache.go"
+      },
+      {
+        "title": "mcentral — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/mcentral.go"
+      },
+      {
+        "title": "GC marking, including noscan — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcmark.go"
+      },
+      {
+        "title": "Runtime scan metrics — Go 1.26.1",
+        "url": "https://pkg.go.dev/runtime/metrics@go1.26.1"
+      },
+      {
+        "title": "GC guide: allocation costs and profiling",
+        "url": "https://go.dev/doc/gc-guide"
+      }
+    ],
+    "practice": {
+      "kind": "Отдели данные от дескриптора",
+      "promptEN": "A heap-allocated Holder refers to a large []byte and a string. Which objects contain pointers? Does noscan mean the backing bytes cannot be collected?",
+      "promptRU": "Holder в куче ссылается на большой []byte и строку. Какие объекты содержат указатели? Означает ли noscan, что лежащие за ними байты нельзя собрать?",
+      "pointsEN": [
+        "Holder contains data pointers in its slice and string descriptors.",
+        "The referenced byte storage has no pointers to traverse.",
+        "Reachability still matters: bytes remain while referenced and can be collected once unreachable."
+      ],
+      "pointsRU": [
+        "Holder содержит указатели на данные в дескрипторах среза и строки.",
+        "В самих байтах нет указателей для обхода.",
+        "Достижимость остаётся важной: байты удерживаются ссылками и могут быть собраны, когда становятся недостижимыми."
+      ],
+      "followUpEN": "What changes if []byte is replaced with []string?",
+      "followUpRU": "Что изменится, если вместо []byte использовать []string?"
+    }
   },
   {
     id: "c26",
