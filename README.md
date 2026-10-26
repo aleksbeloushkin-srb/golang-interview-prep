@@ -125,7 +125,7 @@ open index.html
 
 ## Текущий этап улучшений
 
-**Актуальный остаток и точные списки ID: [CURRENT_STATUS_RU.md](CURRENT_STATUS_RU.md).** После локальной порции 9 остаются 22 карточки и 12 исходных quiz; общий объём сайта — 38 карточек и 22 задачи. Это разные показатели.
+**Актуальный остаток редакции и точные списки ID: [CURRENT_STATUS_RU.md](CURRENT_STATUS_RU.md).** Счётчики материалов на сайте показывают общий объём, а не остаток редакции.
 
 Полный аудит исходного состояния и план: [AUDIT_AND_PLAN_RU.md](AUDIT_AND_PLAN_RU.md), реестр Go-материала: [GO_CONTENT_AUDIT_RU.md](GO_CONTENT_AUDIT_RU.md). Выполненные изменения и проверки: [CHANGE_LOG_RU.md](CHANGE_LOG_RU.md). Материал проходит поэтапную редакцию; наличие темы в каталоге выше не означает, что все замечания аудита уже исправлены.
 
@@ -147,3 +147,6 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Подробный разбор компиляции select, версий и ловушек: [SELECT_COMPILATION_RU.md](SELECT_COMPILATION_RU.md).
 Запрос для независимого поиска следующих задач: [TASK_RESEARCH_BRIEF_RU.md](TASK_RESEARCH_BRIEF_RU.md).
+
+Проверка порции и завершение работы: [VERIFICATION_WORKFLOW_RU.md](VERIFICATION_WORKFLOW_RU.md).
+Быстрая проверка синтаксиса, структуры и изменённых ID: `node scripts/check-content.mjs --base <base-commit>`. Она не заменяет Go-review и браузер.

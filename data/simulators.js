@@ -1906,7 +1906,6 @@ const CHEATSHEET_ROWS = [
     markers: "STW-переходы без гарантии микросекунд. <code>GOGC</code> задаёт heap goal, pacer начинает раньше. <code>GOMEMLIMIT</code> — мягкий бюджет <code>Sys − HeapReleased</code>, не защита от OOM; <code>Mark Assist</code> может увеличить задержки.",
     cardId: "c28", simId: "sim6"
   },
-  ,
   {
     topic: "10. Мапы: Classic hmap vs SwissTables (Go 1.24+)",
     how: "В Go 1.24+ группы по 8 слотов с 64-битным словом метаданных <code>ctrl</code> (7-битный хеш <code>H2</code>) + директория подтаблиц по 1024 элемента (Extendible Hashing).",
