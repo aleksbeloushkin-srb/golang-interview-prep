@@ -1089,26 +1089,72 @@ go func() {
     }
   },
   {
-    id: "c26",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim3",
-    qEN: "Q26: How does Go's Garbage Collector work at a high level (Tri-Color Mark-and-Sweep)?",
-    qRU: "Как на базовом уровне работает сборщик мусора (GC) в Go (трёхцветный алгоритм Дейкстры)?",
-    shortEN: "Go uses a concurrent, tri-color mark-and-sweep garbage collector that runs in parallel with user goroutines to keep Stop-The-World (STW) pauses under a millisecond. It classifies heap objects into three colors — White (unvisited), Grey (visited, children pending), and Black (visited, children scanned) — and sweeps remaining White objects after marking completes.",
-    detailsEN: [
-      "White Set: All heap objects start White. Any object still White at the end of the Mark phase is unreachable garbage.",
-      "Grey Set (Work Queue): GC roots (goroutine stacks and global variables) are scanned first; heap objects they point to are painted Grey.",
-      "Black Set (Live Objects): Background GC workers pop a Grey object, paint all White objects it references Grey, and paint the object itself Black. Once no Grey objects remain, all White objects are reclaimed."
+    "id": "c26",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim6",
+    "qEN": "Q26: How does Go's GC decide what to keep, and what happens during a collection?",
+    "qRU": "Как GC в Go решает, что сохранить, и из каких этапов состоит сборка?",
+    "shortEN": "Go traces pointers from roots to find heap objects that must stay alive, then reclaims unmarked objects for reuse. Most marking and sweeping run alongside the program; phase transitions use stop-the-world pauses. Think reachability first, then the white/grey/black model.",
+    "detailsEN": [
+      "Roots include live pointers in goroutine stacks, globals and runtime structures outside the heap. A reachable object stays alive even if the application no longer needs it. A cycle with no path from any root can be collected: this is tracing, not reference counting.",
+      "In the teaching model, white means not yet marked, grey means marked with outgoing pointers still to scan, and black means scanned. Colours describe work, not fields in each object. Root jobs and heap scanning can interleave; scanning a stack temporarily stops that goroutine.",
+      "First, STW finishes any pending sweep and prepares marking, including enabling the write barrier. Concurrent marking then traces roots and heap pointers; allocating goroutines may assist. Objects allocated during marking are treated as black. Termination must account for outstanding root jobs and buffered work, not just one empty queue.",
+      "A second STW transition finishes marking and prepares sweeping. Sweep reclaims unmarked slots in the background and on allocation paths. Scavenging returns unused physical memory to the OS separately; freeing an object does not promise an immediate RSS drop.",
+      "Pauses have no fixed duration guarantee. Cost depends on live data, pointer layout, roots, allocation rate and workload. Green Tea improves marking/scanning locality and CPU scalability; it does not turn this into a moving or generational collector."
     ],
-    practicalRU: "В отличие от старых GC в Java, где пауза Stop-The-World зависела от общего размера кучи, в Go пауза STW (~10–100 мкс) нужна только для включения/выключения Write Barrier. Но стоимость фазы Concurrent Mark напрямую зависит от КОЛИЧЕСТВА живых указателей в куче.",
-    code: `// Tri-Color Graph Traversal:
-// [Roots: Stacks + Globals] -> paint direct targets GREY
-// While GREY set is not empty:
-//   Pop obj from GREY -> paint its WHITE children GREY -> paint obj BLACK
-// Sweep all remaining WHITE slots back to mspan free lists.`
+    "practicalRU": "На интервью начни с «GC сохраняет достижимое», затем назови фазы. В примере глобальный root удерживает цикл из двух узлов: после GC чтение даёт 42. После удаления последнего пути от корней цикл можно собрать, но точный момент освобождения и падение RSS не обещаем. Для удержания памяти ищи путь от корня: глобальный кеш, живую горутину, срез. Опора: «нашли → просмотрели → освободили»; отдельно объясни, почему кольцо ссылок само себя не удерживает.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\nvar root *Node\n\nfunc makeCycle() {\n\ta, b := &Node{Value: 7}, &Node{Value: 42}\n\ta.Next, b.Next = b, a\n\troot = a\n}\n\nfunc main() {\n\tmakeCycle()\n\truntime.GC()\n\tfmt.Println(root.Next.Value) // 42: reachable through a global\n\troot = nil\n\truntime.GC() // The cycle is now collectible; no RSS promise.\n}",
+    "shortRU": "Go обходит указатели от корней, находит объекты кучи, которые нужно сохранить, и освобождает неотмеченные объекты для повторного использования. Основная разметка и очистка идут вместе с программой; переходы между фазами требуют stop-the-world. Сначала думай о достижимости, затем — о белом, сером и чёрном цветах.",
+    "detailsRU": [
+      "Корни включают живые указатели в стеках горутин, глобальных переменных и структурах runtime вне кучи. Достижимый объект удерживается, даже если приложению он уже не нужен. Цикл без пути от корней можно собрать: это обход графа, а не подсчёт ссылок.",
+      "В учебной модели белый означает «ещё не отмечен», серый — «отмечен, исходящие указатели ещё нужно просмотреть», чёрный — «просмотрен». Цвета описывают работу, а не поля каждого объекта. Обработка корней и объектов кучи может чередоваться; при сканировании стека соответствующая горутина временно останавливается.",
+      "Сначала STW завершает оставшийся sweep и подготавливает разметку, включая барьер записи. Затем конкурентная разметка обходит корни и указатели кучи; выделяющие память горутины могут помогать. Объекты, выделенные во время marking, считаются чёрными. Для завершения нужно учесть задания корней и буферизованную работу, а не только одну пустую очередь.",
+      "Второй переход STW завершает разметку и подготавливает очистку. Sweep освобождает неотмеченные ячейки фоново и на путях аллокации. Scavenger отдельно возвращает неиспользуемую физическую память ОС; освобождение объекта не обещает немедленного снижения RSS.",
+      "Фиксированная длительность пауз не гарантируется. Стоимость зависит от живых данных, расположения указателей, корней, скорости аллокаций и нагрузки. Green Tea улучшает локальность разметки/сканирования и масштабирование по CPU; сборщик не становится перемещающим или поколенческим."
+    ],
+    "versionNote": "Модель проверена по runtime Go 1.26.1, не является гарантией спецификации. В Go 1.17 уже есть конкурентный mark-and-sweep и hybrid barrier. Green Tea: эксперимент GOEXPERIMENT=greenteagc в 1.25, по умолчанию в 1.26. Цвета остаются полезной моделью, но не точным описанием очередей новой реализации.",
+    "sources": [
+      {
+        "title": "GC phases and roots — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgc.go"
+      },
+      {
+        "title": "Go GC guide: reachability and costs",
+        "url": "https://go.dev/doc/gc-guide"
+      },
+      {
+        "title": "Green Tea design",
+        "url": "https://go.dev/blog/greenteagc"
+      },
+      {
+        "title": "Go 1.26: Green Tea enabled by default",
+        "url": "https://go.dev/doc/go1.26#runtime"
+      },
+      {
+        "title": "Historical GC — Go 1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/mgc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Найди путь от корня",
+      "promptEN": "Two heap nodes point to each other. A global cache points to one of them. Can GC reclaim the cycle? What changes when you clear the cache entry and no other root reaches either node?",
+      "promptRU": "Два узла в куче ссылаются друг на друга. Глобальный кеш ссылается на один из них. Может ли GC собрать цикл? Что изменится, если удалить запись кеша и других путей от корней нет?",
+      "pointsEN": [
+        "The cache keeps both nodes reachable.",
+        "Without a path from a root, the cycle can be collected; a reference count is not required.",
+        "Collection does not guarantee an immediate drop in process RSS."
+      ],
+      "pointsRU": [
+        "Кеш сохраняет достижимость обоих узлов.",
+        "Без пути от корня цикл можно собрать; подсчёт ссылок не нужен.",
+        "Сборка не гарантирует немедленного падения RSS процесса."
+      ],
+      "followUpEN": "During concurrent marking, is an empty local work queue enough to declare marking finished?",
+      "followUpRU": "Достаточно ли пустой локальной очереди, чтобы объявить конкурентную разметку законченной?"
+    }
   },
   {
     "id": "c27",
@@ -1187,29 +1233,76 @@ go func() {
     }
   },
   {
-    id: "c28",
-    mod: "m4",
-    modName: "4. Memory, Allocator & GC",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim3",
-    qEN: "Q28: Why does Go's GC need a Hybrid Write Barrier, and why is Go's GC non-generational and non-compacting?",
-    qRU: "Зачем сборщику мусора Go нужен Гибридный барьер записи (Hybrid Write Barrier) и почему GC в Go непоколенческий и без дефрагментации?",
-    shortEN: "During Concurrent Mark, user goroutines mutate heap pointers simultaneously with GC workers. The compiler-injected Hybrid Write Barrier intercepts every heap pointer write ('*slot = ptr') and shades both the overwritten and new target objects Grey so a White object can never be hidden behind an already-scanned Black object. Go omits generations and compaction because Escape Analysis keeps short-lived objects on the stack and TCMalloc-style size classes prevent fragmentation.",
-    detailsEN: [
-      "The Lost Object Problem: If a goroutine attaches a White object C to an already-scanned Black object A ('A.next = C') and deletes the link from Grey object B ('B.next = nil'), the GC would never reach C and would free a live object!",
-      "Hybrid Write Barrier (Go 1.8+): Combines Yuasa's deletion barrier (shades the old pointer '*slot' Grey) and Dijkstra's insertion barrier (shades the new pointer 'ptr' Grey). Crucially, it is ONLY active on the heap — stack pointer writes have zero write-barrier overhead, and stacks never need to be re-scanned during STW #2!",
-      "Why Non-Generational & Non-Compacting: In Java, all objects allocate on the heap, requiring a Young Generation. In Go, Escape Analysis puts short-lived objects on the stack for free. And size-class 'mspan' allocation avoids external fragmentation without costly stop-the-world memory compaction."
+    "id": "c28",
+    "mod": "m4",
+    "modName": "4. Memory, Allocator & GC",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim6",
+    "qEN": "Q28: What does Go's hybrid write barrier protect, and which pointer writes need it?",
+    "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
+    "shortEN": "The collector scans a graph while the program changes its edges. The hybrid write barrier keeps those changes from hiding reachable objects from the scan. It preserves GC correctness; it does not synchronize application goroutines or make a data race safe.",
+    "detailsEN": [
+      "Imagine A is already scanned, B is not yet scanned, and B points to an unmarked C. Moving that link from B to A could make a plain concurrent traversal miss C. The barrier records pointer changes so C remains protected even if the collector has passed A and has not reached B.",
+      "The hybrid combines deletion shading of the old target with insertion shading of the new target. In the theoretical algorithm, insertion shading is needed while the current stack is grey. The Go 1.26.1 implementation does not test that stack colour for each store: compiler-generated code records relevant old/new pointers in a write-barrier buffer. Safe cases can be eliminated; shading is not necessarily an immediate scan.",
+      "This is not heap-only: storing heap pointers into globals also needs protection. The compiler omits barriers for writes it proves target the current stack frame. A store through a pointer passed to a callee may still get a barrier because that pointer could target the heap. Even writing nil may need the deletion part.",
+      "The hybrid design removed the need for an end-of-mark STW rescan of stacks in Go 1.8. Ordinary stack scanning still happens. Barriers are enabled for marking; phase transitions still need STW. Do not confuse this GC mechanism with atomic operations, locks or a CPU memory fence.",
+      "Go 1.26.1 uses a non-generational, non-compacting heap collector: it does not divide collection by object age or relocate live heap objects to pack them together. Goroutine stacks can move. Escape analysis and size classes reduce some costs, but do not prove generations unnecessary or fragmentation impossible."
     ],
-    practicalRU: "Как `sync.Pool` спасает от нагрузки на GC и Write Barrier: буферы, взятые из `sync.Pool`, переиспользуются между запросами на одном и том же процессоре `P` (внутри `sync.Pool` массив `local` привязан к каждому `P` без локов!) и очищаются только при срабатывании GC. Это позволяет снизить аллокации и работу Write Barrier в JSON-парсерах и сетевых прокси в 5–10 раз.",
-    code: `// Compiler-injected Hybrid Write Barrier on every heap pointer assignment (*slot = ptr):
-func writePointer(slot *unsafe.Pointer, ptr unsafe.Pointer) {
-    if writeBarrier.enabled {
-        shade(*slot) // Yuasa deletion barrier: shade old target Grey
-        shade(ptr)   // Dijkstra insertion barrier: shade new target Grey
+    "practicalRU": "Проговори по схеме: «A уже прошли, B ещё нет; переносим B → C в A → C; C нельзя потерять». В Go-коде барьер вставляет компилятор — вручную вызывать runtime не нужно. Пример требует разных ненулевых a и b и исключительного доступа к обоим узлам. Для совместного доступа нужна своя синхронизация. sync.Pool используй после измерений: Get не обязан вернуть прежний объект, содержимое может исчезнуть в любой момент; ускорение в 5–10 раз и переиспользование на том же P не гарантируются.",
+    "code": "package example\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\n// Move requires distinct, non-nil nodes and exclusive access.\nfunc Move(a, b *Node) {\n\ta.Next = b.Next\n\tb.Next = nil // Deleting a pointer can also need a GC barrier.\n}\n\n// Compiler-generated barriers protect GC, not concurrent callers.\n// White/grey/black states are a teaching model, not observable here.",
+    "shortRU": "Сборщик обходит граф, а программа в это время меняет его связи. Гибридный барьер записи не даёт этим изменениям скрыть достижимые объекты от обхода. Он обеспечивает корректность GC, но не синхронизирует горутины приложения и не исправляет data race.",
+    "detailsRU": [
+      "Представь: A уже просмотрен, B ещё нет, а B ссылается на неотмеченный C. Если перенести эту связь из B в A, простой конкурентный обход может пропустить C. Барьер учитывает изменения указателей и защищает C, даже если сборщик уже прошёл A, но ещё не дошёл до B.",
+      "Гибрид сочетает deletion shading старой цели и insertion shading новой. В теоретическом алгоритме новая цель требует shading, пока текущий стек серый. Реализация Go 1.26.1 не проверяет цвет стека при каждой записи: сгенерированный компилятором код заносит нужные старые/новые указатели в буфер барьера. Доказанно безопасные случаи можно исключить; shading не означает немедленный обход объекта.",
+      "Это не только куча: запись указателя на объект кучи в глобальную переменную тоже требует защиты. Компилятор убирает барьер, когда доказал запись в текущий кадр стека. Запись через переданный вызываемой функции указатель может получить барьер: такой указатель мог бы вести в кучу. Даже запись nil может требовать deletion-части.",
+      "Гибридная схема убрала необходимость повторного сканирования стеков в конце marking во время STW в Go 1.8. Обычное сканирование стеков осталось. Барьеры включены для marking; переходы фаз всё ещё требуют STW. Не путай этот механизм GC с атомиками, блокировками или барьером памяти CPU.",
+      "В Go 1.26.1 сборщик кучи непоколенческий и без compaction: он не разделяет сборки по возрасту объектов и не перемещает живые объекты кучи для уплотнения. Стеки горутин могут переезжать. Escape analysis и классы размеров снижают часть затрат, но не доказывают ненужность поколений или невозможность фрагментации."
+    ],
+    "versionNote": "Hybrid barrier — с Go 1.8, поэтому уже присутствует в 1.17. Компилятор и буферизация проверены по Go 1.26.1. Green Tea был экспериментальным в 1.25 и стал стандартным в 1.26; это изменение организации разметки, а не замена барьера блокировкой приложения.",
+    "sources": [
+      {
+        "title": "Hybrid write barrier, stack/global writes — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mbarrier.go"
+      },
+      {
+        "title": "Compiler: barrier insertion and elimination — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/ssa/writebarrier.go"
+      },
+      {
+        "title": "Write-barrier buffering — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mwbbuf.go"
+      },
+      {
+        "title": "Go 1.8: eliminate STW stack rescanning",
+        "url": "https://go.dev/doc/go1.8#runtime"
+      },
+      {
+        "title": "Collector properties — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgc.go"
+      },
+      {
+        "title": "sync.Pool contract — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync@go1.26.1#Pool"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни потерянную связь",
+      "promptEN": "A is black, B is grey, C is white, and B.Next points to C. The program executes Move(A, B). Why could a traversal without a barrier miss C? Does the GC barrier make concurrent calls to Move safe?",
+      "promptRU": "A чёрный, B серый, C белый; B.Next указывает на C. Программа выполняет Move(A, B). Почему обход без барьера мог бы пропустить C? Делает ли GC-барьер конкурентные вызовы Move безопасными?",
+      "pointsEN": [
+        "The collector has passed A; when it later scans B, B.Next is nil.",
+        "Recording the inserted and deleted pointers prevents C from being hidden.",
+        "The barrier protects GC reachability, not application access; concurrent mutation still needs synchronization."
+      ],
+      "pointsRU": [
+        "Сборщик уже прошёл A; когда он дойдёт до B, B.Next будет nil.",
+        "Учёт вставленного и удалённого указателей не даёт скрыть C.",
+        "Барьер защищает достижимость для GC, а доступ приложения требует собственной синхронизации."
+      ],
+      "followUpEN": "Why can storing nil or storing a pointer into a global still require a barrier?",
+      "followUpRU": "Почему запись nil или указателя в глобальную переменную тоже может потребовать барьера?"
     }
-    *slot = ptr
-}`
   },
 // ==========================================
   // МОДУЛЬ 5: МАПЫ (SWISSTABLES), ИНТЕРФЕЙСЫ, DEFER И GO 1.24–1.25+ (Q29 - Q38)

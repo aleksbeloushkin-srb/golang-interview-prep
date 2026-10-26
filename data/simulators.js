@@ -1356,19 +1356,47 @@ const SIMULATORS = [
   // ДИАГРАММА 6: АЛЛОКАТОР (MCACHE/MSPAN) И ТРЁХЦВЕТНЫЙ GC + WRITE BARRIER
   // =========================================================================
   {
-    id: "sim6",
-    title: "Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)",
-    subtitle: "Размещение данных, быстрый путь и пополнение аллокатора, scan/noscan, затем фазы GC. Размер объекта отличается от размера span; отсутствие указателей не отменяет сборку мусора.",
-    cardId: "c27",
-    cardLabel: "Карточка Q27 (GC, GOGC и мягкий лимит) →",
-    versionNote: "Учебная схема runtime Go 1.26.1. Цель кучи, порог запуска и мягкий бюджет памяти — разные величины; граф и цвета не являются трассой исполнения или обещанием длительности пауз.",
-    sources: [
-      { title: "GC guide", url: "https://go.dev/doc/gc-guide" },
-      { title: "Allocator — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/malloc.go" },
-      { title: "mcentral — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcentral.go" },
-      { title: "GC pacer — Go 1.26.1", url: "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcpacer.go" }
+    "id": "sim6",
+    "title": "Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)",
+    "subtitle": "От выделения ячейки к достижимости: корни → обход → защита меняющихся ссылок → освобождение. Цвета и граф — учебная модель; отдельные вопросы помогают восстановить её по памяти.",
+    "cardId": "c27",
+    "cardLabel": "Карточка Q27 (GC, GOGC и мягкий лимит) →",
+    "versionNote": "Учебная модель runtime Go 1.26.1, не трасса исполнения. Green Tea: эксперимент в 1.25, по умолчанию в 1.26; организация scanning меняется, достижимость и необходимость барьера остаются. Цель кучи, trigger и мягкий лимит различаются; фиксированной длительности пауз нет.",
+    "sources": [
+      {
+        "title": "GC guide",
+        "url": "https://go.dev/doc/gc-guide"
+      },
+      {
+        "title": "Allocator — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/malloc.go"
+      },
+      {
+        "title": "mcentral — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcentral.go"
+      },
+      {
+        "title": "GC pacer — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgcpacer.go"
+      },
+      {
+        "title": "GC phases — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mgc.go"
+      },
+      {
+        "title": "Hybrid barrier — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mbarrier.go"
+      },
+      {
+        "title": "Compiler write barriers — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/ssa/writebarrier.go"
+      },
+      {
+        "title": "Green Tea in Go 1.26",
+        "url": "https://go.dev/doc/go1.26#runtime"
+      }
     ],
-    steps: [
+    "steps": [
       {
         "title": "1. Размещение → свободная ячейка → пополнение кеша",
         "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью.",
@@ -1448,105 +1476,247 @@ const SIMULATORS = [
         ]
       },
       {
-        title: "2. Concurrent Mark: Сканирование корней (Roots → Grey)",
-        desc: "Мир снова запущен! Пользовательские горутины работают параллельно с воркерами GC (фоновая цель — около 25% CPU-мощности GOMAXPROCS, не общий предел GC). GC сканирует корни (стеки горутин и глобальные переменные) и красит все объекты хипа, на которые есть ссылки со стеков (A и B), в Серый цвет.",
-        boxes: [
-          {
-            title: "Статус мира и Корни сканирования",
-            rows: [
-              { k: "Текущая фаза:", v: "2. Concurrent Mark (параллельно с кодом)", hl: true },
-              { k: "Hybrid Write Barrier:", v: "АКТИВЕН (следит за записью указателей в хипе)", hl: false },
-              { k: "Корни (Стеки + Globals):", v: "Найдены ссылки на объекты A и B", hl: true }
-            ]
-          },
-          {
-            title: "Трёхцветный граф объектов в Хипе",
-            rows: [
-              { k: "Белые (Непосещённые):", v: "Объекты C, D, E", hl: false },
-              { k: "Серые (Очередь обхода):", v: "Объекты A, B (покрашены из корней!)", hl: true },
-              { k: "Чёрные (Проверенные):", v: "Пока пусто", hl: false }
-            ]
-          },
-          {
-            title: "Контроль скорости аллокаций",
-            rows: [
-              { k: "Воркеры GC:", v: "Используют ~25% времени GOMAXPROCS", hl: false },
-              { k: "Mark Assist:", v: "Долг за аллокации → горутина помогает разметке; возможен рост задержки", hl: true },
-              { k: "Стеки горутин:", v: "Сжимаются в 2 раза, если заняты менее чем на 25%", hl: false }
-            ]
-          }
-        ]
-      },
-      {
-        title: "3. Обход графа и защита через Hybrid Write Barrier",
-        desc: "GC берёт Серые A и B, красит их в Чёрный, а их детей (C и D) — в Серый. В этот момент работающая горутина перекидывает указатель на Белый/Серый объект D внутрь уже Чёрного объекта A! Срабатывает Hybrid Write Barrier и принудительно затеняет объект в Серый цвет, спасая его от удаления!",
-        boxes: [
-          {
-            title: "Срабатывание Hybrid Write Barrier",
-            rows: [
-              { k: "Действие горутины:", v: "Перезапись указателя в куче (*slot = ptr)", hl: true },
-              { k: "Барьер Юасы (Deletion):", v: "Красит затираемый старый указатель *slot в Серый", hl: true },
-              { k: "Барьер Дейкстры (Insertion):", v: "Красит новый целевой указатель ptr в Серый", hl: true }
-            ]
-          },
-          {
-            title: "Трёхцветный граф объектов в Хипе",
-            rows: [
-              { k: "Белые (Кандидаты в мусор):", v: "Объект E (на него больше нет ссылок)", hl: false },
-              { k: "Серые (Очередь обхода):", v: "Объекты C, D (удержаны барьером записи!)", hl: true },
-              { k: "Чёрные (Проверенные):", v: "Объекты A, B", hl: true }
-            ]
-          },
-          {
-            title: "Почему стекам не нужен барьер записи?",
-            rows: [
-              { k: "Запись на стек:", v: "Работает на полной скорости без Write Barrier!", hl: true },
-              { k: "Инвариант стека:", v: "Новые объекты со стека красятся барьером в хипе", hl: false },
-              { k: "Выигрыш:", v: "Не нужно повторно сканировать стеки на STW #2!", hl: false }
-            ]
-          }
-        ]
-      },
-      {
-        title: "4. Mark Termination (STW #2) и фоновая очистка (Concurrent Sweep)",
-        descEN: "Mark termination and the transition to sweeping use an STW pause without a fixed duration guarantee. Sweeping reclaims dead slots. For the next cycle, GOGC sets a heap goal and the pacer starts earlier. GOMEMLIMIT constrains a soft runtime budget, not total process memory or container usage.",
-        check: {
-          promptEN: "With 100 MiB live heap, 20 MiB roots and GOGC=100, must GC start at 200 MiB?",
-          promptRU: "При 100 MiB живой кучи, 20 MiB корней и GOGC=100 обязан ли GC начаться на 200 MiB?",
-          answerEN: "No. The simplified goal is 220 MiB; the pacer starts marking earlier. A memory limit may lower the goal, but cannot guarantee that the process avoids OOM.",
-          answerRU: "Нет. Упрощённая цель — 220 MiB; pacer начинает разметку раньше. Лимит памяти может снизить цель, но не гарантирует отсутствие OOM процесса."
+        "title": "2. Достижимость: корни → A, B → C, D",
+        "desc": "После подготовки мир запущен. Корни ведут к A и B; A ведёт к D, B — к C. У E нет пути от корней. В этом учебном снимке A и B найдены, но ещё не просмотрены. Обработка корней и кучи в runtime может чередоваться; при сканировании стека временно останавливается соответствующая горутина.",
+        "descEN": "After setup, the program runs alongside GC. Roots point to A and B; A points to D, B to C. E has no path from a root. In this teaching snapshot, A and B are discovered but not yet scanned. Root jobs and heap scanning may interleave; scanning a stack temporarily stops that goroutine.",
+        "check": {
+          "promptEN": "C is still white but reachable through B. Can it already be treated as garbage?",
+          "promptRU": "C ещё белый, но достижим через B. Можно ли уже считать его мусором?",
+          "answerEN": "No. White during marking means not yet marked. B is pending work, so its outgoing pointer can still reveal C.",
+          "answerRU": "Нет. Белый во время разметки означает «ещё не отмечен». B ещё предстоит просмотреть, и его указатель позволит найти C."
         },
-        desc: "Серых объектов больше не осталось! Пауза STW #2 (без фиксированной гарантии длительности) выключает Write Barrier. Живые объекты (A, B, C, D) стали Чёрными, а оставшийся Белым недостижимый объект E фоново возвращается в битовую карту свободных ячеек mspan без дефрагментации памяти.",
-        boxes: [
+        "boxes": [
           {
-            title: "Завершение цикла GC",
-            rows: [
-              { k: "Фаза 3 (STW #2):", v: "Mark Termination — выключает Write Barrier", hl: true },
-              { k: "Фаза 4 (Sweep):", v: "Фоновый возврат Белых ячеек в пул mspan", hl: true },
-              { k: "Дефрагментация (Compaction):", v: "НЕТ (классы размеров mspan не дробят память)", hl: false }
+            "title": "Связи графа — не порядок исполнения",
+            "rows": [
+              {
+                "k": "Корни → A, B:",
+                "v": "Например, живые указатели стеков и globals",
+                "hl": true
+              },
+              {
+                "k": "A → D; B → C:",
+                "v": "D и C достижимы, хотя ещё белые",
+                "hl": true
+              },
+              {
+                "k": "E отдельно:",
+                "v": "Нет пути от корня; собственный цикл E → E не спасает",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Итог в Хипе после сборки",
-            rows: [
-              { k: "Удалено (Бывшие Белые):", v: "Объект E → ячейка памяти свободна!", hl: true },
-              { k: "Серые:", v: "Пусто (0)", hl: false },
-              { k: "Выжившие (Бывшие Чёрные):", v: "A, B, C, D → сбрасываются в Белый для след. GC", hl: true }
+            "title": "Цвет = состояние работы",
+            "rows": [
+              {
+                "k": "Белые: C, D, E",
+                "v": "Пока не отмечены; это ещё не готовый список мусора",
+                "hl": false
+              },
+              {
+                "k": "Серые: A, B",
+                "v": "Найдены, исходящие указатели ждут просмотра",
+                "hl": true
+              },
+              {
+                "k": "Чёрные: пока нет",
+                "v": "Просмотренные объекты появятся на следующем шаге",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Расчёт следующей цели (GC Pacer)",
-            rows: [
-              { k: "При GOGC = 100:", v: "Цель ≈ live + (live + roots); запуск раньше, не ровно при удвоении", hl: false },
-              { k: "При GOMEMLIMIT:", v: "Мягкий бюджет Sys − HeapReleased; не RSS и не защита от OOM", hl: true },
-              { k: "Проверь на числах:", v: "100 MiB live + 20 MiB roots, GOGC=100 → цель 220 MiB; C-память требует отдельного резерва", hl: false },
-              { k: "Возврат памяти ОС:", v: "Фоновый scavenger возвращает страницы через madvise", hl: false }
+            "title": "Что происходит параллельно",
+            "rows": [
+              {
+                "k": "Write barrier включён:",
+                "v": "Защищает изменения указателей, включая globals",
+                "hl": true
+              },
+              {
+                "k": "Workers и assists:",
+                "v": "Фоновая цель ≈25% мощности GOMAXPROCS; assists добавляют работу",
+                "hl": false
+              },
+              {
+                "k": "Новые объекты marking:",
+                "v": "Считаются чёрными, а не добавляются как обычные белые",
+                "hl": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "3. Перенос связи: почему C нельзя потерять",
+        "desc": "GC просмотрел A: A стал чёрным, D — серым; B ещё серый, C белый. Горутина выполняет A.Next = B.Next, затем B.Next = nil. Без барьера обход мог бы пропустить C: A уже прошли, а в B ссылка исчезла. Барьер учитывает вставленную/удалённую ссылку и защищает C. Это возможное чередование в модели, а не воспроизводимая трасса Go.",
+        "descEN": "GC has scanned A, making A black and D grey; B is still grey and C white. The program executes A.Next = B.Next, then B.Next = nil. A plain traversal could miss C: it has passed A, and B no longer points to C. Recording the inserted/deleted pointer protects C. This is a possible interleaving in a model, not an observable Go trace.",
+        "check": {
+          "promptEN": "Why does B.Next = nil matter even though the new value is not a pointer to an object? Does a GC barrier make Move safe for concurrent callers?",
+          "promptRU": "Почему важна запись B.Next = nil, хотя новое значение не указывает на объект? Делает ли GC-барьер Move безопасным для конкурентных вызовов?",
+          "answerEN": "The deletion part protects the old target C. The barrier serves GC correctness; callers still need exclusive access or application synchronization.",
+          "answerRU": "Deletion-часть защищает старую цель C. Барьер нужен для корректности GC; вызывающему коду всё ещё требуется исключительный доступ или своя синхронизация."
+        },
+        "boxes": [
+          {
+            "title": "1. До переноса → 2. После переноса",
+            "rows": [
+              {
+                "k": "Было:",
+                "v": "A (чёрный) → D; B (серый) → C (белый)",
+                "hl": false
+              },
+              {
+                "k": "A.Next = B.Next:",
+                "v": "Теперь A → C; старая цель A — D",
+                "hl": true
+              },
+              {
+                "k": "B.Next = nil:",
+                "v": "Теперь B → nil; старая цель B — C",
+                "hl": true
+              },
+              {
+                "k": "Без барьера:",
+                "v": "A уже просмотрен, B больше не покажет C",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "3. Что защищает барьер",
+            "rows": [
+              {
+                "k": "Deletion:",
+                "v": "Учитывает старые цели D и C до перезаписи",
+                "hl": true
+              },
+              {
+                "k": "Insertion:",
+                "v": "Учитывает новую цель C; nil не добавляет объект",
+                "hl": true
+              },
+              {
+                "k": "После обработки работы:",
+                "v": "A чёрный; B, C, D ждут обхода или уже просмотрены; E остаётся белым",
+                "hl": false
+              },
+              {
+                "k": "Буферизация:",
+                "v": "Учёт указателя не равен немедленному сканированию объекта",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "Граница механизма",
+            "rows": [
+              {
+                "k": "Не только heap:",
+                "v": "Запись heap-указателя в global тоже защищается",
+                "hl": true
+              },
+              {
+                "k": "Известный текущий стек:",
+                "v": "Компилятор может убрать барьер; косвенный адрес может его сохранить",
+                "hl": false
+              },
+              {
+                "k": "Не mutex и не atomic:",
+                "v": "Гонки приложения требуют отдельной синхронизации",
+                "hl": true
+              },
+              {
+                "k": "Вспомни без схемы:",
+                "v": "A уже прошли → B ещё нет → связь переносится → C нельзя потерять",
+                "hl": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "4. Mark Termination (STW #2) и фоновая очистка (Concurrent Sweep)",
+        "descEN": "After root jobs, scanning and buffered work are complete, runtime enters STW mark termination and disables the barrier when preparing sweep. In this model A, B, C and D are marked; E is not. Sweep reclaims E for reuse. D may have become unreachable in step 3, but its mark keeps it for this cycle: concurrent GC can retain floating garbage.",
+        "check": {
+          "promptEN": "With 100 MiB live heap, 20 MiB roots and GOGC=100, must GC start at 200 MiB?",
+          "promptRU": "При 100 MiB живой кучи, 20 MiB корней и GOGC=100 обязан ли GC начаться на 200 MiB?",
+          "answerEN": "No. The simplified goal is 220 MiB; the pacer starts marking earlier. A memory limit may lower the goal, but cannot guarantee that the process avoids OOM.",
+          "answerRU": "Нет. Упрощённая цель — 220 MiB; pacer начинает разметку раньше. Лимит памяти может снизить цель, но не гарантирует отсутствие OOM процесса."
+        },
+        "desc": "После завершения заданий корней, обхода и обработки буферизованной работы runtime переходит в STW mark termination. При подготовке sweep барьер выключается. В нашей модели отмечены A, B, C, D; E не отмечен. Sweep освобождает его ячейку для повторного использования. D мог потерять достижимость на шаге 3, но уже отмечен и переживёт этот цикл: GC не обязан немедленно удалять всё ставшее ненужным.",
+        "boxes": [
+          {
+            "title": "Завершение разметки → очистка",
+            "rows": [
+              {
+                "k": "Фаза 3 (STW #2):",
+                "v": "Завершение разметки и служебная работа, затем подготовка sweep",
+                "hl": true
+              },
+              {
+                "k": "Фаза 4 (Sweep):",
+                "v": "Возврат неотмеченных ячеек фоново и при аллокациях",
+                "hl": true
+              },
+              {
+                "k": "Без compaction:",
+                "v": "Живые объекты кучи не уплотняются; фрагментация всё же возможна",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "Итог этого цикла",
+            "rows": [
+              {
+                "k": "E не отмечен:",
+                "v": "Его ячейку можно переиспользовать после sweep",
+                "hl": true
+              },
+              {
+                "k": "A, B, C, D отмечены:",
+                "v": "Переживают цикл; D уже мог стать недостижимым",
+                "hl": false
+              },
+              {
+                "k": "Следующий цикл:",
+                "v": "Достижимость проверяется заново; отмечен ≠ нужен приложению навсегда",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Расчёт следующей цели (GC Pacer)",
+            "rows": [
+              {
+                "k": "При GOGC = 100:",
+                "v": "Цель ≈ live + (live + roots); запуск раньше, не ровно при удвоении",
+                "hl": false
+              },
+              {
+                "k": "При GOMEMLIMIT:",
+                "v": "Мягкий бюджет Sys − HeapReleased; не RSS и не защита от OOM",
+                "hl": true
+              },
+              {
+                "k": "Проверь на числах:",
+                "v": "100 MiB live + 20 MiB roots, GOGC=100 → цель 220 MiB; C-память требует отдельного резерва",
+                "hl": false
+              },
+              {
+                "k": "Возврат памяти ОС:",
+                "v": "Scavenger отдельно освобождает физическую память средствами ОС; падение RSS не гарантировано сразу",
+                "hl": false
+              }
             ]
           }
         ]
       }
     ]
   },
+
   // =========================================================================
   // ДИАГРАММА 7: УСТРОЙСТВО MAP В GO (CLASSIC HMAP VS GO 1.24+ SWISSTABLES)
   // =========================================================================
