@@ -642,3 +642,8 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .content-references { margin: 16px 0; color: var(--muted); font-size: 0.9rem; }
 .content-references ul { margin-left: 20px; }
 .content-references a { color: var(--accent); text-underline-offset: 3px; }
+
+.practice-box { margin-top: 20px; border: 1px solid var(--accent); border-radius: 10px; padding: 12px; }
+.practice-box summary { cursor: pointer; padding: 8px 0; color: var(--accent); }
+.practice-box p { margin: 10px 0; }
+.practice-solution { margin-top: 16px; border-top: 1px solid var(--border); }

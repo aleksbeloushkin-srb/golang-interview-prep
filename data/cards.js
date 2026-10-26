@@ -30,20 +30,49 @@ const CARDS = [
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q2: What is the difference between a Data Race and a Race Condition, and how does Go's Race Detector (-race) work?",
-    qRU: "В чём разница между Data Race (гонкой данных) и Race Condition (состоянием гонки), и как работает флаг -race?",
-    shortEN: "A Data Race occurs when two goroutines access the same memory location concurrently and at least one access is a write without synchronization. A Race Condition is a broader semantic flaw where the correctness of a program depends on the unpredictable timing or ordering of operations (which can happen even WITH mutexes).",
+    qEN: "Q2: Can a program have a race condition without a data race?",
+    qRU: "Может ли в программе быть логическая гонка без гонки данных?",
+    shortEN: "A data race is an unsynchronized conflicting access to shared memory: at least one access writes. A race condition is a timing-dependent logic error. Locking individual reads and writes can remove the data race while leaving a check-then-act operation incorrect.",
+    shortRU: "Гонка данных — это конфликтующий доступ к общей памяти без нужной синхронизации, когда хотя бы одна операция пишет. Логическая гонка — ошибка, зависящая от порядка событий. Можно защитить каждое чтение и запись отдельно, но всё равно неправильно выполнить проверку и действие.",
     detailsEN: [
-      "Data Race vs. Race Condition: Protecting every variable read/write separately with a mutex eliminates Data Races, but if two operations (e.g., check-then-act on bank balance) are not locked together as one critical section, you still have a logical Race Condition.",
-      "Consequences in Go: A concurrent map write causes a fatal runtime crash ( cannot be recovered via recover()), while a data race on slices or interfaces can corrupt internal pointer+length headers, leading to memory corruption.",
-      "How -race works (ThreadSanitizer): Compiling with 'go test -race' instruments every memory read and write with shadow memory tracking vector clocks (happens-before relationships). It increases memory usage by 5–10x and slows execution by 2–20x."
+      "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
+      "The race detector observes executed, instrumented paths. A clean go test -race run is useful evidence, not a proof that every possible execution is safe; it does not diagnose all logical races.",
+      "An invalid-memory-address panic does not by itself prove a data race. The runtime detects some conflicting map operations, but its map checks are not a substitute for synchronization or the race detector."
     ],
-    practicalRU: "Если в продакшене сервис внезапно падает с 'fatal error: concurrent map writes' или странным 'panic: runtime error: invalid memory address' внутри multi-word структур (интерфейс или слайс) — это 100% Data Race. При параллельной записи двух частей интерфейса (itab + data pointer) одна горутина может прочитать itab от нового типа, а указатель data — от старого.",
-    code: `// Logical Race Condition WITHOUT a Data Race:
-if cache.Get("key") == nil { // locks & unlocks mutex inside Get()
-    // Another goroutine might insert "key" right here!
-    cache.Set("key", val)    // locks & unlocks mutex inside Set()
-}`
+    detailsRU: [
+      "Синхронизация должна защищать инвариант, а не только отдельные обращения к полю. Проверка баланса и соответствующее списание должны быть одной операцией; подходящий цикл compare-and-swap — другой возможный вариант.",
+      "Детектор гонок наблюдает выполненные инструментированные пути. Успешный go test -race полезен, но не доказывает безопасность всех возможных исполнений и не выявляет все логические гонки.",
+      "Panic с invalid memory address сам по себе не доказывает гонку данных. Рантайм обнаруживает некоторые конфликтующие операции с map, но его проверки не заменяют синхронизацию и детектор гонок."
+    ],
+    practicalRU: "При ревью спроси: «Какое условие должно оставаться истинным между проверкой и изменением?» Затем проверь, что одна блокировка или другая согласованная операция охватывает весь этот участок. Для теста логической гонки можно явно организовать порядок событий через каналы, не полагаясь на Sleep.",
+    versionNote: "Различие гонки данных и логической гонки применимо к Go 1.17, 1.25 и 1.26. Возможности -race зависят также от платформы и реально выполненных путей.",
+    sources: [
+      {"title": "Go memory model", "url": "https://go.dev/ref/mem"},
+      {"title": "Go race detector", "url": "https://go.dev/doc/articles/race_detector"}
+    ],
+    practice: {
+      "kind": "Объясни причину",
+      "promptEN": "Two calls to Spend read balance=100 under a mutex, unlock, and each later writes 20 under the same mutex. Both report a successful withdrawal of 80. Is this a data race? What went wrong?",
+      "promptRU": "Два вызова Spend читают balance=100 под мьютексом, отпускают его и позже каждый записывает 20 под тем же мьютексом. Оба сообщают об успешном списании 80. Это гонка данных? В чём ошибка?",
+      "pointsEN": [
+        "If every access uses the same mutex, there is no data race on balance in this scenario.",
+        "The check and update are separated: both withdrawals succeed although only one can be afforded.",
+        "Protect the whole check-and-update operation. A clean race-detector result does not establish that invariant."
+      ],
+      "pointsRU": [
+        "Если каждое обращение использует один и тот же мьютекс, в этом сценарии нет гонки данных на balance.",
+        "Проверка и изменение разделены: оба списания успешны, хотя денег достаточно только на одно.",
+        "Защити всю проверку вместе с изменением. Успешный запуск детектора гонок не доказывает этот инвариант."
+      ],
+      "followUpEN": "How would you force that ordering in a test without Sleep?",
+      "followUpRU": "Как организовать именно такой порядок в тесте без Sleep?"
+    },
+    code: `// Pseudocode: Get and Set each lock internally.
+// The whole check-and-set is still not atomic.
+if cache.Get(key) == nil {
+    cache.Set(key, value)
+}
+// Design one operation, e.g. LoadOrStore, around the required invariant.`
   },
   {
     id: "c3",
@@ -258,23 +287,56 @@ if pp.runnext.cas(oldnext, guintptr(unsafe.Pointer(gp))) {
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q12: What causes Goroutine Leaks in production, and how do you detect and prevent them?",
-    qRU: "Из-за чего возникают утечки горутин (Goroutine Leaks) в продакшене и как их находить и предотвращать?",
-    shortEN: "A goroutine leak happens when a goroutine blocks forever on a channel, mutex, or I/O operation without a timeout or cancellation path, permanently leaking its 2+ KB stack and any heap objects referenced by its local variables.",
+    qEN: "Q12: How would you find and prevent a goroutine leak?",
+    qRU: "Как найти утечку горутин и обеспечить их завершение?",
+    shortEN: "A goroutine leaks when it outlives the work that needed it and has no effective way to finish. I would identify who owns it, what it can wait for, and how it stops. A context helps only when the work observes cancellation; a buffer does not cancel an operation.",
+    shortRU: "Горутина утекает, когда переживает работу, ради которой была запущена, и не имеет работающего пути завершения. Я проверю, кто ею управляет, чего она может ждать и как должна остановиться. Context помогает только при обработке отмены; буфер сам по себе операцию не отменяет.",
     detailsEN: [
-      "Top 3 Causes: 1) Sending to an unbuffered channel when the receiver returned early on an error; 2) Receiving from a channel that is never written to or closed; 3) HTTP/network calls using http.DefaultClient (which has Timeout: 0 — infinite!).",
-      "Why GC Cannot Collect Leaked Goroutines: Even if no variable in your code references the channel anymore, the parked goroutine itself is treated as a GC Root (or referenced via hchan/sudog), keeping its entire stack and reachable heap objects alive forever.",
-      "Prevention: Always pass context.Context with a timeout, use buffered channels of size 1 for async error reporting ('make(chan error, 1)'), and run goleak in unit tests."
+      "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
+      "A running or blocked goroutine can keep reachable objects alive. Losing the caller's channel variable does not collect the goroutine. A deliberately long-lived service goroutine is not a leak merely because it waits.",
+      "Compare goroutine profiles over time and after load subsides. debug=1 gives grouped text stacks; debug=2 gives a stack dump with goroutine states. A stack shows where work is waiting, not by itself why it cannot finish."
     ],
-    practicalRU: "Как за 10 секунд найти утечку горутин на живом сервере: открой текстовый профиль 'curl http://localhost:6060/debug/pprof/goroutine?debug=1'. Рантайм сгруппирует все тысячи зависших горутин по одинаковому стектрейсу: например, '14520 @ chan send [64 minutes]' с точным номером строки файла, где забыли буфер `make(chan error, 1)` или `case <-ctx.Done():`.",
-    code: `// Classic Goroutine Leak vs. Fix with 1-Buffered Channel & Context:
-errCh := make(chan error, 1) // Buffer of 1 prevents sender leak if caller times out!
-go func() {
-    errCh <- doSlowRPC(ctx)  // Won't block even if select below already exited on ctx.Done()
-}()
-select {
-case err := <-errCh: return err
-case <-ctx.Done():   return ctx.Err()
+    detailsRU: [
+      "Частый случай — отправка единственного результата после ухода вызывающей стороны. Буфер на один элемент позволяет именно этой отправке завершиться; он не останавливает RPC и не делает безопасными повторные отправки. Ограничивай параллелизм и предусматривай остановку длительной работы.",
+      "Работающая или заблокированная горутина может удерживать достижимые объекты. Потеря переменной канала у вызывающего кода не уничтожает горутину. Долгоживущая служебная горутина не становится утечкой только потому, что ждёт.",
+      "Сравнивай профили горутин во времени и после снижения нагрузки. debug=1 даёт сгруппированные текстовые стеки, debug=2 — дамп со состояниями горутин. Стек показывает место ожидания, но сам по себе не объясняет, почему работа не завершится."
+    ],
+    practicalRU: "Начни с повторяющихся стеков и проверь владельца каждой горутины: кто прекращает отправку, кто закрывает очередь и кто дожидается завершения. Проверку остановки строй на наблюдаемом завершении работы; один таймаут запроса не означает, что дочерняя работа уже закончилась.",
+    versionNote: "В Go 1.25 доступны обычные goroutine-профили. В Go 1.26 профиль goroutineleak включается экспериментом GOEXPERIMENT=goroutineleakprofile; это дополнительная диагностика, не гарантия обнаружения всех утечек.",
+    sources: [
+      {"title": "Go: pipelines and cancellation", "url": "https://go.dev/blog/pipelines"},
+      {"title": "pprof formats — Go 1.26.1", "url": "https://pkg.go.dev/runtime/pprof@go1.26.1#Profile.WriteTo"},
+      {"title": "Go 1.26 release notes", "url": "https://go.dev/doc/go1.26"}
+    ],
+    practice: {
+      "kind": "Проверь исправление",
+      "promptEN": "The result channel now has capacity 1, but the RPC ignores context and never returns. Has the leak been fixed? Explain the remaining lifetime problem.",
+      "promptRU": "У канала результата теперь ёмкость 1, но RPC игнорирует context и никогда не возвращается. Исправлена ли утечка? Объясни оставшуюся проблему времени жизни.",
+      "pointsEN": [
+        "The goroutine has not reached the send: it is still inside the RPC.",
+        "Buffering solves only the final send when there is exactly one result; it cannot cancel the RPC.",
+        "Use an operation that supports cancellation or deadlines, define ownership and shutdown, and bound concurrency. Returning from the caller does not prove the worker has stopped."
+      ],
+      "pointsRU": [
+        "Горутина ещё не дошла до отправки: она остаётся внутри RPC.",
+        "Буфер решает только финальную отправку единственного результата; отменить RPC он не может.",
+        "Нужна операция с отменой или ограничением времени, понятный владелец, остановка и ограниченный параллелизм. Возврат вызывающей функции не доказывает завершения воркера."
+      ],
+      "followUpEN": "What changes if the worker sends two results into a buffer of size 1?",
+      "followUpRU": "Что изменится, если воркер отправляет два результата в буфер размера 1?"
+    },
+    code: `// Function fragment; import "context". work must observe ctx cancellation.
+func Await(ctx context.Context, work func(context.Context) error) error {
+	result := make(chan error, 1)
+	go func() {
+		result <- work(ctx) // Exactly one send; it can finish without a receiver.
+	}()
+	select {
+	case err := <-result:
+		return err
+	case <-ctx.Done():
+		return ctx.Err() // Does not wait for work to stop.
+	}
 }`
   },
 
@@ -306,25 +368,65 @@ chAsync := make(chan int, 64) // Buffered:   dataqsiz == 64, ring buffer in heap
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q14: What happens when you read, write, or close a nil, open, or closed channel? (The Channel Matrix)",
-    qRU: "Что происходит при чтении, записи и закрытии nil-канала, открытого и закрытого канала? (Таблица-матрица для собеседования)",
-    shortEN: "Operations on a nil channel block forever (except close, which panics). Sending to or closing an already-closed channel panics immediately. Receiving from a closed channel never blocks: it drains any remaining buffered elements and then immediately returns the type's zero value with ok = false.",
+    qEN: "Q14: How do nil, open, and closed channels behave?",
+    qRU: "Чем отличаются операции с nil-каналом, открытым и закрытым каналом?",
+    shortEN: "I separate the channel state from the operation. Sending to or receiving from a nil channel blocks. An open channel may wait for a peer or buffer space. A closed channel still yields buffered values, then zero values with ok=false. Sending to a closed channel, closing it again, or closing nil panics.",
+    shortRU: "Сначала разделяю состояние канала и операцию. Отправка и чтение nil-канала блокируются. Для открытого канала может потребоваться получатель, отправитель или место в буфере. Закрытый канал отдаёт оставшиеся значения, затем нулевое значение с ok=false. Отправка в закрытый канал, повторное закрытие и закрытие nil вызывают panic.",
     detailsEN: [
-      "1. Nil Channel ('var ch chan int'): Send -> Blocks forever (gopark); Receive -> Blocks forever (gopark); Close -> PANIC!",
-      "2. Closed Channel: Send -> PANIC ('send on closed channel'); Close -> PANIC ('close of closed channel'); Receive -> Drains buffered items first (val, true), then immediately returns (zeroValue, false) forever without blocking.",
-      "3. Why Closing Wakes Everyone: Closing sets hchan.closed = 1 under lock and moves all waiting receivers in recvq (with zero values) and all waiting senders in sendq (to panic) into the runnable state."
+      "For an open unbuffered channel, send and receive rendezvous. For an open buffered channel, send waits when it is full and receive waits when it is empty. A nil-channel case cannot proceed in select, so another case or default can still run.",
+      "After close, buffered values are received with ok=true. Only after the buffer is drained does receive return the zero value with ok=false. Closing does not discard buffered data.",
+      "Closing makes waiting goroutines eligible to proceed; it does not guarantee when each will run. The owner coordinating all sends should close the channel only after no more sends can occur.",
+      "A closed input stays ready. In a select loop, handle ok=false by stopping or setting that input variable to nil. The loop also needs a defined exit when all inputs are disabled."
     ],
-    practicalRU: "Два мощных паттерна в продакшене: 1) Закрытие канала 'close(stopCh)' работает как идеальный Broadcast-сигнал для мгновенного пробуждения 1000 воркеров сразу (так как чтение из закрытого канала никогда не блокируется). 2) Если в цикле с 'select' один из входных каналов закрылся, он начнёт бесконечно возвращать (0, false) на каждой итерации, сжигая 100% CPU! Чтобы динамически «отключить» эту ветку select, достаточно присвоить переменной канала 'ch = nil'.",
-    code: `// Disabling a closed channel branch inside a select loop to prevent 100% CPU spin:
-for ch1 != nil || ch2 != nil {
-    select {
-    case v, ok := <-ch1:
-        if !ok { ch1 = nil; continue } // setting ch1 = nil disables this case in selectgo!
-        process(v)
-    case v, ok := <-ch2:
-        if !ok { ch2 = nil; continue }
-        process(v)
-    }
+    detailsRU: [
+      "В открытом небуферизованном канале отправка и чтение встречаются друг с другом. В буферизованном отправка ждёт при полном буфере, чтение — при пустом. Ветка select с nil-каналом не готова, но другие ветки или default могут выполниться.",
+      "После close значения из буфера приходят с ok=true. Только после опустошения буфера чтение возвращает нулевое значение и ok=false. Закрытие не выбрасывает накопленные данные.",
+      "Закрытие позволяет ожидающим горутинам продолжить работу, но не гарантирует момент запуска каждой из них. Закрывать канал должен владелец, координирующий всех отправителей, когда новых отправок уже не будет.",
+      "Закрытый вход остаётся готовым. В цикле select при ok=false нужно завершиться или присвоить этой переменной канала nil. Для случая, когда отключены все входы, также нужен определённый выход из цикла."
+    ],
+    practicalRU: "Для сигнала завершения удобно закрытие done-канала, но отдельно дождись остановки воркеров, если следующий шаг зависит от неё. Для потока значений всегда различай «пришёл ноль» и «поток закончился» через второй результат чтения.",
+    versionNote: "Контракты каналов в этой карточке применимы к Go 1.17, 1.25 и 1.26. Порядок запуска горутин не является частью этих гарантий.",
+    sources: [
+      {"title": "Go specification: receive", "url": "https://go.dev/ref/spec#Receive_operator"},
+      {"title": "Go specification: close", "url": "https://go.dev/ref/spec#Close"},
+      {"title": "Go memory model: channels", "url": "https://go.dev/ref/mem#chan"}
+    ],
+    practice: {
+      "kind": "Предскажи результат",
+      "promptEN": "Without running this code, predict both receives. Explain why a zero value alone cannot indicate that the stream ended.",
+      "promptRU": "Не запуская код, предскажи оба чтения. Объясни, почему одного нулевого значения недостаточно для определения конца потока.",
+      "code": "ch := make(chan int, 1)\nch <- 0\nclose(ch)\nfirst, firstOK := <-ch\nsecond, secondOK := <-ch",
+      "pointsEN": [
+        "first=0 and firstOK=true: this zero was a real buffered value.",
+        "second=0 and secondOK=false: the closed channel has now been drained.",
+        "Closing preserves buffered values. The second receive result distinguishes data from the end of the stream."
+      ],
+      "pointsRU": [
+        "first=0 и firstOK=true: этот ноль был настоящим значением в буфере.",
+        "second=0 и secondOK=false: закрытый канал уже опустошён.",
+        "Закрытие сохраняет данные буфера. Второй результат чтения отличает данные от конца потока."
+      ],
+      "followUpEN": "What happens if you send another value after close?",
+      "followUpRU": "Что произойдёт при отправке ещё одного значения после close?"
+    },
+    code: `// Function fragment. Both inputs must eventually close, or add cancellation.
+func Drain(a, b <-chan int, consume func(int)) {
+	for a != nil || b != nil {
+		select {
+		case v, ok := <-a:
+			if !ok {
+				a = nil
+				continue
+			}
+			consume(v)
+		case v, ok := <-b:
+			if !ok {
+				b = nil
+				continue
+			}
+			consume(v)
+		}
+	}
 }`
   },
   {
@@ -420,6 +522,23 @@ func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
       {"title": "Go specification: select", "url": "https://go.dev/ref/spec#Select_statements"},
       {"title": "context.Context", "url": "https://pkg.go.dev/context@go1.26.1#Context"}
     ],
+    practice: {
+      "kind": "Измени условие",
+      "promptEN": "A cancellation pre-check finds no cancellation. Before the next select, the context is cancelled and a job becomes ready. Can the job case still run? Explain the limit of the pre-check.",
+      "promptRU": "Предварительная проверка не обнаружила отмену. Перед следующим select контекст отменяется и появляется готовая задача. Может ли выполниться ветка задачи? Объясни ограничение проверки.",
+      "pointsEN": [
+        "Yes. Both cases can be ready when the second select chooses an operation.",
+        "Source order does not give cancellation priority, and the two checks are not one atomic operation.",
+        "The handler must also observe cancellation. A strict admission boundary needs an explicit synchronization protocol."
+      ],
+      "pointsRU": [
+        "Да. В момент выбора во втором select обе ветки могут быть готовы.",
+        "Порядок веток не даёт отмене приоритет, а две проверки не образуют одну атомарную операцию.",
+        "Обработчик также должен поддерживать отмену. Для строгой границы приёма задач нужен явный протокол синхронизации."
+      ],
+      "followUpEN": "What if cancellation is already visible at the first pre-check?",
+      "followUpRU": "Что изменится, если отмена уже видна при первой проверке?"
+    },
     code: `// Function fragment; import "context". Cancellation is cooperative.
 func Run(ctx context.Context, jobs <-chan int, handle func(context.Context, int) error) error {
 	for {
@@ -470,6 +589,23 @@ func Run(ctx context.Context, jobs <-chan int, handle func(context.Context, int)
       {"title": "select.go — Go 1.26.1", "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/select.go"},
       {"title": "waitq.dequeue — Go 1.26.1", "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"}
     ],
+    practice: {
+      "kind": "Сравни механизмы",
+      "promptEN": "Why not use the same randomized order both for checking readiness and for locking channels? Explain the purpose of each order without naming runtime functions first.",
+      "promptRU": "Почему бы не использовать один случайный порядок и для проверки готовности, и для блокировки каналов? Сначала объясни назначение порядков без названий функций runtime.",
+      "pointsEN": [
+        "The poll order avoids always favoring the first ready source case; it does not guarantee a bounded waiting time.",
+        "A consistent lock order prevents two selects from locking the same channels in opposite order and waiting on each other.",
+        "These are different problems. In the ordinary blocking path, poll and registration share one lock acquisition; cleanup requires another."
+      ],
+      "pointsRU": [
+        "Порядок опроса не отдаёт постоянное предпочтение первой готовой ветке в коде; ограниченного времени ожидания он не гарантирует.",
+        "Согласованный порядок блокировок не даёт двум select захватить общие каналы в противоположном порядке и ждать друг друга.",
+        "Это разные задачи. В обычном блокирующем пути опрос и регистрация используют один захват блокировок, очистка — ещё один."
+      ],
+      "followUpEN": "How does selectDone stop two channel operations from claiming the same waiting select?",
+      "followUpRU": "Как selectDone не даёт двум операциям забрать один ожидающий select?"
+    },
     code: `// Simplified excerpt from runtime.waitq.dequeue; not standalone Go.
 if sgp.isSelect && !sgp.g.selectDone.CompareAndSwap(0, 1) {
     continue // Another operation has already claimed this select waiter.

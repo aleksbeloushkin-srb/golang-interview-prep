@@ -63,6 +63,26 @@ function referencesHtml(item) {
   </aside>`;
 }
 
+function practiceHtml(card) {
+  const exercise = card.practice;
+  if (!exercise) return "";
+  return `<details class="practice-box">
+    <summary>${escapeHtml(exercise.kind)} · практика без вариантов ответа</summary>
+    <p class="muted-text">Сначала ответь вслух или на бумаге. Затем сравни рассуждение с разбором. Точного совпадения слов не требуется.</p>
+    <p lang="en">${escapeHtml(exercise.promptEN)}</p>
+    <details class="translated-answer"><summary>Задание на русском</summary><p lang="ru">${escapeHtml(exercise.promptRU)}</p></details>
+    ${exercise.code ? `<pre class="code-block">${escapeHtml(exercise.code)}</pre>` : ""}
+    <details class="practice-solution">
+      <summary>Сверить рассуждение</summary>
+      <ul class="details-list" lang="en">${exercise.pointsEN.map(point => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+      <details class="translated-answer"><summary>Разбор на русском</summary><ul class="details-list" lang="ru">${exercise.pointsRU.map(point => `<li>${escapeHtml(point)}</li>`).join("")}</ul></details>
+      <p lang="en"><strong>Follow-up:</strong> ${escapeHtml(exercise.followUpEN)}</p>
+      <p lang="ru">${escapeHtml(exercise.followUpRU)}</p>
+      <p class="muted-text">Если упустил причину или условие, отметь тему «Нужно повторить». Это самопроверка, не автоматическая оценка ответа.</p>
+    </details>
+  </details>`;
+}
+
 // Автоматическая привязка карточек к 6 диаграммам
 const CARD_TO_SIM = {
   c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
@@ -114,7 +134,8 @@ function getFilteredCards() {
   if (typeof CARDS === "undefined") return [];
   return CARDS.filter(c => {
     if (state.filter === "review" && state.progress[c.id] !== "review") return false;
-    if (state.filter !== "all" && state.filter !== "review" && c.mod !== state.filter) return false;
+    if (state.filter === "practice" && !c.practice) return false;
+    if (!["all", "review", "practice"].includes(state.filter) && c.mod !== state.filter) return false;
     if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
@@ -157,6 +178,7 @@ function renderCard() {
     document.getElementById("card-q-ru").textContent = state.filter === "review" ? "В этой подборке нет карточек на повторение. Можно выбрать другой уровень или открыть все карточки." : "Измени поиск, модуль или уровень в разделе «Настроить подборку».";
     ansBox.classList.remove("visible");
     document.getElementById("card-status").textContent = "";
+    document.getElementById("card-practice").innerHTML = "";
     return;
   }
 
@@ -178,6 +200,7 @@ function renderCard() {
   document.getElementById("card-short-en").textContent = card.shortEN;
   document.getElementById("card-translation").innerHTML = russianExplanationHtml(card);
   document.getElementById("card-references").innerHTML = referencesHtml(card);
+  document.getElementById("card-practice").innerHTML = practiceHtml(card);
 
   const ul = document.getElementById("card-details-en");
   ul.innerHTML = "";
@@ -542,6 +565,8 @@ function syncDynamicCounters() {
 
   const btnAllMod = document.querySelector('#module-filter-row .chip[data-filter="all"]');
   if (btnAllMod) btnAllMod.textContent = `Все (${total})`;
+  const practiceButton = document.querySelector('[data-filter="practice"]');
+  if (practiceButton) practiceButton.textContent = `С практикой (${CARDS.filter(c => c.practice).length})`;
 
   const btnAllLvl = document.querySelector('#level-filter-row .level-chip[data-level="all"]');
   if (btnAllLvl) btnAllLvl.textContent = `Все уровни (${total})`;
