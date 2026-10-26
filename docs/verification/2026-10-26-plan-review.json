@@ -1,0 +1,300 @@
+{
+  "checks": [
+    {
+      "name": "initial plan rendered",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "checkbox persisted",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 320 plan/w2",
+      "passed": false,
+      "result": false
+    },
+    {
+      "name": "layout 320 plan/w3",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 320 cards",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 320 quiz",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 320 simulators/sim4",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 390 plan/w2",
+      "passed": false,
+      "result": false
+    },
+    {
+      "name": "layout 390 plan/w3",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 390 cards",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 390 quiz",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 390 simulators/sim4",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 1440 plan/w2",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 1440 plan/w3",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 1440 cards",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 1440 quiz",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "layout 1440 simulators/sim4",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "current select paths preserved in targeted integration",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "plan to card route",
+      "passed": true,
+      "result": true
+    },
+    {
+      "name": "back to plan",
+      "passed": true,
+      "result": true
+    }
+  ],
+  "findings": [
+    {
+      "case": "Today banner after checkbox",
+      "before": "Сегодня — неделя 3, Пн: 90 мин, осталось 3 из 3. К задачам дня →",
+      "after": "Сегодня — неделя 3, Пн: 90 мин, осталось 3 из 3. К задачам дня →",
+      "weekCount": "1 из 18 задач недели"
+    },
+    {
+      "case": "Impossible date",
+      "accepted": true,
+      "normalized": "03.03"
+    },
+    {
+      "case": "Tuesday start and active week after settings change",
+      "hash": "#/plan/w8",
+      "heading": "Неделя 2. Идиомы Go II: slice, map, строки, generics, тесты",
+      "firstDay": "Пн · 20.10 · 90 мин"
+    },
+    {
+      "case": "Import unrelated JSON accepted as empty progress",
+      "done": {}
+    },
+    {
+      "case": "layout 320 plan/w2",
+      "overflow": [
+        {
+          "tag": "LI",
+          "class": "plan-predict",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])Твой ответ (что выведет "
+        },
+        {
+          "tag": "PRE",
+          "class": "code-block",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])"
+        },
+        {
+          "tag": "LABEL",
+          "class": "",
+          "width": 375.390625,
+          "right": 424.390625,
+          "text": "Твой ответ (что выведет и почему, по-английски)"
+        },
+        {
+          "tag": "TEXTAREA",
+          "class": "plan-answer",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": ""
+        },
+        {
+          "tag": "DETAILS",
+          "class": "translated-answer",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "СверитьВывод: 1Arrays are values in Go, so assignment copies the whole array, un"
+        },
+        {
+          "tag": "SUMMARY",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Сверить"
+        },
+        {
+          "tag": "P",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Вывод: 1"
+        },
+        {
+          "tag": "P",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Arrays are values in Go, so assignment copies the whole array, unlike a slice."
+        }
+      ]
+    },
+    {
+      "case": "layout 390 plan/w2",
+      "overflow": [
+        {
+          "tag": "LI",
+          "class": "plan-predict",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])Твой ответ (что выведет "
+        },
+        {
+          "tag": "PRE",
+          "class": "code-block",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])"
+        },
+        {
+          "tag": "LABEL",
+          "class": "",
+          "width": 375.390625,
+          "right": 424.390625,
+          "text": "Твой ответ (что выведет и почему, по-английски)"
+        },
+        {
+          "tag": "TEXTAREA",
+          "class": "plan-answer",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": ""
+        },
+        {
+          "tag": "DETAILS",
+          "class": "translated-answer",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "СверитьВывод: 1Arrays are values in Go, so assignment copies the whole array, un"
+        },
+        {
+          "tag": "SUMMARY",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Сверить"
+        },
+        {
+          "tag": "P",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Вывод: 1"
+        },
+        {
+          "tag": "P",
+          "class": "",
+          "width": 381.796875,
+          "right": 430.796875,
+          "text": "Arrays are values in Go, so assignment copies the whole array, unlike a slice."
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "date": "2026-10-26",
+  "mode": "Read-only assessment; isolated integration preview under /private/tmp; repository website unchanged",
+  "base": "f84ac75 (content same as b65ac1d)",
+  "archiveBase": "0965e56",
+  "archiveSHA256": "c4c4fe847d61d3a2ab16e0081033faca1a5b19f3e123608053dd39536ec52f68",
+  "inventory": {
+    "weeks": 13,
+    "days": 65,
+    "tasks": 170,
+    "tasksWithInternalLinks": 28,
+    "uniqueInternalLinks": 66,
+    "missingTargets": [],
+    "unlinkedCurrentItems": [
+      "q22"
+    ],
+    "leetcodeEntries": 37,
+    "talks": 29,
+    "predict": 10
+  },
+  "goChecks": {
+    "toolchain": "go1.26.1 darwin/arm64",
+    "command": "go test -v ./... in temporary prediction harness",
+    "passedPredict": [
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "p8",
+      "p9",
+      "p10"
+    ],
+    "p3": "0 0 then expected nil-map write panic",
+    "oldLanguageP9": "333 using current compiler with -gcflags=-lang=go1.21",
+    "oldToolchainExecuted": false,
+    "adaptations": [
+      "Added package main, fmt import and main wrapper",
+      "For p5/p6, enabled calls shown only in comments in supplied fragments"
+    ],
+    "environmentIssue": "Initial direct go run probes for uncached cases failed due sandbox denial of Go cache writes. Authorized go test rerun passed all 10 cases and old-language check."
+  },
+  "limitations": [
+    "Not a review of all LeetCode solutions or all external sources",
+    "No physical mobile device or screen reader",
+    "No deployment",
+    "Sources from archive remain unapproved until verified",
+    "First browser attempt hit CDP navigation attachment race; active page rerun completed"
+  ]
+}

@@ -3,27 +3,49 @@ const QUIZ_QUESTIONS = [
   // ЧАСТЬ 1: ЛОВУШКИ ЯЗЫКА И РАНТАЙМА (Q1 - Q8)
   // =========================================================================
   {
-    id: "q1",
-    title: "Задача 1: Замыкание в цикле и горутины (Loop Variable Capture)",
-    ru: "Что выведет этот код и как изменилось поведение компилятора в Go 1.22+?",
-    en: "What does this code print, and how did the compiler's Escape Analysis & variable binding change in Go 1.22+?",
-    code: `for i := 0; i < 3; i++ {
-    go func() {
-        println(i)
-    }()
-}
-time.Sleep(time.Millisecond)`,
-    options: [
-      "Во всех версиях Go выведет 0, 1, 2 в строгом порядке создания, так как новые горутины последовательно ставятся в FIFO-очередь P.runq[256]",
-      "До Go 1.22 переменная i аллоцировалась один раз в хипе на весь цикл (обычно выводилось 3, 3, 3); начиная с Go 1.22+ создаётся отдельная копия i на каждую итерацию (выведет 0, 1, 2 в произвольном порядке)",
-      "До Go 1.22 происходила паника concurrent read/write, а в Go 1.22+ компилятор автоматически оборачивает чтение захваченных переменных цикла в атомарный LoadAcq",
-      "Во всех версиях Go выведет 2, 1, 0, поскольку слот P.runnext работает по принципу LIFO и запускает последнюю созданную горутину первой на горячем кеше L1",
-      "Начиная с Go 1.22+ компилятор запрещает захват счётчика цикла по ссылке и передаёт i как скрытый аргумент в runtime.newproc прямо на стек g0 без побега в хип",
-      "Выведет 3, 3, 3 даже в Go 1.25+, потому что правило новой области видимости работает только для циклов for-range по слайсам и мапам, но не для классического трёхкомпонентного цикла for"
+    "id": "q1",
+    "title": "Задача 1: Три функции после завершения цикла",
+    "ru": "В модуле с go 1.25 или go 1.26 что напечатает программа? Что изменится при старой семантике цикла до Go 1.22?",
+    "en": "In a module declaring go 1.25 or go 1.26, what does this program print? How would pre-Go 1.22 loop semantics change the result?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tstart := make(chan struct{})\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\t<-start\n\t\t\tfmt.Println(i)\n\t\t}()\n\t}\n\tclose(start)\n\twg.Wait()\n}",
+    "options": [
+      "0, 1, 2 строго по порядку: WaitGroup заставляет горутины завершаться в порядке их создания.",
+      "3, 3, 3 во всех версиях: закрытие start заменяет сохранённые значения i итоговым значением цикла.",
+      "Могут отсутствовать строки: WaitGroup ждёт только запуск функций, но не завершение их печати.",
+      "Будет deadlock: закрытие start освобождает только одну горутину, остальные продолжают ждать.",
+      "По одному 0, 1 и 2 в любом порядке; при старой семантике все три строки содержат 3.",
+      "По одному 0, 1 и 2 во всех версиях: каждый вызов go автоматически копирует переменные замыкания."
     ],
-    correct: 1,
-    explanationRU: "До Go 1.22 переменная i имела область видимости всего цикла, сбегала в кучу в единственном экземпляре, и все 3 горутины читали её адрес после завершения цикла (получая 3, 3, 3). Начиная с Go 1.22+, семантика языка изменилась — и для range, и для классического for создаётся новая переменная на каждую итерацию (печатает 0, 1, 2 в порядке планировщика).",
-    speechEN: "Before Go 1.22, the loop variable 'i' was allocated once per loop on the heap, so all closures shared the same pointer and typically printed '3, 3, 3' (with a data race). Since Go 1.22+, both 'for-range' and standard 3-clause 'for' loops bind a fresh variable per iteration, safely printing '0, 1, 2' in scheduler order."
+    "correct": 4,
+    "explanationRU": "В Go 1.25/1.26 с соответствующей версией языка модуль печатает 0, 1 и 2 по одному разу, в произвольном порядке. Переменная i объявлена через := в заголовке for: начиная с семантики Go 1.22 у каждой итерации своя переменная. WaitGroup обеспечивает завершение всех трёх горутин, но не порядок печати. При старой семантике все замыкания используют одну i. Именно в этом примере они читают её только после close(start), когда цикл уже довёл i до 3, поэтому получится 3, 3, 3 без гонки на i. Без такого барьера прежний пример с Sleep не гарантировал ни эти значения, ни завершение печати и мог содержать data race. Семантика переменной сама по себе не обещает конкретного размещения в куче. Для самопроверки: объяви i до цикла и используй for i = 0; ... — тогда при сохранённом барьере все три строки будут 3 и в новой версии. Ниже явная передача аргумента сохраняет значения итераций и при старой семантике.",
+    "speechEN": "It prints 0, 1 and 2 once each, in any order. With Go 1.22 or later language semantics, a loop variable declared with := is separate for each iteration. WaitGroup ensures completion, not ordering. Under the old semantics all closures share i, but this example makes them wait until the loop finishes, so all print 3 without racing on i. Declaring i outside the loop and using = would also share one variable today. Passing i as an argument makes the intended per-call value explicit across these versions.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tstart := make(chan struct{})\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func(value int) {\n\t\t\tdefer wg.Done()\n\t\t\t<-start\n\t\t\tfmt.Println(value)\n\t\t}(i)\n\t}\n\tclose(start)\n\twg.Wait()\n}",
+    "versionNote": "Семантика итераций изменилась в Go 1.22 и зависит от версии языка пакета, обычно заданной go.mod. Для Go 1.25/1.26 здесь одинаковый результат. Форма с аргументом совместима и с Go 1.17. Тесты выполнены Go 1.26.1; старые правила дополнительно проверены режимом языка go1.17 текущего компилятора, не запуском toolchain 1.17.",
+    "sources": [
+      {
+        "title": "Go 1.22: language changes",
+        "url": "https://go.dev/doc/go1.22#language"
+      },
+      {
+        "title": "Loop-variable semantics and go.mod",
+        "url": "https://go.dev/blog/loopvar-preview"
+      },
+      {
+        "title": "Specification: for clause",
+        "url": "https://go.dev/ref/spec#For_clause"
+      },
+      {
+        "title": "Memory model: channel synchronization",
+        "url": "https://go.dev/ref/mem#chan"
+      },
+      {
+        "title": "sync.WaitGroup — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync@go1.26.1#WaitGroup"
+      }
+    ],
+    "cardIds": [
+      "c2"
+    ]
   },
   {
     id: "q2",
@@ -383,40 +405,47 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     speechEN: "This is a classic Time-Of-Check to Time-Of-Use (TOCTOU) race. Between 'RUnlock()' and acquiring 'Lock()', dozens of concurrent goroutines can miss the cache simultaneously. They will then queue up on 'Lock()' and one by one call 'dialNewGRPCClient', leaking connections and overwriting the map entry. You must re-check 'if cli, ok := c.clients[endpoint]; ok' after acquiring 'Lock()', or use 'singleflight.Group' so you don't hold the mutex during network I/O."
   },
   {
-    id: "q14",
-    title: "Задача 14: Гонка данных при возврате указателя из защищённой мапы (Pointer Escape from Mutex)",
-    ru: "Все обращения к мапе db обёрнуты в RWMutex. Почему детектор гонок (-race) всё равно бьёт тревогу в продакшене?",
-    en: "All map accesses are properly guarded by sync.RWMutex. Why does the Race Detector (-race) still report a data race here?",
-    code: `type Account struct { Balance int64 }
-
-var (
-    mu sync.RWMutex
-    db = map[int]*Account{}
-)
-
-func AddFunds(id int, amount int64) {
-    mu.Lock()
-    db[id].Balance += amount
-    mu.Unlock()
-}
-
-func ReadBalance(id int) int64 {
-    mu.RLock()
-    acc := db[id]
-    mu.RUnlock()
-    return acc.Balance // Читаем поле после RUnlock()!
-}`,
-    options: [
-      "Это ложное срабатывание детектора -race (false positive), так как 64-битное чтение int64 на архитектуре amd64 всегда является атомарным на уровне процессора",
-      "При вызове db[id].Balance += amount внутри мапы происходит эвакуация бакета SwissTable, из-за чего адрес структуры Account в куче меняется на лету",
-      "Чистый Data Race на поле acc.Balance: мьютекс защитил только чтение самого указателя *Account из хеш-таблицы мапы, но в функции ReadBalance чтение поля acc.Balance происходит УЖЕ ПОСЛЕ вызова mu.RUnlock(), одновременно с записью db[id].Balance += amount в другой горутине!",
-      "Ошибка возникает потому, что в AddFunds используется обычный Lock(), который не инвалидирует кэш-линии ядер, читавших мапу через RLock()",
-      "В Go запрещено хранить указатели на структуры в качестве значений мапы при использовании RWMutex из-за работы Гибридного барьера записи сборщика мусора",
-      "Гонка данных происходит на ключе id, так как он передаётся в обе функции без захвата мьютекса"
+    "id": "q14",
+    "title": "Задача 14: Баланс из общей map",
+    "ru": "Account с ключом 1 существует, состав map не меняется. Достаточна ли синхронизация двух горутин? Как исправить доступ к Balance?",
+    "en": "Account 1 exists and the map entries do not change. Is access from these two goroutines synchronized correctly? How would you fix access to Balance?",
+    "code": "package main\n\nimport \"sync\"\n\ntype Account struct{ Balance int64 }\n\nvar (\n\tmu       sync.RWMutex\n\taccounts = map[int]*Account{1: {Balance: 100}}\n)\n\nfunc AddFunds() {\n\tmu.Lock()\n\taccounts[1].Balance++\n\tmu.Unlock()\n}\n\nfunc ReadBalance() int64 {\n\tmu.RLock()\n\tacc := accounts[1]\n\tmu.RUnlock()\n\treturn acc.Balance\n}\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(2)\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tfor n := 0; n < 1000; n++ {\n\t\t\tAddFunds()\n\t\t}\n\t}()\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tfor n := 0; n < 1000; n++ {\n\t\t\t_ = ReadBalance()\n\t\t}\n\t}()\n\twg.Wait()\n}",
+    "options": [
+      "Достаточна: после чтения указателя под RLock все поля объекта защищены до возврата ReadBalance.",
+      "Достаточна: WaitGroup упорядочивает обращения к Balance, даже когда сами функции идут параллельно.",
+      "Недостаточна: Balance читается после RUnlock. Значение нужно скопировать, пока RLock ещё удерживается.",
+      "Недостаточна: нужно копировать указатель acc ещё раз после RUnlock; так у чтения будет свой Account.",
+      "Недостаточна: только ReadBalance нужно перевести на atomic.LoadInt64, оставив обычную запись под Lock.",
+      "Недостаточна: нужно заменить RLock на Lock только вокруг поиска указателя, а Balance читать после Unlock."
     ],
-    correct: 2,
-    explanationRU: "Одна из самых частых ошибок в реальных микросервисах: разработчики защищают мьютексом саму мапу (map[int]*Account), возвращают из функции указатель *Account, отпускают мьютекс и начинают читать/менять поля этой структуры в хендлере. Мьютекс защищает только то, что выполняется МЕЖДУ Lock и Unlock! Как только сделан RUnlock(), горутина в ReadBalance читает область памяти acc.Balance без всякой защиты, пока AddFunds меняет ту же самую ячейку памяти под Lock(). Решение: прочитать val := acc.Balance ДО вызова RUnlock() (или возвращать структуру Account по значению / использовать atomic.Int64 для поля Balance).",
-    speechEN: "The RWMutex only protects the map lookup itself, not the heap struct pointed to by '*Account' once the lock is released! In 'ReadBalance', 'acc.Balance' is dereferenced AFTER 'mu.RUnlock()', racing directly against 'db[id].Balance += amount' in 'AddFunds'. To fix this, read 'bal := db[id].Balance' BEFORE calling 'mu.RUnlock()', return 'Account' by value, or make 'Balance' an 'atomic.Int64'."
+    "correct": 2,
+    "explanationRU": "Нет: обе функции обращаются к одной Balance, но ReadBalance читает её уже после RUnlock. Получение указателя под блокировкой не продлевает защиту последующего доступа к объекту. WaitGroup ждёт завершения, но не упорядочивает эти чтения и записи между собой. Исправление — скопировать значение Balance под RLock и вернуть копию. Если возвращаешь весь Account, копировать его поля тоже нужно под блокировкой; поля-ссылки при такой копии остаются общими. Альтернатива для отдельного счётчика — согласованно использовать атомарные операции для всех конкурентных доступов: одна атомарная загрузка вместе с обычной записью не исправляет гонку. В примере аккаунт заранее создан, поэтому обсуждаем гонку, а не nil dereference. Запуск с -race помогает обнаружить выполненный конфликт; отсутствие сообщения в отдельном прогоне не доказывает корректность. Для самопроверки: защищает ли полученную копию указателя замена RLock на Lock, если чтение поля всё равно осталось после Unlock? Нет.",
+    "speechEN": "No. The map lookup is protected, but ReadBalance accesses the shared Balance field after releasing the read lock. That access can race with AddFunds. I would copy the balance while holding RLock and return the copied value. Copying a pointer does not copy the account, and WaitGroup only waits for completion. An atomic alternative requires consistent atomic access on both the read and write paths; changing only the reader is insufficient. If I return a struct snapshot, I must also account for any shared reference fields.",
+    "correctedCode": "package main\n\nimport \"sync\"\n\ntype Account struct{ Balance int64 }\n\nvar (\n\tmu       sync.RWMutex\n\taccounts = map[int]*Account{1: {Balance: 100}}\n)\n\nfunc AddFunds() {\n\tmu.Lock()\n\taccounts[1].Balance++\n\tmu.Unlock()\n}\n\nfunc ReadBalance() int64 {\n\tmu.RLock()\n\tacc := accounts[1]\n\tbalance := acc.Balance\n\tmu.RUnlock()\n\treturn balance\n}\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(2)\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tfor n := 0; n < 1000; n++ {\n\t\t\tAddFunds()\n\t\t}\n\t}()\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tfor n := 0; n < 1000; n++ {\n\t\t\t_ = ReadBalance()\n\t\t}\n\t}()\n\twg.Wait()\n}",
+    "versionNote": "Контракт блокировок применим к Go 1.17/1.25/1.26; примеры проверены Go 1.26.1 с -race. atomic.Int64 доступен с Go 1.19; для 1.17 есть функции sync/atomic над int64. Ни один атомарный вариант здесь не смешивается с обычными конкурентными доступами.",
+    "sources": [
+      {
+        "title": "sync.RWMutex — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync@go1.26.1#RWMutex"
+      },
+      {
+        "title": "The Go memory model",
+        "url": "https://go.dev/ref/mem"
+      },
+      {
+        "title": "Race detector",
+        "url": "https://go.dev/doc/articles/race_detector"
+      },
+      {
+        "title": "sync/atomic — Go 1.26.1",
+        "url": "https://pkg.go.dev/sync/atomic@go1.26.1"
+      }
+    ],
+    "cardIds": [
+      "c2",
+      "c20",
+      "c21"
+    ]
   },
 
   // =========================================================================
@@ -526,38 +555,49 @@ func ReadBalance(id int) int64 {
     ]
   },
   {
-    id: "q18",
-    title: "Задача 18: Ранняя оценка аргументов в defer при откате транзакции БД (Eager Defer Argument Trap)",
-    ru: "Почему в этом коде при ошибке во втором SQL-запросе транзакция НИКОГДА не откатывается (tx.Rollback не вызывается)?",
-    en: "Why does tx.Rollback() NEVER execute when the second SQL query fails with an error?",
-    code: `func TransferMoney(ctx context.Context, db *sql.DB) error {
-    tx, err := db.BeginTx(ctx, nil)
-    if err != nil {
-        return err
-    }
-    // Пытаемся откатить транзакцию при ошибке при выходе из функции:
-    defer func(e error) {
-        if e != nil {
-            _ = tx.Rollback()
-        }
-    }(err) // <--- Внимание на аргумент!
-
-    if _, err = tx.ExecContext(ctx, "UPDATE accounts SET bal = bal - 100 WHERE id = 1"); err != nil {
-        return err
-    }
-    return tx.Commit()
-}`,
-    options: [
-      "Метод tx.ExecContext возвращает ошибку в новую затенённую переменную err, не меняя внешнюю переменную функции",
-      "Аргументы вызова функции в операторе defer вычисляются НЕМЕДЛЕННО в момент регистрации строчки defer! В этой точке err равен nil (так как db.BeginTx прошёл успешно), поэтому на стек отложенного вызова копируется e = nil, и условие if e != nil при выходе никогда не выполнится (фикс: просто defer tx.Rollback() или замыкание без аргументов с именованным (err error))",
-      "В стандартной библиотеке database/sql метод tx.Rollback() нельзя вызывать внутри анонимной функции defer из-за привязки транзакции к контексту горутины",
-      "Open-Coded Defer в Go 1.14+ игнорирует аргументы типа интерфейса error, если они не были инициализированы константой",
-      "При вызове return err компилятор освобождает соединение tx обратно в пул sql.DB до запуска цепочки отложенных вызовов defer",
-      "Ошибка возникает потому, что переменная err не передана в замыкание по указателю (*error)"
+    "id": "q18",
+    "title": "Задача 18: Ошибка запроса и отложенная очистка",
+    "ru": "BeginTx успешен, единственный ExecContext возвращает ошибку, ctx не отменён. Вызовет ли показанный defer tx.Rollback() и как исправить очистку?",
+    "en": "BeginTx succeeds, the single ExecContext call fails, and ctx is not cancelled. Will this defer call tx.Rollback(), and how would you fix the cleanup?",
+    "code": "package example\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\nfunc UpdateStatus(ctx context.Context, db *sql.DB, id int64, status string) error {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer func(e error) {\n\t\tif e != nil {\n\t\t\t_ = tx.Rollback()\n\t\t}\n\t}(err)\n\n\t_, err = tx.ExecContext(ctx,\n\t\t\"UPDATE tasks SET status = $1 WHERE id = $2\", status, id)\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn tx.Commit()\n}",
+    "options": [
+      "Да: при выходе из функции аргумент err вычислится повторно и передаст в defer ошибку запроса.",
+      "Да: параметр e автоматически ссылается на внешнюю err, поэтому присваивание изменит оба значения.",
+      "Нет: ошибка ExecContext запрещает вызывать Rollback; незавершённую транзакцию нужно оставить пулу.",
+      "Нет: аргумент err сохранён как nil при регистрации defer. После BeginTx нужен defer tx.Rollback().",
+      "Нет: Rollback разрешён только после вызова Commit; перед возвратом ошибки сначала нужен Commit.",
+      "Да: defer выполняется между ExecContext и проверкой if, поэтому ошибка уже обработана до return."
     ],
-    correct: 1,
-    explanationRU: "Два важнейших правила для продакшен-работы с БД в Go: 1) Аргументы любой функции, стоящей после ключевого слова `defer fn(arg)`, вычисляются в ту самую микросекунду, когда процессор проходит строчку `defer` (а тогда `err` после `BeginTx` был равен `nil`!). 2) В Go вообще не нужно городить условие `if err != nil` вокруг роллбэка: идиоматический паттерн — написать сразу после `BeginTx` одну строчку `defer tx.Rollback()`. Если функция дойдёт до конца и сделает `tx.Commit()`, последующий вызов `tx.Rollback()` в `defer` просто мгновенно вернёт `sql.ErrTxDone` (безопасный no-op), зато при любой ошибке или панике транзакция гарантированно откатится!",
-    speechEN: "Function arguments passed to a 'defer' statement are evaluated EAGERLY at the moment 'defer' is scheduled, not when the surrounding function returns! At line 11, 'err' from 'BeginTx' is strictly 'nil', so 'e' is permanently captured as 'nil' and 'tx.Rollback()' never runs—leaking the DB transaction lock! The idiomatic Go fix is simply 'defer tx.Rollback()' right after 'BeginTx' (which is a safe no-op if 'tx.Commit()' succeeds first)."
+    "correct": 3,
+    "explanationRU": "Этот defer не вызовет Rollback: после успешного BeginTx переменная err равна nil, и именно это значение сразу передаётся как будущий аргумент e. Позднее присваивание ошибки запроса не меняет сохранённый аргумент. Для очистки зарегистрируй defer tx.Rollback() сразу после успешного BeginTx; затем проверяй ошибку запроса и возвращай результат Commit. После успешного Commit отложенный Rollback возвращает sql.ErrTxDone и не откатывает зафиксированные изменения. Это попытка корректно завершить транзакцию, а не гарантия успешного отката при любой ошибке драйвера. Нельзя говорить «никакого rollback никогда»: при отмене контекста BeginTx пакет database/sql может выполнить rollback сам. Полагаться на будущую отмену вместо явной очистки не нужно. Ошибка Commit также должна быть возвращена вызывающему коду; её нельзя превращать в успех или обещание автоматического восстановления. Для самопроверки: что изменится, если заменить defer func(e error) {...}(err) на замыкание без аргумента, читающее внешнюю err? Оно увидит позднее значение, но безусловная регистрация Rollback проще покрывает ранние выходы.",
+    "speechEN": "This defer skips Rollback because err is nil when the deferred call is registered, and that nil value is saved as e. The later query error does not update the saved argument. I would defer tx.Rollback immediately after a successful BeginTx, check the query error and return the result of Commit. After a successful commit, Rollback returns sql.ErrTxDone without undoing it. The claim is about this deferred callback: cancelling the transaction context can also cause database/sql to roll back. Cleanup can fail, so I would not describe a deferred rollback as a guarantee of successful database recovery.",
+    "correctedCode": "package example\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\nfunc UpdateStatus(ctx context.Context, db *sql.DB, id int64, status string) error {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\n\t_, err = tx.ExecContext(ctx,\n\t\t\"UPDATE tasks SET status = $1 WHERE id = $2\", status, id)\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn tx.Commit()\n}",
+    "versionNote": "Правило defer одинаково для Go 1.17/1.25/1.26. Это компилируемый пакет с функцией, не самостоятельная программа: вызывающий код передаёт открытый *sql.DB; SQL использует PostgreSQL-параметры $1/$2. Тесты Go 1.26.1 проверяют database/sql с управляемым тестовым драйвером; реальная PostgreSQL в этой порции не запускалась.",
+    "sources": [
+      {
+        "title": "Specification: defer statements",
+        "url": "https://go.dev/ref/spec#Defer_statements"
+      },
+      {
+        "title": "Executing transactions",
+        "url": "https://go.dev/doc/database/execute-transactions"
+      },
+      {
+        "title": "sql.DB.BeginTx — Go 1.26.1",
+        "url": "https://pkg.go.dev/database/sql@go1.26.1#DB.BeginTx"
+      },
+      {
+        "title": "sql.Tx — Go 1.26.1",
+        "url": "https://pkg.go.dev/database/sql@go1.26.1#Tx"
+      },
+      {
+        "title": "Tx.awaitDone / Commit / Rollback — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/database/sql/sql.go"
+      }
+    ],
+    "cardIds": [
+      "c35"
+    ]
   },
   {
     id: "q19",
