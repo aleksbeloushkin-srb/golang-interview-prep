@@ -104,26 +104,50 @@ func main() {
     speechEN: "It returns 1. In Go, 'return 0' is compiled into three distinct steps: first, it assigns 0 to the named return slot 'result'; second, it executes the inline open-coded defer closure (which captures 'result' by reference and increments it to 1); third, it executes the assembly RET instruction."
   },
   {
-    id: "q4",
-    title: "Задача 4: Скрытая утечка памяти через саб-слайс (Sub-slice Memory Retention)",
-    ru: "Почему эта функция приводит к скрытой утечке 100 МБ в куче и как это правильно исправить?",
-    en: "Why does this function cause a 100 MB memory retention leak in the heap, and what is the idiomatic fix?",
-    code: `func readHeader() []byte {
-    buf := make([]byte, 100*1024*1024) // 100 MB
-    // ... читаем пакет из сокета в buf ...
-    return buf[:16] // возвращаем только первые 16 байт заголовка
-}`,
-    options: [
-      "Никакой утечки нет: на фазе Concurrent Sweep сборщик мусора Go видит, что длина среза len=16, и освобождает неиспользуемые страницы mspan после 16-го байта",
-      "При возврате среза buf[:16] срабатывает runtime.copystack, который пытается скопировать все 100 МБ в стек вызывающей функции и вызывает панику превышения лимита 1 ГБ",
-      "Утечка возникает только потому, что не использовано трёхэлементное выражение среза buf[:16:16]; если ограничить capacity до 16, сборщик мусора сразу освободит оставшиеся 99.9 МБ",
-      "Возвращённый 24-байтовый заголовок среза {ptr, len: 16, cap: 100MB} продолжает указывать на единый 100-мегабайтный блок памяти в mheap; так как GC в Go маркирует аллокации целиком, все 100 МБ останутся в памяти (лечится через bytes.Clone(buf[:16]))",
-      "Массив на 100 МБ попадает в категорию noscan mspan (так как []byte не содержит указателей), а объекты из noscan спанов вообще никогда не удаляются сборщиком мусора до завершения процесса",
-      "При выходе из функции сработает Hybrid Write Barrier, который переведёт массив buf в Чёрный список корней навечно из-за смены размера возвращаемого среза"
+    "id": "q4",
+    "title": "Задача 4: 16 байт из большого буфера",
+    "ru": "Go 1.25/1.26, памяти для аллокации достаточно. Что напечатает программа? Почему сохранённый header влияет на сборку массива? Поможет ли замена на buf[:16:16], если нужны независимые 16 байт?",
+    "en": "With Go 1.25/1.26 and enough memory for the allocation, what does this program print? How does keeping header affect collection of the array? Would buf[:16:16] give us 16 independent bytes?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nvar header []byte\n\nfunc readHeader() []byte {\n\tbuf := make([]byte, 100<<20) // 100 MiB\n\tcopy(buf, \"0123456789ABCDEF\")\n\treturn buf[:16]\n}\n\nfunc main() {\n\theader = readHeader()\n\truntime.GC()\n\tfmt.Println(len(header), cap(header), string(header))\n}",
+    "options": [
+      "После GC остаются только 16 байт: сборщик освобождает часть массива за len, сохраняя прежнее значение cap.",
+      "Возврат []byte по значению копирует 16 байт в отдельный массив; исходные 100 MiB больше не удерживаются.",
+      "Только buf[:16:16] освобождает большой массив: capacity становится 16, поэтому GC отрезает остаток.",
+      "Сохранённый header удерживает массив 100 MiB; cap-limit не копирует данные. Независимый префикс даёт копирование.",
+      "Байты относятся к noscan, поэтому массив нельзя собрать даже после удаления всех ссылок на него.",
+      "После header = nil вызов runtime.GC() гарантированно уменьшит RSS процесса ровно на 100 MiB."
     ],
-    correct: 3,
-    explanationRU: "Обрати внимание на частый миф в варианте №3: даже если написать buf[:16:16] (ограничив capacity до 16), это защитит только от перезаписи при последующем append, но НЕ освободит 100 МБ! GC отслеживает достижимость выделенного объекта, а не только len возвращённого среза. Объект и mspan — не одно и то же: один span небольших объектов содержит много отдельных ячеек. Здесь срез удерживает большой backing array; даже ссылка внутрь массива может сохранять его достижимым. Чтобы вернуть независимые 16 байт, скопируй их через bytes.Clone(buf[:16]) или make+copy; bytes.Clone доступен с Go 1.20.",
-    speechEN: "The returned slice retains the large backing array, even if its length and capacity are restricted to 16. Reachability is tracked for the allocated object, not just the visible byte range; an interior pointer can also keep that object alive. A span and an object are different concepts: a small-object span contains many slots. To return independent bytes, copy the prefix with bytes.Clone, available since Go 1.20, or make plus copy."
+    "correct": 3,
+    "explanationRU": "Программа печатает 16 104857600 0123456789ABCDEF. Глобальный header сохраняет ссылку на исходный массив: возврат среза копирует дескриптор, а не байты. 100<<20 — это 100 MiB. Пока массив достижим, GC не может освободить его хвост по len. Он учитывает выделенный объект; один span малых объектов при этом содержит много отдельных ячеек. Это нежелательное удержание памяти, а не вечная неспособность GC освободить массив. buf[:16:16] задаёт len=cap=16, но всё ещё разделяет данные: header[0] меняет общий массив. Append с добавлением хотя бы одного байта к такому полному срезу потребует другого массива; само ограничение cap ничего не копирует. bytes.Clone(buf[:16]) создаёт независимые байты; точная capacity копии не обещана. Для Go 1.17 подходит out := make([]byte, 16); copy(out, buf[:16]). Если других ссылок нет, исходный массив после копирования можно собрать, но это не обещает немедленного падения RSS. noscan исключает обход указателей внутри байтов, а не сборку массива. Исправленный пример печатает 16 0123456789ABCDEF и всё ещё временно выделяет 100 MiB; если реально нужен только заголовок, лучше сразу читать нужные 16 байт. Самопроверка: после buf[:16:16] изменение header[0] видно через buf? Да. После Clone? Нет. Опора: «len — вижу, cap — могу расширить, copy — отделяю».",
+    "speechEN": "It prints 16 104857600 0123456789ABCDEF. The global header keeps the original 100 MiB array reachable. Returning a slice copies its descriptor, not its bytes; GC cannot reclaim just the part beyond len. A small-object span can contain many separate objects, so an object is not the same thing as a span. Restricting the slice to buf[:16:16] changes capacity but still shares the array: writing header[0] changes the original bytes. Appending at least one byte to that full slice needs another array. To detach the prefix, I would use bytes.Clone or make plus copy. Clone does not promise an exact capacity. Once no references remain, the original array can be collected; that does not guarantee an immediate RSS drop. Pointer-free data is still collectible. The fixed example prints 16 0123456789ABCDEF, but still temporarily allocates the large buffer. If only a header is needed, I would read those 16 bytes directly. To check my understanding: an indexed write is shared before copying and independent afterwards.",
+    "correctedCode": "package main\n\nimport (\n\t\"bytes\"\n\t\"fmt\"\n\t\"runtime\"\n)\n\nvar header []byte\n\nfunc readHeader() []byte {\n\tbuf := make([]byte, 100<<20) // 100 MiB\n\tcopy(buf, \"0123456789ABCDEF\")\n\treturn bytes.Clone(buf[:16]) // Independent bytes, Go 1.20+.\n}\n\nfunc main() {\n\theader = readHeader()\n\truntime.GC()\n\tfmt.Println(len(header), string(header))\n}",
+    "versionNote": "В Go 1.25 и 1.26 ответ одинаков: Green Tea не меняет семантику slice/copy и не освобождает хвост достижимого массива. bytes.Clone доступен с Go 1.20; для 1.17 используй make+copy. Исполнение проверено Go 1.26.1; это не запуск toolchain 1.17/1.25. Размер дескриптора и точный RSS не являются частью ответа.",
+    "sources": [
+      {
+        "title": "Specification: slices share their underlying array; full slice capacity",
+        "url": "https://go.dev/ref/spec#Slice_expressions"
+      },
+      {
+        "title": "bytes.Clone: copy, capacity and version — Go 1.26.1",
+        "url": "https://pkg.go.dev/bytes@go1.26.1#Clone"
+      },
+      {
+        "title": "Go slices: retaining a large array through a small slice",
+        "url": "https://go.dev/blog/slices-intro"
+      },
+      {
+        "title": "Go 1.20: bytes.Clone introduced",
+        "url": "https://go.dev/doc/go1.20#bytes"
+      },
+      {
+        "title": "GC guide: tracing and physical memory",
+        "url": "https://go.dev/doc/gc-guide"
+      }
+    ],
+    "cardIds": [
+      "c25",
+      "c26"
+    ]
   },
   {
     id: "q5",
