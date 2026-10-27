@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-27",
+  "pullRequest": 19,
+  "merged": true,
+  "mergedAt": "2026-10-27T14:26:05Z",
+  "mergeCommit": "5d2fb90a7c77f1d2ae705c4872145f5f3832bda9",
+  "contentCommit": "655cda288cb09b5eccb456efdd67dddae4674ee6",
+  "version": 18,
+  "assets": [
+    {
+      "path": "index.html",
+      "matches": true,
+      "sha256": "cb77b3b34b5e82fedfd3736174fc9d8449df7beedae41d0d852318d9a31060ec"
+    },
+    {
+      "path": "css/style.css",
+      "matches": true,
+      "sha256": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+    },
+    {
+      "path": "js/app.js",
+      "matches": true,
+      "sha256": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845"
+    },
+    {
+      "path": "data/cards.js",
+      "matches": true,
+      "sha256": "f73c47460f08954d13cdbb027ff888078ae8c310ec1500012e46f8c15716678c"
+    },
+    {
+      "path": "data/quiz.js",
+      "matches": true,
+      "sha256": "05155d1c88889f60e931f74c0d9d7ec6b5218f211974a01ad8093fae0f155177"
+    },
+    {
+      "path": "data/simulators.js",
+      "matches": true,
+      "sha256": "3598bfc75e49bfa37e99b1f99918a71e9966cb5291873209b6f4485a74440c4a"
+    }
+  ],
+  "smoke": {
+    "ok": true,
+    "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/css/style.css?v=18",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/cards.js?v=18",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/simulators.js?v=18",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/quiz.js?v=18",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/js/app.js?v=18"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 3397,
+    "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+  },
+  "scope": "Deployed byte equality and shared browser smoke; prior local Go/content/targeted-browser evidence reused for identical content. No new full semantic or visual audit of portion 12."
+}

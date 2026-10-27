@@ -217,66 +217,67 @@ const QUIZ_QUESTIONS = [
     ]
   },
   {
-    id: "q7",
-    title: "Задача 7: Передача sync.WaitGroup по значению (Copying Sync Primitives)",
-    ru: "Что произойдёт при запуске этого кода и как устроена структура sync.WaitGroup внутри?",
-    en: "What happens when this code runs, and how is sync.WaitGroup laid out in memory?",
-    code: `func worker(wg sync.WaitGroup) {
-    defer wg.Done()
-    println("working...")
-}
-
-func main() {
-    var wg sync.WaitGroup
-    wg.Add(1)
-    go worker(wg)
-    wg.Wait()
-}`,
-    options: [
-      "Выведет 'working...' и успешно завершится, так как внутри sync.WaitGroup, как и внутри канала или мапы, хранится скрытый указатель *runtime.waitGroup на общую структуру в хипе",
-      "Упадёт с паникой 'sync: WaitGroup is copied after first use' в момент вызова wg.Done(), так как рантайм проверяет адрес структуры через встроенный детектор копирования",
-      "Напечатает 'working...', после чего упадёт с 'fatal error: all goroutines are asleep - deadlock!': WaitGroup хранит 64-битный атомарный счётчик прямо по значению, поэтому worker уменьшает локальную копию на своём стеке, а main вечно спит на оригинале",
-      "Завершится мгновенно, даже не дождавшись печати 'working...', поскольку при копировании WaitGroup в новую горутину старшие 32 бита счётчика задач автоматически сбрасываются в 0",
-      "Фоновый монитор sysmon через 10 мс обнаружит, что на семафоре оригинального wg нет активных воркеров, и принудительно разбудит горутину main сигналом SIGURG",
-      "Код не скомпилируется, так как компилятор Go (начиная с версии 1.20) включает проверку анализатора go vet copylocks прямо в этап сборки бинаря"
+    "id": "q7",
+    "title": "Задача 7: Копия WaitGroup и чужой счётчик",
+    "ru": "Что произойдёт в этой отдельной программе? Чей счётчик уменьшит worker?",
+    "en": "What happens in this standalone program? Whose task counter does worker decrement?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc worker(wg sync.WaitGroup) { defer wg.Done(); fmt.Println(\"working\") }\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(1)\n\tgo worker(wg)\n\twg.Wait()\n}",
+    "options": [
+      "Копия ссылается на общий счётчик: программа завершится.",
+      "Компилятор запретит копирование WaitGroup.",
+      "worker уменьшит копию; main останется ждать оригинал, и эта программа завершится fatal deadlock.",
+      "Во время копирования счётчик оригинала сбросится.",
+      "Каждая копия автоматически вызывает panic о копировании.",
+      "Планировщик отменит ожидание после 10 мс."
     ],
-    correct: 2,
-    explanationRU: "Обрати внимание на популярное заблуждение в вариантах №2 и №6: у sync.Mutex и sync.WaitGroup НЕТ рантайм-детектора копирования (такой детектор copyChecker есть только у sync.Cond!), и компилятор позволяет собрать этот код без ошибок (ругается только статический линтер go vet). Поскольку WaitGroup хранит свой atomic.Uint64 счётчик прямо внутри структуры по значению, горутина worker делает Done() на своей копии, а main навсегда засыпает в wg.Wait() -> фатальный дедлок!",
-    speechEN: "It prints 'working...' and crashes with 'fatal error: all goroutines are asleep - deadlock!'. Unlike channels or maps, 'sync.WaitGroup' stores its 64-bit atomic state word (packing the task counter and waiter count) inline by value. Passing 'wg' by value copies the counter onto the worker's stack, so 'main' blocks forever on the original instance."
+    "correct": 2,
+    "explanationRU": "worker напечатает working и вызовет Done на своей копии. У оригинала после Add остаётся одна задача, поэтому Wait не завершается; в этой отдельной программе рантайм обнаруживает общий deadlock. Это не обычный panic для recover. WaitGroup после первого использования нельзя копировать: noCopy помогает go vet, но не запрещает сборку и не обеспечивает универсальный детектор копирования во время исполнения. В большом сервисе ошибка может выглядеть как зависшая горутина, без общего fatal deadlock. Передай *WaitGroup либо используй wg.Go в Go 1.25+. Для запоминания: один счётчик → регистрация → Done на том же объекте → Wait.",
+    "speechEN": "worker prints working and calls Done on a copy. The original still has one outstanding task, so main never completes Wait; this standalone program ends with a runtime deadlock failure, not a recoverable panic. A WaitGroup must not be copied after first use. noCopy helps go vet; it neither makes copying a compiler error nor guarantees runtime copy detection. In a server the same mistake may leave one goroutine stuck without a process-wide deadlock. Pass *WaitGroup, or use wg.Go in Go 1.25+. Think: one counter, register, finish on that same object, then join.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc worker(wg *sync.WaitGroup) { defer wg.Done(); fmt.Println(\"working\") }\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(1)\n\tgo worker(&wg)\n\twg.Wait()\n}",
+    "versionNote": "Основные контракты применимы к Go 1.17, 1.25 и 1.26; детали реализации не являются причиной корректности. Исходный пример намеренно ошибочный; go vet должен сообщить copylocks. Раскладка 1.17 и 1.25/1.26 различается — см. c22.",
+    "sources": [
+      {
+        "title": "WaitGroup — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/waitgroup.go"
+      },
+      {
+        "title": "WaitGroup — go1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/sync/waitgroup.go"
+      }
+    ],
+    "cardIds": [
+      "c22"
+    ]
   },
   {
-    id: "q8",
-    title: "Задача 8: Рекурсивный захват sync.Mutex в одной горутине (Non-Reentrant Mutex)",
-    ru: "Как поведёт себя sync.Mutex при повторном вызове Lock() из той же самой горутины и почему?",
-    en: "What happens when the same goroutine calls Lock() twice on a sync.Mutex, and why did Go design Mutex this way?",
-    code: `type SafeCounter struct {
-    mu sync.Mutex
-    v  int
-}
-
-func (c *SafeCounter) Inc() {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    c.v++
-    c.Log() // внутри вызывает c.mu.Lock() ещё раз в том же стеке вызовов!
-}
-
-func (c *SafeCounter) Log() {
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    println(c.v)
-}`,
-    options: [
-      "Успешно выведет 1: рантайм читает указатель текущей горутины из аппаратного регистра R14, видит совпадение владельца мьютекса и увеличивает внутренний счётчик рекурсивных захватов",
-      "Произойдёт мгновенный Deadlock: sync.Mutex в Go намеренно НЕ является реентерабельным и состоит всего из 8 байт (state + sema) без хранения владельца; повторный Lock() видит бит mutexLocked=1 и паркует горутину в ожидание самой себя",
-      "Через 1 миллисекунду ожидания мьютекс перейдёт в режим голодания (Starvation Mode), принудительно сбросит старый захват и передаст управление методу Log()",
-      "Вызовет панику времени выполнения 'sync: unlock of unlocked mutex / recursive lock detected', которую можно перехватить через recover()",
-      "Второй вызов c.mu.Lock() покрутится 4 итерации в активном цикле spinning (PAUSE) и, увидев тот же стек g0, пропустит блокировку без ошибки",
-      "Дедлок произойдёт только при GOMAXPROCS=1, а на многоядерной системе планировщик перенесёт вызов Log() на свободный поток M2 через механизм Work Stealing"
+    "id": "q8",
+    "title": "Задача 8: Повторный Lock и цикл ожидания",
+    "ru": "Inc держит Mutex и вызывает Log, который берёт тот же Mutex. Откуда появится Unlock?",
+    "en": "Inc holds a Mutex and calls Log, which locks it again. What could reach Unlock?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Counter struct {\n\tmu sync.Mutex\n\tn  int\n}\n\nfunc (c *Counter) Inc() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.n++\n\tc.Log()\n}\nfunc (c *Counter) Log() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tfmt.Println(c.n)\n}\nfunc main() { var c Counter; c.Inc() }",
+    "options": [
+      "Mutex распознает владельца и разрешит повторный Lock.",
+      "Второй Lock ждёт освобождения, но первый Unlock отложен до возврата Inc: программа застрянет.",
+      "Starvation mode через 1 мс принудительно освободит Mutex.",
+      "Второй Lock немедленно вызовет перехватываемый panic.",
+      "Сборщик мусора освободит Mutex после парковки.",
+      "GOMAXPROCS > 1 устранит цикл ожидания."
     ],
-    correct: 1,
-    explanationRU: "Создатели Go (Расс Кокс) намеренно отказались от рекурсивных (reentrant) мьютексов: мьютекс должен защищать инварианты структуры данных. Когда метод Inc() уже изменил поле c.v++, инвариант временно нарушен, и если вызвать другой публичный метод Log(), который снова берёт Lock(), это признак плохой архитектуры. Физически sync.Mutex — это всего два поля int32 (state и sema), он понятия не имеет, какая горутина его захватила, и повторный Lock() гарантированно вешает горутину в дедлок.",
-    speechEN: "It deadlocks immediately. Go's 'sync.Mutex' is strictly non-reentrant by design and consists of just 8 bytes ('state' int32 and 'sema' uint32) with no owner goroutine tracking. When 'Log()' calls 'Lock()' a second time on the same call stack, it sees 'mutexLocked == 1' and parks the goroutine on the semaphore, waiting forever for itself to call 'Unlock()'."
+    "correct": 1,
+    "explanationRU": "Зависимость замыкается: Inc держит lock → Log ждёт lock → Unlock выполнится только после возврата Log и выхода из Inc. Mutex не реентерабелен; дополнительный P не меняет эту зависимость. В данной отдельной программе возникает fatal deadlock. Не нужно объяснять это точным размером структуры, «мгновенной» парковкой или нарушением инварианта самим n++: причина — недостижимый Unlock. Исправление возвращает снимок под lock, а печатает снаружи. При параллельных вызовах порядок печати снимков может отличаться от порядка изменений; если важен порядок событий, его нужно проектировать отдельно. Альтернатива — private helper с явно оговорённым уже удерживаемым lock.",
+    "speechEN": "The dependency cycle is: Inc holds the lock, Log waits for it, and Unlock can only run after Log returns and Inc exits. Mutex is not reentrant; adding another P does not break that cycle. This standalone program ends with a fatal deadlock. No exact struct size or immediate-parking claim is needed to explain it. The fix returns a snapshot under the lock and prints outside it. With concurrent callers, printed snapshots need not follow update order; ordered events need their own protocol. Another design is a private helper whose contract requires the lock to be held.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Counter struct {\n\tmu sync.Mutex\n\tn  int\n}\n\nfunc (c *Counter) Inc() int {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.n++\n\treturn c.n\n}\nfunc main() {\n\tvar c Counter\n\tsnapshot := c.Inc()\n\tfmt.Println(snapshot) // 1; printing is outside the lock\n}",
+    "versionNote": "Основные контракты применимы к Go 1.17, 1.25 и 1.26; детали реализации не являются причиной корректности.",
+    "sources": [
+      {
+        "title": "Mutex contract — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/mutex.go"
+      }
+    ],
+    "cardIds": [
+      "c21",
+      "c15"
+    ]
   },
 
   // =========================================================================
@@ -319,33 +320,38 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ]
   },
   {
-    id: "q10",
-    title: "Задача 10: Отмена фонового аудита при выходе из HTTP-хендлера (Request Context Lifecycle)",
-    ru: "Почему этот код асинхронной отправки аудита/S3 в HTTP-хендлере стабильно ломается в продакшене?",
-    en: "Why does this asynchronous background task inside an HTTP handler consistently fail in production, and how do you fix it in Go 1.21+?",
-    code: `func HandleOrder(w http.ResponseWriter, r *http.Request) {
-    order := parseOrder(r)
-    
-    // Отправляем событие аудита асинхронно, чтобы не задерживать ответ клиенту:
-    go func(ctx context.Context) {
-        if err := sendAuditToKafka(ctx, order); err != nil {
-            log.Errorf("audit failed: %v", err) // Постоянно сыпет "context canceled"!
-        }
-    }(r.Context())
-
-    w.WriteHeader(http.StatusCreated)
-}`,
-    options: [
-      "Контекст r.Context() привязан к локальному хранилищу потока (TLS) текущего воркера net/http, и при переключении горутины на другой процессор P он теряет авторизационные заголовки",
-      "Сервер стандартной библиотеки net/http автоматически вызывает cancel() для r.Context() сразу после возврата из хендлера ServeHTTP; поэтому фоновая горутина получает отменённый контекст ещё до отправки пакета в сеть (фикс: context.WithoutCancel(r.Context()))",
-      "Передача r.Context() по значению в анонимную горутину вызывает гонку данных (Data Race) на внутренней мапе дочерних контекстов cancelCtx.children",
-      "После вызова w.WriteHeader(http.StatusCreated) сборщик мусора немедленно очищает буфер запроса r, обнуляя все поля структуры order внутри дочерней горутины",
-      "Метод r.Context() по умолчанию имеет жёсткий хардкод-таймаут в 10 миллисекунд внутри рантайма Go, которого не хватает для сетевого похода в Kafka",
-      "Фоновая горутина попадает в глобальную очередь GRQ с низким приоритетом и не получает процессорного времени до тех пор, пока клиент не закроет TCP-соединение"
+    "id": "q10",
+    "title": "Задача 10: Время жизни запроса и фоновой работы",
+    "ru": "send учитывает отмену контекста; report допускает параллельные вызовы. Что гарантировано после возврата серверного handler, а что зависит от расписания?",
+    "en": "send honors context cancellation; report supports concurrent calls. What is guaranteed after the server handler returns, and what depends on scheduling?",
+    "code": "package audit\n\nimport (\n\t\"context\"\n\t\"net/http\"\n)\n\nfunc Handler(send func(context.Context) error, report func(error)) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tgo func(ctx context.Context) {\n\t\t\tif err := send(ctx); err != nil {\n\t\t\t\treport(err)\n\t\t\t}\n\t\t}(r.Context())\n\t\tw.WriteHeader(http.StatusAccepted)\n\t})\n}",
+    "options": [
+      "WriteHeader немедленно отменяет контекст запроса.",
+      "После возврата ServeHTTP сервер отменяет контекст; send может успеть завершиться раньше либо столкнуться с отменой.",
+      "Контекст нельзя безопасно передать другой горутине.",
+      "WithoutCancel сам добавляет таймаут и гарантирует доставку аудита.",
+      "Контекст теряет values после переноса горутины на другой P.",
+      "Фоновая горутина автоматически переживает завершение процесса."
     ],
-    correct: 1,
-    explanationRU: "По контракту пакета net/http жизненный цикл r.Context() строго ограничен временем работы самого HTTP-хендлера: как только функция HandleOrder доходит до конца и отдаёт 201 Created, сервер вызывает cancel() на контексте запроса. Если в фоне нужно сохранить значения из контекста (trace_id, user_id для логов), но отвязаться от отмены HTTP-запроса, в Go 1.21+ используют context.WithoutCancel(r.Context()) в паре со своим context.WithTimeout.",
-    speechEN: "The 'net/http' server automatically cancels 'r.Context()' the instant the 'ServeHTTP' handler returns. Because the handler exits immediately after spawning the goroutine, 'sendAuditToKafka' receives an already-canceled context. The idiomatic Go 1.21+ fix is 'context.WithoutCancel(r.Context())' wrapped with a dedicated 'context.WithTimeout'."
+    "correct": 1,
+    "explanationRU": "Входящий request context отменяется при возврате ServeHTTP, а также может отмениться раньше из-за отключения клиента или отмены HTTP/2. Сам WriteHeader не равен возврату handler. Фоновая send может успеть, поэтому «всегда падает ещё до отправки» неверно. Исправление зависит от требования: здесь выбран контракт «успешный ответ после успешной send», поэтому работа выполняется внутри handler. Для обязательного асинхронного аудита нужна надёжная передача в очередь/outbox, а не просто go. Для допустимой best-effort задачи можно отдельно организовать владельца, остановку сервиса, WithoutCancel и новый WithTimeout; WithoutCancel сохраняет values, но удаляет дедлайн/отмену/cause родителя и имеет nil Done. Отделённый контекст не гарантирует доставку и может удерживать значения запроса.",
+    "speechEN": "The server cancels an incoming request context when ServeHTTP returns; client disconnect or HTTP/2 cancellation may cancel it earlier. Calling WriteHeader is not the same as returning. The background send may finish first, so failure before any send is not guaranteed. The fix depends on the requirement: this variant promises success only after send succeeds, and therefore performs it inside the handler. Mandatory asynchronous audit needs a durable queue or outbox handoff, not just go. An intentionally best-effort detached task needs an owner, shutdown handling, WithoutCancel and a fresh timeout. WithoutCancel preserves value lookup but removes the parent deadline, cancellation and cause; Done is nil. Detachment does not guarantee delivery and may retain request values.",
+    "correctedCode": "package audit\n\nimport (\n\t\"context\"\n\t\"net/http\"\n)\n\n// Policy: report success only after send succeeds.\nfunc Handler(send func(context.Context) error) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tif err := send(r.Context()); err != nil {\n\t\t\thttp.Error(w, \"audit failed\", http.StatusInternalServerError)\n\t\t\treturn\n\t\t}\n\t\tw.WriteHeader(http.StatusNoContent)\n\t})\n}",
+    "versionNote": "WithoutCancel добавлен в Go 1.21, доступен в 1.25/1.26. Исправленный синхронный пример не требует этого API и применим к 1.17. В тесте используется настоящий httptest.Server, не прямой вызов handler.",
+    "sources": [
+      {
+        "title": "Request.Context — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/net/http/request.go"
+      },
+      {
+        "title": "Context — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+      }
+    ],
+    "cardIds": [
+      "c12",
+      "c22"
+    ]
   },
   {
     "id": "q11",
@@ -390,67 +396,80 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ]
   },
   {
-    id: "q12",
-    title: "Задача 12: Конкурентный append в общий слайс (Concurrent Slice Append & Lost Updates)",
-    ru: "Разработчик решил не ставить мьютекс вокруг append, полагая, что в худшем случае произойдёт лишняя аллокация. Что случится на самом деле?",
-    en: "Why is concurrent append() to a shared slice a critical bug? Explain what happens to the 24-byte slice header and backing array.",
-    code: `func ProcessBatch(items []int) []int {
-    var results []int
-    var wg sync.WaitGroup
-
-    for _, item := range items {
-        wg.Add(1)
-        go func(v int) {
-            defer wg.Done()
-            results = append(results, v*2) // Конкурентный append без синхронизации!
-        }(item)
-    }
-    wg.Wait()
-    return results
-}`,
-    options: [
-      "Рантайм упадёт с неперехватываемой фатальной ошибкой 'fatal error: concurrent slice writes', аналогично встроенной защите от конкурентной записи в мапу",
-      "Никаких данных не потеряется: функция runtime.growslice использует атомарный CAS на поле capacity, поэтому конкурирующие горутины просто выделят чуть больше памяти в хипе",
-      "Тяжёлый Data Race на 24-байтовом заголовке results {ptr, len, cap} и ячейках массива: горутины читают один и тот же старый индекс len, затирают результаты друг друга (потеря данных), а при одновременном росте могут записать ptr от одного массива, а len/cap от другого (повреждение памяти и паника)",
-      "Поскольку переменная results объявлена локально внутри функции ProcessBatch, она остаётся на стеке горутины, и каждая дочерняя горутина безопасно модифицирует свою копию стека",
-      "Горутины выстроятся в безопасную очередь благодаря Гибридному барьеру записи (Hybrid Write Barrier), который сериализует обновление указателя ptr при каждом вызове append",
-      "Проблема возникнет только если исходный срез items содержит более 256 элементов (когда формула роста меняется с 2x на 1.25x), а на малых размерах всё атомарно"
+    "id": "q12",
+    "title": "Задача 12: Общий append или отдельные индексы",
+    "ru": "При двух и более workers где возникает гонка? Устраняет ли её Wait в конце?",
+    "en": "With two or more workers, where is the race? Does waiting at the end prevent it?",
+    "code": "package batch\n\nimport \"sync\"\n\nfunc ProcessBatch(items []int) []int {\n\tvar results []int\n\tvar wg sync.WaitGroup\n\tfor _, item := range items {\n\t\twg.Add(1)\n\t\tgo func(v int) {\n\t\t\tdefer wg.Done()\n\t\t\tresults = append(results, v*2)\n\t\t}(item)\n\t}\n\twg.Wait()\n\treturn results\n}",
+    "options": [
+      "Wait сериализует все операции append.",
+      "Заранее выделенная capacity сделает общий append безопасным.",
+      "Workers конфликтуют на общей переменной results; возможны потерянные записи и повреждение составного значения.",
+      "Есть гарантированная runtime-ошибка concurrent slice writes.",
+      "Барьер GC сериализует изменения заголовка среза.",
+      "Гонка возможна только после достижения len == 256."
     ],
-    correct: 2,
-    explanationRU: "В отличие от мап (где рантайм проверяет флаг hashWriting и роняет процесс), у слайсов нет проверки на конкурентную запись! При вызове results = append(results, x) без мьютекса происходят две беды: 1) две горутины одновременно читают len=5, пишут свои значения в одну и ту же ячейку results[5] и обе ставят len=6 (один результат бесследно пропал); 2) 24-байтовая структура {ptr, len, cap} не может обновиться атомарно за одну 64-битную инструкцию CPU (возможен torn write, когда ptr уже указывает на новый массив, а cap прочитался от старого!). Правильный фикс без мьютекса: заранее создать results := make([]int, len(items)) и в каждой горутине писать строго в свой индекс results[i] = v*2.",
-    speechEN: "This is a severe Data Race causing lost updates and potential memory corruption. Updating the 24-byte slice header '{ptr, len, cap}' is not atomic: multiple goroutines read the same 'len', overwrite each other's elements at the same index, and can tear the 3-word header during reallocations. Fix it with a mutex, or pre-allocate 'make([]int, len(items))' and assign each goroutine its own distinct index 'results[i] = v*2'."
+    "correct": 2,
+    "explanationRU": "Wait ждёт завершения, но не упорядочивает workers между собой. Они читают и перезаписывают общую переменную results; при общей backing array могут конфликтовать и элементы. Возможны потерянные обновления и несогласованное составное значение; конкретный вывод или panic не гарантированы. Заголовок в обычной реализации состоит из трёх машинных слов, а не всегда из 24 байт. Даже make([]int, 0, len(items)) не защищает общие len/указатель и позицию записи. Исправленный вариант заранее задаёт длину, назначает отдельный индекс каждому worker, не меняет заголовок и читает результат после Wait; порядок соответствует входу. Предполагается отсутствие посторонних записей в items/results. Для большого входа нужен ограниченный пул, а не неограниченное число горутин. Проверка -race помогает обнаружить конфликт, но не доказывает все исполнения.",
+    "speechEN": "Wait joins workers; it does not serialize them. They read and overwrite the shared results variable and may also write the same backing-array element. Lost updates and inconsistent multiword values are possible; no particular output or panic is guaranteed. A typical slice header has three machine words, not a portable size of 24 bytes. Reserving capacity still leaves the shared length and write position unprotected. The fix allocates the final length, assigns each worker a distinct index, never changes the shared header, and reads after Wait. It preserves input order, assuming no external mutation of inputs or outputs. Large inputs need bounded concurrency. The race detector can reveal the conflict but does not prove every execution.",
+    "correctedCode": "package batch\n\nimport \"sync\"\n\nfunc ProcessBatch(items []int) []int {\n\tresults := make([]int, len(items))\n\tvar wg sync.WaitGroup\n\tfor i, item := range items {\n\t\twg.Add(1)\n\t\tgo func(index, v int) {\n\t\t\tdefer wg.Done()\n\t\t\tresults[index] = v * 2\n\t\t}(i, item)\n\t}\n\twg.Wait()\n\treturn results\n}",
+    "versionNote": "Основные контракты применимы к Go 1.17, 1.25 и 1.26; детали реализации не являются причиной корректности. Явная передача index/v подходит и для семантики циклов до Go 1.22. Исходник намеренно содержит гонку.",
+    "sources": [
+      {
+        "title": "Go memory model — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_mem.html"
+      },
+      {
+        "title": "WaitGroup — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/waitgroup.go"
+      }
+    ],
+    "cardIds": [
+      "c2",
+      "c15",
+      "c22",
+      "c29"
+    ]
   },
   {
-    id: "q13",
-    title: "Задача 13: Сломанный Double-Checked Locking при работе с sync.RWMutex (TOCTOU Race)",
-    ru: "В чём архитектурная ошибка этого кэша при холодном старте под высокой конкурентной нагрузкой?",
-    en: "What concurrency flaw (Time-Of-Check to Time-Of-Use / Cache Stampede) exists in this RWMutex pattern, and how do you fix it?",
-    code: `func (c *Cache) GetClient(endpoint string) *Client {
-    c.mu.RLock()
-    cli, ok := c.clients[endpoint]
-    c.mu.RUnlock()
-    if ok {
-        return cli
-    }
-
-    c.mu.Lock()
-    defer c.mu.Unlock()
-    // Сразу создаём клиент и кладём в мапу:
-    cli = dialNewGRPCClient(endpoint)
-    c.clients[endpoint] = cli
-    return cli
-}`,
-    options: [
-      "Вызов c.mu.Lock() сразу после c.mu.RUnlock() в одной и той же горутине приводит к взаимной блокировке (Deadlock) при переходе мьютекса в режим голодания Starvation Mode",
-      "Классическая гонка Check-then-Act (TOCTOU): если 100 горутин одновременно запросят новый endpoint, все 100 пройдут RLock(), увидят ok == false, а затем по очереди войдут в Lock() и 100 раз подряд вызовут тяжёлый dialNewGRPCClient, затирая старые соединения в мапе (фикс: повторная проверка if cli, ok := c.clients[endpoint]; ok внутри Lock() или singleflight)",
-      "Поскольку чтение из мапы c.clients[endpoint] под RLock() происходит параллельно из нескольких горутин, новая SwissTable в Go 1.24+ выбросит fatal error: concurrent map read and map write",
-      "Конструкция defer c.mu.Unlock() удерживает эксклюзивную блокировку записи даже после возврата из функции GetClient, блокируя все последующие чтения RLock()",
-      "Между строчками c.mu.RUnlock() и if ok значение локальной переменной ok на стеке горутины может быть изменено другой горутиной, захватившей c.mu.Lock()",
-      "Никакой ошибки нет: в Go при вызове c.mu.RUnlock() рантайм автоматически бронирует слот апгрейда блокировки до эксклюзивного Lock() для текущей горутины"
+    "id": "q13",
+    "title": "Задача 13: Чтения защищены, но проверка устарела",
+    "ru": "Все обращения к clients защищены одним RWMutex. Почему для одного ключа всё равно можно создать несколько клиентов?",
+    "en": "Every clients access uses the same RWMutex. Why can one key still get several client creations?",
+    "code": "package cache\n\nimport \"sync\"\n\ntype Client struct{ Endpoint string }\ntype Cache struct {\n\tmu        sync.RWMutex\n\tclients   map[string]*Client   // initialized before use\n\tnewClient func(string) *Client // teaching model: cannot fail\n}\n\nfunc (c *Cache) Get(endpoint string) *Client {\n\tc.mu.RLock()\n\tcli, ok := c.clients[endpoint]\n\tc.mu.RUnlock()\n\tif ok {\n\t\treturn cli\n\t}\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tcli = c.newClient(endpoint)\n\tc.clients[endpoint] = cli\n\treturn cli\n}",
+    "options": [
+      "Параллельные чтения map под RLock запрещены.",
+      "Несколько вызовов могут увидеть отсутствие ключа, затем по очереди создать клиента без повторной проверки.",
+      "RUnlock резервирует право повысить блокировку до Lock.",
+      "Любой переход RUnlock → Lock вызывает deadlock.",
+      "defer Unlock выполняется только после завершения программы.",
+      "-race обязательно обнаружит эту логическую ошибку."
     ],
-    correct: 1,
-    explanationRU: "В Go нет атомарной операции 'Upgrade RLock to Lock'. В микросекундный промежуток между RUnlock() и захватом эксклюзивного Lock() десятки других горутин успевают проскочить первую проверку (или уже стоят в очереди на Lock()). Когда первая горутина создаст соединение и отпустит Lock(), вторая горутина войдёт в Lock() и БЕЗ повторной проверки мапы снова создаст новый gRPC-клиент поверх первого (утечка сокетов и шторм подключений). Обязательно нужна повторная проверка (Double-Checked Locking) сразу после c.mu.Lock(), а чтобы не держать мьютекс на время долгого сетевого dial — используют пакет golang.org/x/sync/singleflight.",
-    speechEN: "This is a classic Time-Of-Check to Time-Of-Use (TOCTOU) race. Between 'RUnlock()' and acquiring 'Lock()', dozens of concurrent goroutines can miss the cache simultaneously. They will then queue up on 'Lock()' and one by one call 'dialNewGRPCClient', leaking connections and overwriting the map entry. You must re-check 'if cli, ok := c.clients[endpoint]; ok' after acquiring 'Lock()', or use 'singleflight.Group' so you don't hold the mutex during network I/O."
+    "correct": 1,
+    "explanationRU": "Два вызова могут увидеть miss до первой записи. После RUnlock знание об отсутствии устарело: второй получает Lock после первого, но создаёт ещё одного клиента. Обращения к map защищены, поэтому это логическая гонка, а не обязательно data race. Не все 100 вызовов обязательно увидят miss; точное число зависит от расписания. Повторная проверка под Lock делает проверку и установку единой операцией. В учебном исправлении создание остаётся под общим lock: медленный dial будет задерживать и другие ключи. Для дорогого создания можно использовать singleflight на ключ вместе с синхронизированным кэшем и повторной проверкой внутри функции группы. singleflight объединяет только совпавшие по времени вызовы и не хранит готовый кэш. Возможная утечка ресурсов зависит от владения/Close: она не следует автоматически из любой перезаписи указателя.",
+    "speechEN": "Two callers can both observe a miss before the first insertion. After RUnlock, absence is stale information: the second caller acquires Lock later but creates another client anyway. The map accesses are protected, so this is a logic race, not necessarily a data race. Not every concurrent caller must miss; the exact count depends on scheduling. Rechecking under Lock makes the decision and insertion one operation. The teaching fix keeps construction under a global lock, so a slow dial also delays other keys. For expensive construction, combine per-key singleflight with a synchronized cache and a second lookup inside the grouped function. singleflight deduplicates overlapping calls; it is not a persistent cache. Resource leakage depends on ownership and Close policy, not merely on overwriting any pointer.",
+    "correctedCode": "package cache\n\nimport \"sync\"\n\ntype Client struct{ Endpoint string }\ntype Cache struct {\n\tmu        sync.RWMutex\n\tclients   map[string]*Client   // initialized before use\n\tnewClient func(string) *Client // teaching model: cannot fail\n}\n\nfunc (c *Cache) Get(endpoint string) *Client {\n\tc.mu.RLock()\n\tcli, ok := c.clients[endpoint]\n\tc.mu.RUnlock()\n\tif ok {\n\t\treturn cli\n\t}\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tif cli, ok := c.clients[endpoint]; ok {\n\t\treturn cli\n\t}\n\tcli = c.newClient(endpoint)\n\tc.clients[endpoint] = cli\n\treturn cli\n}",
+    "versionNote": "Основные контракты применимы к Go 1.17, 1.25 и 1.26; детали реализации не являются причиной корректности. newClient здесь упрощён: реальное создание требует обработки ошибок и политики закрытия. x/sync имеет отдельную версию от Go.",
+    "sources": [
+      {
+        "title": "RWMutex — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/rwmutex.go"
+      },
+      {
+        "title": "Go memory model — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_mem.html"
+      },
+      {
+        "title": "singleflight — v0.20.0",
+        "url": "https://github.com/golang/sync/blob/v0.20.0/singleflight/singleflight.go"
+      }
+    ],
+    "cardIds": [
+      "c2",
+      "c15",
+      "c21",
+      "c31"
+    ]
   },
   {
     "id": "q14",
@@ -539,35 +558,42 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ]
   },
   {
-    id: "q16",
-    title: "Задача 16: Ловушка контекста errgroup.WithContext после вызова g.Wait()",
-    ru: "Обе параллельные задачи в errgroup отработали успешно (err == nil). Почему же следующая строчка saveOrderToDB(ctx) всегда падает с ошибкой context canceled?",
-    en: "Both concurrent tasks in errgroup succeed with nil error. Why does saveOrderToDB(ctx) right below g.Wait() always fail with 'context canceled'?",
-    code: `func ProcessCheckout(ctx context.Context, id int) error {
-    // Затеняем (shadowing) входной ctx дочерним контекстом errgroup:
-    g, ctx := errgroup.WithContext(ctx)
-
-    g.Go(func() error { return checkInventory(ctx, id) })
-    g.Go(func() error { return chargeCard(ctx, id) })
-
-    if err := g.Wait(); err != nil {
-        return err
-    }
-
-    // Обе задачи успешны! Сохраняем итоговый заказ в БД:
-    return saveOrderToDB(ctx, id) // Всегда возвращает "context canceled"!
-}`,
-    options: [
-      "Внутренние методы checkInventory и chargeCard автоматически закрывают переданный им контекст после чтения тела HTTP-ответа",
-      "Метод g.Wait() внутри пакета x/sync/errgroup в блоке defer ВСЕГДА вызывает cancel() для своего дочернего контекста — не только при первой ошибке, но и при полностью успешном завершении всех горутин! Из-за затенения переменной ctx в saveOrderToDB передаётся уже мёртвый контекст (фикс: называть переменную g, gCtx := errgroup.WithContext(ctx))",
-      "Пакет errgroup использует контекст с жестким дефолтным дедлайном 100 мс, который истекает к моменту завершения g.Wait()",
-      "Драйвер базы данных в saveOrderToDB проверяет счётчик ссылок на контекст и отклоняет контексты, которые уже использовались в нескольких горутинах одновременно",
-      "После вызова g.Wait() срабатывает сборщик мусора и закрывает канал ctx.Done() через финализатор runtime.AddCleanup",
-      "Ошибка возникает потому, что в errgroup не был вызван метод g.SetLimit(), без которого контекст переходит в состояние отмены"
+    "id": "q16",
+    "title": "Задача 16: Контекст errgroup после успешного Wait",
+    "ru": "check и load возвращают nil. Каков ctx.Err() внутри save и какой контекст нужен следующему этапу?",
+    "en": "check and load return nil. What does ctx.Err() report inside save, and which context should the next phase use?",
+    "code": "package checkout\n\nimport (\n\t\"context\"\n\t\"golang.org/x/sync/errgroup\"\n)\n\nfunc Process(ctx context.Context, check, load, save func(context.Context) error) error {\n\tg, ctx := errgroup.WithContext(ctx)\n\tg.Go(func() error { return check(ctx) })\n\tg.Go(func() error { return load(ctx) })\n\tif err := g.Wait(); err != nil {\n\t\treturn err\n\t}\n\treturn save(ctx)\n}",
+    "options": [
+      "Wait сохраняет контекст живым, если не было ошибок.",
+      "Контекст группы отменён к возврату Wait; следующий этап должен использовать исходный parent, если его жизненный цикл ещё подходит.",
+      "Без SetLimit контекст отменяется сразу при создании группы.",
+      "Wait отменяет parent и все соседние группы.",
+      "Контекст истекает по встроенному таймауту 100 мс.",
+      "Отмена возникает из-за финализатора сборщика мусора."
     ],
-    correct: 1,
-    explanationRU: "Один из самых коварных багов на продакшене из-за случайного затенения переменной (variable shadowing `g, ctx := errgroup.WithContext(ctx)`). Если заглянуть в исходники `golang.org/x/sync/errgroup`, то метод `Wait()` в самом конце делает `if g.cancel != nil { g.cancel() }`, чтобы гарантированно освободить ресурсы дочернего контекста. Поэтому ПОСЛЕ выхода из `g.Wait()` контекст, возвращённый из `errgroup.WithContext`, ВСЕГДА отменён (даже если ошибок не было!). Никогда не перезаписывай родительский `ctx` — называй дочерний контекст `gCtx` и используй его только внутри `g.Go(...)`.",
-    speechEN: "Inside 'x/sync/errgroup', 'g.Wait()' unconditionally calls 'g.cancel()' before returning—even when all goroutines succeed with zero errors—to prevent context leaks. Because line 3 shadowed the parent 'ctx' variable ('g, ctx := errgroup.WithContext(ctx)'), 'saveOrderToDB(ctx)' receives an already-canceled context! Always name the group's context 'gCtx' and pass the original parent 'ctx' to downstream calls after 'g.Wait()'."
+    "correct": 1,
+    "explanationRU": "WithContext отменяет дочерний контекст при первой ошибке задачи или при первом возврате Wait, даже успешном. Поэтому внутри save(ctx) ctx.Err() равен context.Canceled; фактический результат save зависит от того, как функция учитывает отмену. В этом конкретном коде g, ctx := не создаёт скрывающую переменную в новом блоке: параметр ctx переиспользуется в том же блоке функции и перезаписывается. Имя gCtx сохраняет parent для следующего этапа. Parent тоже может быть отменён или иметь истёкший дедлайн, так что исправление не обещает успеха save. Wait ждёт возврата всех функций; отмена не убивает горутину и не отменяет уже выполненные внешние эффекты.",
+    "speechEN": "WithContext cancels the derived context on the first task error or when the first Wait returns, including success. Thus ctx.Err() inside save reports context.Canceled; whether save itself fails depends on how it handles cancellation. In this exact function, g, ctx := reuses and overwrites the ctx parameter in the same function block rather than shadowing it in a nested block. Naming the child gCtx preserves the parent for the next phase. The parent can still be canceled or expired, so this fix does not promise save will succeed. Wait waits for all functions to return; cancellation neither kills goroutines nor rolls back external side effects.",
+    "correctedCode": "package checkout\n\nimport (\n\t\"context\"\n\t\"golang.org/x/sync/errgroup\"\n)\n\nfunc Process(ctx context.Context, check, load, save func(context.Context) error) error {\n\tg, gCtx := errgroup.WithContext(ctx)\n\tg.Go(func() error { return check(gCtx) })\n\tg.Go(func() error { return load(gCtx) })\n\tif err := g.Wait(); err != nil {\n\t\treturn err\n\t}\n\treturn save(ctx)\n}",
+    "versionNote": "errgroup — внешний модуль golang.org/x/sync, здесь проверена v0.20.0, а не «версия из Go 1.26». Примеры исполнялись на Go 1.26.1; для старого Go выбирают совместимую версию модуля.",
+    "sources": [
+      {
+        "title": "errgroup — v0.20.0",
+        "url": "https://github.com/golang/sync/blob/v0.20.0/errgroup/errgroup.go"
+      },
+      {
+        "title": "Context — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+      },
+      {
+        "title": "Short variable declarations — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      }
+    ],
+    "cardIds": [
+      "c22",
+      "c12"
+    ]
   },
   {
     "id": "q17",
@@ -648,38 +674,42 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ]
   },
   {
-    id: "q19",
-    title: "Задача 19: Исчерпание пула соединений sql.DB из-за defer в цикле и раннего выхода",
-    ru: "Почему эта функция пакетной выгрузки зависает на 26-й странице при настройке пула БД db.SetMaxOpenConns(25)?",
-    en: "With db.SetMaxOpenConns(25), why does this paginated query function hang forever on page 26?",
-    code: `func ExportAllUsers(ctx context.Context, db *sql.DB) error {
-    for page := 0; page < 100; page++ {
-        rows, err := db.QueryContext(ctx, "SELECT id, email FROM users LIMIT 100 OFFSET $1", page*100)
-        if err != nil {
-            return err
-        }
-        defer rows.Close() // <--- Внутри цикла for!
-
-        for rows.Next() {
-            // Если нашли нужного пользователя — переходим к проверке следующей страницы:
-            if checkStopOnPage(rows) {
-                break // Выходим из внутреннего цикла rows.Next() раньше конца!
-            }
-        }
-    }
-    return nil
-}`,
-    options: [
-      "Метод db.QueryContext открывает отдельную транзакцию на каждый вызов, которая требует явного вызова db.Commit() в конце итерации",
-      "Комбинация двух факторов: 1) при раннем выходе по break из цикла rows.Next() курсор не дочитывается до EOF (когда database/sql закрывает rows автоматически); 2) вызов defer rows.Close() находится внутри цикла for по страницам, поэтому структуры _defer копятся в куче и НЕ выполняются до выхода из всей функции ExportAllUsers! На 26-й итерации все 25 соединений пула оказываются заблокированы открытыми rows (фикс: вынести тело итерации в отдельную функцию или закрывать rows.Close() явно в конце итерации)",
-      "Драйвер базы данных блокируется из-за того, что аргумент page*100 передаётся в QueryContext без предварительной подготовки выражения db.Prepare()",
-      "При вызове break внутри вложенного цикла for rows.Next() компилятор Go автоматически пропускает регистрацию defer rows.Close() на текущей итерации",
-      "Пул sql.DB в Go не умеет переиспользовать TCP-соединения внутри одной и той же горутины без переключения контекста планировщика",
-      "На 26-й странице срабатывает лимит вложенности Open-Coded Defers (максимум 25 штук на функцию), и рантайм блокирует горутину"
+    "id": "q19",
+    "title": "Задача 19: Ранний break, defer и занятые соединения",
+    "ru": "Пул ограничен 25 соединениями. Если предыдущие страницы оставили 25 незакрытых Rows, чего ждёт следующий QueryContext? Обязан ли это быть именно 26-й запрос?",
+    "en": "The pool allows 25 connections. If earlier pages left 25 Rows open, what does the next QueryContext wait for? Must the 26th request always block?",
+    "code": "package pages\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\nfunc VisitPages(ctx context.Context, db *sql.DB, stop func(int64) bool) error {\n\tfor page := 0; page < 100; page++ {\n\t\trows, err := db.QueryContext(ctx,\n\t\t\t\"SELECT id FROM users ORDER BY id LIMIT 100 OFFSET $1\", page*100)\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tdefer rows.Close()\n\t\tfor rows.Next() {\n\t\t\tvar id int64\n\t\t\tif err := rows.Scan(&id); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\tif stop(id) {\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\t\tif err := rows.Err(); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\treturn nil\n}",
+    "options": [
+      "Каждый QueryContext требует последующего db.Commit().",
+      "Открытые Rows удерживают соединения, а defer ждёт выхода из VisitPages; следующий запрос может ждать свободное соединение или отмену контекста.",
+      "Любой defer в цикле гарантированно блокирует именно 26-ю итерацию.",
+      "break автоматически закрывает Rows и отменяет все defer.",
+      "Проблему исправит увеличение лимита до 100, независимо от числа запросов.",
+      "QueryContext не поддерживает ожидание пула с контекстом."
     ],
-    correct: 1,
-    explanationRU: "Тонкий нюанс работы пакета `database/sql`: если цикл `for rows.Next()` дошёл до самого конца и вернул `false` по причине EOF, библиотека `database/sql` сама автоматически закрывает `rows` и возвращает соединение в пул (даже если `defer rows.Close()` ещё не сработал!). Но как только в коде появляется ранний `break` (или ошибка сканирования), `rows` остаётся открытым и держит физическое TCP-соединение занятым. А поскольку `defer rows.Close()` написан внутри цикла `for page`, ни один из отложенных вызовов не сработает до завершения всех 100 страниц! На 26-й странице все 25 коннектов из `MaxOpenConns(25)` висят занятыми, и 26-й `QueryContext` вечно ждёт свободного коннекта у самого себя!",
-    speechEN: "Two things combine to cause a connection pool deadlock: first, breaking early out of 'for rows.Next()' prevents 'database/sql' from auto-closing 'rows' at EOF, leaving the underlying DB connection checked out; second, 'defer rows.Close()' is inside the 'for page' loop, so it won't execute until all 100 pages finish! On iteration 26, all 25 connections in 'MaxOpenConns(25)' are held by unclosed 'rows' from previous iterations, and 'QueryContext' blocks forever waiting for a free connection."
+    "correct": 1,
+    "explanationRU": "defer привязан к вызову функции, а не к итерации. Ранний break не закрывает Rows; если Next ещё не достиг конца последнего набора результатов, соединение остаётся занятым. Когда все разрешённые соединения заняты, QueryContext может ждать возврата соединения; отмена или дедлайн контекста позволяют прекратить ожидание. «Всегда навечно на странице 26» неверно: нужны 25 удерживаемых Rows, отсутствие освобождения и отмены. Если Next дошёл до конца и дальнейших result sets нет, Rows закрываются автоматически. Исправление ограничивает жизнь Rows вспомогательной функцией: её defer выполняется до следующей страницы, включая break и Scan-ошибку. Проверяем Scan, Rows.Err и Close; errors.Join сохраняет обе ошибки, если они возникли вместе.",
+    "speechEN": "A defer belongs to a function call, not a loop iteration. An early break does not close Rows; before exhaustion of the final result set, the connection remains occupied. If every permitted connection is in use, QueryContext can wait for one to return; cancellation or a deadline can end the wait. Blocking forever on exactly page 26 requires 25 retained Rows and no release or cancellation. Exhausting the final result set closes Rows automatically. The fix bounds each Rows lifetime with a helper whose defer runs before the next page, including on break or Scan error. It checks Scan, Rows.Err and Close; errors.Join retains both errors if they occur together.",
+    "correctedCode": "package pages\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"errors\"\n)\n\nfunc VisitPages(ctx context.Context, db *sql.DB, stop func(int64) bool) error {\n\tfor page := 0; page < 100; page++ {\n\t\tif err := visitPage(ctx, db, page, stop); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\treturn nil\n}\nfunc visitPage(ctx context.Context, db *sql.DB, page int, stop func(int64) bool) (err error) {\n\trows, err := db.QueryContext(ctx,\n\t\t\"SELECT id FROM users ORDER BY id LIMIT 100 OFFSET $1\", page*100)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer func() { err = errors.Join(err, rows.Close()) }()\n\tfor rows.Next() {\n\t\tvar id int64\n\t\tif err := rows.Scan(&id); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tif stop(id) {\n\t\t\tbreak\n\t\t}\n\t}\n\treturn rows.Err()\n}",
+    "versionNote": "Семантика defer и владения Rows применима к 1.17/1.25/1.26. Исправление с errors.Join требует Go 1.20+. SQL использует PostgreSQL-подобный $1; тест проверяет реальный database/sql с управляемым driver, не работу PostgreSQL или согласованность пагинации.",
+    "sources": [
+      {
+        "title": "database/sql — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/database/sql/sql.go"
+      },
+      {
+        "title": "Defer statements — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "errors.Join — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/errors/join.go"
+      }
+    ],
+    "cardIds": [
+      "c35",
+      "c22"
+    ]
   },
   {
     id: "q20",
