@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards } from './check-content.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 
@@ -86,4 +86,14 @@ test('plan task IDs are listed in order for progress-compatibility checks', () =
   const ids = planTaskIds(plan);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(ids[0], firstTask(plan).id);
+});
+
+test('markdown: Liquid hazards are reported outside raw blocks only', () => {
+  const files = [
+    { name: 'a.md', text: 'Go:\n```go\nps := []P{{1}, {2}}\n```' },
+    { name: 'b.md', text: '<!-- {% raw %} -->\nps := []P{{1}, {2}}\n<!-- {% endraw %} -->' },
+    { name: 'c.md', text: 'inline {% raw %}{{x}}{% endraw %} then {{y}}' },
+    { name: 'd.md', text: 'plain text with { braces }' },
+  ];
+  assert.deepEqual(liquidHazards(files), ['a.md:3', 'c.md:1']);
 });

@@ -74,6 +74,34 @@ export function validatePlan(plan, data) {
   function fields(object, keys, label) { keys.forEach(key => require(text(object[key]), `${label}: missing/empty ${key}`)); }
 }
 
+// GitHub Pages runs Markdown through Jekyll/Liquid: `{{` or `{%` outside a raw block breaks the build
+// (for example Go code like []P{{1}}). Returns file:line entries for such text.
+export function liquidHazards(files) {
+  const found = [];
+  for (const { name, text } of files) {
+    const lines = text.split('\n');
+    let raw = false;
+    lines.forEach((line, index) => {
+      let rest = line;
+      for (;;) {
+        if (raw) {
+          const end = rest.search(/\{%-?\s*endraw\s*-?%\}/);
+          if (end < 0) return;
+          rest = rest.slice(end).replace(/^\{%-?\s*endraw\s*-?%\}/, '');
+          raw = false;
+        }
+        const start = rest.search(/\{%-?\s*raw\s*-?%\}/);
+        const head = start < 0 ? rest : rest.slice(0, start);
+        if (/\{\{|\{%/.test(head)) { found.push(`${name}:${index + 1}`); return; }
+        if (start < 0) return;
+        rest = rest.slice(start).replace(/^\{%-?\s*raw\s*-?%\}/, '');
+        raw = true;
+      }
+    });
+  }
+  return found;
+}
+
 export function validateContent(data) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
@@ -172,6 +200,9 @@ function main() {
   const errors = validateContent(data);
   const plan = hasPlan ? loadPlan(read) : null;
   if (plan && !errors.length) errors.push(...validatePlan(plan, data));
+  const markdown = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
+  const hazards = liquidHazards(markdown.map(name => ({ name, text: read(name) })));
+  if (hazards.length) errors.push(`markdown: Liquid syntax outside {% raw %} breaks GitHub Pages: ${hazards.join(', ')}`);
   let base = null, changes = null;
   if (args.length) {
     const git = argv => execFileSync('git', argv, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });

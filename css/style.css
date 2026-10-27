@@ -514,6 +514,11 @@ table.cheat-table th {
   display: none !important;
 }
 
+/* Длинное слово заголовка не должно расширять страницу при крупном тексте на 320 px. */
+.route-view h2 {
+  overflow-wrap: break-word;
+}
+
 .kbd-hint {
   font-size: 0.78rem;
   color: var(--muted);
