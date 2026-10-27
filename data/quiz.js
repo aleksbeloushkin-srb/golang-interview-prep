@@ -146,7 +146,8 @@ func main() {
     ],
     "cardIds": [
       "c25",
-      "c26"
+      "c26",
+      "c29"
     ]
   },
   {
@@ -182,30 +183,34 @@ func main() {
     speechEN: "The entire OS process crashes. While 'send on closed channel' is a regular recoverable panic (unlike concurrent map writes which call unrecoverable 'runtime.throw'), each goroutine has its own isolated stack and 'g._defer' chain. 'gopanic' only unwinds the crashing goroutine's stack, misses 'main's recover(), and terminates the program."
   },
   {
-    id: "q6",
-    title: "Задача 6: Мутация общего базового массива при append (Slice Aliasing Trap)",
-    ru: "Что выведет этот код в консоль и как избежать взаимного затирания элементов?",
-    en: "What does this code output? Explain how shared backing arrays behave during append() and how Full Slice Expressions fix it.",
-    code: `func main() {
-    a := make([]int, 2, 4) // len = 2, cap = 4
-    a[0], a[1] = 1, 2
-
-    b := append(a, 3)
-    c := append(a, 4)
-
-    println(b[2], c[2])
-}`,
-    options: [
-      "Выведет '3 4', так как каждый вызов встроенной функции append() по спецификации Go создаёт независимую копию среза в локальном кеше P.mcache",
-      "Выведет '3 3', потому что первый вызов append(a, 3) атомарно помечает 3-ю ячейку базового массива как занятую в заголовке исходного слайса a",
-      "Выведет '4 4': поскольку у слайса a есть свободный запас ёмкости (len=2 < cap=4), оба вызова append пишут по индексу 2 в один и тот же базовый массив без реаллокации, и второй вызов затирает b[2] четвёркой (лечится через a[:2:2])",
-      "Вызовет панику index out of range [2] with length 2, так как базовый слайс a имеет длину 2 и не разрешает обращение к индексу 2 в производных срезах без явного реслайсинга",
-      "Выведет '4 4' только на одноядерном процессоре, а при GOMAXPROCS > 1 произойдёт реаллокация через runtime.growslice из-за выравнивания классов размеров mspan",
-      "Компилятор выдаст предупреждение Escape Analysis и принудительно скопирует массив a на стек для каждого нового присваивания b и c"
+    "id": "q6",
+    "title": "Задача 6: Два append и один общий массив",
+    "ru": "Предскажи вывод. Какие дескрипторы меняются и где обе операции записывают данные?",
+    "en": "Predict the output. Which slice descriptors change, and where do both appends write?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tb := append(a, 3)\n\tc := append(a, 4)\n\tfmt.Println(b[2], c[2])\n}",
+    "options": [
+      "3 4: каждый append копирует исходные элементы.",
+      "3 3: второй append сохраняет прежнее значение.",
+      "4 4: оба append записывают в один слот массива.",
+      "Паника: индекс 2 выходит за длину b и c.",
+      "Вывод зависит от случайного порядка операций.",
+      "Код не компилируется без присваивания обратно в a."
     ],
-    correct: 2,
-    explanationRU: "Так как у слайса a длина 2, а ёмкость 4, вызов b := append(a, 3) кладёт тройку в ячейку с индексом 2 того же самого базового массива и возвращает новый заголовок {ptr, len: 3, cap: 4}. Но в самом заголовке a поле len по-прежнему равно 2! Поэтому следующий вызов c := append(a, 4) снова видит свободное место по индексу 2 и записывает туда 4 поверх тройки! Чтобы защититься от этого при передаче срезов, используют полное выражение среза с тремя индексами: a[:2:2] (ограничивает cap равным len, заставляя append выделить новый массив).",
-    speechEN: "It prints '4 4'. Because slice 'a' has 'len=2' and 'cap=4', 'append(a, 3)' writes 3 into index 2 of the shared backing array in place. However, 'a.len' remains 2 on the stack! When 'append(a, 4)' runs next, it writes 4 into the exact same index 2 of the shared array, overwriting 'b[2]'. You can prevent this using a full slice expression 'a[:2:2]' to cap capacity at length."
+    "correct": 2,
+    "explanationRU": "Выведется 4 4. У a длина 2 и capacity 4. Первый append записывает 3 в слот 2 общего массива и возвращает b длины 3, но длина a остаётся 2. Второй append снова пишет в слот 2, теперь 4; это видно и через b. В исправлении каждый append получает a[:len(a):len(a)], поэтому для нового элемента нужен отдельный массив и вывод становится 3 4. Само ограничение cap не копирует данные: запись по существующему индексу до append всё ещё общая. Для независимого хранилища сразу нужны make и copy (либо подходящий Clone). Опора: два дескриптора могут вести в один массив.",
+    "speechEN": "It prints 4 4. The first append writes 3 into index 2 of the shared array and returns b with length 3. It does not change a’s length, which is still 2. The second append therefore writes 4 into the same index, and b observes that overwrite. In the corrected version, each append receives a view whose capacity equals its length, forcing separate storage for the added element and producing 3 4. Limiting capacity alone does not copy existing elements: index writes before append still share storage. Use make and copy, or an appropriate Clone, when independent element storage is required immediately.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tb := append(a[:len(a):len(a)], 3)\n\tc := append(a[:len(a):len(a)], 4)\n\tfmt.Println(b[2], c[2])\n}",
+    "versionNote": "Этот вывод и исправление применимы к Go 1.17, 1.25 и 1.26. Точная capacity новых массивов не нужна для ответа и не гарантируется языком.",
+    "sources": [
+      {
+        "title": "Go 1.26.1 language specification",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      }
+    ],
+    "cardIds": [
+      "c29",
+      "c25"
+    ]
   },
   {
     id: "q7",

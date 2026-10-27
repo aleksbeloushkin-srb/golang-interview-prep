@@ -1,0 +1,407 @@
+{
+  "date": "2026-10-27",
+  "portion": 11,
+  "base": "dfc17ce0627bec04382b99f128c9640ea9e5aff6",
+  "branch": "improve/maps-slices-recall",
+  "scope": {
+    "fullyReviewedCards": [
+      "c29",
+      "c30",
+      "c31",
+      "c32"
+    ],
+    "fullyReviewedOriginalQuiz": [
+      "q6"
+    ],
+    "linkedOnly": [
+      "q4 -> c29"
+    ],
+    "diagram": "sim7: all 5 steps; 4 rewritten and memory step added",
+    "other": "map cheatsheet, README, cache v17; no shared renderer/CSS/storage edits"
+  },
+  "mode": "Content-focused: structural validator + primary-source review + affected executable Go examples + common browser smoke + targeted browser/layout review. No repetition of unrelated historical suites.",
+  "toolchain": "go1.26.1 darwin/arm64",
+  "go": {
+    "commands": [
+      "gofmt -w docs/verification/fixtures/maps-slices",
+      "go test -count=1 -v ./...",
+      "go vet ./...",
+      "go run ./c29",
+      "go run ./c30",
+      "go run ./c32",
+      "go run ./q6",
+      "go run ./q6-fixed"
+    ],
+    "workingDirectory": "docs/verification/fixtures/maps-slices",
+    "testResult": "PASS: five behavioral tests; five example packages compile",
+    "vetResult": "PASS, no diagnostics",
+    "examples": [
+      {
+        "example": "c29",
+        "exit": 0,
+        "stdout": "[9 2] [7 2 3] [9 8]\n",
+        "matches": true,
+        "stderr": ""
+      },
+      {
+        "example": "c30",
+        "exit": 0,
+        "stdout": "1\n2\n",
+        "matches": true,
+        "stderr": ""
+      },
+      {
+        "example": "c32",
+        "exit": 0,
+        "stdout": "0 1\n0 0\n",
+        "matches": true,
+        "stderr": ""
+      },
+      {
+        "example": "q6",
+        "exit": 0,
+        "stdout": "4 4\n",
+        "matches": true,
+        "stderr": ""
+      },
+      {
+        "example": "q6-fixed",
+        "exit": 0,
+        "stdout": "3 4\n",
+        "matches": true,
+        "stderr": ""
+      }
+    ],
+    "tests": [
+      "Capacity restriction versus element storage and shallow pointer copying",
+      "Two shared appends versus cap-limited appends",
+      "Map aliases, shallow rebuild, nil-map clear/delete/range",
+      "NaN key survives delete but is removed by clear",
+      "Unvisited deleted map entries are skipped by range"
+    ],
+    "race": "Not run: this batch has no concurrent executable example. No concurrency correctness claim.",
+    "olderToolchains": "Go 1.17 and 1.25 behavior reviewed from tagged sources; examples were not executed with those toolchains."
+  },
+  "sourceReview": [
+    "Spec: append reuses sufficient capacity; map indexes are not addressable; iteration deletion/insertion rules; clear added in 1.21.",
+    "Go 1.17 map: hashGrow chooses doubling or same-size growth; growWork evacuates bucket chains, not a fixed CPU-time quantum.",
+    "Go 1.17 slice threshold 1024 differs from nextslicecap threshold 256 in both 1.25.0 and 1.26.1; requested length and allocation rounding matter.",
+    "Both table125.go and table126.go have pruneTombstones before growth. It is not a new Go 1.26 feature.",
+    "Map Clear keeps table/directory storage; Delete clears pointer-bearing key/value references. Payload reclamation is different from table shrink and RSS.",
+    "Portable matchH2 has several operations and can return extra candidates; amd64 intrinsic does not make full lookup one cycle. Always compare actual keys.",
+    "Quadratic probe sequence; grow up to maxTableCapacity=1024 slots, then split; installTableSplit can grow the directory. No constant worst-case insertion promise.",
+    "SwissMap flag exists in 1.25.0 flags.go and is absent in 1.26.1. Historical noswissmap must not be recommended universally.",
+    "Teaching group uses occupied and empty slots. The follow-up replaces all empties with deleted; it does not invent an ordinary mixed empty/deleted group."
+  ],
+  "sources": [
+    {
+      "url": "https://github.com/golang/go/blob/go1.17/src/runtime/map.go",
+      "sha256": "54d62c9a527dd76bcff9022d999c7c0a462710d27a1a2b8b98c69cfe6ca91446"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.17/src/runtime/slice.go",
+      "sha256": "5f894a0e39653cd6dc5a01ec181fe9f458ba7a0f7be91061e76872ed0092de03"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/slice.go",
+      "sha256": "586118064456dae44c081584933d7e99a287f851088ae926ffe10565f11a22b6"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/slice.go",
+      "sha256": "90e3cf05f3c055780fe5b8b9b1cdda27dbc5a4956c49c152fd8935b0c96375e0"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/runtime/maps/table.go",
+      "sha256": "cd21902756ef05875091c9223df1819189c339ca2c4d6cbc4b0e0a24db4f22f5"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/table.go",
+      "sha256": "d15567aa1735a8221599af3b11f857292a7b270daaa2820ff4e8053d4f172112"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/map.go",
+      "sha256": "cec1f588f261caf8fe4a9b310fae11abcc162d5c975be21d243f9ce727151432"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go",
+      "sha256": "cd99fe64dc1c3aa3a80516a070e6826afc424ddb11e883cd9dd761a2d5570aef"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/goexperiment/flags.go",
+      "sha256": "818253f229fe504d6f066e2820efa5bc5d9ef325b231d99b25012eba51bb8877"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/goexperiment/flags.go",
+      "sha256": "b34bfa58c283c17def13d43173fabd633dd361ebc22a1fe172750ceb14c43a3a"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html",
+      "sha256": "e5806989624c1e9dd32bddaedd2f70a1dd208295cb6d0ff72b02625b2cd6f592"
+    }
+  ],
+  "structural": {
+    "ok": true,
+    "base": "dfc17ce0627bec04382b99f128c9640ea9e5aff6",
+    "counts": {
+      "cards": 38,
+      "quiz": 22,
+      "simulators": 7,
+      "cheatsheet": 12
+    },
+    "changes": {
+      "cards": {
+        "changed": [
+          "c29",
+          "c30",
+          "c31",
+          "c32"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "quiz": {
+        "changed": [
+          "q4",
+          "q6"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "simulators": {
+        "changed": [
+          "sim7"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "cheatsheetChanged": true
+    },
+    "errors": [],
+    "durationMs": 275,
+    "scope": "Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion."
+  },
+  "browser": {
+    "smoke": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "route cards",
+        "route simulators",
+        "route wiki",
+        "route cheatsheet",
+        "route quiz",
+        "keyboard reveals answer",
+        "visible focus",
+        "progress survives reload",
+        "quiz answer",
+        "diagram step",
+        "cheatsheet rows",
+        "overflow cards 320",
+        "overflow simulators 320",
+        "overflow wiki 320",
+        "overflow cheatsheet 320",
+        "overflow quiz 320",
+        "overflow cards 390",
+        "overflow simulators 390",
+        "overflow wiki 390",
+        "overflow cheatsheet 390",
+        "overflow quiz 390",
+        "overflow cards 430",
+        "overflow simulators 430",
+        "overflow wiki 430",
+        "overflow cheatsheet 430",
+        "overflow quiz 430",
+        "overflow cards 1440",
+        "overflow simulators 1440",
+        "overflow wiki 1440",
+        "overflow cheatsheet 1440",
+        "overflow quiz 1440",
+        "HTTP 200 http://127.0.0.1:8000/",
+        "HTTP 200 http://127.0.0.1:8000/css/style.css?v=17",
+        "HTTP 200 http://127.0.0.1:8000/data/cards.js?v=17",
+        "HTTP 200 http://127.0.0.1:8000/data/simulators.js?v=17",
+        "HTTP 200 http://127.0.0.1:8000/data/quiz.js?v=17",
+        "HTTP 200 http://127.0.0.1:8000/js/app.js?v=17"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 583,
+      "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+    },
+    "targeted": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "c29 answer initially hidden",
+        "c29 keyboard reveal",
+        "c29 EN and code",
+        "c29 RU and sources",
+        "c29 practice hidden",
+        "c29 prompt opens before solution",
+        "c29 solution keyboard reveal",
+        "c29 visible focus",
+        "c30 answer initially hidden",
+        "c30 keyboard reveal",
+        "c30 EN and code",
+        "c30 RU and sources",
+        "c30 practice hidden",
+        "c30 prompt opens before solution",
+        "c30 solution keyboard reveal",
+        "c30 visible focus",
+        "c30 diagram and return link",
+        "c31 answer initially hidden",
+        "c31 keyboard reveal",
+        "c31 EN and code",
+        "c31 RU and sources",
+        "c31 practice hidden",
+        "c31 prompt opens before solution",
+        "c31 solution keyboard reveal",
+        "c31 visible focus",
+        "c31 diagram and return link",
+        "c32 answer initially hidden",
+        "c32 keyboard reveal",
+        "c32 EN and code",
+        "c32 RU and sources",
+        "c32 practice hidden",
+        "c32 prompt opens before solution",
+        "c32 solution keyboard reveal",
+        "c32 visible focus",
+        "c32 diagram and return link",
+        "q6 answer initially hidden",
+        "q6 choice 0",
+        "q6 choice 1",
+        "q6 choice 2",
+        "q6 choice 3",
+        "q6 choice 4",
+        "q6 choice 5",
+        "q6 keyboard answer",
+        "q6 bilingual explanation",
+        "q6 fixed code",
+        "q6 bidirectional c29",
+        "q6 bidirectional c25",
+        "q4 bidirectional c29",
+        "sim7 step 0 content",
+        "sim7 step 0 hidden answer",
+        "sim7 step 0 recall",
+        "sim7 step 0 states",
+        "sim7 step 1 content",
+        "sim7 step 1 hidden answer",
+        "sim7 step 1 recall",
+        "sim7 step 1 states",
+        "sim7 step 2 content",
+        "sim7 step 2 hidden answer",
+        "sim7 step 2 recall",
+        "sim7 step 2 states",
+        "sim7 step 3 content",
+        "sim7 step 3 hidden answer",
+        "sim7 step 3 recall",
+        "sim7 step 3 states",
+        "sim7 step 4 content",
+        "sim7 step 4 hidden answer",
+        "sim7 step 4 recall",
+        "sim7 step 4 states",
+        "sim7 previous step and focus",
+        "sim7 next step",
+        "c29 expanded layout 320",
+        "c30 expanded layout 320",
+        "c31 expanded layout 320",
+        "c32 expanded layout 320",
+        "q6 expanded layout 320",
+        "sim7 step 0 layout 320",
+        "sim7 step 1 layout 320",
+        "sim7 step 2 layout 320",
+        "sim7 step 3 layout 320",
+        "sim7 step 4 layout 320",
+        "wiki expanded layout 320",
+        "map cheatsheet layout 320",
+        "c29 expanded layout 390",
+        "c30 expanded layout 390",
+        "c31 expanded layout 390",
+        "c32 expanded layout 390",
+        "q6 expanded layout 390",
+        "sim7 step 0 layout 390",
+        "sim7 step 1 layout 390",
+        "sim7 step 2 layout 390",
+        "sim7 step 3 layout 390",
+        "sim7 step 4 layout 390",
+        "wiki expanded layout 390",
+        "map cheatsheet layout 390",
+        "c29 expanded layout 430",
+        "c30 expanded layout 430",
+        "c31 expanded layout 430",
+        "c32 expanded layout 430",
+        "q6 expanded layout 430",
+        "sim7 step 0 layout 430",
+        "sim7 step 1 layout 430",
+        "sim7 step 2 layout 430",
+        "sim7 step 3 layout 430",
+        "sim7 step 4 layout 430",
+        "wiki expanded layout 430",
+        "map cheatsheet layout 430",
+        "c29 expanded layout 1440",
+        "c30 expanded layout 1440",
+        "c31 expanded layout 1440",
+        "c32 expanded layout 1440",
+        "q6 expanded layout 1440",
+        "sim7 step 0 layout 1440",
+        "sim7 step 1 layout 1440",
+        "sim7 step 2 layout 1440",
+        "sim7 step 3 layout 1440",
+        "sim7 step 4 layout 1440",
+        "wiki expanded layout 1440",
+        "map cheatsheet layout 1440",
+        "c29 text 200%",
+        "c30 text 200%",
+        "c31 text 200%",
+        "c32 text 200%",
+        "sim7 0 text 200%",
+        "sim7 1 text 200%",
+        "sim7 2 text 200%",
+        "sim7 3 text 200%",
+        "sim7 4 text 200%",
+        "q6 text 200%",
+        "map cheatsheet text 200%",
+        "c29 actual font sizes doubled",
+        "c30 actual font sizes doubled",
+        "c31 actual font sizes doubled",
+        "c32 actual font sizes doubled",
+        "sim7 0 actual font sizes doubled",
+        "sim7 1 actual font sizes doubled",
+        "sim7 2 actual font sizes doubled",
+        "sim7 3 actual font sizes doubled",
+        "sim7 4 actual font sizes doubled",
+        "q6 actual font sizes doubled"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 1082,
+      "scope": "Targeted c29-c32, q6, q4 link, five sim7 steps; EN/RU, keyboard, links, widths and 200% text. Not broad shared-UI regression."
+    },
+    "screenshotsViewed": [
+      "maps-diagram-390.png",
+      "maps-diagram-1440.png",
+      "maps-card-390.png"
+    ],
+    "checksScope": "320/390/430/1440 px, expanded cards/quiz/all five sim7 steps/wiki/cheatsheet, keyboard and focus, links, hidden practice, all quiz options, 200% root text plus actual computed font sizes doubled for cards, quiz and diagram at 320 px.",
+    "limits": "Desktop headless Chrome emulation; no physical phone, Safari, screen reader or touch-device test. Visual review is separate from overflow assertions."
+  },
+  "fixtures": "docs/verification/fixtures/maps-slices and maps-slices-browser.mjs",
+  "reviewNotes": [
+    "Initial browser runner used the wrong answer-box ID and omitted Enter text. Runner corrected against the existing DOM and smoke; no site fix was needed.",
+    "Sandbox denied initial Go-run cache writes and one CDP connection; successful runs used approved escalation.",
+    "All changed content reviewed for EN/RU agreement. Memory cues are teaching aids, not measured retention improvements.",
+    "Unused practicalEN fields removed before finalization; the renderer already uses shortEN/detailsEN and bilingual practice. Rendered content unchanged."
+  ],
+  "remaining": {
+    "cards": 18,
+    "originalQuiz": 10
+  },
+  "testedAssetSHA256": {
+    "index.html": "3af46101b4ef8ded5b2186a0a492834863c26e0cb2abe792d7c6df3184792909",
+    "data/cards.js": "6c005616871d709d828c5aab4a5d7abd5504f6ddc610ed8490ae6fccfb3cdc2e",
+    "data/quiz.js": "03f43c1ac54e03141990541e01380920b4a0de00bd0f414bdfc47484a10a2287",
+    "data/simulators.js": "973baf9cd5fce83880e8a614d105a2faabe10982f30bff37211d08376346cb9d",
+    "js/app.js": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845",
+    "css/style.css": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+  }
+}

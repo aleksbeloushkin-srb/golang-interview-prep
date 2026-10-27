@@ -1308,105 +1308,262 @@ go func() {
   // МОДУЛЬ 5: МАПЫ (SWISSTABLES), ИНТЕРФЕЙСЫ, DEFER И GO 1.24–1.25+ (Q29 - Q38)
   // ==========================================
   {
-    id: "c29",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: null,
-    qEN: "Q29: How are slices and strings represented in memory, and how does slice growth (runtime.growslice) work?",
-    qRU: "Как в памяти устроены срезы (slice) и строки (string), и по какой формуле растёт capacity при append (runtime.growslice)?",
-    shortEN: "A string is an immutable 16-byte header (pointer + len), while a slice is a 24-byte header (pointer to backing array + len + cap). When append() exceeds capacity, runtime.growslice allocates a new array: doubling (2x) for small slices (< 256 elements) and transitioning smoothly to ~1.25x + 192 for larger slices, rounded up to the nearest allocator size class.",
-    detailsEN: [
-      "Header Layout (64-bit): 'runtime.stringStruct' = {str unsafe.Pointer, len int} (16 bytes). 'runtime.slice' = {array unsafe.Pointer, len int, cap int} (24 bytes).",
-      "Smooth Growth Formula (Go 1.18+): If oldCap < 256, newCap = 2 * oldCap. If oldCap >= 256, it grows in a loop: 'newCap += (newCap + 3*256) / 4' (approaching 1.25x growth with a smooth transition).",
-      "Size-Class Rounding (roundupsize): After computing newCap, 'growslice' asks the memory allocator for the exact 'mspan' size class (e.g., 32, 48, 64, 80 bytes) and sets the final cap to fill the entire span so zero bytes are wasted!"
+    "id": "c29",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "Q29: What do a slice and a string refer to, and when does append allocate a new backing array?",
+    "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
+    "shortEN": "A slice is a view of an array: copying the slice does not copy its elements. append reuses that array when capacity is sufficient and allocates a new one otherwise. A string is an immutable sequence of bytes. Exact header sizes and slice growth factors are implementation details.",
+    "detailsEN": [
+      "In the standard 64-bit runtime layout, a slice has a data pointer, len and cap (three words, usually 24 bytes); a string has a data pointer and byte length (two words, usually 16 bytes). These are not portable language constants. len(string) counts bytes, not Unicode code points.",
+      "Assigning b := a copies the slice descriptor. Index writes can affect both views. append returns an updated descriptor: it does not change the len stored in a different slice variable. Draw the descriptors separately from their shared array.",
+      "a[:len(a):len(a)] restricts the capacity of that view. Appending at least one element must then use a new array, but index writes before that append still share storage. make plus copy creates independent element storage; pointers or nested slices inside the elements can still share their targets.",
+      "For the examined Go 1.25.0 and 1.26.1 growth path, a request larger than twice the old capacity uses the requested length as a starting capacity. Otherwise small capacities below 256 double; larger ones use a smooth transition towards 1.25×. Allocation rounding can change the final cap. Go 1.17 used a threshold of 1024 and a different transition. None of these formulas is a language guarantee."
     ],
-    practicalRU: "Почему `s := []int{1, 2}; s = append(s, 3, 4, 5)` даёт `cap(s) == 6`, а не `4` или `8`? Потому что 5 элементов по 8 байт требуют 40 байт, а ближайший класс размера в аллокаторе Go (`mspan`) — 48 байт (`48 / 8 = 6` элементов)! А для экстремальной оптимизации конвертации `string <-> []byte` без аллокаций в горячих путях используют `unsafe.String(unsafe.SliceData(b), len(b))`.",
-    code: `// src/runtime/slice.go — nextslicecap growth formula (Go 1.18+):
-func nextslicecap(newLen, oldCap int) int {
-    newcap := oldCap
-    doublecap := newcap + newcap
-    if newLen > doublecap { return newLen }
-    const threshold = 256
-    if oldCap < threshold { return doublecap }
-    for {
-        newcap += (newcap + 3*threshold) >> 2 // ~1.25x smooth growth
-        if uint(newcap) >= uint(newLen) { break }
+    "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
+    "shortRU": "Срез — это представление массива: копирование среза не копирует его элементы. append использует прежний массив, пока хватает capacity, иначе выделяет новый. Строка — неизменяемая последовательность байтов. Точные размеры заголовков и коэффициенты роста относятся к реализации.",
+    "detailsRU": [
+      "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
+      "Присваивание b := a копирует дескриптор среза. Запись по индексу может быть видна через оба среза. append возвращает обновлённый дескриптор: len другой переменной он не меняет. Рисуй дескрипторы отдельно от общего массива.",
+      "a[:len(a):len(a)] ограничивает capacity этого представления. Добавление хотя бы одного элемента потребует нового массива, но запись по индексу до append всё ещё затрагивает общие данные. make плюс copy отделяет хранилище элементов; указатели или вложенные срезы внутри элементов могут по-прежнему разделять свои данные.",
+      "В проверенном пути Go 1.25.0 и 1.26.1 запрос больше удвоенной старой capacity берёт требуемую длину как начальную capacity. Иначе capacity меньше 256 удваивается, а для больших применяется плавный переход к 1.25×. Округление аллокатора может изменить итоговый cap. В Go 1.17 порог был 1024, переход — другим. Ни одна из этих формул не является гарантией языка."
+    ],
+    "versionNote": "Семантика примера одинакова в Go 1.17, 1.25 и 1.26. Рост capacity сверён отдельно по go1.17, go1.25.0 и go1.26.1; точный cap после роста не входит в контракт.",
+    "sources": [
+      {
+        "title": "Go 1.26.1 language specification",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Go 1.17: growslice",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/slice.go"
+      },
+      {
+        "title": "Go 1.25.0: nextslicecap / growslice",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/slice.go"
+      },
+      {
+        "title": "Go 1.26.1: nextslicecap / growslice",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/slice.go"
+      }
+    ],
+    "practice": {
+      "kind": "Предскажи → нарисуй → объясни",
+      "promptEN": "Before running the example, predict all three slices. Which write is visible through a, and which two are isolated?",
+      "promptRU": "До запуска предскажи три среза. Какая запись видна через a, а какие две отделены?",
+      "pointsEN": [
+        "The output is [9 2] [7 2 3] [9 8].",
+        "The full slice expression alone still shares storage, so limited[0] changes a[0].",
+        "The append exceeds the limited capacity; make plus copy also creates independent element storage."
+      ],
+      "pointsRU": [
+        "Вывод: [9 2] [7 2 3] [9 8].",
+        "Полное выражение среза само по себе сохраняет общий массив, поэтому limited[0] меняет a[0].",
+        "append превышает ограниченную capacity; make плюс copy тоже создаёт отдельное хранилище элементов."
+      ],
+      "followUpEN": "Replace []int with []*int. Does copying the slice also copy the pointed-to integers?",
+      "followUpRU": "Замени []int на []*int. Копируются ли вместе со срезом числа, на которые указывают элементы?"
     }
-    return newcap
-}`
   },
   {
-    id: "c30",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim7",
-    qEN: "Q30: How did the classic Go map (hmap / bmap before Go 1.24) work under the hood, and how did incremental evacuation work?",
-    qRU: "Как была устроена классическая мапа в Go (hmap / bmap до Go 1.24), зачем был массив tophash[8] и как работала инкрементальная эвакуация?",
-    shortEN: "Classic Go maps used a header struct ('runtime.hmap') pointing to an array of $2^B$ buckets ('bmap'). Each bucket held up to 8 key-value pairs, prefixed by an 8-byte 'tophash' array storing the top 8 bits of each key's hash. When load factor exceeded 6.5 (or too many overflow buckets accumulated), Go allocated a 2x bucket array and evacuated 1–2 old buckets incrementally on every write or delete.",
-    detailsEN: [
-      "Bucket Layout (bmap): 8 'tophash' bytes, followed by 8 keys packed together, then 8 values packed together (to eliminate struct alignment padding!), and an 'overflow' pointer.",
-      "Hash Split: Low B bits select the bucket index; top 8 bits are compared against 'tophash[0..7]' before doing expensive key equality checks.",
-      "2 Triggers for Growth: 1) Load factor > 6.5 elements/bucket -> doubles bucket count ($B+1$); 2) Too many overflow buckets (from mass additions + deletions) with load factor <= 6.5 -> Same-Size Grow to compact overflow chains.",
-      "Incremental Evacuation: To avoid latency spikes on huge maps, Go never rehashes the whole map at once. Instead, 'oldbuckets' keeps the old array, and every 'mapassign'/'mapdelete' evacuates up to 2 buckets into X/Y split targets until finished."
+    "id": "c30",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim7",
+    "qEN": "Q30: How did classic Go maps use buckets and incremental growth before Swiss Tables?",
+    "qRU": "Как классические map до Swiss Tables использовали бакеты и постепенное расширение?",
+    "shortEN": "Classic maps used buckets with eight slots and overflow chains. A hash prefix filtered candidates before key comparison. Excess load grew the bucket array; excess overflow could trigger a same-size rebuild. Evacuation spread copying across mutations, but did not guarantee constant insertion latency.",
+    "detailsEN": [
+      "In the Go 1.17 implementation, low hash bits select one of 2^B primary buckets. Each bucket has eight tophash bytes, grouped keys and values, and an overflow link. Occupied tophash values encode the high hash byte, adjusted to avoid reserved states; a match still needs key equality.",
+      "The growth test combines a load threshold of about 6.5 entries per primary bucket with a minimum-entry condition. Too much load doubles the primary bucket count. Too many overflow buckets without excess load instead triggers same-size growth to reorganize chains.",
+      "While growing, oldbuckets retains the old storage. growWork evacuates the relevant old bucket and may advance another. Each evacuation includes its overflow chain, and allocating the new bucket array also costs work. Incremental does not mean every mutation has a fixed time bound.",
+      "A map index is not addressable under the language rules, so &m[k] is invalid in both old and new maps. For map[K]Struct, read a value, modify the copy, then assign it back. map[K]*Struct allows pointed-to mutation, but shared access still requires synchronization."
     ],
-    practicalRU: "Классический вопрос на собеседовании: почему нельзя взять адрес элемента мапы (`p := &m[\"key\"]` — ошибка компиляции)? Потому что при следующей записи в мапу может начаться инкрементальная эвакуация бакета (или сплит группы в SwissTable), ключ с значением физически переедут в новый блок памяти, и указатель `p` превратился бы в висячую ссылку (dangling pointer)!",
-    code: `// Classic bmap memory layout (keys and values grouped to avoid padding):
-// +-------------------+-------------------+---------------------+----------+
-// | tophash [8]uint8  | keys [8]KeyType   | values [8]ValueType | overflow |
-// +-------------------+-------------------+---------------------+----------+`
-  },
-  {
-    id: "c31",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim7",
-    qEN: "Q31: How do SwissTable maps work in Go 1.24+ under the hood (ctrl metadata bytes, H1/H2 hash split, SIMD/SWAR probing, and Split-Table growth)?",
-    qRU: "Как устроены новые мапы на базе SwissTables в Go 1.24+ (управляющее 64-битное слово ctrl, H1/H2 хеш, побитовый поиск за 1 такт и разбиение таблиц)?",
-    shortEN: "Starting in Go 1.24, the built-in map was replaced by a SwissTable implementation featuring open addressing, 8-slot groups with a 64-bit control word ('ctrl'), SIMD/SWAR bitmask probing (checking all 8 slots in parallel without branches), and Extendible Hashing (splitting large maps into independent 1024-entry sub-tables so growth never rehashes the entire map at once).",
-    detailsEN: [
-      "57/7 Hash Split (H1 & H2): The 64-bit hash is split into H1 (top 57 bits — selects the table and starting group) and H2 (bottom 7 bits — stored inside the control byte as a fingerprint).",
-      "Group & 64-bit Control Word (ctrl): Each group holds 8 key-value slots and one 8-byte 'ctrl' metadata word (1 byte per slot: '0b10000000' = Empty, '0b11111110' = Deleted/Tombstone, or '0b0xxxxxxx' = 7-bit H2 hash). No overflow pointer chains!",
-      "SWAR / SIMD Parallel Lookup: To find a key, Go broadcasts its 7-bit H2 across a 64-bit word and compares it against all 8 'ctrl' bytes in a SINGLE bitwise operation (or SIMD instruction), yielding a bitmask of matching slots.",
-      "Extendible Hashing (Directory of Tables): To preserve O(1) worst-case insertion latency without stop-the-world rehashing, a large SwissMap uses a top-level directory pointing to independent sub-tables (each capped at 1024 slots). When one sub-table hits 7/8 (87.5%) load factor, ONLY that single 1024-slot table splits into two!"
+    "practicalRU": "Опора: загрузка → больше бакетов; overflow → возможно прежний размер. Отделяй историческую реализацию от контракта языка. На обычном интервью сначала объясни обновление значения map, затем детали эвакуации.",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\n\nfunc main() {\n\tm := map[string]Counter{\"go\": {N: 1}}\n\tv := m[\"go\"]\n\tv.N++\n\tfmt.Println(m[\"go\"].N)\n\tm[\"go\"] = v\n\tfmt.Println(m[\"go\"].N)\n}",
+    "shortRU": "Классические map использовали бакеты по восемь слотов и overflow-цепочки. Префикс хеша отбирал кандидатов перед сравнением ключей. Высокая загрузка увеличивала массив бакетов; избыток overflow мог вызвать перестройку того же размера. Эвакуация распределяла перенос между изменениями map, но не гарантировала постоянную задержку вставки.",
+    "detailsRU": [
+      "В реализации Go 1.17 младшие биты хеша выбирают один из 2^B основных бакетов. В каждом — восемь байтов tophash, сгруппированные ключи и значения и ссылка overflow. Занятые tophash кодируют старший байт хеша с поправкой на зарезервированные состояния; после совпадения всё равно сравниваются ключи.",
+      "Условие роста сочетает порог около 6.5 элементов на основной бакет с проверкой минимального числа элементов. Избыточная загрузка удваивает число основных бакетов. Если велико только число overflow-бакетов, выполняется перестройка прежнего размера для переупаковки цепочек.",
+      "Во время роста oldbuckets удерживает старое хранилище. growWork эвакуирует нужный старый бакет и может продвинуть ещё один. Эвакуация включает overflow-цепочку; выделение нового массива бакетов тоже требует работы. Постепенность не означает фиксированного времени каждой операции.",
+      "По правилам языка индекс map не является адресуемым, поэтому &m[k] недопустимо и в старых, и в новых map. Для map[K]Struct нужно прочитать значение, изменить копию и записать её обратно. map[K]*Struct позволяет менять объект по указателю, но совместный доступ всё равно требует синхронизации."
     ],
-    practicalRU: "В продакшене переход на SwissTables в Go 1.24–1.25+ даёт ускорение операций с `map` до **30–60%** и экономит память за счёт более высокого максимального заполнения (**87.5% = 7/8** против ~81% = 6.5/8 у старой мапы) и полного отказа от аллокаций отдельных `overflow`-бакетов.",
-    code: `// SwissTable Group in Go 1.24+ (internal/runtime/maps):
-type group struct {
-    ctrl uint64     // 8 control bytes: [Empty(0x80) | Deleted(0xFE) | 0b0 + 7-bit H2]
-    slots [8]slot   // 8 {key, elem} pairs contiguous in a single CPU cache line!
-}
-// Parallel lookup matches all 8 slots in 1 register operation without a loop!`
-  },
-  {
-    id: "c32",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim7",
-    qEN: "Q32: Why does deleting keys from a Go map NOT free memory (Map Memory Leak), and why is map iteration order randomized?",
-    qRU: "Почему удаление всех ключей через delete(m, k) или clear(m) НЕ уменьшает память мапы в куче, и почему порядок обхода range по мапе случайный?",
-    shortEN: "Deleting keys from a map marks slots as empty/tombstones (so they can be reused by future inserts), but never shrinks the allocated bucket/group array in the heap. To actually release memory back to the GC after a spike, you must copy remaining keys into a new map or replace the map reference. Map iteration starts at a random offset to prevent developers from relying on hash order.",
-    detailsEN: [
-      "The Peak-Map Memory Leak: If a global cache map grows to 5 million entries (consuming ~300 MB) and you later call 'delete(m, k)' on all 5 million keys (or 'clear(m)'), 'len(m)' becomes 0, but the underlying 300 MB table array remains allocated forever!",
-      "Tombstones in SwissTables: In Go 1.24+, deleting a key from a group that was once full leaves a 'Deleted (0xFE)' tombstone so linear probing chains aren't broken; tombstones are only cleared on rehash/split.",
-      "Randomized Iteration: 'mapiterinit' uses 'cheaprandn()' to pick a random starting table/bucket and a random slot offset so code never depends on hash function internals."
+    "versionNote": "Историческое устройство сверено по Go 1.17. Swiss Tables стали стандартом в Go 1.24. В Go 1.25 ещё есть экспериментальный переключатель SwissMap; в Go 1.26 он удалён, поэтому noswissmap нельзя предлагать как универсальный способ отката.",
+    "sources": [
+      {
+        "title": "Go 1.26.1 language specification",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Classic map — Go 1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/map.go"
+      },
+      {
+        "title": "Experiments — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/goexperiment/flags.go"
+      },
+      {
+        "title": "Experiments — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/goexperiment/flags.go"
+      }
     ],
-    practicalRU: "Реальный продакшен-инцидент: сервис хранит активные сессии в `var sessions = make(map[string]Session)`. Во время ночной DDoS-атаки в мапу набилось 10 млн сессий (2 ГБ RAM). Утром сессии протухли и были удалены через `delete(sessions, id)` — в метриках `len(sessions) == 100`, но процесс продолжает жрать 2 ГБ RAM! Лечится периодическим пересозданием: раз в час создавать `newMap := make(map[string]Session, len(oldMap))`, копировать живые ключи и подменять ссылку.",
-    code: `// Reclaiming heap memory from a shrunken map in production:
-func compactMap[K comparable, V any](old map[K]V) map[K]V {
-    fresh := make(map[K]V, len(old))
-    for k, v := range old {
-        fresh[k] = v
+    "practice": {
+      "kind": "Два похожих случая",
+      "promptEN": "Predict the two printed values. Then explain why excessive load and excessive overflow do not always lead to the same growth operation.",
+      "promptRU": "Предскажи два числа. Затем объясни, почему высокая загрузка и избыток overflow не всегда приводят к одинаковому росту.",
+      "pointsEN": [
+        "The example prints 1, then 2: v is a copied struct until it is stored back.",
+        "Excess load grows the bucket count; excess overflow alone can rebuild at the same size.",
+        "Map index addressability is a language rule, not a property to infer from a runtime version."
+      ],
+      "pointsRU": [
+        "Пример печатает 1, затем 2: v — копия структуры до записи обратно.",
+        "Избыточная загрузка увеличивает число бакетов; избыток только overflow допускает перестройку прежнего размера.",
+        "Адресуемость индекса map задаётся языком, а не выводится из версии рантайма."
+      ],
+      "followUpEN": "What changes if the map stores *Counter? Which synchronization question remains?",
+      "followUpRU": "Что изменится, если map хранит *Counter? Какой вопрос синхронизации останется?"
     }
-    return fresh // old huge bucket array can now be collected by GC!
-}`
+  },
+  {
+    "id": "c31",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim7",
+    "qEN": "Q31: How do Swiss Tables find a key and grow a Go map?",
+    "qRU": "Как Swiss Tables находят ключ и расширяют map в Go?",
+    "shortEN": "Swiss Tables first filter a group using short hash fingerprints, then compare candidate keys. Go uses groups of eight slots and a directory of bounded-size tables. This reduces some lookup and growth work, but neither a one-cycle lookup nor constant worst-case insertion latency is guaranteed.",
+    "detailsEN": [
+      "Each group has eight control bytes and eight key/value slots. H2 uses the low seven hash bits; H1 uses the remaining bits for probing. On a 64-bit hash this is a 57/7 split, not a rule for every target. Occupied bytes hold H2, 0x80 means empty and 0xFE means deleted. The keys and values do not have to fit in one cache line.",
+      "Metadata matching produces candidate slots, not a final answer. The portable SWAR implementation uses several arithmetic/bitwise operations and may include extra candidates; amd64 has a SIMD intrinsic. Actual key equality decides the match. Hashing, candidate loops and possible later groups still cost work.",
+      "After checking candidates in a group, an empty slot ends an unsuccessful search. A deleted marker cannot end it: a key may have been placed farther along the probe sequence. Go uses quadratic group probing, not a linked overflow chain or a simple linear scan of groups.",
+      "The single-group small-map representation can hold all eight entries. Tables generally reserve space with a 7/8 load limit, including tombstone accounting. A table grows by doubling up to 1024 slots; beyond that it splits. Directory growth can also be necessary. The bound is on one table, not on the entire map or the latency of an insertion.",
+      "Both Go 1.25.0 and 1.26.1 can prune unneeded tombstones before growing, without moving live entries. This is best effort and does not shrink allocated table storage. Measure performance on the actual workload; neither a universal speedup percentage nor a p99 guarantee follows from the design."
+    ],
+    "practicalRU": "Цепочка для воспроизведения: отпечаток → сравнить ключ → остановиться или продолжить. Проговори её и объясни, почему совпадения H2 недостаточно и чем deleted отличается от empty. В sim7 есть разбор условной группы.",
+    "code": "// Teaching trace, not executable Go or actual hashes.\n// Search key: \"go\", chosen H2: 0x2A\n// slot:    0      1       2       3      4      5      6      7\n// ctrl:   2A     19      2A      80     11     80     80     80\n// key:   \"rust\" \"c\"     \"go\"   empty  \"js\"  empty  empty  empty\n// 1. Fingerprints select candidate slots 0 and 2.\n// 2. \"rust\" != \"go\"; \"go\" == \"go\": return slot 2's value.\n// 3. Only if no candidate key matched would empty stop this search.",
+    "shortRU": "Swiss Tables сначала отбирают слоты группы по коротким отпечаткам хеша, затем сравнивают ключи кандидатов. Go использует группы по восемь слотов и директорию таблиц ограниченного размера. Это уменьшает часть работы поиска и роста, но не гарантирует поиск за один такт или постоянную задержку любой вставки.",
+    "detailsRU": [
+      "В группе восемь управляющих байтов и восемь слотов ключ/значение. H2 — младшие семь бит хеша, H1 — оставшиеся биты для пробирования. Для 64-битного хеша это разбиение 57/7, но не правило для всех платформ. Занятый байт хранит H2, 0x80 означает empty, 0xFE — deleted. Ключи и значения не обязаны помещаться в одну кеш-линию.",
+      "Сопоставление метаданных даёт слоты-кандидаты, а не окончательный ответ. Переносимая SWAR-реализация использует несколько арифметических и побитовых операций и может дать лишних кандидатов; на amd64 есть SIMD-интринсик. Решает сравнение самих ключей. Хеширование, цикл по кандидатам и следующие группы тоже требуют работы.",
+      "После проверки кандидатов empty в группе завершает неуспешный поиск. Метка deleted его не завершает: искомый ключ мог разместиться дальше по последовательности проб. В Go применяется квадратичное пробирование групп, а не overflow-цепочка и не простой линейный обход групп.",
+      "Малая map в представлении одной группы может хранить все восемь элементов. Для таблиц обычно действует порог 7/8 с учётом tombstones. Таблица удваивается до 1024 слотов, после чего делится; при этом может понадобиться рост директории. Ограничен размер одной таблицы, а не всей map и не время вставки.",
+      "В Go 1.25.0 и 1.26.1 ненужные tombstones могут очищаться перед ростом без перемещения живых элементов. Это попытка освободить слоты, а не сжать выделенное хранилище таблицы. Производительность измеряй на своей нагрузке: из устройства не следует универсальный процент ускорения или гарантия p99."
+    ],
+    "versionNote": "Swiss Tables — стандартная map с Go 1.24. Детали здесь сверены для Go 1.25.0 и 1.26.1. pruneTombstones есть в обеих версиях; не следует приписывать его появление Go 1.26. Числа слотов и алгоритмы относятся к реализации.",
+    "sources": [
+      {
+        "title": "Go 1.26.1 language specification",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Go 1.25.0: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: directory and Clear",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/map.go"
+      },
+      {
+        "title": "Go 1.26.1: control-byte matching",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go"
+      }
+    ],
+    "practice": {
+      "kind": "Проследи поиск без подсказки",
+      "promptEN": "In the trace, can the lookup stop at empty before checking slot 2? If no key matched, what would change if every empty byte became deleted?",
+      "promptRU": "Можно ли в схеме остановиться на empty до проверки слота 2? Если ключ не совпал, что изменится при замене всех empty на deleted?",
+      "pointsEN": [
+        "Check candidate keys first; the matching key at slot 2 wins even though the group also contains empty slots.",
+        "Without a matching key, empty ends the search. Deleted does not: continue probing.",
+        "H2 is a filter. Matching seven bits does not establish key equality."
+      ],
+      "pointsRU": [
+        "Сначала сравни ключи кандидатов; ключ в слоте 2 найден, хотя в группе есть empty.",
+        "Если ключ не найден, empty завершает поиск. Deleted — нет: нужно продолжить пробирование.",
+        "H2 — фильтр. Совпадение семи бит не доказывает равенства ключей."
+      ],
+      "followUpEN": "Does a limit of 1024 slots per table mean a map can contain only 1024 keys or that every insert has constant latency?",
+      "followUpRU": "Означает ли лимит 1024 слота на таблицу, что в map максимум 1024 ключа или что каждая вставка имеет постоянную задержку?"
+    }
+  },
+  {
+    "id": "c32",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim7",
+    "qEN": "Q32: What do delete and clear release, and what can you rely on during map iteration?",
+    "qRU": "Что освобождают delete и clear и на что можно рассчитывать при обходе map?",
+    "shortEN": "Deleting an entry removes the map’s references to its key and value, so otherwise unreachable payloads can be collected. It does not promise to shrink the table. clear empties the existing map; replacing one variable leaves aliases pointing to the old map. Iteration order is unspecified.",
+    "detailsEN": [
+      "Separate three layers: entries, table storage, and process RSS. In Go 1.25/1.26, delete and clear can remove references to payloads while keeping table capacity. Payloads are collectible only if no other references retain them; GC and returning memory to the OS are separate events.",
+      "In Swiss tables, deleting from a group with an empty slot can leave empty; otherwise a deleted marker preserves the probe path. Tombstones can be reused or pruned during insertion in the examined 1.25/1.26 implementation, and clear resets them. None of these operations promises table shrinking.",
+      "Rebuilding a map can reduce retained table storage after a measured spike. The old map becomes collectible only after all references to it disappear. Copying entries is shallow: pointer values and nested slices may still share payloads. Coordinate replacement with readers and writers; do not rebuild periodically without evidence.",
+      "The language does not specify map iteration order; two iterations can still happen to produce the same order. Deleting an entry not yet reached prevents it from being produced. An entry added during iteration may be visited or skipped. Nil maps have zero iterations; sort collected keys when a stable order is required."
+    ],
+    "practicalRU": "Опора: delete убирает запись; clear очищает общую map; присваивание меняет одну переменную. Перед выводом об утечке спроси, кто ещё держит ссылку. Отработай различие на примере и сравни с удержанием массива в q4.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tm := map[string]int{\"go\": 1}\n\talias := m\n\tm = make(map[string]int)\n\tfmt.Println(len(m), len(alias))\n\tclear(alias)\n\tfmt.Println(len(m), len(alias))\n}",
+    "shortRU": "Удаление записи убирает ссылки map на её ключ и значение, поэтому недостижимые другим путём данные могут быть собраны GC. Сжатие таблицы не обещается. clear очищает существующую map; замена одной переменной оставляет другие ссылки на старую map. Порядок обхода не задан.",
+    "detailsRU": [
+      "Разделяй три уровня: записи, хранилище таблицы и RSS процесса. В Go 1.25/1.26 delete и clear могут убрать ссылки на данные, сохранив вместимость таблицы. Данные доступны для GC, только если их не удерживают другие ссылки; сборка и возврат памяти ОС — отдельные события.",
+      "В Swiss Tables удаление из группы с пустым слотом может оставить empty; иначе deleted сохраняет путь поиска. В проверенной реализации 1.25/1.26 tombstones могут переиспользоваться или очищаться при вставке, а clear их сбрасывает. Ни одна из этих операций не обещает сжатия таблицы.",
+      "Перестройка map может уменьшить удерживаемое хранилище после измеренного пика. Старая map доступна для GC, только когда исчезнут все ссылки на неё. Копирование записей поверхностное: значения-указатели и вложенные срезы могут разделять данные. Замена должна быть согласована с читателями и писателями; без измерений не нужна периодическая перестройка.",
+      "Язык не задаёт порядок обхода map; два обхода при этом могут случайно дать одинаковый порядок. Удалённая до посещения запись не будет выдана. Добавленная во время обхода запись может попасть в результат или быть пропущена. Nil-map даёт ноль итераций; для стабильного порядка собери и отсортируй ключи."
+    ],
+    "versionNote": "clear появился в Go 1.21; пример запускается в Go 1.25/1.26. В Go 1.17 для обычных строковых ключей можно удалять их циклом. Это не полная замена clear для ключей NaN: NaN не равен самому себе, поэтому delete по такому ключу его не находит.",
+    "sources": [
+      {
+        "title": "Go 1.26.1 language specification",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Go 1.25.0: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: directory and Clear",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/map.go"
+      },
+      {
+        "title": "Go 1.26.1: control-byte matching",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go"
+      }
+    ],
+    "practice": {
+      "kind": "Кто ещё держит данные?",
+      "promptEN": "Predict both output lines. Would m = nil also empty alias? What if alias still contains a pointer to a large object?",
+      "promptRU": "Предскажи обе строки вывода. Очистит ли m = nil также alias? Что если alias всё ещё содержит указатель на большой объект?",
+      "pointsEN": [
+        "The output is 0 1, then 0 0: reassignment and clearing have different effects.",
+        "Setting m to nil does not mutate the map retained by alias.",
+        "An entry reachable through alias can retain its payload; clearing it only helps when no other reference retains that payload."
+      ],
+      "pointsRU": [
+        "Вывод: 0 1, затем 0 0: замена переменной и очистка действуют по-разному.",
+        "Присваивание m = nil не изменяет map, на которую ссылается alias.",
+        "Достижимая через alias запись может удерживать данные; её очистка поможет, только если данные не удерживаются другой ссылкой."
+      ],
+      "followUpEN": "Why can delete(m, math.NaN()) fail to remove a NaN key while clear(m) still empties the map?",
+      "followUpRU": "Почему delete(m, math.NaN()) может не удалить ключ NaN, а clear(m) всё равно очищает map?"
+    }
   },
   {
     id: "c33",
