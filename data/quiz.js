@@ -44,7 +44,8 @@ const QUIZ_QUESTIONS = [
       }
     ],
     "cardIds": [
-      "c2"
+      "c2",
+      "c3"
     ]
   },
   {
@@ -285,6 +286,7 @@ const QUIZ_QUESTIONS = [
   // =========================================================================
   {
     id: "q9",
+    cardIds: ["c12", "c13", "c10"],
     title: "Задача 9: Результат после отмены запроса",
     ru: "Хендлер уже вернулся по ctx.Done(). RPC затем завершился. Что произойдёт с дочерней горутиной и что исправляет буфер на один элемент?",
     en: "The handler has already returned through ctx.Done(), and the RPC then finishes. What happens to the child goroutine, and what does a one-element buffer fix?",
@@ -554,7 +556,8 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     "cardIds": [
       "c13",
       "c14",
-      "c12"
+      "c12",
+      "c1"
     ]
   },
   {
@@ -592,7 +595,8 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ],
     "cardIds": [
       "c22",
-      "c12"
+      "c12",
+      "c10"
     ]
   },
   {
@@ -625,7 +629,8 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     ],
     "cardIds": [
       "c18",
-      "c19"
+      "c19",
+      "c8"
     ]
   },
   {
@@ -713,6 +718,7 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
   },
   {
     id: "q20",
+    cardIds: ["c35"],
     title: "Задача 20: Результат записи отчёта",
     ru: "Write вернул nil, но последующий Close вернул ошибку. Что вернёт эта функция и как сохранить обе ошибки?",
     en: "Write returned nil, but the later Close returned an error. What does this function return, and how would you preserve both errors?",

@@ -5,10 +5,10 @@ const SIMULATORS = [
   {
     "id": "sim1",
     "title": "Диаграмма 1: Кто выполняется, где стек, откуда продолжить",
-    "subtitle": "Упрощённый путь создания и запуска горутины в Go 1.26.1 на amd64. Адреса обозначены символически. Это не снимок всех регистров и не измерение скорости.",
+    "subtitle": "Шесть шагов: аргументы → G и стек → сохранённый контекст → очередь → исполнение → завершение. Модель Go 1.26.1/amd64; адреса символические, скорость не измеряется.",
     "cardId": "c6",
     "cardLabel": "Q6: регистры простыми словами →",
-    "learningHint": "Три опоры: R14 — указатель на текущую G; RSP — адрес в активном стеке; RIP — позиция инструкции. Регистр хранит значение или адрес, а не весь стек. При сохранении место продолжения записывается как PC. На arm64 имена и соглашения другие.",
+    "learningHint": "Кто — текущая G (R14); где стек — адрес RSP; откуда продолжить — PC, загружаемый в поток инструкций. R14 на g0 и M.curg — не одно и то же: системный стек обслуживает пользовательскую G. На arm64 имена и соглашения другие.",
     "sources": [
       {
         "title": "Go 1.26.1: ABIInternal",
@@ -21,13 +21,74 @@ const SIMULATORS = [
       {
         "title": "Go 1.26.1: newproc1/execute/gfput",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "Go specification: go statements",
+        "url": "https://go.dev/ref/spec#Go_statements"
+      },
+      {
+        "title": "go1.26.1: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
       }
     ],
     "steps": [
       {
-        "title": "1. Подготовить G2",
-        "desc": "G1 вызывает go doWork(). Runtime выполняет создание на системном стеке g0 и получает структуру G2: переиспользует доступную или выделяет новую. Нужен пригодный стек; его размер не обязан всегда быть ровно 2 КиБ. G2 ещё не выполняет doWork.",
-        "descEN": "The runtime prepares G2 on the system-stack path, reusing or allocating goroutine state and a suitable stack. Creating it does not mean doWork has started.",
+        "title": "1. Сначала вычислить аргументы",
+        "desc": "G1 выполняет go doWork(n): значение функции и аргументы вычисляются в G1. Затем новая G2 выполнит сам вызов. В показанном примере передаётся копия int; чтение изменяемого n внутри замыкания было бы другой программой.",
+        "descEN": "G1 evaluates the function and arguments of go doWork(n). G2 will execute the call later. Passing an int value is different from closing over mutable n.",
+        "boxes": [
+          {
+            "title": "Сейчас работает G1",
+            "rows": [
+              {
+                "k": "R14 · кто",
+                "v": "G1",
+                "hl": true
+              },
+              {
+                "k": "RSP · где стек",
+                "v": "Адрес в стеке G1",
+                "hl": true
+              },
+              {
+                "k": "n",
+                "v": "1",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "Что получает будущий вызов",
+            "rows": [
+              {
+                "k": "Аргумент int",
+                "v": "Копия значения 1",
+                "hl": true
+              },
+              {
+                "k": "Тело doWork",
+                "v": "Ещё не выполняется",
+                "hl": false
+              },
+              {
+                "k": "Порядок",
+                "v": "Вычислить → запустить конкурентно",
+                "hl": true
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "If G1 changes n afterwards, does the copied argument change?",
+          "promptRU": "Если G1 затем изменит n, изменится ли скопированный аргумент?",
+          "answerEN": "No. The int argument was evaluated in G1. A pointer argument would copy the pointer, not the pointed-to data.",
+          "answerRU": "Нет. Аргумент int уже вычислен в G1. При передаче указателя копируется указатель, а не данные по нему."
+        }
+      },
+      {
+        "title": "2. Подготовить G2",
+        "desc": "После вычисления аргументов runtime переходит на системный стек g0 и подготавливает G2: переиспользует доступную структуру либо создаёт новую. Нужен пригодный стек; 2 КиБ — базовый минимум реализации, а не неизменный размер каждой горутины. M.curg при этом обозначает обслуживаемую пользовательскую G1, тогда как текущая G на системном стеке — g0.",
+        "descEN": "After evaluating arguments, the runtime prepares G2 on g0, reusing or allocating its state and a suitable stack. The 2 KiB baseline is not every goroutine’s fixed size. M.curg still identifies the user G1 being serviced, while the current G on the system stack is g0.",
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -69,10 +130,16 @@ const SIMULATORS = [
               }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Is g0 a newly created goroutine for each go statement?",
+          "promptRU": "Создаётся ли новая g0 для каждого оператора go?",
+          "answerEN": "No. g0 is the thread’s system-stack goroutine. G2 is the new user goroutine.",
+          "answerRU": "Нет. g0 — системная горутина потока. Новая пользовательская горутина здесь — G2."
+        }
       },
       {
-        "title": "2. Сохранить стартовый контекст",
+        "title": "3. Сохранить стартовый контекст",
         "desc": "В G2.sched подготавливаются SP и PC для запуска doWork. На amd64 создаётся путь возврата через goexit после завершения функции. Это сохранённые данные будущего запуска; активные регистры пока обслуживают runtime на g0.",
         "descEN": "G2 receives saved start state, including its stack position and entry PC. The amd64 return path leads to goexit. Saved state in memory is different from registers currently running the runtime.",
         "boxes": [
@@ -125,7 +192,7 @@ const SIMULATORS = [
         }
       },
       {
-        "title": "3. Сделать G2 доступной планировщику",
+        "title": "4. Сделать G2 доступной планировщику",
         "desc": "После подготовки G2 становится runnable. Показан путь постановки через runqput с предпочтением runnext: прежний элемент этого слота может перейти в обычную очередь. Это готовность к запуску, без обещания немедленного выполнения или горячего кеша.",
         "descEN": "G2 becomes runnable and is queued. The illustrated path requests runnext placement, potentially displacing the previous entry. This does not promise when or on which CPU G2 will execute.",
         "boxes": [
@@ -164,15 +231,21 @@ const SIMULATORS = [
               },
               {
                 "k": "Запуск",
-                "v": "Следующее решение планировщика",
+                "v": "Позднейшее решение планировщика, не обязательно ближайшее",
                 "hl": true
               }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Can G1 assume that G2 has finished once it is queued?",
+          "promptRU": "Может ли G1 считать G2 завершённой после постановки в очередь?",
+          "answerEN": "No. Runnable is eligibility for execution. Use explicit synchronization for completion.",
+          "answerRU": "Нет. Runnable означает готовность исполняться. Для завершения нужна явная синхронизация."
+        }
       },
       {
-        "title": "4. Восстановить и перейти",
+        "title": "5. Восстановить и перейти",
         "desc": "Когда планировщик выбирает G2, execute переводит её в running, а gogo восстанавливает контекст: текущую G, SP, BP и контекст замыкания, затем переходит к saved PC. JMP меняет поток исполнения; RSP теперь указывает в стек G2. Показаны ключевые действия, не полный листинг.",
         "descEN": "When G2 is selected, execute marks it running and gogo restores its continuation. The stack pointer now addresses G2’s stack, and a jump transfers execution to its saved PC. More runtime bookkeeping is omitted.",
         "boxes": [
@@ -225,7 +298,7 @@ const SIMULATORS = [
         }
       },
       {
-        "title": "5. Завершить G2",
+        "title": "6. Завершить G2",
         "desc": "После возврата doWork путь goexit вызывает mcall(goexit0). Выполнение переходит на g0; runtime завершает G2 и возвращается к планированию. Структура G может переиспользоваться; сохранение её стека зависит от размера и политики runtime.",
         "descEN": "After doWork returns, goexit reaches mcall(goexit0) and system-stack cleanup. G2 finishes; its state may be reused. Retaining its stack is a separate runtime policy decision.",
         "boxes": [
@@ -269,7 +342,13 @@ const SIMULATORS = [
               }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does returning from doWork guarantee that its stack pages immediately leave RSS?",
+          "promptRU": "Гарантирует ли возврат из doWork немедленное удаление страниц её стека из RSS?",
+          "answerEN": "No. G reuse, stack retention, span reuse and returning pages to the OS are separate decisions.",
+          "answerRU": "Нет. Переиспользование G, сохранение стека, повторное использование спана и возврат страниц ОС — разные решения."
+        }
       }
     ]
   },
@@ -278,131 +357,477 @@ const SIMULATORS = [
   // ДИАГРАММА 2: ПЛАНИРОВЩИК GMP, ВЫТЕСНЕНИЕ (SYSMON) И WORK STEALING
   // =========================================================================
   {
-    id: "sim2",
-    title: "Диаграмма 2: Планировщик GMP, вытеснение (sysmon / SIGURG), Work Stealing и Syscall Handoff",
-    subtitle: "Правило каждого 61-го тика, асинхронное вытеснение через 10 мс, кража 50% очереди у соседнего процессора P и отсоединение P при системном вызове.",
-    cardId: "c9",
-    cardLabel: "Карточка Q9 (Work Stealing) →",
-    steps: [
+    "id": "sim2",
+    "title": "Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание",
+    "subtitle": "Восемь учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall и сеть — отдельные сценарии. Go 1.26.1 с явным сравнением 1.25.",
+    "cardId": "c9",
+    "cardLabel": "Q9: поиск и перехват работы →",
+    "steps": [
       {
-        title: "1. Опрос очередей и правило 61-го тика",
-        desc: "Процессор P1 выполняет G1 (в его очереди LRQ лежат ещё 6 горутин: G2–G7). Чтобы локальные горутины не заморили голодом глобальную очередь GRQ, ровно на каждый 61-й тик (schedtick % 61 == 0) процессор обязан сначала взять задачу из GRQ.",
-        boxes: [
+        "title": "1. Несколько источников работы",
+        "desc": "P — ресурсы рантайма, M — поток ОС, G — горутина. В findRunnable есть проверки GC, таймеров и другой служебной работы, поэтому это не простая неизменная очередь приоритетов. При schedtick % 61 == 0 и наблюдаемой непустой GRQ рантайм пробует взять глобальную работу для справедливости. Тик не равен миллисекунде; runnext может его наследовать.",
+        "descEN": "G is a goroutine, M an OS thread and P the resources needed to run user Go code. The scheduler has several work sources and special runtime work. A schedtick % 61 check can favor global work, but it is not a wall-clock interval or a complete priority contract.",
+        "boxes": [
           {
-            title: "Процессор P1 (Поток M1)",
-            rows: [
-              { k: "На ядре (M1.curg):", v: "G1 (_Grunning)", hl: false },
-              { k: "P1.runq (LRQ):", v: "[ G2, G3, G4, G5, G6, G7 ] (6 шт.)", hl: false },
-              { k: "P1.schedtick:", v: "61 → Проверка GRQ первой!", hl: true }
+            "title": "Источники / Work sources",
+            "rows": [
+              {
+                "k": "Локально",
+                "v": "runnext + обычная runq",
+                "hl": false
+              },
+              {
+                "k": "Общее",
+                "v": "Готовые G в GRQ",
+                "hl": false
+              },
+              {
+                "k": "События",
+                "v": "Сеть, таймеры, работа других P",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Глобальные ресурсы рантайма",
-            rows: [
-              { k: "Глобальная GRQ:", v: "[ G9 ] (защищена мьютексом)", hl: true },
-              { k: "netpoller (epoll):", v: "0 готовых событий", hl: false },
-              { k: "Фоновый sysmon:", v: "Сканирует время работы G", hl: false }
-            ]
-          },
-          {
-            title: "Процессор P2 (Поток M2)",
-            rows: [
-              { k: "На ядре (M2.curg):", v: "G8 (завершается)", hl: false },
-              { k: "P2.runq (LRQ):", v: "Пусто (0 горутин)", hl: false },
-              { k: "Статус P2:", v: "_Prunning", hl: false }
+            "title": "Проверка справедливости",
+            "rows": [
+              {
+                "k": "Условие",
+                "v": "schedtick % 61 == 0 и GRQ не пуста",
+                "hl": true
+              },
+              {
+                "k": "Действие",
+                "v": "Попытка получить глобальную G",
+                "hl": true
+              },
+              {
+                "k": "Не следует",
+                "v": "Ровно через 61 мс / 61 горутину",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does a long chain of runnext executions necessarily advance schedtick each time?",
+          "promptRU": "Обязательно ли длинная цепочка runnext увеличивает schedtick каждый раз?",
+          "answerEN": "No. Inheriting the time slice can keep the same tick; sysmon also helps fairness.",
+          "answerRU": "Нет. При наследовании кванта тик может сохраняться; справедливости также помогает sysmon."
+        }
       },
       {
-        title: "2. Асинхронное вытеснение (sysmon + SIGURG)",
-        desc: "Горутина G1 на P1 крутит тяжёлый цикл for {} дольше 10 мс без вызовов функций. Фоновый поток sysmon (живёт без P) замечает превышение квоты 10 мс и посылает потоку M1 сигнал ОС SIGURG. G1 снимается с ядра и отправляется в глобальную очередь GRQ!",
-        boxes: [
+        "title": "2. Запросить вытеснение — ещё не переключить",
+        "desc": "Отдельный сценарий: G1 исполняется на M1 с P1. Sysmon наблюдает неизменный schedtick; порог forcePreemptNS равен 10 мс в проверенной реализации. Он запрашивает вытеснение. На поддерживаемом Unix-пути используется SIGURG, но точная задержка и успешность этой попытки не гарантированы.",
+        "descEN": "In this scenario G1 runs on M1 with P1. Sysmon observes an unchanged scheduling tick and can request preemption using the checked 10 ms threshold. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
+        "boxes": [
           {
-            title: "Процессор P1 (Поток M1)",
-            rows: [
-              { k: "Сигнал ядра:", v: "Получен SIGURG → asyncPreempt!", hl: true },
-              { k: "На ядре (M1.curg):", v: "Переключён на G2 из LRQ", hl: true },
-              { k: "P1.runq (LRQ):", v: "[ G3, G4, G5, G6, G7, G_new ] (6 шт.)", hl: false }
+            "title": "До безопасного переключения",
+            "rows": [
+              {
+                "k": "M1 + P1",
+                "v": "Обслуживают G1",
+                "hl": false
+              },
+              {
+                "k": "G1",
+                "v": "Ещё может исполняться",
+                "hl": true
+              },
+              {
+                "k": "Другие G",
+                "v": "Не получают гарантию запуска через 10 мс",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Глобальные ресурсы рантайма",
-            rows: [
-              { k: "Глобальная GRQ:", v: "[ G1 (вытеснена!) ]", hl: true },
-              { k: "netpoller (epoll):", v: "Пусто", hl: false },
-              { k: "Фоновый sysmon:", v: "Отправил SIGURG потоку M1 (>10ms)", hl: true }
-            ]
-          },
-          {
-            title: "Процессор P2 (Поток M2)",
-            rows: [
-              { k: "На ядре (M2.curg):", v: "Пусто (ищет работу в findrunnable)", hl: false },
-              { k: "P2.runq (LRQ):", v: "Пусто (0 горутин)", hl: false },
-              { k: "Статус P2:", v: "Поиск задач...", hl: false }
+            "title": "Сигнал / Request",
+            "rows": [
+              {
+                "k": "sysmon",
+                "v": "Запросить вытеснение",
+                "hl": true
+              },
+              {
+                "k": "Unix",
+                "v": "SIGURG — механизм, не квант времени",
+                "hl": false
+              },
+              {
+                "k": "Если точка небезопасна",
+                "v": "Отложить / повторить",
+                "hl": true
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does receiving SIGURG automatically make every instruction safe to preempt?",
+          "promptRU": "Делает ли получение SIGURG любую инструкцию безопасной для вытеснения?",
+          "answerEN": "No. The runtime checks whether the interrupted point is safe.",
+          "answerRU": "Нет. Рантайм проверяет безопасность прерванной точки."
+        }
       },
       {
-        title: "3. Кража задач (Work Stealing — 50% очереди)",
-        desc: "Процессор P2 остался без работы: проверил свою LRQ, проверил GRQ и netpoller — везде пусто. P2 выбирает случайного соседа (P1, у которого 6 горутин) и через lock-free CAS (runqgrab) атомарно крадёт РОВНО ПОЛОВИНУ его очереди (3 горутины)!",
-        boxes: [
+        "title": "3. Безопасная точка → сохранение → планировщик",
+        "desc": "Продолжение шага 2: обработчик обнаружил допустимую точку и подготовил возврат через asyncPreempt. После возобновления этот путь сохраняет регистры и входит в планировщик. В обычном пути уступки G1 становится runnable; следующий выбор зависит от доступной работы. Это не отменяет G1 и не снимает её блокировки.",
+        "descEN": "Continuing step 2, the handler found a safe point and arranged asyncPreempt on resumption. That path saves registers and enters the scheduler. In the ordinary yield path G1 becomes runnable; the next selection depends on available work. Preemption neither cancels G1 nor releases its locks.",
+        "boxes": [
           {
-            title: "Процессор P1 (Жертва кражи)",
-            rows: [
-              { k: "На ядре (M1.curg):", v: "G2 (_Grunning)", hl: false },
-              { k: "P1.runq (LRQ):", v: "[ G3, G4, G5 ] (осталось 3 из 6)", hl: true },
-              { k: "Синхронизация:", v: "CAS по индексу P1.runqhead", hl: false }
+            "title": "Переход / Transition",
+            "rows": [
+              {
+                "k": "1. Обработчик",
+                "v": "Проверить точку и изменить контекст",
+                "hl": false
+              },
+              {
+                "k": "2. После возврата",
+                "v": "asyncPreempt: сохранить регистры",
+                "hl": true
+              },
+              {
+                "k": "3. Планировщик",
+                "v": "G1 снова доступна для исполнения",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Механизм кражи (runqsteal)",
-            rows: [
-              { k: "Украдено у P1:", v: "3 горутины (50% хвоста LRQ)", hl: true },
-              { k: "Блокировки:", v: "0 мьютексов (Lock-Free CAS!)", hl: true },
-              { k: "Фоновый sysmon:", v: "Нагрузка сбалансирована", hl: false }
-            ]
-          },
-          {
-            title: "Процессор P2 (Вор — снова в работе)",
-            rows: [
-              { k: "На ядре (M2.curg):", v: "Запустил украденную G6!", hl: true },
-              { k: "P2.runq (LRQ):", v: "[ G7, G_new ] (ещё 2 в очереди)", hl: true },
-              { k: "Статус P2:", v: "_Prunning", hl: false }
+            "title": "Что сохраняется",
+            "rows": [
+              {
+                "k": "Операция G1",
+                "v": "Ещё не завершена",
+                "hl": false
+              },
+              {
+                "k": "Mutex у G1",
+                "v": "Не отпускается автоматически",
+                "hl": false
+              },
+              {
+                "k": "Отмена",
+                "v": "Отдельный протокол приложения",
+                "hl": true
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Can another goroutine acquire G1’s locked mutex merely because G1 was preempted?",
+          "promptRU": "Может ли другая горутина захватить занятый G1 mutex только потому, что G1 вытеснили?",
+          "answerEN": "No. Preemption does not unlock it; the program must release the lock correctly.",
+          "answerRU": "Нет. Вытеснение не отпускает mutex; программа должна корректно его освободить."
+        }
       },
       {
-        title: "4. Блокирующий Syscall (Handoff _Psyscall) против netpoller",
-        desc: "Горутина G2 на потоке M1 делает блокирующий системный вызов (или Cgo). Поток M1 застревает в ядре ОС! Чтобы очередь P1 не простаивала, P1 переводится в _Psyscall, отвязывается от M1 и передаётся свободному потоку M3 (Handoff).",
-        boxes: [
+        "title": "4. Перед перехватом: пять готовых G",
+        "desc": "Новый сценарий, не продолжение очередей шага 3. P2 ищет работу и рассматривает обычную очередь P1. Для наглядности очередь неизменна на время успешной попытки: [A,B,C,D,E], голова слева; runnext пуст. runqgrab рассчитывает n - n/2 = 3 и через CAS забирает префикс с головы. При конкурирующем изменении нужна повторная проверка.",
+        "descEN": "This is a new stable-queue example. P2 considers P1’s ordinary queue [A,B,C,D,E], head on the left, with empty runnext. runqgrab computes n - n/2 = 3 and claims the head prefix with CAS. Concurrent changes can require retrying.",
+        "boxes": [
           {
-            title: "Поток M1 (Заблокирован в ядре ОС)",
-            rows: [
-              { k: "Горутина G2:", v: "_Gsyscall (ждёт диск / Cgo)", hl: true },
-              { k: "Связь с P1:", v: "ОТВЯЗАН (M1 блокирован без P)", hl: true },
-              { k: "При выходе:", v: "Вернёт G2 на свободный P или в GRQ", hl: false }
+            "title": "P1 до / Before",
+            "rows": [
+              {
+                "k": "Обычная очередь",
+                "v": "[A B C D E]",
+                "hl": true
+              },
+              {
+                "k": "runnext",
+                "v": "Пуст",
+                "hl": false
+              },
+              {
+                "k": "Уже исполняемая G",
+                "v": "Не входит в перехватываемую пачку",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Передача процессора P1 (Handoff)",
-            rows: [
-              { k: "Статус P1:", v: "_Psyscall → захвачен потоком M3!", hl: true },
-              { k: "Поток M3 + P1:", v: "Продолжает выполнять [ G3, G4, G5 ]", hl: true },
-              { k: "Сетевой I/O (G8):", v: "Ждёт в netpoller (_Gwaiting) без потери M!", hl: false }
-            ]
-          },
-          {
-            title: "Процессор P2 (Поток M2)",
-            rows: [
-              { k: "На ядре (M2.curg):", v: "Работает штатно", hl: false },
-              { k: "Лимит потоков M:", v: "До 10 000 потоков ОС (SetMaxThreads)", hl: false },
-              { k: "Статус P2:", v: "_Prunning", hl: false }
+            "title": "Выбранная пачка",
+            "rows": [
+              {
+                "k": "Размер",
+                "v": "5 − floor(5/2) = 3",
+                "hl": true
+              },
+              {
+                "k": "С головы",
+                "v": "[A B C]",
+                "hl": true
+              },
+              {
+                "k": "P2 до",
+                "v": "Обычная очередь пуста",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Why are three taken rather than two?",
+          "promptRU": "Почему берутся три, а не две?",
+          "answerEN": "The formula rounds half upward: n - floor(n/2). This is a runtime queue policy, not a language rule.",
+          "answerRU": "Формула округляет половину вверх: n - floor(n/2). Это политика очереди рантайма, не правило языка."
+        }
+      },
+      {
+        "title": "5. После перехвата: одна к исполнению, две в очередь",
+        "desc": "Продолжение шага 4: runqsteal возвращает последний элемент взятой пачки, C, для исполнения, а A и B публикует в очереди P2. В P1 остаются D и E. Все пять G учтены, уже работающую G не перемещали. Это модель успешного пути без конкурирующих изменений; выбор жертвы и общее расписание не обещаны.",
+        "descEN": "Continuing step 4, runqsteal returns C, the last element of the grabbed batch, for execution. A and B are queued on P2; D and E remain on P1. All five are accounted for. This models a successful stable-queue path, not a guaranteed program schedule.",
+        "boxes": [
+          {
+            "title": "P1 после / After",
+            "rows": [
+              {
+                "k": "Обычная очередь",
+                "v": "[D E]",
+                "hl": true
+              },
+              {
+                "k": "Изъято с головы",
+                "v": "A, B, C",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "P2 после / After",
+            "rows": [
+              {
+                "k": "Возвращена для исполнения",
+                "v": "C",
+                "hl": true
+              },
+              {
+                "k": "Обычная очередь",
+                "v": "[A B]",
+                "hl": true
+              },
+              {
+                "k": "Проверка количества",
+                "v": "2 + 2 + 1 = 5",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Would moving C directly from P1’s running slot be the same operation?",
+          "promptRU": "Было бы извлечение C прямо из исполняемого слота P1 той же операцией?",
+          "answerEN": "No. This steals runnable queue entries, not a currently running goroutine.",
+          "answerRU": "Нет. Здесь забирают готовые элементы очереди, а не исполняющуюся горутину."
+        }
+      },
+      {
+        "title": "6. Syscall: различие Go 1.25 и 1.26",
+        "desc": "Новый сценарий: G1 входит в обычный runtime-aware syscall на M1. В Go 1.25 связь M–P снимается, а P получает _Psyscall. В Go 1.26.1 обычный вход может сохранить связь M1–P1, а G1 переходит в _Gsyscall; отдельного действующего состояния Psyscall больше нет. Для изъятия P рантайм удерживает состояние G, проверяет связи и безопасно отсоединяет P. Заведомо блокирующий entersyscallblock отдаёт P отдельным путём.",
+        "descEN": "In a new syscall scenario, Go 1.25 detaches M from P and marks P _Psyscall. In Go 1.26.1, ordinary entry can retain M–P attachment while G is _Gsyscall. Retaking P holds the G state, validates the links and detaches P safely. The known-blocking entry path gives up P separately.",
+        "boxes": [
+          {
+            "title": "Go 1.25 · обычный вход",
+            "rows": [
+              {
+                "k": "G1",
+                "v": "_Gsyscall",
+                "hl": false
+              },
+              {
+                "k": "M1 ↔ P1",
+                "v": "Связь снята",
+                "hl": true
+              },
+              {
+                "k": "P1",
+                "v": "_Psyscall; может быть изъят",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Go 1.26.1 · обычный вход",
+            "rows": [
+              {
+                "k": "G1",
+                "v": "_Gsyscall",
+                "hl": false
+              },
+              {
+                "k": "M1 ↔ P1",
+                "v": "Может пока сохраниться",
+                "hl": true
+              },
+              {
+                "k": "P1",
+                "v": "_Prunning; syscall определяют по G",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Go 1.26.1 · изъятие",
+            "rows": [
+              {
+                "k": "Зафиксировать",
+                "v": "setBlockOnExitSyscall",
+                "hl": false
+              },
+              {
+                "k": "Передать",
+                "v": "takeP → resume → handoffp",
+                "hl": true
+              },
+              {
+                "k": "Неиспользуемое имя",
+                "v": "_Psyscall_unused",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Can a Go 1.25 diagram labelled _Psyscall be reused unchanged for Go 1.26?",
+          "promptRU": "Можно ли без изменений использовать схему 1.25 с _Psyscall для Go 1.26?",
+          "answerEN": "No. The ordinary entry and retake protocol changed; distinguish G state from P state.",
+          "answerRU": "Нет. Изменились обычный вход и протокол изъятия; различай состояние G и состояние P."
+        }
+      },
+      {
+        "title": "7. Syscall вернулся: для Go-кода снова нужен P",
+        "desc": "В обеих версиях возврат к обычному Go-коду требует P. Если P можно сохранить или получить, исполнение продолжается. Если P недоступен, G1 может попасть в очередь, а M1 остановиться. Поэтому число M не равно GOMAXPROCS; один syscall также не означает обязательное создание нового M. При cgo внешний код может вычислять, а не только ждать в ядре.",
+        "descEN": "In both versions, resuming normal user Go code requires a P. The thread may keep or acquire one. Otherwise G1 can be queued while M1 stops. Thread count need not equal GOMAXPROCS, and a syscall need not create a new thread. Foreign cgo code may compute rather than wait in the kernel.",
+        "boxes": [
+          {
+            "title": "Есть P",
+            "rows": [
+              {
+                "k": "G1",
+                "v": "Продолжить с P",
+                "hl": true
+              },
+              {
+                "k": "M",
+                "v": "Может быть прежним",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "Нет доступного P",
+            "rows": [
+              {
+                "k": "G1",
+                "v": "Runnable: ждать планирования",
+                "hl": true
+              },
+              {
+                "k": "M1",
+                "v": "Может остановиться",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Предел приложения",
+            "rows": [
+              {
+                "k": "Лимитер операций",
+                "v": "Отдельно от GOMAXPROCS",
+                "hl": true
+              },
+              {
+                "k": "Отмена C-кода",
+                "v": "Не обеспечивается одним context",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Does a timeout on context forcibly terminate any foreign call?",
+          "promptRU": "Завершает ли timeout контекста любой внешний вызов принудительно?",
+          "answerEN": "No. The operation or its API must support cancellation; a timeout can only stop waits that observe it.",
+          "answerRU": "Нет. Операция или её API должна поддерживать отмену; timeout прекращает лишь ожидания, которые его учитывают."
+        }
+      },
+      {
+        "title": "8. Сеть: припарковать G, сохранить поток для работы",
+        "desc": "Отдельный стандартный Unix-сценарий поллируемого сокета: чтение пока невозможно, поэтому G1 ждёт через netpoller. M1 с P1 может исполнять другую G; нет отдельного занятого потока на каждый ожидающий сокет. Событие готовности позволяет возобновить ожидание и повторить I/O, но не гарантирует немедленного запуска или наличия всех запрошенных байтов. Пользовательская реализация net.Conn может вести себя иначе.",
+        "descEN": "For a standard pollable Unix socket, a read that would block parks G1 through netpoll. M1 with P1 can run another G. Readiness permits resumption and an I/O retry; it guarantees neither immediate scheduling nor all requested bytes. A custom net.Conn implementation may behave differently.",
+        "boxes": [
+          {
+            "title": "Ожидание / Waiting",
+            "rows": [
+              {
+                "k": "G1",
+                "v": "Waiting в поллируемом I/O",
+                "hl": true
+              },
+              {
+                "k": "M1 + P1",
+                "v": "Могут выполнять другую G",
+                "hl": true
+              }
+            ]
+          },
+          {
+            "title": "Готовность / Readiness",
+            "rows": [
+              {
+                "k": "Событие",
+                "v": "Разрешает возобновить попытку I/O",
+                "hl": false
+              },
+              {
+                "k": "G1",
+                "v": "Получает возможность продолжить",
+                "hl": true
+              },
+              {
+                "k": "Не гарантия",
+                "v": "Немедленный запуск / полное сообщение",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Does one ready socket event mean Read must return a complete application message?",
+          "promptRU": "Означает ли одно событие готовности, что Read вернёт целое сообщение приложения?",
+          "answerEN": "No. Readiness and stream framing are separate; handle partial reads and the protocol’s message boundaries.",
+          "answerRU": "Нет. Готовность и границы сообщений потока — разные вещи; учитывай частичные чтения и формат протокола."
+        }
+      }
+    ],
+    "learningHint": "Не смешивай три перехода: runnable → running; запрос → безопасное вытеснение; занятый M → доступный другому M процессор P. Голова очереди слева. Цвет выделяет изменение, смысл повторяется текстом.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.25.0: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+      },
+      {
+        "title": "go1.26.1: runtime/preempt.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/preempt.go"
+      },
+      {
+        "title": "go1.26.1: runtime/signal_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/signal_unix.go"
+      },
+      {
+        "title": "go1.26.1: internal/poll/fd_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/poll/fd_unix.go"
       }
     ]
   },
@@ -2144,34 +2569,39 @@ const SIMULATORS = [
 
 const CHEATSHEET_ROWS = [
   {
-    topic: "1. Горутина vs Поток ОС и Стек",
-    how: "<code>go fn()</code> → <code>runtime.newproc</code> на стеке <code>g0</code>. Структура <code>runtime.g</code> + стек в хипе. На дно стека кладётся адрес возврата <code>runtime.goexit</code>.",
-    markers: "Стек от <strong>2 КБ</strong> до <strong>1 ГБ</strong> (у треда ОС 1–8 МБ). Переключение ~15 нс против 1–2 мкс.",
-    cardId: "c1", simId: "sim1"
+    "topic": "1. Горутина vs Поток ОС и Стек",
+    "how": "Горутина → очередь → исполнение. <code>go</code> вычисляет аргументы у вызывающего; <code>newproc</code> подготавливает G и стек на <code>g0</code>. Готовность к запуску ещё не исполнение.",
+    "markers": "Базовый <code>stackMin</code> — 2 КиБ в проверенной реализации; реальный размер и память процесса зависят от нагрузки. Нет универсальной цены переключения в нс.",
+    "cardId": "c1",
+    "simId": "sim1"
   },
   {
-    topic: "2. Регистры CPU и Переключение (gogo)",
-    how: "Контекст хранится в <code>g.sched</code> (<code>gobuf</code>). <code>runtime.gogo</code> грузит <code>&G</code> в <code>R14</code>, стек в <code>RSP</code> и делает <code>JMP</code> в <code>RIP</code>. Обратно на <code>g0</code> — через <code>mcall</code>.",
-    markers: "Занимает <strong>~10–20 нс</strong> в user space на границе вызова функции без обращения к ядру ОС.",
-    cardId: "c6", simId: "sim1"
+    "topic": "2. Регистры CPU и Переключение (gogo)",
+    "how": "На amd64 <code>gogo</code> восстанавливает текущую G, SP, BP и контекст; переход к saved PC продолжает код. <code>mcall</code> переключает на системный стек g0.",
+    "markers": "<strong>Кто → где стек → откуда продолжить.</strong> R14 хранит указатель на G, RSP — адрес в стеке, а не весь стек. Это детали amd64, не общий контракт CPU.",
+    "cardId": "c6",
+    "simId": "sim1"
   },
   {
-    topic: "3. Динамический рост стека (copystack)",
-    how: "Пролог функции сравнивает <code>RSP</code> с <code>g.stackguard0</code> → <code>morestack</code> (на <code>g0</code>) → <code>copystack</code> → <code>adjustpointers</code>.",
-    markers: "Удвоение <strong>2x</strong> в хипе. Внутренние указатели сдвигаются на <code>Δ = new.hi - old.hi</code> по битовой карте стека.",
-    cardId: "c5", simId: "sim1"
+    "topic": "3. Динамический рост стека (copystack)",
+    "how": "Проверка места → <code>morestack/newstack</code> → новый стек → копирование кадров и исправление указателей. Guard также может означать запрос вытеснения.",
+    "markers": "Обычный рост начинается с удвоения; крупному кадру может понадобиться больше. Уменьшение — отдельный безопасный путь. Возврат функции не гарантирует shrink или падения RSS.",
+    "cardId": "c5",
+    "simId": "sim1"
   },
   {
-    topic: "4. Планировщик GMP и слот P.runnext",
-    how: "Мультиплексирование M:N. У каждого <code>P</code> (<code>GOMAXPROCS</code>) есть <code>LRQ[256]</code> и приоритетный 1-слотовый LIFO <code>runnext</code>.",
-    markers: "<code>runnext</code> держит данные в горячем <strong>L1/L2 кеше CPU</strong>. Каждый <strong>61-й тик</strong> проверяется <code>GRQ</code>.",
-    cardId: "c11", simId: "sim1"
+    "topic": "4. Планировщик GMP и слот P.runnext",
+    "how": "G — горутина, M — поток ОС, P — ресурсы для Go-кода. <code>runnext</code> — один предпочтительный кандидат рядом с обычной очередью; вытесненный кандидат не теряется.",
+    "markers": "Кандидат может наследовать квант и schedtick. <code>% 61</code> — условная проверка GRQ, не таймер; sysmon помогает справедливости. Кеш и скорость не гарантированы.",
+    "cardId": "c11",
+    "simId": "sim1"
   },
   {
-    topic: "5. Вытеснение (sysmon), Work Stealing и Syscall",
-    how: "Гибридное вытеснение: <code>stackPreempt</code> + сигнал <code>SIGURG</code> от <code>sysmon</code>. Пустой <code>P</code> крадёт задачи через <code>runqsteal</code>. В <code>syscall</code> отдаёт <code>_Psyscall</code> другому потоку <code>M</code>.",
-    markers: "Квота <strong>10 мс</strong> → <strong><code>SIGURG</code></strong> → отправка в <code>GRQ</code>. Крадётся ровно <strong>50%</strong> чужой <code>LRQ</code> через <code>CAS</code>.",
-    cardId: "c9", simId: "sim2"
+    "topic": "5. Вытеснение (sysmon), Work Stealing и Syscall",
+    "how": "Запрос вытеснения → безопасная точка → сохранение → планировщик. <code>runqgrab</code> забирает <code>ceil(n/2)</code> с головы обычной очереди; конкуренция может потребовать повтор.",
+    "markers": "10 мс — порог реализации, не SLA. Syscall: 1.25 использует <code>_Psyscall</code>; 1.26 — состояние G и новый протокол изъятия P. Сетевое ожидание через netpoll — другой путь.",
+    "cardId": "c9",
+    "simId": "sim2"
   },
   {
     topic: "6. Канал (hchan), sudog и sendDirect",
