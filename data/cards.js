@@ -27,7 +27,6 @@ const CARDS = [
       "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Время переключения горутин и размер стека потока ОС не являются переносимыми константами; измеряй свою нагрузку вместо заучивания наносекунд.",
       "Оператор go не возвращает дескриптор для join. Организуй ожидание через синхронизацию и определи владельца и путь завершения каждой горутины. Возврат из main не ждёт остальные горутины."
     ],
-    "practicalEN": "For a server, bound active work and queued requests separately. A parked goroutine uses no CPU for that wait, but its stack and reachable request data can still consume memory.",
     "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
     "sources": [
       {
@@ -49,14 +48,14 @@ const CARDS = [
     ],
     "practice": {
       "kind": "Объясни и измени условие",
-      "promptEN": "One hundred thousand goroutines are waiting on channels. Can you predict RSS from that count alone?",
-      "promptRU": "Сто тысяч горутин ждут на каналах. Можно ли по одному этому числу предсказать RSS?",
+      "promptEN": "One hundred thousand goroutines are waiting on channels. What do you need besides that count to estimate memory use?",
+      "promptRU": "Сто тысяч горутин ждут на каналах. Что нужно знать кроме этого числа, чтобы оценить память?",
       "pointsEN": [
-        "No: include allocated stacks, descriptors, retained data and other runtime/process memory.",
+        "Allocated stacks, descriptors, retained data and other runtime/process memory; the count alone does not determine RSS.",
         "Waiting does not imply leaking. Check ownership, a reachable completion path and whether the population keeps growing."
       ],
       "pointsRU": [
-        "Нет: нужны выделенные стеки, дескрипторы, удерживаемые данные и остальная память рантайма и процесса.",
+        "Выделенные стеки, дескрипторы, удерживаемые данные и остальная память рантайма и процесса; одно число не определяет RSS.",
         "Ожидание само по себе не означает утечку. Проверь владельца, достижимый путь завершения и рост числа горутин."
       ],
       "followUpEN": "What changes if each waiter retains a 1 MiB request body?",
@@ -70,7 +69,7 @@ const CARDS = [
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q2: Can a program have a race condition without a data race?",
+    qEN: "Can a program have a race condition without a data race?",
     qRU: "Может ли в программе быть логическая гонка без гонки данных?",
     shortEN: "A data race is an unsynchronized conflicting access to shared memory: at least one access writes. A race condition is a timing-dependent logic error. Locking individual reads and writes can remove the data race while leaving a check-then-act operation incorrect.",
     shortRU: "Гонка данных — это конфликтующий доступ к общей памяти без нужной синхронизации, когда хотя бы одна операция пишет. Логическая гонка — ошибка, зависящая от порядка событий. Можно защитить каждое чтение и запись отдельно, но всё равно неправильно выполнить проверку и действие.",
@@ -126,7 +125,7 @@ if cache.Get(key) == nil {
     "qRU": "Что происходит при запуске горутины?",
     "shortEN": "A go statement evaluates the function and its arguments in the caller, then runs the call in a new goroutine. In the checked runtime, newproc prepares reusable or new goroutine state, initializes a start context and makes the goroutine runnable. Runnable does not mean running.",
     "detailsEN": [
-      "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations.",
+      "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations. A newly created G gets the minimum stack (2 KiB on Linux); since Go 1.19 a reused G can instead get a starting size based on average stack usage recalculated at each GC (GODEBUG adaptivestackstart in the checked runtime).",
       "The runtime initializes saved SP/PC state and, on the illustrated amd64 path, a return path through goexit. These are data for a future execution, not the CPU registers of an already running goroutine.",
       "newproc requests runnext placement with runqput(..., true), but runtime conditions can choose an ordinary queue. A scheduler later transitions the G from runnable to running. The language promises neither immediate execution nor FIFO launch order.",
       "The runtime has internal goroutine IDs, but the language exposes no goroutine handle, public current-ID API or operation to kill another goroutine. Use explicit request IDs, cancellation and completion signals; do not parse stack dumps as an identity API."
@@ -135,12 +134,11 @@ if cache.Get(key) == nil {
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
     "shortRU": "Оператор go вычисляет функцию и её аргументы в вызывающей горутине, а сам вызов выполняет в новой. В проверенном рантайме newproc подготавливает переиспользуемое или новое состояние горутины, настраивает стартовый контекст и делает её готовой к запуску. Готова — ещё не значит выполняется.",
     "detailsRU": [
-      "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений.",
+      "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart в проверенном рантайме).",
       "Рантайм инициализирует сохранённые SP/PC и в показанном amd64-пути — возврат через goexit. Это данные будущего исполнения, а не регистры CPU уже работающей горутины.",
       "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
       "У рантайма есть внутренние ID горутин, но язык не предоставляет дескриптор горутины, публичный API текущего ID или операцию убийства другой горутины. Используй явные ID запросов, отмену и сигналы завершения; разбор stack dump не заменяет API идентификации."
     ],
-    "practicalEN": "Pass values explicitly when the worker needs a snapshot. A closure that reads shared mutable state later has different semantics and may race.",
     "versionNote": "Порядок вычисления go — гарантия языка во всех рассматриваемых версиях. newproc1/gfget/runnext — Go 1.26.1; сигнатуры внутренних функций не являются API. В Go 1.17 нет современной startingStackSize-политики.",
     "sources": [
       {
@@ -158,6 +156,10 @@ if cache.Get(key) == nil {
       {
         "title": "go1.17: runtime/proc.go",
         "url": "https://github.com/golang/go/blob/go1.17/src/runtime/proc.go"
+      },
+      {
+        "title": "Go 1.19 Release Notes: runtime",
+        "url": "https://go.dev/doc/go1.19#runtime"
       }
     ],
     "practice": {
@@ -201,7 +203,6 @@ if cache.Get(key) == nil {
       "Неиспользуемые спаны стеков могут вернуться в кучу. Уменьшение стека, освобождение спана и возврат физических страниц ОС — разные события; ни одно не обещает немедленного соответствующего падения RSS.",
       "StackSys включает полученную рантаймом память стеков, в том числе некоторые стеки потоков ОС, но не учитывает каждый стек C. ReadMemStats выдаёт общие счётчики рантайма, а не отчёт о выделениях отдельной горутины."
     ],
-    "practicalEN": "Compare trends under a representative workload and inspect goroutine profiles for owners and wait sites. Do not subtract two snapshots and call the result the universal cost of one goroutine.",
     "versionNote": "Поля MemStats — публичная документация; устройство stack spans и кешей проверено по Go 1.26.1. Счётчики не эквивалентны RSS ни в Go 1.17, ни в 1.25/1.26.",
     "sources": [
       {
@@ -219,14 +220,14 @@ if cache.Get(key) == nil {
     ],
     "practice": {
       "kind": "Объясни и измени условие",
-      "promptEN": "StackInuse is unchanged after a function returns. Does that prove the function leaked memory?",
-      "promptRU": "StackInuse не изменился после возврата из функции. Доказывает ли это утечку?",
+      "promptEN": "StackInuse is unchanged after a function returns. What can explain that, and what would actually indicate a leak?",
+      "promptRU": "StackInuse не изменился после возврата из функции. Чем это можно объяснить и что на самом деле указывало бы на утечку?",
       "pointsEN": [
-        "No. The goroutine may retain allocated stack capacity, and the runtime can cache stack storage.",
+        "The goroutine may retain allocated stack capacity, and the runtime can cache stack storage; an unchanged value alone proves no leak.",
         "Inspect repeated growth, ownership and reachability. Stack capacity, live frames and RSS answer different questions."
       ],
       "pointsRU": [
-        "Нет. У горутины может сохраниться ёмкость стека, а рантайм может кешировать память стеков.",
+        "У горутины может сохраниться ёмкость стека, а рантайм может кешировать память стеков; неизменное значение само по себе утечку не доказывает.",
         "Проверь повторяющийся рост, владение и достижимость. Ёмкость стека, живые кадры и RSS отвечают на разные вопросы."
       ],
       "followUpEN": "Which additional evidence would distinguish retained capacity from unbounded live goroutines?",
@@ -247,7 +248,7 @@ if cache.Get(key) == nil {
       "Stack checks lead through morestack/newstack on the growth path. Not every function has the same prologue: small leaf functions and nosplit code have special rules. A tripped guard can also request preemption, not just allocation.",
       "For normal growth, Go 1.26.1 starts with twice the old size and can double again until the needed frame fits. copystack relocates active frames and uses pointer maps to fix references; channel-related references require coordinated updates too.",
       "Shrinking is a separate operation at safe points. The checked implementation can halve the stack when usage including a safety allowance is below one quarter, subject to minimum size and safety checks. Returning from a call does not itself guarantee shrinking.",
-      "The default per-goroutine growth limit is 1 GB on 64-bit systems and 250 MB on 32-bit systems; debug.SetMaxStack changes the limit for future growth. Exceeding it crashes the program. A uintptr is an integer, not a GC-tracked pointer you may keep across arbitrary operations."
+      "The default per-goroutine growth limit is 1 GB on 64-bit systems and 250 MB on 32-bit systems; because sizes double, the largest stack under the 64-bit default is 512 MiB; debug.SetMaxStack changes the limit for future growth. Exceeding it crashes the program. A uintptr is an integer, not a GC-tracked pointer you may keep across arbitrary operations."
     ],
     "practicalRU": "Используй обычные указатели и ограничивай глубину рекурсии. Если в профиле заметно копирование стеков, сначала изучи глубину вызовов и крупные кадры; worker pool не является универсальным лечением роста стека.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc descend(depth int, value *int) int {\n\tvar frame [1024]byte\n\tframe[0] = byte(depth)\n\tif depth == 0 {\n\t\t*value = 42\n\t\treturn 0\n\t}\n\tsum := descend(depth-1, value)\n\treturn sum + int(frame[0]) // Keep frame data live across the call.\n}\n\nfunc main() {\n\tvalue := 0\n\tsum := descend(64, &value)\n\tfmt.Println(value, sum) // 42 2080; not a measurement of stack addresses.\n}",
@@ -256,9 +257,8 @@ if cache.Get(key) == nil {
       "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
       "Для обычного роста Go 1.26.1 начинает с удвоенного размера и при необходимости удваивает снова, чтобы вместить нужный кадр. copystack переносит активные кадры и исправляет ссылки по картам указателей; ссылки, связанные с каналами, тоже требуют согласованного обновления.",
       "Уменьшение — отдельная операция в безопасных точках. Проверенная реализация может уменьшить стек вдвое, если использование с защитным запасом меньше четверти, с учётом минимального размера и проверок безопасности. Сам возврат из вызова не гарантирует уменьшения.",
-      "Стандартный предел роста одной горутины — 1 ГБ на 64-битных системах и 250 МБ на 32-битных; debug.SetMaxStack меняет предел будущего роста. Превышение аварийно завершает программу. uintptr — целое число, а не отслеживаемый GC указатель, который можно сохранять через произвольные операции."
+      "Стандартный предел роста одной горутины — 1 ГБ на 64-битных системах и 250 МБ на 32-битных; так как размер удваивается, наибольший стек при 64-битном пределе — 512 МиБ; debug.SetMaxStack меняет предел будущего роста. Превышение аварийно завершает программу. uintptr — целое число, а не отслеживаемый GC указатель, который можно сохранять через произвольные операции."
     ],
-    "practicalEN": "Use ordinary pointers and keep deep recursion bounded. If stack copying appears in a profile, first examine call depth and large frames; a worker pool is not a universal fix for stack growth.",
     "versionNote": "Копируемые стеки есть в 1.17/1.25/1.26. Конкретные пороги, карты и алгоритм описаны по Go 1.26.1; тест результата не доказывает конкретный момент перемещения стека.",
     "sources": [
       {
@@ -276,14 +276,14 @@ if cache.Get(key) == nil {
     ],
     "practice": {
       "kind": "Объясни и измени условие",
-      "promptEN": "A pointer refers to a caller’s local variable while deeper calls grow the stack. Must application code repair that pointer?",
-      "promptRU": "Указатель ссылается на локальную переменную вызывающего, пока вложенные вызовы наращивают стек. Нужно ли приложению исправлять этот указатель?",
+      "promptEN": "A pointer refers to a caller’s local variable while deeper calls grow the stack. Who keeps that pointer valid, and what must application code avoid?",
+      "promptRU": "Указатель ссылается на локальную переменную вызывающего, пока вложенные вызовы наращивают стек. Кто сохраняет корректность этого указателя и чего должен избегать код приложения?",
       "pointsEN": [
-        "No. The runtime and compiler preserve ordinary Go pointer semantics, including during stack relocation.",
+        "The runtime and compiler: they preserve ordinary Go pointer semantics, including during stack relocation.",
         "Do not replace the pointer with a stored uintptr and assume the same safety. Do not infer physical placement from correct output alone."
       ],
       "pointsRU": [
-        "Нет. Рантайм и компилятор сохраняют семантику обычных Go-указателей, в том числе при переносе стека.",
+        "Рантайм и компилятор: они сохраняют семантику обычных Go-указателей, в том числе при переносе стека.",
         "Нельзя заменить указатель сохранённым uintptr и рассчитывать на ту же безопасность. По одному правильному результату нельзя установить физическое размещение."
       ],
       "followUpEN": "If recursion is unbounded, does automatic growth make the algorithm safe?",
@@ -297,7 +297,7 @@ if cache.Get(key) == nil {
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim1",
-    "qEN": "Q6: What must the runtime restore to resume a goroutine?",
+    "qEN": "What must the runtime restore to resume a goroutine?",
     "qRU": "Что runtime восстанавливает, чтобы продолжить выполнение горутины?",
     "shortEN": "To resume a goroutine, the runtime restores where its stack is and where execution should continue. On amd64, RSP points into the active stack, RIP identifies the instruction position, and Go uses R14 for the current goroutine. These roles are easier to understand before memorizing assembly instructions.",
     "shortRU": "Чтобы продолжить горутину, runtime восстанавливает положение её стека и место продолжения кода. На amd64 RSP указывает в активный стек, RIP задаёт позицию инструкции, а Go использует R14 для текущей горутины. Сначала полезно понять эти роли, а затем читать ассемблер.",
@@ -377,7 +377,6 @@ if cache.Get(key) == nil {
       "Go 1.25 ввёл учитывающий контейнеры GOMAXPROCS по умолчанию и периодические обновления. На Linux политика учитывает CPU affinity, квоту cgroup и логические CPU. Явная настройка через окружение или runtime.GOMAXPROCS отключает автообновления; важны настройки совместимости и версия языка модуля.",
       "GOMAXPROCS не ограничивает конкурентность приложения. Пулу БД, обращениям к внешнему сервису и приёму запросов нужны свои бюджеты. При GOMAXPROCS=1 всё ещё возможны чередование операций и гонки данных."
     ],
-    "practicalEN": "Start with the runtime default, observe throttling and latency, and tune against actual load. Choosing 2 or the host CPU count is not a universal container prescription.",
     "versionNote": "В 1.17 стандартный runtime не имел современной container-aware политики. В 1.25 она появилась; 1.26 сохраняет этот API. Для совместимого поведения старых модулей см. containermaxprocs/updatemaxprocs в документации runtime.",
     "sources": [
       {
@@ -425,7 +424,7 @@ if cache.Get(key) == nil {
     "shortEN": "Go can request preemption so other goroutines get a chance to run. Supported platforms have asynchronous preemption as well as checks at safe points. A request is not an immediate switch: the runtime must find a safe place to suspend the current Go execution.",
     "detailsEN": [
       "The checked sysmon/retake implementation uses a 10 ms threshold while observing an unchanged scheduling tick. This is not a strict CPU quantum, a guaranteed latency bound or a statement that sysmon wakes exactly every 10 ms. runnext goroutines can share a tick.",
-      "On supported Unix paths, SIGURG is used to interrupt a thread. The handler checks whether the interrupted code is at an asynchronous safe point and can arrange a call to asyncPreempt after resuming. That path saves registers and enters the scheduler; the signal handler does not simply schedule arbitrary Go code.",
+      "The cooperative path sets the goroutine’s stack guard to stackPreempt; the next function prologue check then enters newstack, which can switch to the scheduler instead of growing the stack (see C5). A loop that makes no calls with a stack check never reaches it, which is why the asynchronous path exists. On supported Unix paths, SIGURG is used to interrupt a thread. The handler checks whether the interrupted code is at an asynchronous safe point and can arrange a call to asyncPreempt after resuming. That path saves registers and enters the scheduler; the signal handler does not simply schedule arbitrary Go code.",
       "If the point is unsafe, preemption must wait or retry. runtime code, foreign C execution and platform mechanisms have different constraints. Preempting a goroutine does not cancel its operation or release its locks.",
       "runtime.Gosched yields voluntarily but creates no application-level ordering guarantee. Use channels, locks or other synchronization for ordering, and check cancellation explicitly in long-running application loops."
     ],
@@ -434,11 +433,10 @@ if cache.Get(key) == nil {
     "shortRU": "Go может запросить вытеснение, чтобы дать шанс другим горутинам. На поддерживаемых платформах есть асинхронное вытеснение и проверки в безопасных точках. Запрос не равен немедленному переключению: рантайм должен найти безопасное место для приостановки Go-кода.",
     "detailsRU": [
       "В проверенной реализации sysmon/retake использует порог 10 мс при наблюдении неизменного тика планировщика. Это не строгий квант CPU, не гарантия задержки и не утверждение, что sysmon просыпается ровно каждые 10 мс. Горутины runnext могут разделять один тик.",
-      "В поддерживаемых Unix-путях для прерывания потока используется SIGURG. Обработчик проверяет асинхронную безопасную точку и может подготовить вызов asyncPreempt после возобновления. Этот путь сохраняет регистры и входит в планировщик; обработчик сигнала не начинает просто исполнять произвольный Go-код.",
+      "Кооперативный путь ставит в stack guard горутины значение stackPreempt; следующая проверка в прологе функции входит в newstack, который может переключиться на планировщик вместо роста стека (см. C5). Цикл без вызовов с проверкой стека до неё не доходит, поэтому и нужен асинхронный путь. В поддерживаемых Unix-путях для прерывания потока используется SIGURG. Обработчик проверяет асинхронную безопасную точку и может подготовить вызов asyncPreempt после возобновления. Этот путь сохраняет регистры и входит в планировщик; обработчик сигнала не начинает просто исполнять произвольный Go-код.",
       "Если точка небезопасна, вытеснение ждёт или повторяется. У кода рантайма, внешнего C-кода и механизмов платформы разные ограничения. Вытеснение горутины не отменяет её операцию и не освобождает блокировки.",
       "runtime.Gosched добровольно уступает исполнение, но не создаёт гарантию порядка событий приложения. Для порядка нужны каналы, блокировки или другая синхронизация, а в длительных циклах приложения отмену нужно проверять явно."
     ],
-    "practicalEN": "For a long computation, check ctx.Done at a suitable work boundary. Scheduler fairness and the responsiveness of your cancellation protocol are separate concerns.",
     "versionNote": "Асинхронное вытеснение появилось в Go 1.14, то есть уже есть в 1.17; поддержка зависит от платформы. Порог и описанный Unix-путь проверены по Go 1.26.1, не являются гарантией языка.",
     "sources": [
       {
@@ -499,7 +497,6 @@ if cache.Get(key) == nil {
       "Проверенный runqgrab берёт ceil(n/2) элементов с головы обычной локальной очереди жертвы и закрепляет их через CAS. Конкурентные изменения могут вызвать повтор. runqsteal возвращает один элемент пачки для исполнения, остальные ставит в очередь; перехват runnext — отдельная возможность, когда она разрешена.",
       "Для неизменной очереди жертвы [A,B,C,D,E] с головой слева пачка равна [A,B,C]. runqsteal возвращает C, а A,B ставит в очередь забирающего P; D,E остаются у жертвы. Это пример по исходникам при заданных условиях, а не предсказание вывода приложения."
     ],
-    "practicalEN": "Use schedtrace for a coarse snapshot and execution tracing for timelines. An uneven queue snapshot alone does not prove cgo, a stuck safe point or a scheduler defect.",
     "versionNote": "Конкретный путь описан по 1.26.1 и сопоставлен с 1.25.0. В Go 1.17 имя findrunnable было со строчной r, а проверка %61 находилась в schedule. Не переносить расположение функций между версиями механически.",
     "sources": [
       {
@@ -562,7 +559,6 @@ if cache.Get(key) == nil {
       "После возврата нужен P, прежде чем продолжится обычный пользовательский Go-код. Если P нет, горутина может стать runnable и ждать. cgo может занимать потоки даже вычислениями, а не ожиданием; GOMAXPROCS не ограничивает такую работу внешнего кода.",
       "Для каждого вызова необязательно создаётся новый поток: свободные могут переиспользоваться. Но неограниченные блокирующие вызовы способны исчерпать ресурсы или предел потоков рантайма (изначально 10 000, настраивается debug.SetMaxThreads). Ограничивай операции у их владельца, не предполагая фиксированного отношения горутин к потокам."
     ],
-    "practicalEN": "The example bounds callbacks admitted through one shared limit. Cancellation can stop waiting for admission; once work starts, the callback must itself cooperate. A context does not forcibly interrupt arbitrary C code.",
     "versionNote": "Существенная граница 1.25 → 1.26: _Psyscall больше не действующее состояние P. Старый путь 1.17/1.25 нельзя выдавать за схему 1.26.1. RawSyscall и особые runtime-пути здесь не моделируются.",
     "sources": [
       {
@@ -615,7 +611,7 @@ if cache.Get(key) == nil {
     "simId": "sim1",
     "qEN": "What is P.runnext, and how does it interact with fairness?",
     "qRU": "Что такое P.runnext и как он связан со справедливостью?",
-    "shortEN": "runnext is a single preferred runnable-goroutine slot next to a P’s ordinary local queue. It can reduce scheduling overhead for related goroutines by letting the selected goroutine inherit the current time slice. It is a runtime optimization, not a promise about who runs next.",
+    "shortEN": "runnext is a single preferred runnable-goroutine slot next to a P’s ordinary local queue. It can reduce scheduling latency for goroutines that communicate and wait: the selected goroutine is taken before the ordinary local queue instead of waiting at its tail. It inherits the remaining time slice, so the chain shares one slice rather than getting a fresh one. It is a runtime optimization, not a promise about who runs next.",
     "detailsEN": [
       "With next=true, runqput can replace the current slot using CAS and move the previous occupant to the ordinary queue; queue overflow has its own path. Calling this a one-element LIFO stack hides the displacement into another queue.",
       "runqget checks runnext before the ordinary local queue and reports inheritTime=true for that path. execute then does not increment schedtick. This local preference does not override all other scheduler work or guarantee immediate execution after go or a channel operation.",
@@ -624,14 +620,13 @@ if cache.Get(key) == nil {
     ],
     "practicalRU": "Объясняй через «один предпочтительный кандидат, остальные остаются в очереди». Не оправдывай передачу данных без синхронизации предполагаемым порядком runnext.",
     "code": "// Source-level model, NOT executable Go. No concurrent queue changes.\n// Before: runnext=A, ordinary queue=[X Y]\n// runqput(P, B, true), assuming runnext is enabled and the queue has room:\n// After:  runnext=B, ordinary queue=[X Y A]\n// runqget(P) can return B with inheritTime=true.\n// This is a local queue rule, not an application execution-order guarantee.",
-    "shortRU": "runnext — отдельный слот для одной предпочтительной готовой горутины рядом с обычной локальной очередью P. Он может снизить накладные расходы для связанных горутин, передав выбранной горутине остаток текущего кванта. Это оптимизация рантайма, а не обещание, кто запустится следующим.",
+    "shortRU": "runnext — отдельный слот для одной предпочтительной готовой горутины рядом с обычной локальной очередью P. Он может снизить задержку планирования для горутин, которые обмениваются данными и ждут друг друга: выбранная горутина берётся раньше обычной локальной очереди, а не ждёт в её хвосте. Она наследует остаток текущего кванта, поэтому цепочка делит один квант, а не получает новый. Это оптимизация рантайма, а не обещание, кто запустится следующим.",
     "detailsRU": [
       "При next=true runqput может заменить содержимое слота через CAS и перенести прежнего кандидата в обычную очередь; при переполнении есть отдельный путь. Название «LIFO-стек из одного элемента» скрывает перенос в другую очередь.",
       "runqget проверяет runnext раньше обычной локальной очереди и возвращает inheritTime=true для этого пути. execute тогда не увеличивает schedtick. Локальный приоритет не отменяет остальную работу планировщика и не гарантирует немедленный запуск после go или операции с каналом.",
       "Цепочка горутин может снова и снова заменять runnext, разделяя один тик. Вытеснение через sysmon помогает не монополизировать P. Ёмкость в один элемент сама по себе не доказывает справедливость; проверенный рантайм отключает оптимизацию без sysmon и может рандомизировать её использование в некоторых сборках.",
       "Связанное исполнение может выиграть от локальности, но ни горячий L1-кеш, ни фиксированное время переключения не гарантированы. Корректная синхронизация должна работать и без runnext, и при переходе горутины на другой P."
     ],
-    "practicalEN": "Explain it with “one preferred candidate, the rest remain queued”. Never use a presumed runnext order to justify an unsynchronized handoff.",
     "versionNote": "Описаны runqput/runqget/execute/retake Go 1.26.1; соответствующие механизмы есть и в 1.25.0. Это внутреннее планирование, а не контракт языка или точная модель кешей CPU.",
     "sources": [
       {
@@ -666,7 +661,7 @@ if cache.Get(key) == nil {
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q12: How would you find and prevent a goroutine leak?",
+    qEN: "How would you find and prevent a goroutine leak?",
     qRU: "Как найти утечку горутин и обеспечить их завершение?",
     shortEN: "A goroutine leaks when it outlives the work that needed it and has no effective way to finish. I would identify who owns it, what it can wait for, and how it stops. A context helps only when the work observes cancellation; a buffer does not cancel an operation.",
     shortRU: "Горутина утекает, когда переживает работу, ради которой была запущена, и не имеет работающего пути завершения. Я проверю, кто ею управляет, чего она может ждать и как должна остановиться. Context помогает только при обработке отмены; буфер сам по себе операцию не отменяет.",
@@ -730,7 +725,7 @@ func Await(ctx context.Context, work func(context.Context) error) error {
     "simId": "sim3",
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
-    "qEN": "Q13: What does a channel buffer change, and what does it not change?",
+    "qEN": "What does a channel buffer change, and what does it not change?",
     "qRU": "Что меняет буфер канала, а что остаётся прежним?",
     "shortEN": "A channel transfers typed values and synchronizes sends with receives. An unbuffered send needs a matching receiver. A buffer lets sends complete while capacity is available, but it does not remove backpressure or make referenced data private to the receiver.",
     "shortRU": "Канал передаёт типизированные значения и синхронизирует отправку с чтением. Небуферизованной отправке нужен получатель. Буфер позволяет отправлять, пока есть место, но не устраняет обратное давление и не делает данные по ссылкам частной копией получателя.",
@@ -793,7 +788,7 @@ func Await(ctx context.Context, work func(context.Context) error) error {
     level: "base",
     levelLabel: "🟢 Base (Entry/Mid)",
     simId: null,
-    qEN: "Q14: How do nil, open, and closed channels behave?",
+    qEN: "How do nil, open, and closed channels behave?",
     qRU: "Чем отличаются операции с nil-каналом, открытым и закрытым каналом?",
     shortEN: "I separate the channel state from the operation. Sending to or receiving from a nil channel blocks. An open channel may wait for a peer or buffer space. A closed channel still yields buffered values, then zero values with ok=false. Sending to a closed channel, closing it again, or closing nil panics.",
     shortRU: "Сначала разделяю состояние канала и операцию. Отправка и чтение nil-канала блокируются. Для открытого канала может потребоваться получатель, отправитель или место в буфере. Закрытый канал отдаёт оставшиеся значения, затем нулевое значение с ok=false. Отправка в закрытый канал, повторное закрытие и закрытие nil вызывают panic.",
@@ -861,7 +856,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": null,
-    "qEN": "Q15: Channels or a mutex — who owns the data, and what must happen together?",
+    "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
     "shortEN": "Use a channel to communicate work, results or lifecycle events. Use a mutex to protect an invariant in shared state. Sending a pointer does not enforce exclusive ownership: the sender and receiver still need an agreement about later access. Choose by the coordination problem, then measure performance.",
     "detailsEN": [
@@ -879,7 +874,6 @@ func Drain(a, b <-chan int, consume func(int)) {
       "RWMutex допускает параллельных читателей, но RLock не разрешает запись. Ожидающий писатель может задержать новых читателей; атомарного повышения read-lock до write-lock нет. Для короткого чтения дополнительные расходы могут перевесить параллелизм: RWMutex не всегда быстрее Mutex.",
       "Каналы сочетаются с select для отмены и обмена. Mutex.Lock не принимает context и не может быть веткой select. Атомарная операция защищает указанное значение, а не произвольный инвариант нескольких полей; актору тоже нужны ограничение очереди и путь завершения."
     ],
-    "practicalEN": "Start with the invariant: a balance must not become negative. Keep its check and update under one lock. Do not promise a universal nanosecond cost or a 10× actor slowdown; benchmark the actual workload. Return snapshots rather than exposing mutable state after unlocking.",
     "versionNote": "Контракты Mutex/RWMutex и передачи значений применимы к Go 1.17, 1.25 и 1.26. Производительность зависит от нагрузки и реализации; фиксированных коэффициентов здесь нет.",
     "sources": [
       {
@@ -925,7 +919,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "simId": "sim3",
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
-    "qEN": "Q16: Why does a channel wait queue contain sudog records instead of just goroutines?",
+    "qEN": "Why does a channel wait queue contain sudog records instead of just goroutines?",
     "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
     "shortEN": "The channel owns the buffer and wait queues. A sudog records one waiting operation and links it to a goroutine. A blocked select may need several such records for one goroutine, so a queue entry and a goroutine are different things.",
     "shortRU": "Канал хранит буфер и очереди ожидания. Sudog описывает одну ожидающую операцию и связывает её с горутиной. Заблокированному select может понадобиться несколько записей для одной горутины, поэтому запись очереди и горутина — разные сущности.",
@@ -980,7 +974,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "simId": "sim3",
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
-    "qEN": "Q17: How does a channel safely hand a value to a waiting receiver?",
+    "qEN": "How does a channel safely hand a value to a waiting receiver?",
     "qRU": "Как канал безопасно передаёт значение ожидающему получателю?",
     "shortEN": "The sender transfers the value while holding the channel lock, releases the lock, and makes the receiver runnable. Runnable does not mean already running. Parking and stack copying follow a coordinated protocol so the waiting receiver’s storage stays valid.",
     "shortRU": "Отправитель передаёт значение под блокировкой канала, отпускает её и делает получателя готовым к запуску. Готовность ещё не означает выполнение. Парковка и копирование стека согласованы так, чтобы место для результата оставалось корректным.",
@@ -1043,7 +1037,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": "sim4",
-    "qEN": "Q18: How does select choose a case, and can cancellation take priority?",
+    "qEN": "How does select choose a case, and can cancellation take priority?",
     "qRU": "Как select выбирает готовую ветку и можно ли дать отмене приоритет?",
     "shortEN": "A select runs one ready channel operation. If several are ready, it chooses one uniformly at random. A default branch runs only when none is ready; without it, select waits. A nil channel cannot become ready. Putting cancellation first in the source does not give it priority.",
     "shortRU": "Select выполняет одну готовую операцию с каналом. Если готовы несколько, он выбирает одну равновероятно. Ветка default выполняется только при отсутствии готовых операций; без неё select ждёт. Nil-канал не может стать готовым. Порядок веток в коде не даёт отмене приоритет.",
@@ -1097,7 +1091,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim4",
-    "qEN": "Q19: Does every select call selectgo, and how does the general path work?",
+    "qEN": "Does every select call selectgo, and how does the general path work?",
     "qRU": "Каждый ли select вызывает selectgo и как устроен общий путь?",
     "shortEN": "No. The compiler specializes simple selects: an empty one blocks, a default-only one runs its body, one channel case becomes an ordinary operation, and one channel case plus default becomes a non-blocking probe. Two or more channel cases use selectgo, which separates randomized polling from consistent channel locking.",
     "shortRU": "Нет. Простые select компилятор разбирает отдельно: пустой блокируется, один default выполняет тело, единственная операция становится обычной операцией с каналом, а операция с default — неблокирующей пробой. Две и более операции идут в selectgo, где случайный порядок опроса отделён от согласованного порядка блокировок.",
@@ -1169,7 +1163,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim5",
-    "qEN": "Q20: What does compare-and-swap do, and why is a separate check and store different?",
+    "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
     "shortEN": "Compare-and-swap means: replace this value only if it still equals the value I expect. The comparison and conditional update are one atomic operation. It returns true if the update happened and false otherwise, so competing goroutines can tell who changed the state.",
     "shortRU": "Compare-and-swap означает: замени это значение, только если оно всё ещё равно ожидаемому. Проверка и условная запись выполняются одной атомарной операцией. Результат true означает успешную замену, false — несовпадение; так конкурирующие горутины узнают, кто изменил состояние.",
@@ -1232,7 +1226,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
-    "qEN": "Q21: How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
+    "qEN": "How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
     "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
     "shortEN": "A Mutex protects shared state through mutual exclusion and synchronization. In the checked runtime, an uncontended Lock first tries a CAS; contention can lead to brief spinning and then parking. Normal mode allows competition, while starvation mode favors waiting goroutines. The 1 ms threshold is an implementation policy, not a maximum wait time.",
     "detailsEN": [
@@ -1252,7 +1246,6 @@ func Drain(a, b <-chan int, consume func(int)) {
       "Допуск к spinning основан на эвристиках: ограничении попыток, доступности CPU/P и пустой локальной очереди. Рантайм не проверяет горутину-владельца, чтобы доказать, что она сейчас выполняется. Когда spinning не подходит или не помог, горутина может парковаться.",
       "Обычный режим: разбудили ожидающего → он соревнуется с новыми → может снова ждать. В медленном пути ожидание дольше порога 1 мс может включить starvation mode, пока mutex ещё захвачен. Unlock передаёт владение первому ожидающему. Режим может закончиться у последнего ожидающего или после короткого ожидания; это не ограничивает задержки планировщика и время удержания lock."
     ],
-    "practicalEN": "Use mutex and block profiles to locate contention, then shorten critical sections or change ownership. SetMutexProfileFraction(5) requests roughly one in five mutex contention events, not every fifth Lock. A profile is evidence about contention, not proof that starvation mode caused an outage.",
     "versionNote": "TryLock появился в Go 1.18; пример не подходит для 1.17. CAS/режимы сверены по Go 1.25.0 и 1.26.1: существенной смены описанного алгоритма нет. Порог 1 мс не является обещанием API.",
     "sources": [
       {
@@ -1305,7 +1298,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
-    "qEN": "Q22: WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?",
+    "qEN": "WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?",
     "qRU": "WaitGroup, Once и Context: кто ждёт, публикует инициализацию и просит отмену?",
     "shortEN": "WaitGroup waits for counted tasks; Once makes callers wait for a single initialization; Context carries cancellation, deadlines and request-scoped values. These are different contracts. Waiting does not serialize workers, cancellation does not join them, and a one-time initializer is not a retry loop.",
     "detailsEN": [
@@ -1327,7 +1320,6 @@ func Drain(a, b <-chan int, consume func(int)) {
       "Отмена — просьба: работа должна проверять Done или использовать API с поддержкой контекста, а владелец при необходимости отдельно ждёт завершения. Вызывай CancelFunc для освобождения связанных ресурсов. Методы Context безопасны при параллельных вызовах; изменяемые объекты в values автоматически не защищаются.",
       "WithoutCancel (Go 1.21+) сохраняет поиск values, но убирает дедлайн, отмену и cause родителя: Done равен nil. При использовании добавь явный таймаут. Это только для осознанно отделённой best-effort работы с владельцем; доставки и остановки вместе с сервисом он не обеспечивает. Обязательному аудиту нужна надёжная передача или завершение до ответа об успехе."
     ],
-    "practicalEN": "Ask three questions: who registers and joins the task, who publishes initialized state, and who cancels it? Treat background work as a lifecycle decision. A timeout plus a detached goroutine is not a durable queue.",
     "versionNote": "Пример: Go 1.25+ (WaitGroup.Go); отдельная переменная каждой итерации при := — семантика модулей Go 1.22+. Для Go 1.17: Add до go, defer Done и явная передача i аргументом. WithoutCancel — 1.21+. Различие panic-пути проверено по тегам 1.25.0 и 1.26.1.",
     "sources": [
       {
@@ -1387,7 +1379,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": "sim6",
-    "qEN": "Q23: How do stack and heap allocation differ, and how do you compare their cost?",
+    "qEN": "How do stack and heap allocation differ, and how do you compare their cost?",
     "qRU": "Чем отличаются выделения на стеке и в куче и как сравнивать их стоимость?",
     "shortEN": "Local storage can often live in a goroutine stack frame or disappear through optimization. Heap storage has allocator and GC costs. That makes avoiding unnecessary heap allocations useful, but neither taking an address nor returning a pointer proves that a particular call allocates. Check the optimized caller and measure the real workload.",
     "detailsEN": [
@@ -1445,7 +1437,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim6",
-    "qEN": "Q24: How does escape analysis choose storage, and how do you verify a particular allocation?",
+    "qEN": "How does escape analysis choose storage, and how do you verify a particular allocation?",
     "qRU": "Как escape analysis определяет размещение и как проверить конкретное выделение памяти?",
     "shortEN": "Escape analysis follows pointer lifetimes at compile time. A pointer must not outlive its stack storage or be retained in the heap while pointing into that storage. The compiler may inline calls, eliminate objects or choose heap storage for size and other constraints. Syntax alone is not a reliable allocation test.",
     "detailsEN": [
@@ -1517,7 +1509,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim6",
-    "qEN": "Q25: How do mcache, mcentral, mheap and scan/noscan fit together?",
+    "qEN": "How do mcache, mcentral, mheap and scan/noscan fit together?",
     "qRU": "Как связаны mcache, mcentral, mheap и разделение scan/noscan?",
     "shortEN": "For a small heap allocation, the runtime can take a free slot from a span cached by the current P. If the cache cannot satisfy it, slower paths refill or obtain pages. Pointer-free payloads do not need pointer scanning, but they still occupy memory and must be tracked and reclaimed. A fast path is not a guarantee that every allocation is lock-free.",
     "detailsEN": [
@@ -1593,7 +1585,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": "sim6",
-    "qEN": "Q26: How does Go's GC decide what to keep, and what happens during a collection?",
+    "qEN": "How does Go's GC decide what to keep, and what happens during a collection?",
     "qRU": "Как GC в Go решает, что сохранить, и из каких этапов состоит сборка?",
     "shortEN": "Go traces pointers from roots to find heap objects that must stay alive, then reclaims unmarked objects for reuse. Most marking and sweeping run alongside the program; phase transitions use stop-the-world pauses. Think reachability first, then the white/grey/black model.",
     "detailsEN": [
@@ -1661,7 +1653,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim6",
-    "qEN": "Q27: How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?",
+    "qEN": "How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?",
     "qRU": "Как фазы GC, mark assist, GOGC и GOMEMLIMIT влияют на память и задержки?",
     "shortEN": "GOGC sets a heap growth goal; the pacer starts marking early enough to aim for that goal. GOMEMLIMIT is a soft budget for memory managed by Go, not an OOM shield. GC mostly works alongside the program, but brief stop-the-world transitions and allocation assists can still affect latency.",
     "detailsEN": [
@@ -1737,7 +1729,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim6",
-    "qEN": "Q28: What does Go's hybrid write barrier protect, and which pointer writes need it?",
+    "qEN": "What does Go's hybrid write barrier protect, and which pointer writes need it?",
     "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
     "shortEN": "The collector scans a graph while the program changes its edges. The hybrid write barrier keeps those changes from hiding reachable objects from the scan. It preserves GC correctness; it does not synchronize application goroutines or make a data race safe.",
     "detailsEN": [
@@ -1812,7 +1804,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": null,
-    "qEN": "Q29: What do a slice and a string refer to, and when does append allocate a new backing array?",
+    "qEN": "What do a slice and a string refer to, and when does append allocate a new backing array?",
     "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
     "shortEN": "A slice is a view of an array: copying the slice does not copy its elements. append reuses that array when capacity is sufficient and allocates a new one otherwise. A string is an immutable sequence of bytes. Exact header sizes and slice growth factors are implementation details.",
     "detailsEN": [
@@ -1875,7 +1867,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim7",
-    "qEN": "Q30: How did classic Go maps use buckets and incremental growth before Swiss Tables?",
+    "qEN": "How did classic Go maps use buckets and incremental growth before Swiss Tables?",
     "qRU": "Как классические map до Swiss Tables использовали бакеты и постепенное расширение?",
     "shortEN": "Classic maps used buckets with eight slots and overflow chains. A hash prefix filtered candidates before key comparison. Excess load grew the bucket array; excess overflow could trigger a same-size rebuild. Evacuation spread copying across mutations, but did not guarantee constant insertion latency.",
     "detailsEN": [
@@ -1937,7 +1929,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim7",
-    "qEN": "Q31: How do Swiss Tables find a key and grow a Go map?",
+    "qEN": "How do Swiss Tables find a key and grow a Go map?",
     "qRU": "Как Swiss Tables находят ключ и расширяют map в Go?",
     "shortEN": "Swiss Tables first filter a group using short hash fingerprints, then compare candidate keys. Go uses groups of eight slots and a directory of bounded-size tables. This reduces some lookup and growth work, but neither a one-cycle lookup nor constant worst-case insertion latency is guaranteed.",
     "detailsEN": [
@@ -2006,7 +1998,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": "sim7",
-    "qEN": "Q32: What do delete and clear release, and what can you rely on during map iteration?",
+    "qEN": "What do delete and clear release, and what can you rely on during map iteration?",
     "qRU": "Что освобождают delete и clear и на что можно рассчитывать при обходе map?",
     "shortEN": "Deleting an entry removes the map’s references to its key and value, so otherwise unreachable payloads can be collected. It does not promise to shrink the table. clear empties the existing map; replacing one variable leaves aliases pointing to the old map. Iteration order is unspecified.",
     "detailsEN": [
@@ -2072,7 +2064,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
-    "qEN": "Q33: What does an interface value contain, and why can a typed nil make an interface non-nil?",
+    "qEN": "What does an interface value contain, and why can a typed nil make an interface non-nil?",
     "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
     "shortEN": "An interface value has a dynamic type and a dynamic value. It is nil only when neither is present. A nil *T stored in an interface still supplies the dynamic type *T. Runtime layouts explain the representation, but interface semantics do not depend on a fixed byte size.",
     "detailsEN": [
@@ -2132,7 +2124,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
     "simId": null,
-    "qEN": "Q34: How do method sets differ from the shorthand used to call pointer methods?",
+    "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
     "shortEN": "For a defined non-interface type T, the method set of T contains methods with receiver T; *T also has methods with receiver *T. An addressable variable t can call a pointer method through the shorthand t.M(), but that does not add the method to T’s method set.",
     "detailsEN": [
@@ -2182,7 +2174,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
-    "qEN": "Q35: When do deferred calls run, and where can recover stop a panic?",
+    "qEN": "When do deferred calls run, and where can recover stop a panic?",
     "qRU": "Когда выполняются отложенные вызовы и где recover может остановить panic?",
     "shortEN": "defer evaluates the function and its arguments when reached, then calls it when the surrounding function exits, in reverse registration order. Return values are assigned before deferred calls run. recover must be called directly by a deferred function during a panic in the same goroutine.",
     "detailsEN": [
@@ -2247,7 +2239,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
-    "qEN": "Q36: When should you use weak pointers, unique handles and runtime cleanups?",
+    "qEN": "When should you use weak pointers, unique handles and runtime cleanups?",
     "qRU": "Когда нужны weak-указатели, unique handles и runtime cleanups?",
     "shortEN": "weak.Pointer observes an object without keeping it alive; unique.Make gives equal values a canonical handle; AddCleanup registers a callback for a later unreachable state. These solve different problems. None replaces explicit resource ownership, and cleanup timing is not guaranteed.",
     "detailsEN": [
@@ -2319,7 +2311,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim1",
-    "qEN": "Q37: How do push iterators differ from iter.Pull, and when must you call stop?",
+    "qEN": "How do push iterators differ from iter.Pull, and when must you call stop?",
     "qRU": "Чем push-итераторы отличаются от iter.Pull и когда нужно вызывать stop?",
     "shortEN": "A push iterator calls yield for each value and must stop when yield returns false. iter.Pull turns that sequence into next and stop functions. If you stop consuming before next reports the end, call stop so the iterator can finish and release its resources.",
     "detailsEN": [
@@ -2381,7 +2373,7 @@ func Drain(a, b <-chan int, consume func(int)) {
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim2",
-    "qEN": "Q38: What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
+    "qEN": "What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
     "qRU": "Что именно гарантируют GOMAXPROCS с учётом контейнера, synctest и FlightRecorder?",
     "shortEN": "Go 1.25 added container-aware defaults for CPU parallelism, stable synctest bubbles for concurrent tests, and a rolling execution-trace recorder. Each has conditions: explicit GOMAXPROCS overrides automatic updates, fake time requires durable blocking, and a trace window is not an exact retention promise.",
     "detailsEN": [

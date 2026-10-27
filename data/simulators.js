@@ -79,10 +79,10 @@ const SIMULATORS = [
           }
         ],
         "check": {
-          "promptEN": "If G1 changes n afterwards, does the copied argument change?",
-          "promptRU": "Если G1 затем изменит n, изменится ли скопированный аргумент?",
-          "answerEN": "No. The int argument was evaluated in G1. A pointer argument would copy the pointer, not the pointed-to data.",
-          "answerRU": "Нет. Аргумент int уже вычислен в G1. При передаче указателя копируется указатель, а не данные по нему."
+          "promptEN": "If G1 changes n afterwards, which value does G2 receive, and what changes with a pointer argument?",
+          "promptRU": "Если G1 затем изменит n, какое значение получит G2 и что изменится при передаче указателя?",
+          "answerEN": "The value evaluated in G1 at the go statement; later changes to n do not affect it. A pointer argument would copy the pointer, not the pointed-to data.",
+          "answerRU": "Значение, вычисленное в G1 при выполнении оператора go; последующие изменения n на него не влияют. При передаче указателя копируется указатель, а не данные по нему."
         }
       },
       {
@@ -132,10 +132,10 @@ const SIMULATORS = [
           }
         ],
         "check": {
-          "promptEN": "Is g0 a newly created goroutine for each go statement?",
-          "promptRU": "Создаётся ли новая g0 для каждого оператора go?",
-          "answerEN": "No. g0 is the thread’s system-stack goroutine. G2 is the new user goroutine.",
-          "answerRU": "Нет. g0 — системная горутина потока. Новая пользовательская горутина здесь — G2."
+          "promptEN": "What is g0, and which goroutine is the new one here?",
+          "promptRU": "Что такое g0 и какая горутина здесь новая?",
+          "answerEN": "g0 is the thread’s system-stack goroutine; it is not created per go statement. G2 is the new user goroutine.",
+          "answerRU": "g0 — системная горутина потока; она не создаётся для каждого оператора go. Новая пользовательская горутина здесь — G2."
         }
       },
       {
@@ -238,10 +238,10 @@ const SIMULATORS = [
           }
         ],
         "check": {
-          "promptEN": "Can G1 assume that G2 has finished once it is queued?",
-          "promptRU": "Может ли G1 считать G2 завершённой после постановки в очередь?",
-          "answerEN": "No. Runnable is eligibility for execution. Use explicit synchronization for completion.",
-          "answerRU": "Нет. Runnable означает готовность исполняться. Для завершения нужна явная синхронизация."
+          "promptEN": "What does the runnable state tell G1 about G2’s completion?",
+          "promptRU": "Что состояние runnable говорит G1 о завершении G2?",
+          "answerEN": "Nothing: runnable is eligibility for execution. Use explicit synchronization to wait for completion.",
+          "answerRU": "Ничего: runnable означает готовность исполняться. Чтобы дождаться завершения, нужна явная синхронизация."
         }
       },
       {
@@ -756,7 +756,7 @@ const SIMULATORS = [
       },
       {
         "title": "8. Сеть: припарковать G, сохранить поток для работы",
-        "desc": "Отдельный стандартный Unix-сценарий поллируемого сокета: чтение пока невозможно, поэтому G1 ждёт через netpoller. M1 с P1 может исполнять другую G; нет отдельного занятого потока на каждый ожидающий сокет. Событие готовности позволяет возобновить ожидание и повторить I/O, но не гарантирует немедленного запуска или наличия всех запрошенных байтов. Пользовательская реализация net.Conn может вести себя иначе.",
+        "desc": "Отдельный стандартный Unix-сценарий поллируемого сокета: чтение пока невозможно, поэтому G1 ждёт через netpoller. M1 с P1 может исполнять другую G; нет отдельного занятого потока на каждый ожидающий сокет. Событие готовности позволяет возобновить G1 и повторить I/O, но не гарантирует немедленного запуска или наличия всех запрошенных байтов. Пользовательская реализация net.Conn может вести себя иначе.",
         "descEN": "For a standard pollable Unix socket, a read that would block parks G1 through netpoll. M1 with P1 can run another G. Readiness permits resumption and an I/O retry; it guarantees neither immediate scheduling nor all requested bytes. A custom net.Conn implementation may behave differently.",
         "boxes": [
           {
@@ -2592,7 +2592,7 @@ const CHEATSHEET_ROWS = [
   {
     "topic": "4. Планировщик GMP и слот P.runnext",
     "how": "G — горутина, M — поток ОС, P — ресурсы для Go-кода. <code>runnext</code> — один предпочтительный кандидат рядом с обычной очередью; вытесненный кандидат не теряется.",
-    "markers": "Кандидат может наследовать квант и schedtick. <code>% 61</code> — условная проверка GRQ, не таймер; sysmon помогает справедливости. Кеш и скорость не гарантированы.",
+    "markers": "Кандидат может наследовать остаток кванта (schedtick не увеличивается). <code>% 61</code> — условная проверка GRQ, не таймер; sysmon помогает справедливости. Кеш и скорость не гарантированы.",
     "cardId": "c11",
     "simId": "sim1"
   },
