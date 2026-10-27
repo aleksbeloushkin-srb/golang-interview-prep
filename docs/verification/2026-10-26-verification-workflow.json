@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-26",
+  "base": "2ed5a6d9f2b1b65713cc5c42c7712d1e64f707c4",
+  "branch": "improve/verification-workflow",
+  "mode": "tooling + documentation + unchanged-rendering sparse-array repair",
+  "selection": "No Go facts or renderer/CSS/storage implementation changed. Check checker failures, smoke failures, local loading and affected cheatsheet layout. No full historical browser/Go rerun.",
+  "tools": {
+    "node": "v22.10.0",
+    "structure": "scripts/check-content.mjs",
+    "structure_tests": "scripts/check-content.test.mjs",
+    "smoke": "scripts/browser-smoke.mjs"
+  },
+  "structure": {
+    "ok": true,
+    "base": "2ed5a6d9f2b1b65713cc5c42c7712d1e64f707c4",
+    "counts": {
+      "cards": 38,
+      "quiz": 22,
+      "simulators": 7,
+      "cheatsheet": 12
+    },
+    "changes": {
+      "cards": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "quiz": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "simulators": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "cheatsheetChanged": true
+    },
+    "errors": [],
+    "durationMs": 260,
+    "scope": "Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion."
+  },
+  "unit_tests": {
+    "command": "node --test scripts/check-content.test.mjs",
+    "passed": 15,
+    "failed": 0,
+    "coverage": "Current corpus; malformed collections; duplicate IDs; null row/step; broken references; answer index; incomplete translation/practice/step answer; diff changes/removals/order; invalid JavaScript."
+  },
+  "smoke": {
+    "ok": true,
+    "url": "http://127.0.0.1:8000/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 http://127.0.0.1:8000/",
+      "HTTP 200 http://127.0.0.1:8000/css/style.css?v=15",
+      "HTTP 200 http://127.0.0.1:8000/data/cards.js?v=15",
+      "HTTP 200 http://127.0.0.1:8000/data/simulators.js?v=15",
+      "HTTP 200 http://127.0.0.1:8000/data/quiz.js?v=15",
+      "HTTP 200 http://127.0.0.1:8000/js/app.js?v=15"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 519,
+    "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+  },
+  "targeted": {
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "reveal answer",
+      "mark for repeat",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "12 actual rows",
+      "cheatsheet fits 320",
+      "cheatsheet fits 390",
+      "cheatsheet fits 430",
+      "cheatsheet fits 1440",
+      "cheatsheet enlarged",
+      "unchanged rendered row text",
+      "resource 200 ",
+      "resource 200 css/style.css?v=15",
+      "resource 200 js/app.js?v=15",
+      "resource 200 data/cards.js?v=15",
+      "resource 200 data/quiz.js?v=15",
+      "resource 200 data/simulators.js?v=15"
+    ],
+    "errors": [],
+    "durationMs": 213
+  },
+  "negative_cases": {
+    "missing_base": "node scripts/check-content.mjs --base nonexistent-check-base => exit 1",
+    "missing_page": {
+      "exit": 1,
+      "result": {
+        "ok": false,
+        "url": "http://127.0.0.1:8000/missing-smoke-page",
+        "checks": [],
+        "errors": [
+          {
+            "message": "Readiness timeout: document.readyState==='complete' && typeof CARDS!=='undefined' && !!document.getElementById('card-q-en')"
+          }
+        ],
+        "consoleErrors": [],
+        "durationMs": 10178,
+        "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+      }
+    },
+    "initial_validator": "Detected existing sparse array entry in CHEATSHEET_ROWS; removed only the extra comma.",
+    "test_development": "Initial partial-answer fixture assumed first step had a check; corrected to select a step that actually has a check. Initial temporary browser probe used incorrect tbody selector; corrected using app.js before final pass.",
+    "sandbox": "New browser script initially blocked from localhost; rerun with approved permission succeeded."
+  },
+  "content_comparison": "Cards, quiz and simulators exactly equal base. Current cheatsheet equals base with empty entry removed: same 12 rendered rows. Asset version v15.",
+  "limitations": [
+    "Structural checker is intentionally partial; does not establish Go correctness, EN/RU meaning or all nested schema constraints.",
+    "Shared smoke does not replace targeted scenarios or broad UI/storage regressions.",
+    "Targeted checks include cheatsheet 320/390/430/1440 px and 200% text; no visual design changed and no screenshot review claimed.",
+    "No new Go tests, live publication verification, physical device or screen reader checks.",
+    "Times are individual local warm-browser observations, excluding startup and editorial work; no end-to-end speedup claim."
+  ],
+  "hashes": {
+    "scripts/check-content.mjs": "c09e40aec286f4311b2fb2f70a0f96a7fe1556c0ef0aa27343ab37c9196ff509",
+    "scripts/check-content.test.mjs": "79606af53900f325849478921c8fb5586690561aa7e2c59d6a2e8a9a47ff3d12",
+    "scripts/browser-smoke.mjs": "a8b4296230ec220c53a8338d967562fc18c0b9bfd4dae13fcd8009aecf07547f",
+    "data/simulators.js": "5008dc39674e1fcd5df4cfad70578a786131738f10a1c25ac04d08e83079b3b6",
+    "index.html": "e55030529828f2cf061c58831b4f9c4f73e448cde84390ca5e642c153098e188"
+  }
+}

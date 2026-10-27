@@ -68,6 +68,10 @@ Keep this architecture unless the task requires changing it. There is currently 
 
 ## Verification and completion
 
+- Follow [VERIFICATION_WORKFLOW_RU.md](VERIFICATION_WORKFLOW_RU.md): select coverage from the diff before editing. Content-only work still needs authoritative Go review, affected examples, linked content and browser checks; shared UI/storage/routing changes require broad regression. Unclear impact means broaden coverage, not skip it.
+- Use `node scripts/check-content.mjs --base <base-commit>` for syntax, structural checks and changed content IDs. This does not certify technical correctness, translation equivalence, UI behavior or review completion. Run `node --test scripts/check-content.test.mjs` when changing the checker.
+- Reuse successful evidence only for unchanged relevant files, fixtures, toolchain and conditions. After a fix rerun failed and affected checks; do not repeat the full suite solely to finalize a commit. Publication checks verify deployed bytes and browser loading; they do not repeat all local semantic tests when the bytes match.
+- Keep current backlog in `CURRENT_STATUS_RU.md` and append the detailed change rationale to `CHANGE_LOG_RU.md`. Update other documents only when their content or contracts change. Keep reports concise; do not copy every previous successful assertion into each report.
 - Match verification to the change. Documentation-only edits need a content/diff review; behavior changes need relevant checks and regression coverage when useful.
 - Preview the site with `python3 -m http.server 8000 --bind 127.0.0.1` from the repository root, then visit `http://127.0.0.1:8000`. Stop the server when finished.
 - For changed JavaScript, use `node --check <file>` if Node is available. There are no npm scripts today; do not invent build/test commands or introduce tooling solely to check a small edit.
