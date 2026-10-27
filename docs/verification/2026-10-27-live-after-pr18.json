@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-27",
+  "pullRequest": 18,
+  "merged": true,
+  "mergeCommit": "a6f7312ba21ca457add7504e3100704e0e932e3a",
+  "contentCommit": "092afe7871874ec38a72cdbce4a08e3489308ef0",
+  "version": 17,
+  "assets": [
+    {
+      "path": "index.html",
+      "matches": true,
+      "sha256": "3af46101b4ef8ded5b2186a0a492834863c26e0cb2abe792d7c6df3184792909"
+    },
+    {
+      "path": "css/style.css",
+      "matches": true,
+      "sha256": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+    },
+    {
+      "path": "js/app.js",
+      "matches": true,
+      "sha256": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845"
+    },
+    {
+      "path": "data/cards.js",
+      "matches": true,
+      "sha256": "6c005616871d709d828c5aab4a5d7abd5504f6ddc610ed8490ae6fccfb3cdc2e"
+    },
+    {
+      "path": "data/quiz.js",
+      "matches": true,
+      "sha256": "03f43c1ac54e03141990541e01380920b4a0de00bd0f414bdfc47484a10a2287"
+    },
+    {
+      "path": "data/simulators.js",
+      "matches": true,
+      "sha256": "973baf9cd5fce83880e8a614d105a2faabe10982f30bff37211d08376346cb9d"
+    }
+  ],
+  "smoke": {
+    "ok": true,
+    "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/css/style.css?v=17",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/cards.js?v=17",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/simulators.js?v=17",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/quiz.js?v=17",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/js/app.js?v=17"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 3955,
+    "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+  },
+  "targeted": {
+    "ok": true,
+    "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+    "checks": [
+      "deployed version 17",
+      "deployed bilingual practice c29",
+      "deployed bilingual practice c30",
+      "deployed bilingual practice c31",
+      "deployed bilingual practice c32",
+      "q6 deployed answer",
+      "sim7 has five steps",
+      "sim7 step 0 EN and hidden recall",
+      "sim7 step 0 recall opens",
+      "sim7 step 1 EN and hidden recall",
+      "sim7 step 1 recall opens",
+      "sim7 step 2 EN and hidden recall",
+      "sim7 step 2 recall opens",
+      "sim7 step 3 EN and hidden recall",
+      "sim7 step 3 recall opens",
+      "sim7 step 4 EN and hidden recall",
+      "sim7 step 4 recall opens",
+      "live sim7 step 0 fits 320",
+      "live sim7 step 1 fits 320",
+      "live sim7 step 2 fits 320",
+      "live sim7 step 3 fits 320",
+      "live sim7 step 4 fits 320",
+      "live sim7 step 0 fits 390",
+      "live sim7 step 1 fits 390",
+      "live sim7 step 2 fits 390",
+      "live sim7 step 3 fits 390",
+      "live sim7 step 4 fits 390",
+      "live sim7 step 0 fits 430",
+      "live sim7 step 1 fits 430",
+      "live sim7 step 2 fits 430",
+      "live sim7 step 3 fits 430",
+      "live sim7 step 4 fits 430",
+      "live sim7 step 0 fits 1440",
+      "live sim7 step 1 fits 1440",
+      "live sim7 step 2 fits 1440",
+      "live sim7 step 3 fits 1440",
+      "live sim7 step 4 fits 1440"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 2322,
+    "scope": "Publication check: version 17, c29-c32, q6, all five sim7 steps and four widths. Unchanged Go semantics reuse local evidence."
+  },
+  "screenshotsViewed": [
+    "sim7-live-390.png",
+    "sim7-live-1440.png"
+  ],
+  "limits": "Chrome desktop emulation; no physical phone/Safari/screen reader. Byte-identical content reuses local Go semantic evidence. Repository files not changed."
+}
