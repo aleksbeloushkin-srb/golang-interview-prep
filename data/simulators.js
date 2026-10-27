@@ -2205,14 +2205,14 @@ const CHEATSHEET_ROWS = [
   },
   {
     topic: "11. Интерфейсы (iface / eface) и Open-Coded Defer",
-    how: "16 байт: <code>eface{_type, data}</code> и <code>iface{tab *itab, data}</code>. Одиночные <code>defer</code> инлайнятся в эпилог функции через битовую маску <code>deferBits</code> на стеке.",
-    markers: "Интерфейс <code>== nil</code> только если <strong>оба слова равны nil</strong>. <code>defer</code> в цикле <code>for</code> аллоцируется в хипе и течёт до выхода из функции.",
+    how: "Интерфейс хранит динамический тип и значение; два слова в проверенной реализации. <code>defer</code>: сохранить функцию/аргументы → при выходе выполнить в обратном порядке. Реализация зависит от сборки.",
+    markers: "Typed nil ≠ nil-интерфейс. Именованный результат задаётся до defer и может быть изменён им. <code>recover</code> действует в той же горутине. Ресурсы с defer в цикле ждут выхода из функции, а не конца итерации.",
     cardId: "c33", simId: null
   },
   {
-    topic: "12. Новинки Go 1.24–1.25+ (weak, unique, synctest, coro)",
-    how: "<code>weak.Pointer</code> + <code>runtime.AddCleanup</code> (вместо <code>SetFinalizer</code>), корутины <code>runtime.coro</code> для <code>iter.Pull</code> и нативный <code>GOMAXPROCS</code> по cgroups v2.",
-    markers: "<code>coroswitch</code> переключает <code>G1 ↔ G2</code> за ~25 нс в обход очередей <code>P</code>. <code>FlightRecorder</code> пишет кольцевой трейс последних секунд.",
+    topic: "12. API Go 1.23–1.26: владение, тесты и диагностика",
+    how: "<code>unique</code> и <code>iter</code> — 1.23; <code>weak</code>/<code>AddCleanup</code> — 1.24; стабильный <code>synctest</code>, <code>FlightRecorder</code> и container-aware defaults — 1.25. Контракты здесь применимы и к 1.26.",
+    markers: "Ранний выход из <code>iter.Pull</code> требует <code>stop</code>. Cleanup не обещает срок; fake time требует durable blocking; явный GOMAXPROCS отключает автообновления; размер/возраст trace — не точная гарантия.",
     cardId: "c38", simId: "sim2"
   }
 ];

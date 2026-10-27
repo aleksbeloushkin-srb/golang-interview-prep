@@ -1,0 +1,478 @@
+{
+  "date": "2026-10-27",
+  "portion": 12,
+  "base": "a6f7312ba21ca457add7504e3100704e0e932e3a",
+  "branch": "improve/go-apis-interfaces-defer",
+  "scope": {
+    "fullyReviewedCards": [
+      "c33",
+      "c34",
+      "c35",
+      "c36",
+      "c37",
+      "c38"
+    ],
+    "fullyReviewedOriginalQuiz": [
+      "q2",
+      "q3",
+      "q5"
+    ],
+    "other": "cheatsheet rows 11/12, references and backlinks, README, cache v18",
+    "diagrams": "sim1/sim2 links retained as background; their steps are unchanged and NOT counted as fully reviewed"
+  },
+  "mode": "Content-focused: tagged primary sources + structural checker + affected Go examples and negative cases + smoke + targeted browser. No unrelated historical suite rerun.",
+  "toolchain": "go1.26.1 darwin/arm64",
+  "go": {
+    "workingDirectory": "docs/verification/fixtures/go-apis",
+    "commands": [
+      "gofmt -w docs/verification/fixtures/go-apis",
+      "go test -race -count=1 -v ./...",
+      "go test -race -count=1 -run TestCleanupDirectRetentionGuardsGo126 -v .",
+      "go vet ./...",
+      "go run ./c33",
+      "go run ./c34",
+      "go run ./c35",
+      "go run ./c36",
+      "go run ./c37",
+      "go run ./q2",
+      "go run ./q2-fixed",
+      "go run ./q3",
+      "go run ./q5-fixed",
+      "go run ./q5 (expected failure)",
+      "go build ./testdata/value-method and ./testdata/map-method (expected failures; -o paths in /private/tmp)",
+      "go run -race ./q5-fixed"
+    ],
+    "results": "Initial six behavioral tests passed with -race; subsequently added Go 1.26 direct-retention guard test passed separately with -race; vet passed after final test edit. All displayed programs match fixture sources.",
+    "examples": [
+      {
+        "example": "c33",
+        "exit": 0,
+        "stdout": "false true\ntrue true\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "c34",
+        "exit": 0,
+        "stdout": "3\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "c35",
+        "exit": 0,
+        "stdout": "closure 3\narg 1\nresult 3\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "c36",
+        "exit": 0,
+        "stdout": "true\ntrue\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "c37",
+        "exit": 0,
+        "stdout": "3 true\n0 false\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "q2",
+        "exit": 0,
+        "stdout": "false\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "q2-fixed",
+        "exit": 0,
+        "stdout": "true\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "q3",
+        "exit": 0,
+        "stdout": "1\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "q5-fixed",
+        "exit": 0,
+        "stdout": "sender recovered: send on closed channel\n",
+        "stderr": "",
+        "ok": true
+      },
+      {
+        "example": "q5 intentional panic",
+        "exit": 1,
+        "stderrSummary": "panic: send on closed channel",
+        "ok": true
+      },
+      {
+        "example": "value-method intentional compile failure",
+        "exit": 1,
+        "diagnostic": "# example.com/go-prep/apis/testdata/value-method\ntestdata/value-method/main.go:8:16: cannot use Counter{} (value of struct type Counter) as Setter value in variable declaration: Counter does not implement Setter (method Set has pointer receiver)\n",
+        "ok": true
+      },
+      {
+        "example": "map-method intentional compile failure",
+        "exit": 1,
+        "diagnostic": "# example.com/go-prep/apis/testdata/map-method\ntestdata/map-method/main.go:8:7: cannot call pointer method Set on Counter\n",
+        "ok": true
+      }
+    ],
+    "q5RaceRun": {
+      "exit": 0,
+      "stdout": "sender recovered: send on closed channel\n",
+      "diagnostics": []
+    },
+    "limits": [
+      "Go 1.17/1.25 toolchains were not run. Version history and relevant 1.25 versus 1.26 contracts were reviewed from tagged sources.",
+      "No Linux cgroup environment was available; GOMAXPROCS quotas/default compatibility reviewed from runtime/debug.go, not inferred from macOS.",
+      "No eventual cleanup, one-GC disappearance, exact trace duration, allocation count or latency guarantee is asserted.",
+      "TestCleanupDirectRetentionGuardsGo126 targets the checked Go 1.26.1 implementation. The module go directive describes language/API requirements, not proof of a Go 1.25 execution."
+    ]
+  },
+  "sourceReview": [
+    "Interface nil/equality and method sets from tagged spec; runtime2 and getitab distinguish two-word representation from language semantics and common lookup from locked insertion.",
+    "Defer semantics do not imply a particular return register, stack location or open-coded implementation. Compiler walk/SSA include multiple eligibility conditions. panicnil compatibility also depends on effective GODEBUG/main language version.",
+    "API manifests: unique/iter 1.23; weak/AddCleanup 1.24; stable synctest, FlightRecorder, SetDefaultGOMAXPROCS 1.25.",
+    "Important actual version difference: AddCleanup 1.26.1 adds direct closure capture and interior-pointer argument guards absent in 1.25.0. These are not arbitrary reachability-graph validation. Both rejection cases executed in a new test.",
+    "Weak Value has no eventual-nil guarantee; cleanup timing/order and tiny objects constrain guarantees. Cleanup.Stop needs target reachability across the call for guaranteed removal.",
+    "iter.Pull early stop, repeated stop, post-stop next and panic propagation from iter.go; coro is internal optimization, not a permanent thread-affinity/25ns guarantee.",
+    "GOMAXPROCS: quotas versus requests, affinity, rounding/minimum, manual overrides, effective GODEBUG compatibility. Relevant debug.go contracts unchanged between checked 1.25/1.26.",
+    "synctest: Mutex/RWMutex, I/O and syscalls are not durably blocking. 1.26 docs add self-contained-test guidance; fake-time contract is not zero-flakiness proof.",
+    "FlightRecorder MinAge/MaxBytes are not exact duration/memory/snapshot guarantees; Start/WriteTo errors and lifecycle executed with a real recorder and a failing writer."
+  ],
+  "sources": [
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcleanup.go",
+      "sha256": "bda3732f12dc16750994d6ce6b10b6844beb2ea1aa854c3407be757097f04207"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/mcleanup.go",
+      "sha256": "826bf51e6948f06907af0c189829b3d467b33b631f98095d1a1dfdf7d50bc23f"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/weak/pointer.go",
+      "sha256": "3c4efb4f12ad6a38adc33c63a8835f062051cb789b7973619baaa18451b65520"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/unique/handle.go",
+      "sha256": "08c7ca3c26f66f22128d0f061e47242fc3a96e6dd765ac73d1fb8800e022c859"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/testing/synctest/synctest.go",
+      "sha256": "5abfa83a4e45dd62bcd0d71692ecc4578e2a259879e707e56a970a3303142421"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/testing/synctest/synctest.go",
+      "sha256": "0b1dc3b38311c4534af73d8c8e4000e891e9a61f665b6c16b17eeb252e821274"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/trace/flightrecorder.go",
+      "sha256": "25da76d84f4acfb22ad782f9336a1db2428c7688c47d20f2674ed73ea657ec43"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/trace/flightrecorder.go",
+      "sha256": "700d85c8afa778c2aef5cf3608d9f058d85e1b4e8a1224bbbd1f7221168236b3"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go",
+      "sha256": "01d5f04213a154af89bee99c8acfafa16ff116b83765126ad970c55f4df1d222"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/debug.go",
+      "sha256": "d5e40b496358454b448479e1aa68841fc66498038ac1b81845e34331c70d5a8c"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/iter/iter.go",
+      "sha256": "ae73fb7933353c001ce3f85095ce248848a724e24490444918b467f725082019"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/coro.go",
+      "sha256": "e510468afaaf06a14b515f6a51e2191fe1871c0655cbeef2c12268496a627c4a"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/iface.go",
+      "sha256": "3b4fe9c60e47cedac3dc34ed87adf8e8af5b7275510e876c2e77801b05d25cd7"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go",
+      "sha256": "1aae37f643d6092ab3911ae5bf95b14941e88efc2c17609bb1db29f6c70841dd"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/stmt.go",
+      "sha256": "27415ee0dc46a3ecc045a3ffed8a7400fe2c59b1f65245096ee7faa4e7ee5688"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/ssagen/ssa.go",
+      "sha256": "dd708c3b9a89f24e94dceb867287baf22d9b5704203f28a529211a54a816d6b3"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/panic.go",
+      "sha256": "4951c11983710ee957881d230290aa8cb130a873d83c55c86a0e4c7ecd35d190"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.23.0/api/go1.23.txt",
+      "sha256": "468b5cb8c5369892f2037d9284981924c144bfd7edc96a3aa344ef4f6707c8fa"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.24.0/api/go1.24.txt",
+      "sha256": "5d717afb14c44034ec8e6a3d12e1a1abd9786ad64aecf161b85ccad976c440dd"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/api/go1.25.txt",
+      "sha256": "8a0ef361fd1ad415078f440cbe155dc7a1c7e6a2ad83f97f93527f2c0530755d"
+    }
+  ],
+  "reusedSources": [
+    "go1.26.1/doc/go_spec.html read in prior maps batch, re-read relevant method/defer/recover passages; hash in 2026-10-27-maps-slices.json"
+  ],
+  "structural": {
+    "ok": true,
+    "base": "a6f7312ba21ca457add7504e3100704e0e932e3a",
+    "counts": {
+      "cards": 38,
+      "quiz": 22,
+      "simulators": 7,
+      "cheatsheet": 12
+    },
+    "changes": {
+      "cards": {
+        "changed": [
+          "c33",
+          "c34",
+          "c35",
+          "c36",
+          "c37",
+          "c38"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "quiz": {
+        "changed": [
+          "q2",
+          "q3",
+          "q5"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "simulators": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "cheatsheetChanged": true
+    },
+    "errors": [],
+    "durationMs": 272,
+    "scope": "Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion."
+  },
+  "browser": {
+    "smoke": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "route cards",
+        "route simulators",
+        "route wiki",
+        "route cheatsheet",
+        "route quiz",
+        "keyboard reveals answer",
+        "visible focus",
+        "progress survives reload",
+        "quiz answer",
+        "diagram step",
+        "cheatsheet rows",
+        "overflow cards 320",
+        "overflow simulators 320",
+        "overflow wiki 320",
+        "overflow cheatsheet 320",
+        "overflow quiz 320",
+        "overflow cards 390",
+        "overflow simulators 390",
+        "overflow wiki 390",
+        "overflow cheatsheet 390",
+        "overflow quiz 390",
+        "overflow cards 430",
+        "overflow simulators 430",
+        "overflow wiki 430",
+        "overflow cheatsheet 430",
+        "overflow quiz 430",
+        "overflow cards 1440",
+        "overflow simulators 1440",
+        "overflow wiki 1440",
+        "overflow cheatsheet 1440",
+        "overflow quiz 1440",
+        "HTTP 200 http://127.0.0.1:8000/",
+        "HTTP 200 http://127.0.0.1:8000/css/style.css?v=18",
+        "HTTP 200 http://127.0.0.1:8000/data/cards.js?v=18",
+        "HTTP 200 http://127.0.0.1:8000/data/simulators.js?v=18",
+        "HTTP 200 http://127.0.0.1:8000/data/quiz.js?v=18",
+        "HTTP 200 http://127.0.0.1:8000/js/app.js?v=18"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 690,
+      "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+    },
+    "targeted": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "c33 hidden before attempt",
+        "c33 keyboard reveal",
+        "c33 bilingual text and code",
+        "c33 sources",
+        "c33 prompt before solution",
+        "c33 solution opens",
+        "c34 hidden before attempt",
+        "c34 keyboard reveal",
+        "c34 bilingual text and code",
+        "c34 sources",
+        "c34 prompt before solution",
+        "c34 solution opens",
+        "c35 hidden before attempt",
+        "c35 keyboard reveal",
+        "c35 bilingual text and code",
+        "c35 sources",
+        "c35 prompt before solution",
+        "c35 solution opens",
+        "c36 hidden before attempt",
+        "c36 keyboard reveal",
+        "c36 bilingual text and code",
+        "c36 sources",
+        "c36 prompt before solution",
+        "c36 solution opens",
+        "c37 hidden before attempt",
+        "c37 keyboard reveal",
+        "c37 bilingual text and code",
+        "c37 sources",
+        "c37 prompt before solution",
+        "c37 solution opens",
+        "c38 hidden before attempt",
+        "c38 keyboard reveal",
+        "c38 bilingual text and code",
+        "c38 sources",
+        "c38 prompt before solution",
+        "c38 solution opens",
+        "q2 initially hidden",
+        "q2 option 0",
+        "q2 option 1",
+        "q2 option 2",
+        "q2 option 3",
+        "q2 option 4",
+        "q2 option 5",
+        "q2 EN RU explanations",
+        "q2 corrected code opens",
+        "q2 linked both ways c33",
+        "q2 linked both ways c34",
+        "q3 initially hidden",
+        "q3 option 0",
+        "q3 option 1",
+        "q3 option 2",
+        "q3 option 3",
+        "q3 option 4",
+        "q3 option 5",
+        "q3 EN RU explanations",
+        "q3 linked both ways c35",
+        "q5 initially hidden",
+        "q5 option 0",
+        "q5 option 1",
+        "q5 option 2",
+        "q5 option 3",
+        "q5 option 4",
+        "q5 option 5",
+        "q5 EN RU explanations",
+        "q5 corrected code opens",
+        "q5 linked both ways c35",
+        "q5 linked both ways c14",
+        "c33 expanded 320",
+        "c34 expanded 320",
+        "c35 expanded 320",
+        "c36 expanded 320",
+        "c37 expanded 320",
+        "c38 expanded 320",
+        "q2 expanded 320",
+        "q3 expanded 320",
+        "q5 expanded 320",
+        "wiki expanded 320",
+        "cheatsheet 320",
+        "c33 expanded 390",
+        "c34 expanded 390",
+        "c35 expanded 390",
+        "c36 expanded 390",
+        "c37 expanded 390",
+        "c38 expanded 390",
+        "q2 expanded 390",
+        "q3 expanded 390",
+        "q5 expanded 390",
+        "wiki expanded 390",
+        "cheatsheet 390",
+        "c33 expanded 430",
+        "c34 expanded 430",
+        "c35 expanded 430",
+        "c36 expanded 430",
+        "c37 expanded 430",
+        "c38 expanded 430",
+        "q2 expanded 430",
+        "q3 expanded 430",
+        "q5 expanded 430",
+        "wiki expanded 430",
+        "cheatsheet 430",
+        "c33 expanded 1440",
+        "c34 expanded 1440",
+        "c35 expanded 1440",
+        "c36 expanded 1440",
+        "c37 expanded 1440",
+        "c38 expanded 1440",
+        "q2 expanded 1440",
+        "q3 expanded 1440",
+        "q5 expanded 1440",
+        "wiki expanded 1440",
+        "cheatsheet 1440",
+        "cards/c33 doubled actual text",
+        "cards/c34 doubled actual text",
+        "cards/c35 doubled actual text",
+        "cards/c36 doubled actual text",
+        "cards/c37 doubled actual text",
+        "cards/c38 doubled actual text",
+        "quiz/q2 doubled actual text",
+        "quiz/q3 doubled actual text",
+        "quiz/q5 doubled actual text",
+        "cheatsheet doubled actual text"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 1177,
+      "scope": "Targeted c33-c38, q2/q3/q5, backlinks, wiki and two cheatsheet rows; four widths and actual font-size doubling. Not full scheduler/diagram review."
+    },
+    "screenshotsViewed": [
+      "apis-card-390.png",
+      "apis-card-1440.png",
+      "apis-quiz-390.png"
+    ],
+    "limits": "Chrome desktop emulation, not physical touch hardware/Safari/screen reader. Initial card screenshots caught fade-in; runner now requests reduced motion and waits for opacity 1 before capturing. No CSS change was required."
+  },
+  "testedAssetSHA256": {
+    "index.html": "cb77b3b34b5e82fedfd3736174fc9d8449df7beedae41d0d852318d9a31060ec",
+    "data/cards.js": "f73c47460f08954d13cdbb027ff888078ae8c310ec1500012e46f8c15716678c",
+    "data/quiz.js": "05155d1c88889f60e931f74c0d9d7ec6b5218f211974a01ad8093fae0f155177",
+    "data/simulators.js": "3598bfc75e49bfa37e99b1f99918a71e9966cb5291873209b6f4485a74440c4a",
+    "js/app.js": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845",
+    "css/style.css": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+  },
+  "remaining": {
+    "cards": 12,
+    "originalQuiz": 7
+  },
+  "fixtures": "docs/verification/fixtures/go-apis, go-apis-browser.mjs"
+}

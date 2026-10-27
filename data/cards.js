@@ -1566,151 +1566,383 @@ go func() {
     }
   },
   {
-    id: "c33",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q33: How do empty interfaces (eface / any) and non-empty interfaces (iface) work under the hood (itab caching & dynamic dispatch)?",
-    qRU: "Чем внутри рантайма различаются пустой интерфейс (eface / any) и интерфейс с методами (iface), и как работает кэш таблиц методов itab?",
-    shortEN: "Both interface types are 16-byte (2-word) structs on 64-bit systems. An empty interface ('runtime.eface' / 'any') stores a direct type metadata pointer ('*_type') and a 'data' pointer. A non-empty interface ('runtime.iface') stores an '*itab' pointer (which pairs the interface type, concrete type, and a virtual function table 'fun') and a 'data' pointer.",
-    detailsEN: [
-      "eface (interface{} / any): '{_type *abi.Type, data unsafe.Pointer}'. Used when there are no methods.",
-      "iface (interface with methods): '{tab *itab, data unsafe.Pointer}'. The 'itab' struct is 32+ bytes and ends with a variable-length array 'fun [1]uintptr' holding function pointers for every method of the interface, sorted alphabetically.",
-      "Global itab Hash Table: Computing whether a concrete type implements an interface takes O(M + N) comparisons of sorted method lists, so Go caches computed '*itab' structs in a global lock-free hash table ('itabTable').",
-      "Zero-Allocation Optimization: Assigning small integers (0..255 via 'staticuint64s'), booleans, empty strings, or already-pointer types into an interface does NOT allocate on the heap!"
+    "id": "c33",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Q33: What does an interface value contain, and why can a typed nil make an interface non-nil?",
+    "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
+    "shortEN": "An interface value has a dynamic type and a dynamic value. It is nil only when neither is present. A nil *T stored in an interface still supplies the dynamic type *T. Runtime layouts explain the representation, but interface semantics do not depend on a fixed byte size.",
+    "detailsEN": [
+      "For a basic interface used as a value type, assignment requires the concrete type to implement its methods. A type assertion x.(T) asks about the stored dynamic type; the comma-ok form reports failure without panicking. A successful assertion can still return a nil pointer.",
+      "In the examined runtime, an empty interface has a type pointer and a data word; an interface with methods has an itab pointer and a data word. An itab pairs the interface and concrete type with method entry points. This is normally two machine words, or 16 bytes on a 64-bit target, not a portable language constant.",
+      "The dynamic itab cache has a common lookup path without locking, but inserting a missing entry takes a lock. Describing the entire cache as lock-free is inaccurate. The compiler can also provide tables statically.",
+      "Boxing, allocation and dispatch cost depend on the value, escape analysis, inlining and devirtualization. An interface call need not remain indirect after optimization. Neither an allocation for every conversion nor a blanket zero-allocation promise is correct.",
+      "Interface equality can panic when equal dynamic types are not comparable, such as []int. Comparing that interface to nil is still valid. Typed nil, an incomparable dynamic value, and an ordinary nil interface are three different cases."
     ],
-    practicalRU: "Почему вызов метода через интерфейс (`reader.Read(p)`) медленнее прямого вызова метода структуры? Во-первых, это косвенный переход по адресу из памяти `CALL 24(AX)` (`itab.fun[0]`), но главное — компилятор часто не может заинлайнить вызов через интерфейс, а без инлайнинга буфер `p` не проходит Escape Analysis и убегает в кучу (если только не сработает PGO — Profile-Guided Optimization, девиртуализирующий горячий интерфейс).",
-    code: `// src/runtime/runtime2.go — 16-byte interface headers:
-type eface struct { // empty interface: any / interface{}
-    _type *_type
-    data  unsafe.Pointer
-}
-type iface struct { // interface with methods: io.Reader, error
-    tab  *itab          // caches concrete type + method pointers fun[0..N]
-    data unsafe.Pointer
-}`
-  },
-  {
-    id: "c34",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: null,
-    qEN: "Q34: Value Receiver vs. Pointer Receiver — why does a pointer type (*T) implement an interface with value receivers, but a value type (T) does NOT implement an interface with pointer receivers?",
-    qRU: "Таблица ресиверов (Value vs. Pointer Receiver): почему указатель *T реализует интерфейс с value-методами, но значение T НЕ реализует интерфейс с pointer-методами?",
-    shortEN: "The method set of a value type 'T' includes ONLY methods declared with a value receiver '(t T)', whereas the method set of a pointer type '*T' includes BOTH '(t T)' and '(t *T)' methods. A value stored inside an interface is not addressable, and copying it would silently discard any mutations made by a pointer receiver.",
-    detailsEN: [
-      "The Method Set Matrix: Value 'T' -> only '(T)' methods. Pointer '*T' -> both '(T)' and '(*T)' methods.",
-      "Why Normal Calls Work ('u.SetName()' on value 'u'): If 'u' is a local variable on the stack, it is addressable, so the compiler automatically rewrites 'u.SetName()' as '(&u).SetName()' as syntactic sugar.",
-      "Why Interface Assignment Fails ('var s Setter = u'): Values packed inside an interface ('iface.data') are treated as non-addressable copies. If Go allowed calling a pointer method on an interface holding a value 'T', the method would mutate a temporary copy and lose all changes!"
+    "practicalRU": "Опора: «какой тип внутри → какое значение → что именно сравниваем». При успехе функции, возвращающей error, возвращай nil явно. Для производительности сначала измерь конкретный вызов, а не размер заголовка.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar p *int\n\tvar x any = p\n\tfmt.Println(x == nil, p == nil)\n\tv, ok := x.(*int)\n\tfmt.Println(ok, v == nil)\n}",
+    "shortRU": "У значения интерфейса есть динамический тип и динамическое значение. Интерфейс равен nil, только когда нет ни того, ни другого. Nil-указатель *T внутри интерфейса всё равно задаёт динамический тип *T. Представление рантайма объясняет хранение, но семантика не зависит от фиксированного размера в байтах.",
+    "detailsRU": [
+      "При присваивании в базовый интерфейс, используемый как тип значения, конкретный тип должен реализовать его методы. Утверждение x.(T) проверяет сохранённый динамический тип; форма comma-ok сообщает о неуспехе без panic. Успешное утверждение типа при этом может вернуть nil-указатель.",
+      "В проверенной реализации у пустого интерфейса указатель на тип и слово данных; у интерфейса с методами — указатель на itab и слово данных. Itab связывает интерфейс, конкретный тип и адреса методов. Обычно это два машинных слова, то есть 16 байт на 64-битной платформе, но не переносимая константа языка.",
+      "У динамического кеша itab обычный путь поиска обходится без блокировки, но добавление отсутствующей записи берёт lock. Называть весь кеш lock-free неточно. Компилятор также может подготовить таблицы статически.",
+      "Упаковка, аллокации и цена вызова зависят от значения, escape analysis, инлайнинга и девиртуализации. Вызов интерфейсного метода после оптимизации не обязан оставаться косвенным. Неверны и «каждое преобразование выделяет память», и универсальное обещание нулевых аллокаций.",
+      "Сравнение интерфейсов может вызвать panic, если одинаковые динамические типы несравнимы, например []int. Сравнить такой интерфейс с nil всё ещё допустимо. Типизированный nil, несравнимое динамическое значение и обычный nil-интерфейс — три разных случая."
     ],
-    practicalRU: "Смежная ловушка с мапами: `m := map[int]User{1: {Name: \"Alex\"}}`. Попытка вызвать pointer-метод `m[1].SetName(\"Bob\")` или изменить поле `m[1].Name = \"Bob\"` не скомпилируется (`cannot call pointer method on m[1]`), потому что элементы мапы неадресуемы из-за переездов бакетов!",
-    code: `type Speaker interface { Speak() }
-type Dog struct{}
-func (d *Dog) Speak() {} // Pointer receiver!
-
-// var s Speaker = Dog{}  // ❌ COMPILE ERROR: Dog does not implement Speaker (Speak has pointer receiver)
-var s Speaker = &Dog{}    // ✅ OK: *Dog method set includes both (Dog) and (*Dog)`
-  },
-  {
-    id: "c35",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q35: How do defer, panic, and recover work under the hood (Open-Coded Defers, g._defer, and gopanic stack unwinding)?",
-    qRU: "Как работают defer, panic и recover под капотом (Open-Coded Defers через битовую маску, список g._defer и раскрутка стека в gopanic)?",
-    shortEN: "Modern Go (1.14+) compiles most 'defer' statements into zero-allocation Open-Coded Defers: the compiler stores deferred closures in local stack variables, sets a 1-bit flag in a stack bitmask ('deferBits') when each defer is reached, and emits inline calls right before 'RET'. Only defers inside loops fall back to linked-list nodes on 'g._defer'.",
-    detailsEN: [
-      "3 Strategies for defer: 1) Open-Coded Defer (default if <= 8 defers and not in a loop): ~1 ns overhead, inlined directly into function epilogue via a 'deferBits' byte on the stack; 2) Stack-allocated '_defer' (if > 8 defers); 3) Heap-allocated '_defer' (ONLY if 'defer' is placed inside a 'for' loop!).",
-      "Argument Evaluation Rule: Function arguments to 'defer fn(x)' are evaluated EAGERLY at the moment the 'defer' statement is registered, NOT when the surrounding function returns!",
-      "How panic & recover Work: 'gopanic' walks the current goroutine's 'g._defer' chain (and scans stack frames for open-coded defers). If a deferred function calls 'gorecover()', it sets 'p.recovered = true' and uses 'mcall(recovery)' -> 'gogo' to jump RSP/RIP back to the normal return path of the recovering function!"
+    "versionNote": "Правила nil и сравнения применимы к Go 1.17, 1.25 и 1.26. any — псевдоним interface{} с Go 1.18; для 1.17 замените any на interface{}. Внутренние eface/iface/getitab сверены по Go 1.26.1, не являются публичным API.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Interface layouts",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+      },
+      {
+        "title": "getitab and conversion paths",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/iface.go"
+      }
     ],
-    practicalRU: "В продакшене `defer mu.Unlock()` на горячем пути стоит практически 0 наносекунд благодаря Open-Coded Defers. Но если написать `for _, file := range files { f, _ := os.Open(file); defer f.Close() }` — компилятор отключит Open-Coded Defer, аллоцирует тысячи структур `_defer` в куче и не закроет ни один файловый дескриптор до конца всей функции, вызвав `too many open files`!",
-    code: `// How the compiler transforms Open-Coded Defer (zero allocations, ~1ns):
-// defer mu.Unlock() compiles into:
-//   deferBits |= 1 << 0        // set bit 0 on stack
-//   ... function body ...
-//   if deferBits & (1<<0) != 0 {
-//       deferBits &^= 1 << 0
-//       mu.Unlock()            // direct call in epilogue before RET!
-//   }`
-  },
-  {
-    id: "c36",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q36: What are weak.Pointer, unique.Make, and runtime.AddCleanup in Go 1.24–1.25+, and why did AddCleanup replace runtime.SetFinalizer?",
-    qRU: "Как работают новые пакеты weak.Pointer, unique.Make и runtime.AddCleanup в Go 1.24–1.25+, и почему старый runtime.SetFinalizer считается устаревшим?",
-    shortEN: "Go 1.24+ introduced 'weak.Pointer[T]' (8-byte indirection blocks that automatically return nil once the target object is collected without preventing GC), 'unique.Make[T]' (global concurrent string/value interning for O(1) pointer comparison), and 'runtime.AddCleanup' (which fixes SetFinalizer's memory leaks on cyclic graphs and doesn't resurrect objects for a second GC cycle).",
-    detailsEN: [
-      "weak.Pointer[T]: Points to a tiny 8-byte indirection word in the runtime rather than the object directly. When GC sweeps the object, it atomically zeroes the indirection word so all copies of the weak pointer yield 'nil' on '.Value()' simultaneously.",
-      "unique.Make[T] (Canonicalization): Interns comparable values in a global concurrent SwissMap backed by weak pointers + cleanup hooks. Comparing two 'unique.Handle[string]' values compares a single pointer in O(1) time instead of byte-by-byte string comparison.",
-      "Why runtime.AddCleanup Beats SetFinalizer: 1) 'SetFinalizer' resurrects the object for an extra full GC cycle; 'AddCleanup' frees the object immediately and passes a separate 'arg' value to the cleanup callback; 2) 'SetFinalizer' permanently leaks cyclic references; 'AddCleanup' handles cycles safely; 3) Multiple cleanups can be attached to the same pointer."
-    ],
-    practicalRU: "В продакшене комбинация `weak.Pointer[T]` + `runtime.AddCleanup` впервые позволяет писать в Go самоочищающиеся in-memory кеши (Memory-Sensitive Caches) и пулы соединений: как только начинается нехватка памяти и срабатывает GC, неиспользуемые элементы кеша автоматически собираются сборщиком мусора, а `AddCleanup` сам удаляет пустые ключи из мапы!",
-    code: `// Modern Go 1.24–1.25+ resource cleanup & weak pointer usage:
-wp := weak.Make(heavyObj) // does NOT prevent GC from collecting heavyObj!
-
-runtime.AddCleanup(heavyObj, func(fd int) {
-    syscall.Close(fd)     // runs after heavyObj is collected; never resurrects heavyObj!
-}, heavyObj.fileDescriptor)`
-  },
-  {
-    id: "c37",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim1",
-    qEN: "Q37: How do Go 1.23–1.25+ iterators (iter.Seq, iter.Pull) and internal runtime coroutines (runtime.newcoro / coroswitch) work under the hood?",
-    qRU: "Как устроены итераторы в Go (iter.Seq / iter.Pull) и как работают внутренние корутины рантайма (runtime.newcoro / coroswitch) в обход очередей планировщика?",
-    shortEN: "Push iterators ('iter.Seq[V]') are zero-allocation higher-order functions 'func(yield func(V) bool)' where the loop body is compiled into a 'yield' closure. Pull iterators ('iter.Pull') invert control using a dedicated runtime primitive — internal coroutines ('runtime.coro') — which perform direct 1-to-1 context switches ('coroswitch') between two goroutines on the same OS thread M, completely bypassing the P run queues!",
-    detailsEN: [
-      "Push Iterator (iter.Seq): 'for v := range mySeq' compiles the loop body into a 'yield(v) bool' function. Returning 'false' from 'yield' corresponds to 'break'.",
-      "The Problem with Pull Iterators (iter.Pull): If 'next()' used standard channels between two goroutines, every iteration would go through 'hchan.lock' -> 'goready' -> 'P.runnext' -> 'schedule()', costing ~150–300 ns per element.",
-      "Direct Coroutine Handoff (runtime.coroswitch): To make 'iter.Pull' fast, the Go runtime introduced 'runtime.coro' (a locked goroutine pair in status '_Gwaiting'). Calling 'coroswitch' on thread M swaps '_Grunning' directly from caller G1 to iterator G2 on the exact same M and P via 'gogo' in ~25 ns without touching 'LRQ', 'runnext', or 'schedule()'!"
-    ],
-    practicalRU: "Знание разницы между `iter.Seq` (Push) и `iter.Pull` (Pull) критично на код-ревью: обычный `for x := range SliceBackward(s)` через `iter.Seq` инлайнится компилятором и работает со скоростью обычного цикла `for` (0 аллокаций). А вот `next, stop := iter.Pull(seq)` аллоцирует в куче отдельную корутину со стеком 2 КБ и требует обязательного `defer stop()`, иначе корутина утечёт!",
-    code: `// Push iterator (iter.Seq) — 0 allocations, inlined by compiler:
-func Backward[E any](s []E) iter.Seq[E] {
-    return func(yield func(E) bool) {
-        for i := len(s) - 1; i >= 0; i-- {
-            if !yield(s[i]) { return } // false means caller executed 'break'
-        }
+    "practice": {
+      "kind": "Тип → значение → сравнение",
+      "promptEN": "Predict both lines. Can ok be true while v is nil? What changes if x contains []int{1}?",
+      "promptRU": "Предскажи обе строки. Может ли ok быть true при v == nil? Что изменится, если x содержит []int{1}?",
+      "pointsEN": [
+        "The output is false true, then true true.",
+        "The assertion succeeds because the dynamic type is *int; the pointer value is nil.",
+        "An interface containing a slice is not nil. Comparing it with itself panics because slices are not comparable."
+      ],
+      "pointsRU": [
+        "Вывод: false true, затем true true.",
+        "Утверждение успешно: динамический тип — *int, а значение указателя — nil.",
+        "Интерфейс со срезом не равен nil. Сравнение его с самим собой вызывает panic, потому что срезы несравнимы."
+      ],
+      "followUpEN": "Would a nil receiver always panic when its method is called? Explain what the method body does.",
+      "followUpRU": "Всегда ли вызов метода с nil-ресивером вызывает panic? Объясни роль тела метода."
     }
-}`
   },
   {
-    id: "c38",
-    mod: "m5",
-    modName: "5. Maps, Interfaces & Go 1.25+",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim2",
-    qEN: "Q38: What changed in Go 1.25+ regarding container-aware GOMAXPROCS (cgroups v1/v2), synctest, and runtime flight recording?",
-    qRU: "Что нового появилось в рантайме Go 1.25+ (нативный учёт лимитов контейнера cgroups для GOMAXPROCS, пакет testing/synctest и Flight Recorder)?",
-    shortEN: "Go 1.25+ natively makes GOMAXPROCS container-aware by reading Linux cgroup v1/v2 CPU bandwidth quotas (cpu.max) at startup and dynamically adjusting P count if container limits change at runtime. It also introduces 'testing/synctest' (isolated concurrency bubbles with fake virtualized clocks) and 'runtime/trace.FlightRecorder' for low-overhead ring-buffer tracing in production.",
-    detailsEN: [
-      "Container-Aware GOMAXPROCS (Go 1.25+): Previously, 'runtime.NumCPU()' read host core count, forcing everyone in Kubernetes to import 'uber-go/automaxprocs'. Go 1.25+ inspects '/sys/fs/cgroup/cpu.max' directly and periodically updates GOMAXPROCS if K8s Vertical Pod Autoscaler changes CPU limits live.",
-      "testing/synctest (Virtual Time Bubbles): Runs concurrent test code inside an isolated 'bubble'. Once all goroutines inside the bubble are durably blocked (on channels, mutexes, or 'time.Sleep'), the runtime automatically advances the virtual clock to the next timer in 0 nanoseconds — making 10-second timeout tests finish in microseconds with zero flakiness!",
-      "trace.FlightRecorder: Continuously records the last N seconds/megabytes of execution traces in a ring buffer in RAM (~1% CPU overhead) so you can dump a full 'go tool trace' snapshot ONLY when an HTTP request exceeds your p99 SLA."
+    "id": "c34",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "Q34: How do method sets differ from the shorthand used to call pointer methods?",
+    "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
+    "shortEN": "For a defined non-interface type T, the method set of T contains methods with receiver T; *T also has methods with receiver *T. An addressable variable t can call a pointer method through the shorthand t.M(), but that does not add the method to T’s method set.",
+    "detailsEN": [
+      "Interface satisfaction uses method sets, not call-site convenience. If Set is declared on *Counter, *Counter implements a Setter interface and Counter does not. Store &c when pointer methods are required; a heap-versus-stack decision is irrelevant to this rule.",
+      "For an addressable c, c.Set(2) is shorthand for (&c).Set(2). This is a method-call rule. Map indexes and temporary results are not automatically made addressable, so the same shorthand is not always available.",
+      "A value receiver copies the receiver value; a pointer receiver receives a pointer. Copying a struct with slices, maps or pointers is shallow, so a value receiver does not guarantee isolation from the original data.",
+      "For map[K]Counter, read a value, modify the copy and store it back. Alternatively store *Counter when shared mutable identity is intended. Neither choice makes concurrent access safe by itself. Embedded methods follow additional promotion rules; start with the simple T/*T distinction."
     ],
-    practicalRU: "`trace.FlightRecorder` — настоящая киллер-фича для отладки редких фризов в продакшене: раньше нельзя было держать `runtime/trace` включённым постоянно из-за гигабайтов данных. Теперь сервис держит в памяти кольцевой буфер последних 5 секунд трейса и сбрасывает его на диск ТОЛЬКО в тот момент, когда конкретный запрос в middleware превысил 500 мс!",
-    code: `// Go 1.25+ FlightRecorder: dump runtime trace ONLY when a request is slow!
-fr := trace.NewFlightRecorder(trace.FlightRecorderConfig{MinAge: 5 * time.Second})
-fr.Start()
-
-if time.Since(start) > 500*time.Millisecond {
-    f, _ := os.Create("slow_spike.trace")
-    fr.WriteTo(f) // dumps the exact last 5 seconds of GMP/GC/Syscall activity!
-}`
+    "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
+    "shortRU": "Для определённого неинтерфейсного типа T набор методов T содержит методы с ресивером T; у *T дополнительно есть методы с ресивером *T. Адресуемая переменная t может вызвать pointer-метод сокращённо как t.M(), но это не добавляет метод в набор методов T.",
+    "detailsRU": [
+      "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
+      "Для адресуемой c вызов c.Set(2) сокращает (&c).Set(2). Это правило вызова метода. Индексы map и временные результаты не становятся адресуемыми автоматически, поэтому такая запись доступна не везде.",
+      "Value-ресивер копирует значение ресивера; pointer-ресивер получает указатель. Копия структуры со срезами, map или указателями поверхностная, поэтому value-ресивер не гарантирует изоляции от исходных данных.",
+      "Для map[K]Counter нужно прочитать значение, изменить копию и сохранить обратно. Можно хранить *Counter, если нужна общая изменяемая сущность. Ни один вариант сам по себе не делает конкурентный доступ безопасным. У встроенных методов есть дополнительные правила продвижения; начни с простого различия T/*T."
+    ],
+    "versionNote": "Правила набора методов и адресуемости здесь одинаковы в Go 1.17, 1.25 и 1.26. Пример не зависит от конкретного размещения объекта или формата itab.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      }
+    ],
+    "practice": {
+      "kind": "Раздели два правила",
+      "promptEN": "Why does c.Set(2) compile while var s Setter = c does not? Would m[0].Set(2) work for map[int]Counter?",
+      "promptRU": "Почему c.Set(2) компилируется, а var s Setter = c — нет? Сработает ли m[0].Set(2) для map[int]Counter?",
+      "pointsEN": [
+        "c is addressable, so the method call can take its address.",
+        "Counter lacks Set in its method set; *Counter implements Setter.",
+        "A map index is not addressable. Modify a copy and write it back, or use pointer values deliberately."
+      ],
+      "pointsRU": [
+        "c адресуема, поэтому при вызове можно взять её адрес.",
+        "У Counter нет Set в наборе методов; Setter реализует *Counter.",
+        "Индекс map неадресуем. Измени копию и запиши обратно либо осознанно храни указатели."
+      ],
+      "followUpEN": "Does copying a struct with a []byte field also copy the bytes?",
+      "followUpRU": "Копирует ли value-ресивер байты поля []byte вместе со структурой?"
+    }
+  },
+  {
+    "id": "c35",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Q35: When do deferred calls run, and where can recover stop a panic?",
+    "qRU": "Когда выполняются отложенные вызовы и где recover может остановить panic?",
+    "shortEN": "defer evaluates the function and its arguments when reached, then calls it when the surrounding function exits, in reverse registration order. Return values are assigned before deferred calls run. recover must be called directly by a deferred function during a panic in the same goroutine.",
+    "detailsEN": [
+      "Passing x as an argument to a deferred call saves its current value. A deferred closure can instead read or modify an outer variable later. Named result parameters are variables, so a deferred closure can change the result after return expressions have been evaluated and assigned.",
+      "Deferred calls belong to the function invocation, not to an iteration of a loop. For per-item resources, use a helper function with its own defer or explicitly release each resource. The immediate problem is lifetime, even if a particular compiler avoids an allocation.",
+      "Recovery stops the panic only within the goroutine that is unwinding. The recovering function returns after its deferred calls; execution does not resume at the panicking statement. An ordinary helper called by a deferred function cannot recover on that deferred function’s behalf.",
+      "The compiler may use open-coded defers or runtime defer records on the stack or heap. Go 1.26.1 considers the number of defers, escape information, return sites, instrumentation and build options. A short function is not an unconditional promise of open coding, zero allocations or nanosecond overhead.",
+      "An unrecovered panic terminates the program. os.Exit skips deferred calls; fatal runtime failures are not ordinary recoverable panics. For expected failures, return errors. Recovering at a deliberate boundary must not silently turn failure into success."
+    ],
+    "practicalRU": "Опора: «сейчас сохранить аргументы → при return присвоить результат → выполнить defer в обратном порядке → вернуть результат». Сначала объясни эту цепочку без регистров; машинный код проверяй только для конкретной сборки.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc f() (n int) {\n\tn = 1\n\tdefer fmt.Println(\"arg\", n)\n\tdefer func() {\n\t\tn++\n\t\tfmt.Println(\"closure\", n)\n\t}()\n\treturn 2\n}\n\nfunc main() { fmt.Println(\"result\", f()) }",
+    "shortRU": "defer вычисляет функцию и её аргументы при достижении инструкции, а вызывает её при выходе из окружающей функции в обратном порядке регистрации. Возвращаемые значения присваиваются до выполнения defer. recover должен быть вызван непосредственно отложенной функцией во время panic в той же горутине.",
+    "detailsRU": [
+      "Передача x аргументом отложенного вызова сохраняет его текущее значение. Отложенное замыкание может вместо этого позже читать или менять внешнюю переменную. Именованные результаты — переменные, поэтому замыкание может изменить результат после вычисления и присваивания выражений return.",
+      "Отложенный вызов относится к вызову функции, а не к итерации цикла. Для ресурса на одну итерацию используй вспомогательную функцию со своим defer или явное освобождение. Первая проблема — время жизни, даже если компилятор избежал аллокации.",
+      "Recover останавливает panic только в раскручиваемой горутине. Восстановившаяся функция возвращается после своих defer; выполнение не продолжается со строки panic. Обычный helper, вызванный отложенной функцией, не может выполнить recover вместо неё.",
+      "Компилятор может использовать open-coded defer либо записи runtime на стеке или в куче. Go 1.26.1 учитывает число defer, escape-информацию, точки возврата, инструментирование и настройки сборки. Короткая функция не даёт безусловной гарантии open coding, нулевых аллокаций или наносекундной стоимости.",
+      "Неперехваченный panic завершает программу. os.Exit пропускает defer; фатальные ошибки runtime не являются обычными перехватываемыми panic. Ожидаемые ошибки возвращай через error. Recover на выбранной границе не должен молча превращать ошибку в успех."
+    ],
+    "versionNote": "Основная семантика defer/recover одинакова в Go 1.17, 1.25 и 1.26. В Go 1.21+ при эффективном panicnil=0 вызов panic(nil) даёт ненулевой *runtime.PanicNilError в recover; panicnil=1 сохраняет историческое поведение. Эффективный default зависит также от языковой версии главного модуля. Здесь примеры используют ненулевой panic. Критерии open coding сверены по Go 1.26.1.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Compiler defer selection",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/stmt.go"
+      },
+      {
+        "title": "Additional open-defer conditions",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/ssagen/ssa.go"
+      },
+      {
+        "title": "Panic and recovery",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/panic.go"
+      }
+    ],
+    "practice": {
+      "kind": "Восстанови порядок",
+      "promptEN": "Predict all three output lines. Which defer uses a saved argument and which observes the named result after return 2?",
+      "promptRU": "Предскажи три строки. Какой defer использует сохранённый аргумент, а какой видит именованный результат после return 2?",
+      "pointsEN": [
+        "return assigns n=2 before deferred calls.",
+        "The last registered closure increments n to 3 and prints closure 3.",
+        "The earlier call prints arg 1; main then prints result 3."
+      ],
+      "pointsRU": [
+        "return присваивает n=2 до отложенных вызовов.",
+        "Последнее зарегистрированное замыкание увеличивает n до 3 и печатает closure 3.",
+        "Ранее зарегистрированный вызов печатает arg 1; затем main печатает result 3."
+      ],
+      "followUpEN": "If the deferred closure instead accepted n as an int argument, would incrementing that parameter change the result?",
+      "followUpRU": "Если замыкание принимает n аргументом типа int, изменит ли увеличение этого параметра возвращаемый результат?"
+    }
+  },
+  {
+    "id": "c36",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Q36: When should you use weak pointers, unique handles and runtime cleanups?",
+    "qRU": "Когда нужны weak-указатели, unique handles и runtime cleanups?",
+    "shortEN": "weak.Pointer observes an object without keeping it alive; unique.Make gives equal values a canonical handle; AddCleanup registers a callback for a later unreachable state. These solve different problems. None replaces explicit resource ownership, and cleanup timing is not guaranteed.",
+    "detailsEN": [
+      "After the target becomes unreachable, weak.Pointer.Value may return nil; it is not guaranteed eventually to do so. Read Value once and keep the returned strong pointer while using it. runtime.KeepAlive can extend reachability through the last operation that needs the object; it is not a lock.",
+      "unique.Make was introduced in Go 1.23. Handles canonicalize comparable values and make repeated equality checks cheap; Make still performs work and may allocate. Handle.Value returns a shallow copy. This is not a claim that the package uses the built-in Swiss map or that every workload becomes faster.",
+      "weak and AddCleanup arrived in Go 1.24. AddCleanup’s callback and argument must not retain the target, directly or indirectly. Passing the target itself as arg panics. Go 1.26.1 also checks direct closure captures and pointer arguments into the target allocation; Go 1.25 lacks those extra checks. These are not general graph checks: indirect retention can still prevent cleanup. Automatic cache-key removal remains application work.",
+      "Cleanups can become eligible for unreachable cycles and multiple cleanups may attach to one allocation. They have no specified order, may run concurrently, and are not guaranteed before program exit or for every allocation. SetFinalizer still exists; AddCleanup does not promise immediate memory release or solve every retention cycle.",
+      "Use explicit Close or another ownership protocol for scarce resources. A cleanup is a fallback; explicit release and callbacks must coordinate to avoid double release and races. Cleanup.Stop prevents a not-yet-queued cleanup but does not wait for an already running one. To guarantee cancellation, keep the target reachable across Stop. Tiny/zero-size allocations and object reachability need care."
+    ],
+    "practicalRU": "Три вопроса: «наблюдать без удержания?» → weak; «сравнивать повторяющиеся значения?» → unique; «запасное освобождение после потери владельца?» → cleanup. Не строй тест на предположении, что один runtime.GC() обязательно вызовет callback.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"unique\"\n\t\"weak\"\n)\n\nfunc main() {\n\tobj := &struct{ Value int }{Value: 42}\n\tw := weak.Make(obj)\n\tgot := w.Value()\n\tfmt.Println(got == obj)\n\truntime.KeepAlive(obj)\n\ta := unique.Make(\"go\")\n\tb := unique.Make(string([]byte{'g', 'o'}))\n\tfmt.Println(a == b)\n}",
+    "shortRU": "weak.Pointer позволяет ссылаться на объект, не удерживая его живым; unique.Make даёт равным значениям канонический handle; AddCleanup регистрирует callback на будущее состояние недостижимости. Это разные задачи. Ни один механизм не заменяет явного владения ресурсом, а время cleanup не гарантируется.",
+    "detailsRU": [
+      "После недостижимости объекта weak.Pointer.Value может вернуть nil; гарантии, что это когда-нибудь произойдёт, нет. Прочитай Value один раз и держи полученный сильный указатель, пока используешь объект. runtime.KeepAlive продлевает достижимость до последней нужной операции, но не является блокировкой.",
+      "unique.Make появился в Go 1.23. Handles канонизируют сравнимые значения и удешевляют повторные сравнения; сам Make выполняет работу и может выделять память. Handle.Value возвращает поверхностную копию. Это не утверждение об использовании обычной Swiss map или ускорении любой нагрузки.",
+      "weak и AddCleanup появились в Go 1.24. Callback и аргумент AddCleanup не должны прямо или косвенно удерживать целевой объект. Передача самого объекта как arg вызывает panic. Go 1.26.1 дополнительно проверяет прямой захват замыканием и аргумент-указатель внутрь целевой аллокации; в Go 1.25 этих дополнительных проверок нет. Это не полный анализ графа: косвенное удержание всё ещё может помешать cleanup. Удаление ключей кеша остаётся задачей приложения.",
+      "Cleanups могут стать доступными для запуска для недостижимых циклов; к одной аллокации можно привязать несколько. Порядок не задан, выполнение может быть конкурентным, запуск до выхода программы и для каждой аллокации не гарантирован. SetFinalizer сохраняется; AddCleanup не обещает немедленного освобождения памяти и не устраняет любое циклическое удержание.",
+      "Для дефицитных ресурсов используй явный Close или другой протокол владения. Cleanup — запасной путь; явное освобождение и callbacks должны координироваться против двойного освобождения и гонок. Cleanup.Stop предотвращает ещё не поставленный в очередь cleanup, но не ждёт уже выполняющийся. Для гарантированной отмены цель должна оставаться достижимой на протяжении Stop. Нужно учитывать tiny/zero-size аллокации и достижимость."
+    ],
+    "versionNote": "unique — Go 1.23; weak и AddCleanup — Go 1.24. Пример требует Go 1.24+. Контракт владения общий для Go 1.25/1.26; в 1.26.1 проверены дополнительные runtime-проверки прямого самозахвата cleanup. Не переносим дату появления самих API на 1.26. В Go 1.17 этих API нет.",
+    "sources": [
+      {
+        "title": "API additions — Go 1.23",
+        "url": "https://github.com/golang/go/blob/go1.23.0/api/go1.23.txt"
+      },
+      {
+        "title": "API additions — Go 1.24",
+        "url": "https://github.com/golang/go/blob/go1.24.0/api/go1.24.txt"
+      },
+      {
+        "title": "weak.Pointer contract",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/weak/pointer.go"
+      },
+      {
+        "title": "unique.Handle and Make",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/unique/handle.go"
+      },
+      {
+        "title": "AddCleanup and Cleanup.Stop",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mcleanup.go"
+      },
+      {
+        "title": "Cleanup contract — Go 1.25",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/mcleanup.go"
+      }
+    ],
+    "practice": {
+      "kind": "Выбери механизм и проверь владение",
+      "promptEN": "A cache stores weak pointers. Does a dead target automatically remove its key? What if the cleanup closure captures the target?",
+      "promptRU": "Кеш хранит weak-указатели. Исчезает ли ключ автоматически после потери объекта? Что если cleanup-замыкание захватывает сам объект?",
+      "pointsEN": [
+        "The map entry remains until application code removes or replaces it.",
+        "A retaining closure is invalid: Go 1.26.1 can reject a direct capture; indirect retention can still keep the target reachable.",
+        "Use one Value result while accessing the object; never require an exact GC cycle or cleanup deadline."
+      ],
+      "pointsRU": [
+        "Запись map сохраняется, пока код приложения не удалит или не заменит её.",
+        "Удерживающее цель замыкание недопустимо: Go 1.26.1 может отвергнуть прямой захват, а косвенный всё ещё может сохранять достижимость.",
+        "Используй один результат Value при доступе к объекту; не требуй точного цикла GC или срока cleanup."
+      ],
+      "followUpEN": "Why is an explicit Close still needed when a cleanup exists?",
+      "followUpRU": "Почему при наличии cleanup всё равно нужен явный Close?"
+    }
+  },
+  {
+    "id": "c37",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim1",
+    "qEN": "Q37: How do push iterators differ from iter.Pull, and when must you call stop?",
+    "qRU": "Чем push-итераторы отличаются от iter.Pull и когда нужно вызывать stop?",
+    "shortEN": "A push iterator calls yield for each value and must stop when yield returns false. iter.Pull turns that sequence into next and stop functions. If you stop consuming before next reports the end, call stop so the iterator can finish and release its resources.",
+    "detailsEN": [
+      "iter.Seq[V] is func(yield func(V) bool). A range-over-function loop supplies the loop body as yield; break makes yield return false. The iterator must return instead of calling yield again. The push form does not itself promise zero allocations or a new goroutine.",
+      "Pull returns next() (V, bool) and stop(). After exhaustion or stop, next keeps returning the zero value and false. Calling stop repeatedly is allowed. Deferring stop immediately after Pull covers early return, break and panic in the consumer.",
+      "Do not call next or stop simultaneously from multiple goroutines. A sequence may also have a single-use contract; the type alone does not guarantee replayability. Panics in the iterator are propagated through next or stop.",
+      "Go 1.26.1 implements Pull using an internal coroutine handoff between goroutines. This is a runtime optimization, not a public coroutine API or a fixed nanosecond guarantee. Iterator code may block or run other code; do not infer permanent thread affinity or universal allocation counts from the fast handoff path."
+    ],
+    "practicalRU": "Опора: push → «получаю через yield»; pull → «запрашиваю next»; ранний выход → stop. На интервью сначала объясни владение завершением, затем внутренний coro. Схема sim1 даёт общий контекст горутин, а не точную трассу iter.Pull.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"iter\"\n)\n\nfunc Backward(s []int) iter.Seq[int] {\n\treturn func(yield func(int) bool) {\n\t\tfor i := len(s) - 1; i >= 0; i-- {\n\t\t\tif !yield(s[i]) {\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc main() {\n\tnext, stop := iter.Pull(Backward([]int{1, 2, 3}))\n\tdefer stop()\n\tv, ok := next()\n\tfmt.Println(v, ok)\n\tstop()\n\tv, ok = next()\n\tfmt.Println(v, ok)\n}",
+    "shortRU": "Push-итератор вызывает yield для каждого значения и должен остановиться, когда yield вернёт false. iter.Pull превращает последовательность в функции next и stop. Если прекращаешь чтение до того, как next сообщил о конце, вызови stop, чтобы итератор завершился и освободил ресурсы.",
+    "detailsRU": [
+      "iter.Seq[V] — это func(yield func(V) bool). Цикл range по функции передаёт своё тело как yield; break приводит к false из yield. Итератор должен вернуться, а не вызывать yield снова. Push-форма сама по себе не обещает нулевых аллокаций или создания новой горутины.",
+      "Pull возвращает next() (V, bool) и stop(). После конца или stop функция next продолжает возвращать нулевое значение и false. Повторный stop допустим. Сразу отложенный stop покрывает ранний return, break и panic у потребителя.",
+      "Нельзя одновременно вызывать next или stop из нескольких горутин. Последовательность может иметь контракт одноразового использования; один тип не гарантирует повторяемость. Panic внутри итератора передаётся через next или stop.",
+      "Go 1.26.1 реализует Pull через внутреннюю передачу управления между горутинами. Это оптимизация runtime, а не публичный API корутин или гарантия наносекунд. Код итератора может блокироваться и вызывать другой код; из быстрого пути нельзя выводить постоянную привязку к потоку или универсальное число аллокаций."
+    ],
+    "versionNote": "iter и range-over-function доступны с Go 1.23; пример применим к Go 1.25/1.26. В Go 1.17 можно писать обычный цикл или свой callback, но пакета iter и такого range ещё нет. Детали coro проверены по Go 1.26.1.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "API additions — Go 1.23",
+        "url": "https://github.com/golang/go/blob/go1.23.0/api/go1.23.txt"
+      },
+      {
+        "title": "iter.Pull contract and implementation",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/iter/iter.go"
+      },
+      {
+        "title": "Internal coroutine handoff",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/coro.go"
+      }
+    ],
+    "practice": {
+      "kind": "Кто завершает итератор?",
+      "promptEN": "Predict the output. Why does the deferred second call to stop remain valid? How would you check that an iterator’s defer ran on early stop?",
+      "promptRU": "Предскажи вывод. Почему второй, отложенный stop допустим? Как проверить выполнение defer итератора при раннем stop?",
+      "pointsEN": [
+        "The output is 3 true, then 0 false.",
+        "stop is idempotent under the API contract; after stop, next reports completion.",
+        "Use an iterator with a deferred completion marker, consume one value, call stop and check the marker. Do not infer completion from a sleep."
+      ],
+      "pointsRU": [
+        "Вывод: 3 true, затем 0 false.",
+        "По контракту повторный stop допустим; после stop функция next сообщает о завершении.",
+        "Используй итератор с отложенной отметкой завершения, прочитай одно значение, вызови stop и проверь отметку. Sleep не доказывает завершение."
+      ],
+      "followUpEN": "Does a reusable iterator type guarantee that a particular sequence can be traversed twice?",
+      "followUpRU": "Гарантирует ли тип итератора, что конкретную последовательность можно пройти дважды?"
+    }
+  },
+  {
+    "id": "c38",
+    "mod": "m5",
+    "modName": "5. Maps, Interfaces & Go 1.25+",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim2",
+    "qEN": "Q38: What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
+    "qRU": "Что именно гарантируют GOMAXPROCS с учётом контейнера, synctest и FlightRecorder?",
+    "shortEN": "Go 1.25 added container-aware defaults for CPU parallelism, stable synctest bubbles for concurrent tests, and a rolling execution-trace recorder. Each has conditions: explicit GOMAXPROCS overrides automatic updates, fake time requires durable blocking, and a trace window is not an exact retention promise.",
+    "detailsEN": [
+      "Default GOMAXPROCS considers logical CPUs, process affinity and, on Linux, cgroup CPU bandwidth quota. Quota is CPU limit, not CPU request or the number of OS threads. Fractional quota rounds up; the examined implementation normally keeps at least 2 unless CPU count or affinity is below 2. Defaults and periodic updates depend on GODEBUG and the main module’s language version.",
+      "A positive GOMAXPROCS environment value or a GOMAXPROCS(n>0) call selects a manual setting and disables automatic updates. GOMAXPROCS(0) only queries. SetDefaultGOMAXPROCS restores the runtime default and automatic behavior while still respecting GODEBUG. Updating the toolchain alone does not necessarily change an older module’s defaults.",
+      "synctest.Test runs a self-contained bubble with fake time. Time advances when all its goroutines are durably blocked; Wait waits for the other goroutines to reach that state. Bubble channels, timers and supported waits matter. Mutex/RWMutex locking, real I/O and syscalls are not durable blocking under this contract. Synctest does not prove correctness or remove every source of flakiness.",
+      "FlightRecorder must be started, checked for errors and eventually stopped. WriteTo snapshots recorded trace data and can fail; only one WriteTo may run at a time. Serialize application snapshot requests or handle that error. Tracing overhead depends on workload, so measure it.",
+      "MinAge is a retention target rather than “exactly the last N seconds”. MaxBytes takes precedence, is a sizing hint and does not strictly cap snapshot size or total memory overhead. New recordings cannot contain history from before Start. Handle writer/close errors and avoid uncontrolled repeated dumps."
+    ],
+    "practicalRU": "Не учи три API одной фразой. Спроси отдельно: «кто выбирает параллелизм?», «почему движется тестовое время?», «какую историю успели записать?». Пример проверяет дедлайн искусственным временем; это не ожидание реальной секунды.",
+    "code": "package apis\n\nimport (\n\t\"context\"\n\t\"testing\"\n\t\"testing/synctest\"\n\t\"time\"\n)\n\nfunc TestDeadline(t *testing.T) {\n\tsynctest.Test(t, func(t *testing.T) {\n\t\tctx, cancel := context.WithTimeout(context.Background(), time.Second)\n\t\tdefer cancel()\n\t\tif ctx.Err() != nil {\n\t\t\tt.Fatal(\"deadline fired early\")\n\t\t}\n\t\ttime.Sleep(time.Second)\n\t\tsynctest.Wait()\n\t\tif ctx.Err() != context.DeadlineExceeded {\n\t\t\tt.Fatalf(\"got %v\", ctx.Err())\n\t\t}\n\t})\n}",
+    "shortRU": "Go 1.25 добавил настройки CPU-параллелизма с учётом контейнера, стабильный synctest для конкурентных тестов и запись скользящего окна execution trace. У каждого механизма есть условия: явный GOMAXPROCS отключает автообновления, искусственное время требует устойчивой блокировки, а окно trace не обещает точного срока хранения.",
+    "detailsRU": [
+      "GOMAXPROCS по умолчанию учитывает логические CPU, affinity процесса и, в Linux, cgroup CPU bandwidth quota. Квота — CPU limit, а не CPU request и не число потоков ОС. Дробная квота округляется вверх; проверенная реализация обычно сохраняет минимум 2, кроме случая, когда число CPU или доступность по affinity меньше 2. Начальные значения и автообновления зависят от GODEBUG и языковой версии главного модуля.",
+      "Положительный GOMAXPROCS в окружении или вызов GOMAXPROCS(n>0) задаёт ручное значение и отключает автообновления. GOMAXPROCS(0) только читает настройку. SetDefaultGOMAXPROCS возвращает выбор runtime и автоматическое поведение, продолжая учитывать GODEBUG. Одно обновление toolchain не обязательно меняет defaults старого модуля.",
+      "synctest.Test запускает изолированный bubble с искусственным временем. Время движется, когда все его горутины устойчиво заблокированы; Wait ждёт такого состояния у остальных горутин. Важны каналы bubble, таймеры и поддерживаемые ожидания. Mutex/RWMutex, настоящее I/O и системные вызовы не считаются durable blocking по этому контракту. Synctest не доказывает корректность и не убирает любую нестабильность.",
+      "FlightRecorder нужно запустить, обработать ошибки и в конце остановить. WriteTo делает снимок trace и может завершиться ошибкой; одновременно допустим только один WriteTo. Сериализуй запросы снимка в приложении либо обрабатывай эту ошибку. Накладные расходы tracing зависят от нагрузки и требуют измерения.",
+      "MinAge — ориентир хранения, а не «ровно последние N секунд». MaxBytes имеет приоритет, служит ориентиром размера и не задаёт жёсткий предел размера снимка или всей дополнительной памяти. Запись не содержит историю до Start. Обрабатывай ошибки записи/закрытия и не допускай неконтролируемых повторных дампов."
+    ],
+    "versionNote": "Стабильный synctest, FlightRecorder и SetDefaultGOMAXPROCS — Go 1.25; пример сохраняется как *_test.go и запускается go test. В Go 1.26 эти API продолжают действовать, это не их первое появление. Для языковой версии главного модуля ≤1.24 containermaxprocs/updatemaxprocs по умолчанию выключены; проверь go.mod и GODEBUG. Linux-cgroup поведение не воспроизводится на macOS.",
+    "sources": [
+      {
+        "title": "API additions — Go 1.25",
+        "url": "https://github.com/golang/go/blob/go1.25.0/api/go1.25.txt"
+      },
+      {
+        "title": "GOMAXPROCS defaults — Go 1.25",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/debug.go"
+      },
+      {
+        "title": "GOMAXPROCS defaults — Go 1.26",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+      },
+      {
+        "title": "Durable blocking and fake time",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/testing/synctest/synctest.go"
+      },
+      {
+        "title": "Flight recorder contract",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/trace/flightrecorder.go"
+      },
+      {
+        "title": "Flight recorder — Go 1.25",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/trace/flightrecorder.go"
+      }
+    ],
+    "practice": {
+      "kind": "Проверь условия обещания",
+      "promptEN": "A service sets GOMAXPROCS=1. Will a quota change automatically raise it? Does MinAge=5s guarantee exactly five seconds in every trace snapshot?",
+      "promptRU": "Сервис задаёт GOMAXPROCS=1. Поднимет ли его изменение квоты автоматически? Гарантирует ли MinAge=5s ровно пять секунд в каждом снимке?",
+      "pointsEN": [
+        "Explicit GOMAXPROCS disables automatic updates; restoring defaults requires deliberate action.",
+        "No exact window is guaranteed: size constraints, recording age and runtime behavior matter.",
+        "A blocked Mutex alone does not make a synctest goroutine durably blocked."
+      ],
+      "pointsRU": [
+        "Явный GOMAXPROCS отключает автообновления; возвращение defaults требует явного действия.",
+        "Точное окно не гарантируется: важны ограничения размера, возраст записи и поведение runtime.",
+        "Ожидание Mutex само по себе не делает горутину synctest устойчиво заблокированной."
+      ],
+      "followUpEN": "Why should a container default calculation be verified on Linux instead of inferred from a macOS test?",
+      "followUpRU": "Почему выбор default для контейнера нужно проверять в Linux, а не выводить из теста на macOS?"
+    }
   }
 ];

@@ -48,60 +48,62 @@ const QUIZ_QUESTIONS = [
     ]
   },
   {
-    id: "q2",
-    title: "Задача 2: Классическая ловушка интерфейса (Typed nil != nil)",
-    ru: "Что выведет функция main() при проверке err == nil и как это устроено в памяти?",
-    en: "What does main() print when checking err == nil? Explain the internal 16-byte runtime.iface layout.",
-    code: `type MyError struct{}
-func (*MyError) Error() string { return "boom" }
-
-func returnsError() error {
-    var p *MyError = nil
-    return p // Возвращаем типизированный nil-указатель через интерфейс error
-}
-
-func main() {
-    err := returnsError()
-    if err == nil {
-        println("err is nil")
-    } else {
-        println("err IS NOT nil!")
-    }
-}`,
-    options: [
-      "Выведет 'err is nil', так как компилятор Go на этапе Escape Analysis видит нулевой указатель data == nil и автоматически зануляет заголовок интерфейса runtime.iface",
-      "Вызовет панику nil pointer dereference в момент возврата из returnsError(), так как рантайм пытается вычислить виртуальную таблицу методов itab.fun[0] у нулевого указателя",
-      "Выведет 'err IS NOT nil!', так как 16-байтовая структура runtime.iface содержит два поля (tab, data): при возврате p поле tab заполняется дескриптором типа *MyError, а интерфейс равен nil только когда оба поля равны нулю",
-      "Выведет 'err is nil', потому что интерфейс error является особым встроенным типом в рантайме, который при сравнении с nil проверяет только второй 8-байтовый указатель data",
-      "Выведет 'err IS NOT nil!', потому что при упаковке указателя в интерфейс рантайм аллоцирует в куче пустую структуру MyError{} размером 0 байт по адресу runtime.zerobase",
-      "Код не скомпилируется, так как метод Error() объявлен на поинтер-ресивере (*MyError), а нулевой указатель не имеет валидного набора методов в таблице itabTable"
+    "id": "q2",
+    "title": "Задача 2: Nil-указатель внутри error",
+    "ru": "Что напечатает программа? Что именно осталось внутри err после возврата p?",
+    "en": "What does the program print? What does err contain after returning p?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype MyError struct{}\n\nfunc (*MyError) Error() string { return \"boom\" }\n\nfunc returnsError() error {\n\tvar p *MyError\n\treturn p\n}\n\nfunc main() { fmt.Println(returnsError() == nil) }",
+    "options": [
+      "true: nil-указатель всегда превращается в nil-интерфейс.",
+      "Panic: у nil-ресивера нельзя объявить метод Error.",
+      "false: в error сохранён динамический тип *MyError.",
+      "true: error при сравнении учитывает только значение указателя.",
+      "false: Go автоматически создаёт ненулевой объект MyError.",
+      "Ошибка компиляции: *MyError не реализует error."
     ],
-    correct: 2,
-    explanationRU: "Под капотом непустой интерфейс (runtime.iface) состоит из двух 8-байтовых слов: указателя на таблицу метаданных типа и методов (tab *itab) и указателя на сами данные (data unsafe.Pointer). Когда мы возвращаем var p *MyError = nil, в поле tab записывается адрес itab для типа *MyError, а в поле data — nil. Поскольку tab != nil, проверка err == nil возвращает false!",
-    speechEN: "It prints 'err IS NOT nil!'. Under the hood, 'error' is a 16-byte 'runtime.iface' struct containing two pointers: 'tab' (*itab) and 'data'. Returning a typed nil pointer '*MyError' populates 'tab' with '*MyError' metadata while setting 'data' to nil. Because an interface equals nil ONLY when both words are zero, 'err == nil' is false."
+    "correct": 2,
+    "explanationRU": "Выведется false. Возврат p в error сохраняет динамический тип *MyError и значение nil. Это не nil-интерфейс: у него тип уже есть. Для успешного результата нужно вернуть nil явно, как в исправленном варианте. Метод Error у nil-ресивера не вызывается этим сравнением; его отдельный вызов здесь вернул бы boom, потому что тело не разыменовывает ресивер. Опора: сначала спроси «какой динамический тип?», затем «какое значение?».",
+    "speechEN": "It prints false. Returning p as error stores the dynamic type *MyError together with a nil pointer value. The interface itself is therefore non-nil. Return nil explicitly to represent success, as in the corrected version. The equality check does not call Error. Calling that method separately would return boom here because its body does not dereference the receiver. A nil receiver does not by itself imply a panic.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc returnsError() error { return nil }\n\nfunc main() { fmt.Println(returnsError() == nil) }",
+    "versionNote": "Семантика одинакова в Go 1.17, 1.25 и 1.26; для ответа не нужны конкретная архитектура, размер iface или аллокация.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      }
+    ],
+    "cardIds": [
+      "c33",
+      "c34"
+    ]
   },
   {
-    id: "q3",
-    title: "Задача 3: Именованный return и модификация в defer",
-    ru: "Какое число вернёт вызов функции f() и в каком порядке выполняются инструкции на стеке?",
-    en: "What integer value does f() return? Explain the exact compilation sequence of named returns and open-coded defers.",
-    code: `func f() (result int) {
-    defer func() {
-        result++
-    }()
-    return 0
-}`,
-    options: [
-      "Вернёт 0, так как выражение return 0 сначала копирует константу 0 в регистр возврата RAX, и только после этого выполняет отложенную функцию над локальной переменной стека",
-      "Вернёт 1: инструкция return 0 сначала записывает 0 в зарезервированный слот именованного возврата result на стеке, затем выполняется замыкание defer (захватившее result по адресу и инкрементирующее его до 1), и только после этого вызывается RET",
-      "Вернёт 0, поскольку аргументы и возвращаемые значения при Open-Coded Defer фиксируются в момент регистрации строчки defer в начале функции",
-      "Приведёт к ошибке компиляции: в Go запрещено изменять именованные возвращаемые параметры внутри анонимных функций defer без явного указания return внутри самого defer",
-      "Вернёт 1, но только если отключены оптимизации компилятора (-gcflags='-N'), а при стандартной сборке инлайнер выбросит модификацию после return как мёртвый код",
-      "Вызовет утечку памяти на стеке, так как захват возвращаемого слота result в замыкание заставляет компилятор перенести весь стековый кадр функции f() в кучу"
+    "id": "q3",
+    "title": "Задача 3: Return до завершения defer",
+    "ru": "Что напечатает программа? Когда result получает 0 и когда увеличивается?",
+    "en": "What does the program print? When is result assigned zero, and when is it incremented?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc f() (result int) {\n\tdefer func() { result++ }()\n\treturn 0\n}\n\nfunc main() { fmt.Println(f()) }",
+    "options": [
+      "0: return завершает функцию до отложенных вызовов.",
+      "1: return задаёт результат, затем defer меняет его.",
+      "0: замыкание сохраняет копию result при регистрации.",
+      "Ошибка компиляции: defer не может менять именованный результат.",
+      "1 только при выключенных оптимизациях компилятора.",
+      "Panic: result уже недоступен при выполнении defer."
     ],
-    correct: 1,
-    explanationRU: "В Go команда return X не является одной машинной инструкцией. Компилятор разворачивает её в три последовательных шага: 1) записать значение 0 в переменную возврата result; 2) выполнить все активные функции defer (замыкание обращается к result по указателю и меняет его с 0 на 1); 3) выполнить пустой возврат RET, читая актуальное значение result (1).",
-    speechEN: "It returns 1. In Go, 'return 0' is compiled into three distinct steps: first, it assigns 0 to the named return slot 'result'; second, it executes the inline open-coded defer closure (which captures 'result' by reference and increments it to 1); third, it executes the assembly RET instruction."
+    "correct": 1,
+    "explanationRU": "Выведется 1. Сначала return 0 присваивает 0 именованному результату result. Затем выполняется отложенное замыкание и увеличивает эту переменную до 1. После defer функция возвращает её итоговое значение. Это порядок языка, а не обещание конкретного стекового слота, регистра или open-coded реализации. Если передать result параметром int в отложенную функцию и менять только этот параметр, меняется копия: именованный результат останется 0.",
+    "speechEN": "It prints 1. The return statement first assigns zero to the named result variable. The deferred closure then increments that same variable, and the function returns its final value. This is a language rule, independent of registers, stack slots or whether the compiler uses open-coded defers. Passing result as an int argument to the deferred function would instead give it a copy; incrementing only that parameter would leave the named result at zero.",
+    "versionNote": "Порядок присваивания результата и defer одинаков в Go 1.17, 1.25 и 1.26. Пример корректен и не нуждается в исправлении; вариант с параметром — отдельная задача на перенос.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      }
+    ],
+    "cardIds": [
+      "c35"
+    ]
   },
   {
     "id": "q4",
@@ -151,36 +153,38 @@ func main() {
     ]
   },
   {
-    id: "q5",
-    title: "Задача 5: Паника в дочерней горутине и область действия recover()",
-    ru: "Что произойдёт при запуске этой программы и сработает ли recover() в main?",
-    en: "Will the deferred recover() in main catch the panic from the child goroutine? Explain how gopanic unwinds stacks.",
-    code: `func main() {
-    defer func() {
-        if r := recover(); r != nil {
-            println("recovered:", r)
-        }
-    }()
-
-    ch := make(chan int)
-    close(ch)
-
-    go func() {
-        ch <- 42 // Запись в закрытый канал
-    }()
-    time.Sleep(time.Second)
-}`,
-    options: [
-      "Выведет 'recovered: send on closed channel', так как дочерняя горутина наследует цепочку отложенных вызовов родительской горутины через указатель gp.parentDefer",
-      "Процесс аварийно упадёт целиком: у каждой горутины свой изолированный стек и свой список g._defer; когда ch <- 42 вызывает gopanic, рантайм раскручивает стек только дочерней горутины, не находит в ней recover() и вызывает fatalpanic()",
-      "Никакой паники не будет: так как в канале ch нет ожидающих читателей в очереди recvq, запись в закрытый небуферизованный канал просто блокирует дочернюю горутину в gopark",
-      "Паника из фоновой горутины автоматически перехватывается системной горутиной g0 на текущем потоке M, которая тихо завершает дочернюю горутину и возвращает её в пул P.gFree",
-      "Сработает recover() в main, но только если запущен ровно один логический процессор GOMAXPROCS=1, когда обе горутины делят один системный поток M",
-      "Запись в закрытый канал вызывает фатальную ошибку рантайма (runtime.throw, как при конкурентной записи в мапу), которую вообще невозможно перехватить через recover() даже внутри самой дочерней горутины"
+    "id": "q5",
+    "title": "Задача 5: Recover в другой горутине",
+    "ru": "Перехватит ли main панику отправителя? После запуска main ждёт done; при panic отправитель до close(done) не доходит.",
+    "en": "Can main recover the sender’s panic? main waits for done; the sender cannot reach close(done) after the send panics.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdefer func() {\n\t\tif r := recover(); r != nil {\n\t\t\tfmt.Println(\"main recovered:\", r)\n\t\t}\n\t}()\n\tch := make(chan int)\n\tclose(ch)\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tch <- 42\n\t\tclose(done)\n\t}()\n\t<-done\n}",
+    "options": [
+      "main перехватит panic через унаследованный defer.",
+      "Неперехваченный panic дочерней горутины завершит программу.",
+      "Отправка в закрытый канал будет ждать получателя.",
+      "Завершится только дочерняя горутина, процесс продолжит работу.",
+      "main перехватит panic, если GOMAXPROCS равен 1.",
+      "Эту панику нельзя перехватить даже внутри отправителя."
     ],
-    correct: 1,
-    explanationRU: "Важное отличие (вариант №6 — популярная ловушка!): запись в закрытый канал вызывает обычную панику (gopanic), которую МОЖНО поймать через recover(), но ТОЛЬКО внутри той же самой горутины, где она произошла! Так как в нашей дочерней горутине своего defer + recover() нет, а gopanic просматривает цепочку g._defer исключительно текущей структуры runtime.g, неперехваченная паника роняет весь ОС-процесс.",
-    speechEN: "The entire OS process crashes. While 'send on closed channel' is a regular recoverable panic (unlike concurrent map writes which call unrecoverable 'runtime.throw'), each goroutine has its own isolated stack and 'g._defer' chain. 'gopanic' only unwinds the crashing goroutine's stack, misses 'main's recover(), and terminates the program."
+    "correct": 1,
+    "explanationRU": "Программа завершится из-за неперехваченного panic: отправка в закрытый канал вызывает обычную панику, а defer с recover в main принадлежит другой горутине. Получение из done не даёт main просто завершить процесс раньше попытки отправки; Sleep для порядка не нужен. В исправленном учебном варианте recover вызывается непосредственно отложенной функцией самого отправителя, затем закрывается done и main продолжает работу. Это показывает область recover, но не исправляет ошибку владения каналом в рабочем приложении: отправитель не должен посылать после закрытия.",
+    "speechEN": "The program terminates with an unrecovered panic. Sending on a closed channel causes an ordinary panic, but main’s deferred recover belongs to another goroutine. Waiting on done prevents main from returning before the send attempt; no sleep is used to establish order. The corrected teaching variant recovers directly in a deferred function of the sender, then closes done so main can continue. This demonstrates recovery scope; the application-level fix is still to coordinate senders and channel closure.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tclose(ch)\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tdefer close(done)\n\t\tdefer func() {\n\t\t\tif r := recover(); r != nil {\n\t\t\t\tfmt.Println(\"sender recovered:\", r)\n\t\t\t}\n\t\t}()\n\t\tch <- 42\n\t}()\n\t<-done\n}",
+    "versionNote": "Основная семантика одинакова в Go 1.17, 1.25 и 1.26. Исходный пример намеренно завершает процесс с ошибкой; проверять его нужно отдельным процессом. Вариант с recover учебный, не рекомендация подавлять ошибки канала.",
+    "sources": [
+      {
+        "title": "Language specification — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+      },
+      {
+        "title": "Panic unwinding — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/panic.go"
+      }
+    ],
+    "cardIds": [
+      "c35",
+      "c14"
+    ]
   },
   {
     "id": "q6",
