@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-27",
+  "portion": 10,
+  "base": "b07ec13",
+  "branch": "improve/slice-retention-quiz",
+  "publication": "local only",
+  "scope": {
+    "changed_ids": [
+      "q4"
+    ],
+    "related_cards": [
+      "c25",
+      "c26"
+    ],
+    "shared_renderer_changed": false,
+    "mode": "structure + affected Go examples + smoke + targeted browser",
+    "remaining": {
+      "cards": 22,
+      "original_quiz": 11
+    },
+    "asset_version": 16
+  },
+  "sources": [
+    {
+      "url": "https://go.dev/ref/spec#Slice_expressions"
+    },
+    {
+      "url": "https://pkg.go.dev/bytes@go1.26.1#Clone"
+    },
+    {
+      "url": "https://go.dev/doc/go1.20#bytes"
+    },
+    {
+      "url": "https://go.dev/blog/slices-intro"
+    },
+    {
+      "url": "https://go.dev/doc/gc-guide"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/golang/go/go1.25.0/src/bytes/bytes.go",
+      "sha256": "3bbe3599dfc7b4f4d090cf2644f34eaaac91e9f4da8fea4b4f2b46531c0478d5",
+      "checked": "Clone comment and implementation match Go 1.26.1 for the relevant contract."
+    }
+  ],
+  "go": {
+    "toolchain": "go1.26.1 darwin/arm64",
+    "module": "module q4check\n\ngo 1.25\n",
+    "commands": [
+      "gofmt -w original/*.go fixed/*.go",
+      "go test -v ./...",
+      "go vet ./..."
+    ],
+    "result": "passed",
+    "tests": [
+      "TestHeaderBounds",
+      "TestReadHeader",
+      "TestCapacityVersusCopy: limited/clone/make_copy",
+      "Example_main in original and fixed packages",
+      "TestRetainedHeap in original and fixed packages"
+    ],
+    "fixtures": {
+      "fixed/main.go": "package main\n\nimport (\n\t\"bytes\"\n\t\"fmt\"\n\t\"runtime\"\n)\n\nvar header []byte\n\nfunc readHeader() []byte {\n\tbuf := make([]byte, 100<<20) // 100 MiB\n\tcopy(buf, \"0123456789ABCDEF\")\n\treturn bytes.Clone(buf[:16]) // Independent bytes, Go 1.20+.\n}\n\nfunc main() {\n\theader = readHeader()\n\truntime.GC()\n\tfmt.Println(len(header), string(header))\n}\n",
+      "fixed/main_test.go": "package main\n\nimport (\n\t\"bytes\"\n\t\"testing\"\n)\n\nfunc Example_main() {\n\tmain()\n\t// Output: 16 0123456789ABCDEF\n}\nfunc TestReadHeader(t *testing.T) {\n\tfirst, second := readHeader(), readHeader()\n\tif len(first) != 16 || string(first) != \"0123456789ABCDEF\" {\n\t\tt.Fatal(\"wrong prefix\")\n\t}\n\tfirst[0] = 'X'\n\tif second[0] != '0' {\n\t\tt.Fatal(\"calls share bytes\")\n\t}\n}\nfunc TestCapacityVersusCopy(t *testing.T) {\n\tfor _, tc := range []struct {\n\t\tname   string\n\t\tfn     func([]byte) []byte\n\t\tshares bool\n\t}{\n\t\t{\"limited\", func(b []byte) []byte { return b[:16:16] }, true},\n\t\t{\"clone\", func(b []byte) []byte { return bytes.Clone(b[:16]) }, false},\n\t\t{\"make_copy\", func(b []byte) []byte { out := make([]byte, 16); copy(out, b[:16]); return out }, false},\n\t} {\n\t\tt.Run(tc.name, func(t *testing.T) {\n\t\t\tb := []byte(\"0123456789ABCDEFtail\")\n\t\t\th := tc.fn(b)\n\t\t\tif string(h) != \"0123456789ABCDEF\" {\n\t\t\t\tt.Fatal(\"wrong content\")\n\t\t\t}\n\t\t\th[0] = 'X'\n\t\t\tif (b[0] == 'X') != tc.shares {\n\t\t\t\tt.Fatal(\"wrong aliasing\")\n\t\t\t}\n\t\t\tif tc.shares {\n\t\t\t\th = append(h, '!')\n\t\t\t\tif b[16] != 't' || h[16] != '!' {\n\t\t\t\t\tt.Fatal(\"append overwrote tail\")\n\t\t\t\t}\n\t\t\t}\n\t\t})\n\t}\n}\n",
+      "fixed/retention_test.go": "package main\n\nimport (\n\t\"runtime\"\n\t\"testing\"\n)\n\nfunc TestRetainedHeap(t *testing.T) {\n\theader = nil\n\tt.Cleanup(func() { header = nil })\n\truntime.GC()\n\tvar before, after runtime.MemStats\n\truntime.ReadMemStats(&before)\n\theader = readHeader()\n\truntime.GC()\n\truntime.ReadMemStats(&after)\n\tdelta := int64(after.HeapAlloc) - int64(before.HeapAlloc)\n\truntime.KeepAlive(header)\n\tt.Logf(\"retained Go heap delta: %d bytes\", delta)\n\tif delta > 1<<20 {\n\t\tt.Fatalf(\"unexpected retained heap: %d\", delta)\n\t}\n}\n",
+      "original/main.go": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nvar header []byte\n\nfunc readHeader() []byte {\n\tbuf := make([]byte, 100<<20) // 100 MiB\n\tcopy(buf, \"0123456789ABCDEF\")\n\treturn buf[:16]\n}\n\nfunc main() {\n\theader = readHeader()\n\truntime.GC()\n\tfmt.Println(len(header), cap(header), string(header))\n}\n",
+      "original/main_test.go": "package main\n\nimport \"testing\"\n\nfunc Example_main() {\n\tmain()\n\t// Output: 16 104857600 0123456789ABCDEF\n}\nfunc TestHeaderBounds(t *testing.T) {\n\th := readHeader()\n\tif len(h) != 16 || cap(h) != 100<<20 || string(h) != \"0123456789ABCDEF\" {\n\t\tt.Fatal(\"unexpected header\")\n\t}\n}\n",
+      "original/retention_test.go": "package main\n\nimport (\n\t\"runtime\"\n\t\"testing\"\n)\n\nfunc TestRetainedHeap(t *testing.T) {\n\theader = nil\n\tt.Cleanup(func() { header = nil })\n\truntime.GC()\n\tvar before, after runtime.MemStats\n\truntime.ReadMemStats(&before)\n\theader = readHeader()\n\truntime.GC()\n\truntime.ReadMemStats(&after)\n\tdelta := int64(after.HeapAlloc) - int64(before.HeapAlloc)\n\truntime.KeepAlive(header)\n\tt.Logf(\"retained Go heap delta: %d bytes\", delta)\n\tif delta < 90<<20 {\n\t\tt.Fatalf(\"unexpected retained heap: %d\", delta)\n\t}\n}\n"
+    },
+    "race": "Not run: no application concurrency added.",
+    "limits": "No physical-memory/RSS assertions; Go HeapAlloc checked with generous thresholds. No older toolchain executions. Exact Clone capacity deliberately not asserted.",
+    "retained_heap": {
+      "metric": "MemStats.HeapAlloc after forced GC minus baseline after forced GC",
+      "original_delta_bytes": 104860960,
+      "fixed_delta_bytes": -2200,
+      "assertions": "Original delta >= 90 MiB; fixed delta <= 1 MiB, with the global result kept reachable.",
+      "interpretation": "One Go 1.26.1 run, generous thresholds. Negative small delta reflects unrelated heap variation, not negative memory use. Not RSS and not a promise of exact allocation overhead."
+    }
+  },
+  "structure": {
+    "ok": true,
+    "base": "b07ec13f157af20587e509e3819dfa610887a2b4",
+    "counts": {
+      "cards": 38,
+      "quiz": 22,
+      "simulators": 7,
+      "cheatsheet": 12
+    },
+    "changes": {
+      "cards": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "quiz": {
+        "changed": [
+          "q4"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "simulators": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "cheatsheetChanged": false
+    },
+    "errors": [],
+    "durationMs": 274,
+    "scope": "Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion."
+  },
+  "smoke": {
+    "ok": true,
+    "url": "http://127.0.0.1:8000/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 http://127.0.0.1:8000/",
+      "HTTP 200 http://127.0.0.1:8000/css/style.css?v=16",
+      "HTTP 200 http://127.0.0.1:8000/data/cards.js?v=16",
+      "HTTP 200 http://127.0.0.1:8000/data/simulators.js?v=16",
+      "HTTP 200 http://127.0.0.1:8000/data/quiz.js?v=16",
+      "HTTP 200 http://127.0.0.1:8000/js/app.js?v=16"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 621,
+    "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+  },
+  "targeted_browser": {
+    "ok": true,
+    "url": "http://127.0.0.1:8000/",
+    "checks": [
+      "q4 hidden before attempt",
+      "q4 original code",
+      "q4 option 0",
+      "q4 option 1",
+      "q4 option 2",
+      "q4 option 3",
+      "q4 option 4",
+      "q4 option 5",
+      "q4 keyboard selection",
+      "q4 explanation RU EN",
+      "q4 corrected code keyboard reveal",
+      "q4 focus visible",
+      "q4 sources",
+      "backlink from c25",
+      "return from c25",
+      "backlink from c26",
+      "return from c26",
+      "q4 expanded fits 320",
+      "related links fit c25 320",
+      "related links fit c26 320",
+      "q4 expanded fits 390",
+      "related links fit c25 390",
+      "related links fit c26 390",
+      "q4 expanded fits 430",
+      "related links fit c25 430",
+      "related links fit c26 430",
+      "q4 expanded fits 1440",
+      "related links fit c25 1440",
+      "related links fit c26 1440",
+      "q4 enlarged text fits"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 539,
+    "scope": "Targeted q4 and c25/c26 links; not a full regression suite."
+  },
+  "visual_review": [
+    "q4-result-390.png",
+    "q4-result-1440.png"
+  ],
+  "static_review": [
+    "Only q4 changed; all other data records equal base.",
+    "Go snippets equal formatted and tested fixture files.",
+    "Stable IDs and saved progress format preserved.",
+    "Changed document links resolve; reviewed/remaining quiz ID sets partition the original 20 as 9 + 11.",
+    "git diff --check passed."
+  ],
+  "assets": {
+    "index.html": "c366950b02f73301a1c288c44d1fd0e20e99e6c5480efd5d7adafd2f56e2869a",
+    "css/style.css": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c",
+    "js/app.js": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845",
+    "data/cards.js": "95db2a0db7ddb832f192f9a9b1c42bf7b9272b69d09a8eccd9b04059688587ca",
+    "data/quiz.js": "c2130edbd9304352c4e7abf74d4e36ecc23b52f69f1b3d951b6e2c4330390e04",
+    "data/simulators.js": "5008dc39674e1fcd5df4cfad70578a786131738f10a1c25ac04d08e83079b3b6"
+  },
+  "limitations": [
+    "Targeted coverage and shared smoke, not a rerun of every historical assertion.",
+    "No physical phone or screen reader.",
+    "q4 review does not complete c29 or all W2 tasks.",
+    "No deployment of this portion."
+  ]
+}

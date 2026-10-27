@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-27",
+  "merge": "b07ec13",
+  "pr": 16,
+  "includes_pr": 15,
+  "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+  "assets_match": true,
+  "assets": [
+    {
+      "path": "index.html",
+      "sha256": "e55030529828f2cf061c58831b4f9c4f73e448cde84390ca5e642c153098e188"
+    },
+    {
+      "path": "css/style.css",
+      "sha256": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+    },
+    {
+      "path": "js/app.js",
+      "sha256": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845"
+    },
+    {
+      "path": "data/cards.js",
+      "sha256": "95db2a0db7ddb832f192f9a9b1c42bf7b9272b69d09a8eccd9b04059688587ca"
+    },
+    {
+      "path": "data/quiz.js",
+      "sha256": "c738177aea9dc7964059650b3175d05dddb7b79189da01c7a1cc9f15ca6e48dd"
+    },
+    {
+      "path": "data/simulators.js",
+      "sha256": "5008dc39674e1fcd5df4cfad70578a786131738f10a1c25ac04d08e83079b3b6"
+    }
+  ],
+  "smoke": {
+    "ok": true,
+    "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/css/style.css?v=15",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/cards.js?v=15",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/simulators.js?v=15",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/quiz.js?v=15",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/js/app.js?v=15"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 2790,
+    "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+  },
+  "reuse": "Published files match the tested commit. Earlier semantic verification is retained in the portion 9 and verification-workflow reports; not rerun or counted as new here."
+}
