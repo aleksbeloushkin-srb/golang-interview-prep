@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loadContent, validateContent, changedContent } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds } from './check-content.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 
@@ -49,4 +49,41 @@ test('diff reports updates, additions, removals and order changes', () => {
 
 test('loader fails on invalid JavaScript rather than reporting success', () => {
   assert.throws(() => loadContent(() => 'const = invalid'));
+});
+
+const plan = loadPlan(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
+
+test('current plan passes structural validation against site data', () => {
+  assert.ok(plan, 'data/plan.js should load');
+  assert.deepEqual(validatePlan(plan, current), []);
+});
+
+test('missing plan file is optional for older commits', () => {
+  assert.equal(loadPlan(() => { throw Error('not in commit'); }), null);
+});
+
+const firstTask = p => p.weeks[0].days[0].tasks[0];
+const planFailures = [
+  ['duplicate task ID', p => { p.weeks[0].days[0].tasks[1].id = firstTask(p).id; }, /duplicate task ID/],
+  ['unknown site link', p => { firstTask(p).links = ['c999']; }, /unknown site ID c999/],
+  ['unknown quiz link', p => { firstTask(p).links = ['q999']; }, /unknown site ID q999/],
+  ['non-https reference', p => { firstTask(p).refs = [{ t: 'x', u: 'http://example.com' }]; }, /https URL/],
+  ['unknown LeetCode entry', p => { firstTask(p).lc = 99999; }, /unknown LeetCode/],
+  ['unknown talk', p => { firstTask(p).talk = 'nope'; }, /unknown talk/],
+  ['acceptance for unknown task', p => { p.acceptance['w99-mon-1'] = { accept: 'x' }; }, /unknown task ID w99-mon-1/],
+  ['empty acceptance text', p => { p.acceptance[firstTask(p).id] = { accept: ' ' }; }, /missing accept/],
+  ['missing weeks', p => { delete p.weeks; }, /PLAN.weeks/],
+];
+for (const [name, mutate, expected] of planFailures) {
+  test('plan: rejects ' + name, () => {
+    const data = structuredClone(plan);
+    mutate(data);
+    assert.match(validatePlan(data, current).join('\n'), expected);
+  });
+}
+
+test('plan task IDs are listed in order for progress-compatibility checks', () => {
+  const ids = planTaskIds(plan);
+  assert.equal(new Set(ids).size, ids.length);
+  assert.equal(ids[0], firstTask(plan).id);
 });

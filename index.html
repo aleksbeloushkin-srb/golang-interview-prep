@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Go Runtime & Concurrency — Interactive Interview Wiki & Quiz</title>
-  <link rel="stylesheet" href="css/style.css?v=20" />
+  <link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body>
 
@@ -15,6 +15,7 @@
         <span>Go Runtime Interview Wiki</span>
       </a>
       <nav class="nav-tabs" aria-label="Разделы сайта">
+        <a href="#/plan" class="tab-btn" data-route="plan">План 13 недель</a>
         <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки</a>
         <a href="#/simulators" class="tab-btn" data-route="simulators">2. Диаграммы</a>
         <a href="#/wiki" class="tab-btn" data-route="wiki">3. База знаний (Wiki)</a>
@@ -25,6 +26,9 @@
   </header>
 
   <main class="container">
+
+    <!-- ПРОГРАММА 13 НЕДЕЛЬ: заполняется js/plan-view.js из data/plan.js -->
+    <section id="view-plan" class="route-view hidden" aria-label="План подготовки на 13 недель"></section>
 
     <!-- РАЗДЕЛ 1: ТРЕНАЖЁР КАРТОЧЕК (FLASHCARDS) -->
     <section id="view-cards" class="route-view">
@@ -180,9 +184,11 @@
 
   </main>
 
-  <script src="data/cards.js?v=20"></script>
-  <script src="data/simulators.js?v=20"></script>
-  <script src="data/quiz.js?v=20"></script>
-  <script src="js/app.js?v=20"></script>
+  <script src="data/cards.js?v=22"></script>
+  <script src="data/simulators.js?v=22"></script>
+  <script src="data/quiz.js?v=22"></script>
+  <script src="data/plan.js?v=22"></script>
+  <script src="js/app.js?v=22"></script>
+  <script src="js/plan-view.js?v=22"></script>
 </body>
 </html>
