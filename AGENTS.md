@@ -9,7 +9,7 @@ This is a Go runtime learning site built with plain HTML, CSS, and JavaScript, w
 - `js/app.js`: routing, interactions, rendering, and saved progress.
 - `data/cards.js`, `data/simulators.js`, `data/quiz.js`: learning content.
 
-Keep this architecture unless the task requires changing it. There is currently no Go module or npm project; Go rules apply to examples and any future Go code. Preserve the Russian UI and bilingual learning content unless asked otherwise.
+Keep this architecture unless the task requires changing it. There is no root Go module or npm project; isolated verification modules live under `docs/verification/fixtures/`. Go rules apply to examples and those fixtures. Preserve the Russian UI and bilingual learning content unless asked otherwise.
 
 ## Working approach
 

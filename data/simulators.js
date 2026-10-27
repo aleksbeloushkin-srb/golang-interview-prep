@@ -1721,131 +1721,422 @@ const SIMULATORS = [
   // ДИАГРАММА 7: УСТРОЙСТВО MAP В GO (CLASSIC HMAP VS GO 1.24+ SWISSTABLES)
   // =========================================================================
   {
-    id: "sim7",
-    title: "Диаграмма 7: Устройство map в Go — Классическая hmap против новой SwissTable (Go 1.24–1.25+)",
-    subtitle: "От бакетов bmap с цепочками overflow и инкрементальной эвакуацией к группам SwissTable с 64-битной маской ctrl, H1/H2 хешем и SIMD/SWAR-поиском за 1 такт.",
-    cardId: "c31",
-    cardLabel: "Карточка Q31 (SwissTables) →",
-    steps: [
+    "id": "sim7",
+    "title": "Диаграмма 7: map — бакеты, поиск в Swiss Tables и память",
+    "subtitle": "Пять шагов: старая схема → метаданные → поиск ключа → рост → удаление. Учебные состояния, не снимок реальных хешей и не обещание задержек.",
+    "cardId": "c31",
+    "cardLabel": "Карточка Q31 (SwissTables) →",
+    "steps": [
       {
-        title: "1. Классическая мапа (до Go 1.24): bmap[8], tophash и overflow",
-        desc: "В классической hmap младшие B бит хеша выбирают бакет (bmap на 8 ключей и 8 значений). Старшие 8 бит сравниваются в цикле с массивом tophash[8]. При коллизиях аллоцируются дополнительные overflow-бакеты по указателю, а при заполнении > 6.5 (81%) начинается инкрементальная эвакуация.",
-        boxes: [
+        "title": "1. До Swiss Tables: бакет → overflow → эвакуация",
+        "desc": "В классической map, показанной по Go 1.17, младшие биты хеша выбирают основной бакет. Tophash отбирает кандидатов, затем сравниваются ключи. Если места не хватает, используются overflow-бакеты. Два основания роста нужно запоминать отдельно.",
+        "descEN": "In the classic Go 1.17 map, low hash bits select a primary bucket. Tophash filters candidates before key equality. Overflow buckets provide more slots. Excess load and excess overflow are different reasons to rebuild.",
+        "boxes": [
           {
-            title: "Структура бакета bmap (8 слотов)",
-            rows: [
-              { k: "tophash [8]uint8:", v: "Старшие 8 бит хеша (проверка в цикле)", hl: false },
-              { k: "Упаковка в памяти:", v: "8 ключей подряд, затем 8 значений подряд", hl: true },
-              { k: "Указатель overflow:", v: "Цепочка дополнительных bmap в хипе", hl: true }
+            "title": "Путь поиска / Lookup path",
+            "rows": [
+              {
+                "k": "① Hash → bucket",
+                "v": "Младшие B бит → один из 2^B бакетов / low bits select a bucket",
+                "hl": false
+              },
+              {
+                "k": "② Tophash → key",
+                "v": "8 отпечатков → сравнение ключей кандидатов / compare candidate keys",
+                "hl": true
+              },
+              {
+                "k": "③ Overflow",
+                "v": "Не нашли → следующий бакет цепочки / follow the chain",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Минусы классической схемы",
-            rows: [
-              { k: "Поиск в бакете:", v: "Последовательный обход 8 байт tophash", hl: false },
-              { k: "Overflow-цепочки:", v: "Лишние аллокации и промахи L1 кеша (Pointer Chasing)", hl: true },
-              { k: "Max Load Factor:", v: "6.5 / 8 = 81.25% (дальше удвоение всей мапы)", hl: false }
+            "title": "Два повода перестроить / Two growth triggers",
+            "rows": [
+              {
+                "k": "Много записей / load",
+                "v": "Порог около 6.5 на бакет с минимальным числом записей → удвоение",
+                "hl": true
+              },
+              {
+                "k": "Много overflow",
+                "v": "При допустимой загрузке → перестройка прежнего размера / same-size grow",
+                "hl": true
+              },
+              {
+                "k": "Эвакуация / evacuation",
+                "v": "growWork переносит нужный бакет и может продвинуть ещё один; вместе с overflow-цепочками",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Инкрементальная эвакуация",
-            rows: [
-              { k: "При росте (2^B → 2^(B+1)):", v: "Старый массив хранится в hmap.oldbuckets", hl: false },
-              { k: "На каждый write/delete:", v: "Переносится по 1–2 бакета в новые X/Y бакеты", hl: true },
-              { k: "Конкурентная запись:", v: "Флаг hashWriting → fatal error (не ловится recover!)", hl: false }
+            "title": "Граница модели / Limits",
+            "rows": [
+              {
+                "k": "Постепенно ≠ мгновенно",
+                "v": "Перенос цепочек и выделение нового массива требуют времени / work still costs time",
+                "hl": false
+              },
+              {
+                "k": "&m[k] недопустимо",
+                "v": "Это правило языка и для старых, и для новых map / language rule",
+                "hl": false
+              },
+              {
+                "k": "Конкурентные записи",
+                "v": "Нужна синхронизация; runtime ловит не все гонки / synchronize shared writes",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does too much overflow always double the bucket count?",
+          "promptRU": "Всегда ли избыток overflow удваивает число бакетов?",
+          "answerEN": "No. With acceptable load, the classic implementation can rebuild at the same size.",
+          "answerRU": "Нет. При допустимой загрузке классическая реализация может перестроить map прежнего размера."
+        }
       },
       {
-        title: "2. Новая мапа SwissTable (Go 1.24+): H1/H2 хеш и Группа с 64-битным ctrl",
-        desc: "В SwissTable 64-битный хеш ключа делится на H1 (старшие 57 бит — выбор группы) и H2 (младшие 7 бит — отпечаток ключа). Каждая группа содержит 8 пар {key, elem} и одно 64-битное управляющее слово ctrl (по 1 байту метаданных на каждый из 8 слотов). Никаких указателей overflow больше нет!",
-        boxes: [
+        "title": "2. Swiss group: отпечаток и три состояния слота",
+        "desc": "У группы восемь управляющих байтов ctrl и восемь слотов ключ/значение. H2 — короткий отпечаток для отбора кандидатов, H1 задаёт пробирование. Байты метаданных можно проверять вместе, но ключи затем сравниваются отдельно.",
+        "descEN": "A group contains eight control bytes and eight key/value slots. H2 is a short fingerprint used to filter candidates; H1 drives probing. Metadata can be matched together, but candidate keys must still be compared.",
+        "boxes": [
           {
-            title: "Разбиение 64-битного хеша ключа",
-            rows: [
-              { k: "H1 (старшие 57 бит):", v: "Выбирает подтаблицу и стартовую группу", hl: true },
-              { k: "H2 (младшие 7 бит):", v: "Хранится прямо в байте ctrl[i] (0b0xxxxxxx)", hl: true },
-              { k: "Вероятность ложного совпадения:", v: "Всего 1 / 128 (0.78%)!", hl: false }
+            "title": "Хеш / Hash",
+            "rows": [
+              {
+                "k": "H2 = low 7 bits",
+                "v": "Отпечаток в занятом ctrl / fingerprint in occupied control byte",
+                "hl": true
+              },
+              {
+                "k": "H1 = remaining bits",
+                "v": "Пробирование групп; старшие биты выбирают таблицу / group probing and table selection",
+                "hl": false
+              },
+              {
+                "k": "57 + 7",
+                "v": "Для 64-битного хеша, не универсально / for a 64-bit hash only",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Управляющее слово ctrl (uint64 = 8 байт)",
-            rows: [
-              { k: "Пустой слот (Empty):", v: "0b10000000 (0x80) — старший бит = 1", hl: true },
-              { k: "Удалённый (Deleted):", v: "0b11111110 (0xFE) — Tombstone (могильный камень)", hl: true },
-              { k: "Занятый слот (Full):", v: "0b0xxxxxxx — старший бит 0 + 7 бит хеша H2", hl: true }
+            "title": "Три состояния / Three states",
+            "rows": [
+              {
+                "k": "Full: 0xxxxxxx",
+                "v": "Здесь ключ; H2 помогает выбрать кандидата / occupied, check candidate",
+                "hl": true
+              },
+              {
+                "k": "Empty: 0x80",
+                "v": "После проверки кандидатов можно завершить поиск / stop after candidate checks",
+                "hl": true
+              },
+              {
+                "k": "Deleted: 0xFE",
+                "v": "Запись удалена, путь поиска продолжается / preserve the probe path",
+                "hl": true
+              }
             ]
           },
           {
-            title: "Преимущества в кэше процессора",
-            rows: [
-              { k: "Локальность L1 Cache:", v: "Все 8 мета-байт ctrl лежат в одном регистре uint64", hl: true },
-              { k: "Overflow-указатели:", v: "ОТСУТСТВУЮТ (открытая адресация / probing)", hl: false },
-              { k: "Max Load Factor:", v: "7 / 8 = 87.5% (экономия памяти!)", hl: true }
+            "title": "Не перепутай / Distinguish",
+            "rows": [
+              {
+                "k": "8 байтов ctrl",
+                "v": "Это только метаданные, не все ключи и значения / metadata only",
+                "hl": false
+              },
+              {
+                "k": "SWAR / SIMD",
+                "v": "Групповая проверка байтов; не весь поиск за один такт / grouped matching, not one-cycle lookup",
+                "hl": false
+              },
+              {
+                "k": "Совпало H2",
+                "v": "Кандидат, а не доказательство равенства / candidate, not key equality",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Two keys have the same H2. Are they equal?",
+          "promptRU": "У двух ключей одинаковый H2. Равны ли ключи?",
+          "answerEN": "Not necessarily. Compare the keys themselves; fingerprints only reduce the number of comparisons.",
+          "answerRU": "Не обязательно. Сравни сами ключи: отпечатки лишь сокращают число сравнений."
+        }
       },
       {
-        title: "3. Магия SIMD / SWAR: параллельная проверка всех 8 слотов за 1 операцию!",
-        desc: "Чтобы найти ключ в группе SwissTable, процессор НЕ крутит цикл из 8 итераций! Он размножает 7-битный хеш H2 на все 8 байт 64-битного регистра (0x0101010101010101 * H2) и за ОДНУ побитовую операцию (SWAR / SIMD) сравнивает его со словом ctrl, сразу получая битовую маску совпавших слотов!",
-        boxes: [
+        "title": "3. Ищем «go»: кандидаты → ключ → результат",
+        "desc": "Условный пример: ищем «go» с выбранным H2 = 0x2A. В группе такой отпечаток есть у «rust» и «go». Empty не отменяет проверку кандидатов в этой же группе. Названия языков и отпечатки здесь учебные, не реальные значения хеш-функции Go.",
+        "descEN": "Teaching example: look up “go” with a chosen H2 of 0x2A. Both “rust” and “go” have that fingerprint in this group. An empty slot does not bypass candidate checks in the same group. These are illustrative fingerprints, not actual Go hash values.",
+        "boxes": [
           {
-            title: "Побитовый поиск в 64-битном регистре (SWAR)",
-            rows: [
-              { k: "Шаг 1 (Broadcast H2):", v: "Тиражируем ищем. H2 (например, 0x2A) в 8 байт uint64", hl: true },
-              { k: "Шаг 2 (XOR с ctrl):", v: "В совпавших байтах получаются нули 0x00!", hl: true },
-              { k: "Шаг 3 (Bitmask + TrailingZeros):", v: "Инструкция CTZ сразу даёт индекс слота (0..7)!", hl: true }
+            "title": "Группа из 8 слотов / Eight-slot group",
+            "rows": [
+              {
+                "k": "0 · H2 2A · rust",
+                "v": "Кандидат: rust ≠ go / reject",
+                "hl": true
+              },
+              {
+                "k": "1 · H2 19 · c",
+                "v": "Не кандидат по H2 / fingerprint differs",
+                "hl": false
+              },
+              {
+                "k": "2 · H2 2A · go",
+                "v": "Кандидат: go = go → вернуть значение / return value",
+                "hl": true
+              },
+              {
+                "k": "3 · 80 · empty",
+                "v": "Стоп только если ключ не найден / stop only after no match",
+                "hl": false
+              },
+              {
+                "k": "4 · H2 11 · js",
+                "v": "Не кандидат по H2 / fingerprint differs",
+                "hl": false
+              },
+              {
+                "k": "5, 6, 7 · 80 · empty",
+                "v": "Остальные три слота пусты / remaining slots empty",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Что если в группе слот не найден?",
-            rows: [
-              { k: "Проверка Empty (0x80):", v: "Маска пустых слотов тоже находится за 1 такт", hl: true },
-              { k: "Если есть Empty (0x80):", v: "Ключа в мапе 100% нет → мгновенный выход!", hl: true },
-              { k: "Если все 8 слотов Full/Deleted:", v: "Шагаем к следующей группе в том же массиве", hl: false }
+            "title": "Три действия / Three actions",
+            "rows": [
+              {
+                "k": "① Отобрать / filter",
+                "v": "Сопоставить H2 с ctrl → кандидаты 0 и 2",
+                "hl": false
+              },
+              {
+                "k": "② Сравнить / compare",
+                "v": "Проверить ключи: слот 0 не подходит, слот 2 подходит",
+                "hl": true
+              },
+              {
+                "k": "③ Решить / decide",
+                "v": "Нашли → результат. Не нашли + empty → отсутствует. Иначе → следующая проба",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Выигрыш в производительности",
-            rows: [
-              { k: "Ускорение чтения/записи:", v: "На 30–60% быстрее классической hmap", hl: true },
-              { k: "Предсказатель переходов CPU:", v: "Нет ветвлений (branchless) при поиске в группе", hl: false },
-              { k: "Удаление delete(m, k):", v: "Ставит Empty (если есть пустые) или Tombstone 0xFE", hl: false }
+            "title": "Если совпадений ключа нет / No key matches",
+            "rows": [
+              {
+                "k": "Есть empty",
+                "v": "Ключ отсутствует / absent",
+                "hl": false
+              },
+              {
+                "k": "Только full/deleted",
+                "v": "Продолжить квадратичное пробирование групп / continue quadratic probing",
+                "hl": true
+              },
+              {
+                "k": "Почему deleted нужен",
+                "v": "За удалённым слотом могут быть ранее размещённые ключи / later keys remain reachable",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "If slot 2 stored “java” and all empty slots became deleted, could this group prove absence?",
+          "promptRU": "Если в слоте 2 будет «java», а все empty станут deleted, докажет ли эта группа отсутствие ключа?",
+          "answerEN": "No. After rejecting both candidate keys, probing must continue because the group has no empty slot. With an empty slot, the unsuccessful search could stop.",
+          "answerRU": "Нет. После отклонения обоих кандидатов нужно продолжить пробирование: в группе нет empty. Если бы empty был, неуспешный поиск мог бы завершиться."
+        }
       },
       {
-        title: "4. Масштабирование без фризов: Extendible Hashing (Директория подтаблиц по 1024)",
-        desc: "В обычной SwissTable (C++ abseil) при росте приходится рехешировать ВСЮ таблицу целиком, что в Go вызвало бы паузы на миллионах ключей. Поэтому в Go 1.24+ применили Extendible Hashing: большая мапа состоит из директории указателей на независимые таблицы максимум по 1024 элемента! При переполнении делится ТОЛЬКО одна 1024-элементная подтаблица!",
-        boxes: [
+        "title": "4. Рост: одна группа → таблица → split",
+        "desc": "Малая map может использовать одну группу напрямую. Затем появляется таблица и директория. При нехватке места реализация может очистить ненужные tombstones; если этого мало, таблица растёт, а достигшая предела таблица делится. Директория тоже может потребовать увеличения.",
+        "descEN": "A small map can use one group directly, then move to a table and directory. When insertion needs room, the runtime may prune unneeded tombstones. If necessary, a table grows or splits at its size limit; the directory may also grow.",
+        "boxes": [
           {
-            title: "Архитектура большой SwissMap в Go",
-            rows: [
-              { k: "Маленькая мапа (<= 8 ключей):", v: "Всего 1 группа напрямую без директории!", hl: false },
-              { k: "Большая мапа (> 1024 ключей):", v: "Директория dirPtr → массив независимых Table", hl: true },
-              { k: "Лимит одной Table:", v: "Максимум 1024 слота (128 групп по 8)", hl: true }
+            "title": "Масштаб / Scale",
+            "rows": [
+              {
+                "k": "Одна малая группа",
+                "v": "До 8 записей без директории; малый len не доказывает это представление / len alone is insufficient",
+                "hl": false
+              },
+              {
+                "k": "Таблица / table",
+                "v": "Группы по 8, обычный лимит загрузки 7/8 с учётом tombstones",
+                "hl": false
+              },
+              {
+                "k": "Директория / directory",
+                "v": "Ссылки на таблицы; это не режим только после 1024 ключей / not only above 1024 keys",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Локальный сплит (Split вместо полного Rehash)",
-            rows: [
-              { k: "Когда Table заполнена на 7/8:", v: "Рехешируется ТОЛЬКО эта таблица из 1024 элементов!", hl: true },
-              { k: "Как она делится:", v: "Раздваивается на две новые Table (Left и Right)", hl: true },
-              { k: "Латентность вставки (p99):", v: "Строгий O(1) — максимум 1024 ключа за один сплит!", hl: true }
+            "title": "Пример пути роста / Growth path",
+            "rows": [
+              {
+                "k": "512 → 1024 слота",
+                "v": "Если нужна перестройка, таблица удваивается / grow one table",
+                "hl": true
+              },
+              {
+                "k": "Предел 1024 слота",
+                "v": "Следующая необходимая перестройка → split на две таблицы / split",
+                "hl": true
+              },
+              {
+                "k": "Directory may grow",
+                "v": "Может удвоиться массив ссылок / pointer array may double",
+                "hl": false
+              }
             ]
           },
           {
-            title: "Важное правило для продакшена",
-            rows: [
-              { k: "Сжимается ли директория при delete?:", v: "НЕТ! Мапа по-прежнему не отдаёт память назад", hl: true },
-              { k: "Как освободить память пиковой мапы:", v: "Создать новую мапу и скопировать живые ключи", hl: false },
-              { k: "Флаг отката (если нужен старый код):", v: "GOEXPERIMENT=noswissmap при компиляции", hl: false }
+            "title": "Что ограничено / What is bounded",
+            "rows": [
+              {
+                "k": "1024",
+                "v": "Слоты одной таблицы, не ключи всей map / slots per table, not map size",
+                "hl": false
+              },
+              {
+                "k": "Go 1.25 и 1.26",
+                "v": "pruneTombstones есть в обеих версиях / present in both",
+                "hl": false
+              },
+              {
+                "k": "Задержки / latency",
+                "v": "Нет гарантии O(1) для каждой вставки или фиксированного p99 / measure workload",
+                "hl": false
+              }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "At 7/8 load, must every table immediately split into two?",
+          "promptRU": "Обязана ли любая таблица сразу разделиться при загрузке 7/8?",
+          "answerEN": "No. Updating an existing key does not add an entry. An insertion may reuse or prune deleted slots; a table below the limit can grow before splitting is needed.",
+          "answerRU": "Нет. Обновление существующего ключа не добавляет запись. Вставка может переиспользовать или очистить deleted-слоты; таблица меньше предела может сначала вырасти."
+        }
+      },
+      {
+        "title": "5. Память: запись ≠ таблица ≠ RSS",
+        "desc": "delete убирает одну запись, clear — все записи в существующей map. Их данные могут стать недостижимыми, но хранилище таблицы не обязано уменьшиться. Замена переменной не очищает map, которую ещё удерживает alias. Это отдельный шаг, чтобы не смешивать поиск и владение памятью.",
+        "descEN": "delete removes one entry; clear removes all entries from the existing map. Payloads may become unreachable while table storage stays allocated. Reassigning one variable does not clear a map still held by an alias. Keep lookup mechanics separate from ownership.",
+        "boxes": [
+          {
+            "title": "① Запись / Entry",
+            "rows": [
+              {
+                "k": "delete(m, k)",
+                "v": "Убрать ключ и значение, если ключ найден / remove matching entry",
+                "hl": false
+              },
+              {
+                "k": "Данные / payload",
+                "v": "GC возможен, если других ссылок нет / collectible without other references",
+                "hl": true
+              },
+              {
+                "k": "Deleted marker",
+                "v": "Служебная метка не обязана удерживать удалённый объект / marker is not payload",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "② Таблица / Table storage",
+            "rows": [
+              {
+                "k": "clear(m)",
+                "v": "Очищает общую map, включая вид через alias / aliases observe it",
+                "hl": false
+              },
+              {
+                "k": "m = new map",
+                "v": "Меняет только m; alias сохраняет старую map / alias retains old map",
+                "hl": true
+              },
+              {
+                "k": "Освобождение старой",
+                "v": "После исчезновения всех ссылок; копирование значений поверхностное / shallow copy",
+                "hl": false
+              }
+            ]
+          },
+          {
+            "title": "③ Процесс / Process",
+            "rows": [
+              {
+                "k": "len(m) == 0",
+                "v": "Не означает нулевой памяти таблицы / does not imply zero table storage",
+                "hl": false
+              },
+              {
+                "k": "GC завершился",
+                "v": "Не обещает немедленного падения RSS / RSS need not drop immediately",
+                "hl": false
+              },
+              {
+                "k": "Когда перестраивать",
+                "v": "После профилирования, с согласованным владением / profile and coordinate access",
+                "hl": false
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "After alias := m; m = nil, is the old map necessarily collectible?",
+          "promptRU": "После alias := m; m = nil обязательно ли старая map доступна для GC?",
+          "answerEN": "No. A still-live alias retains it. Deleting payload references, releasing the table, and reducing RSS are different events.",
+          "answerRU": "Нет. Живая alias удерживает её. Удаление ссылок на данные, освобождение таблицы и снижение RSS — разные события."
+        }
+      }
+    ],
+    "versionNote": "Классическая схема: Go 1.17. Swiss Tables: Go 1.25.0 и 1.26.1. H2 и ключи в примере подобраны для объяснения; SIMD/SWAR не означает одну инструкцию на весь поиск. noswissmap доступен в 1.25, но переключатель удалён в 1.26.",
+    "sources": [
+      {
+        "title": "Classic map — Go 1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/map.go"
+      },
+      {
+        "title": "Go 1.25.0: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: table growth, deletion, pruning",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/table.go"
+      },
+      {
+        "title": "Go 1.26.1: directory and Clear",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/map.go"
+      },
+      {
+        "title": "Go 1.26.1: control-byte matching",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go"
+      },
+      {
+        "title": "Experiments — Go 1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/goexperiment/flags.go"
+      },
+      {
+        "title": "Experiments — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/goexperiment/flags.go"
       }
     ]
   }
@@ -1908,8 +2199,8 @@ const CHEATSHEET_ROWS = [
   },
   {
     topic: "10. Мапы: Classic hmap vs SwissTables (Go 1.24+)",
-    how: "В Go 1.24+ группы по 8 слотов с 64-битным словом метаданных <code>ctrl</code> (7-битный хеш <code>H2</code>) + директория подтаблиц по 1024 элемента (Extendible Hashing).",
-    markers: "Параллельный поиск 8 слотов за <strong>1 побитовую операцию (SWAR/SIMD)</strong>. Заполнение до <strong>87.5% (7/8)</strong>. При <code>delete</code> память НЕ сжимается.",
+    how: "В Go 1.25/1.26: группы по 8 слотов, <code>H2</code> отбирает кандидатов, затем сравниваются ключи. Таблицы растут до 1024 слотов, затем делятся; директория тоже может расти.",
+    markers: "<strong>Отпечаток → ключ → stop/probe</strong>. Обычный лимит таблиц 7/8, у малой группы возможны 8 записей. <code>delete/clear</code> освобождают ссылки на данные, но не обещают сжатия таблицы или немедленного снижения RSS.",
     cardId: "c31", simId: "sim7"
   },
   {
