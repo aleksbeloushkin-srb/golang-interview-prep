@@ -68,6 +68,11 @@ export function validatePlan(plan, data) {
     require(isObject(entry) && text(entry.accept), `plan.acceptance.${id}: missing accept`);
     if (isObject(entry) && entry.exercise !== undefined) require(text(entry.exercise), `plan.acceptance.${id}: empty exercise`);
   }
+  require(plan.modelAnswers === undefined || isObject(plan.modelAnswers), 'plan: modelAnswers must be an object');
+  for (const [id, entry] of Object.entries(isObject(plan.modelAnswers) ? plan.modelAnswers : {})) {
+    require(taskIds.has(id), `plan.modelAnswers: unknown task ID ${id}`);
+    fields(isObject(entry) ? entry : {}, ['hook', 'en'], `plan.modelAnswers.${id}`);
+  }
   for (const item of plan.predict || []) fields(item || {}, ['id', 'code', 'output', 'why'], `plan.predict ${item?.id}`);
   return errors;
 
