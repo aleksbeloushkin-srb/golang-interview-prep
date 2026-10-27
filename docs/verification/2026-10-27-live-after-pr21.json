@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-27",
+  "pullRequest": 21,
+  "mergeCommit": "36cf323136277a69f38687deca24d29a3fe5f9cc",
+  "contentCommit": "5f23e9e9c2df50d778b492028755063c11b91df7",
+  "version": 20,
+  "assets": [
+    {
+      "path": "index.html",
+      "matches": true,
+      "sha256": "f2e92655663ec1df7f830a6b6220f4e37afe3fae3005468bda7affcb950ec8f6"
+    },
+    {
+      "path": "css/style.css",
+      "matches": true,
+      "sha256": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+    },
+    {
+      "path": "js/app.js",
+      "matches": true,
+      "sha256": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845"
+    },
+    {
+      "path": "data/cards.js",
+      "matches": true,
+      "sha256": "6cb1604b9d2437d575b0660ba0862b2f765a35e52aacef3789f2fc9ad95bc0a7"
+    },
+    {
+      "path": "data/quiz.js",
+      "matches": true,
+      "sha256": "6017a68c0f168be0e69f1b2250e7361841aef96ec88b5f47b8da8861951fdd82"
+    },
+    {
+      "path": "data/simulators.js",
+      "matches": true,
+      "sha256": "7313d8189939e9550d665cb9fc7aa75963c7df235e2eed95964a45aada70ae31"
+    }
+  ],
+  "browser": {
+    "ok": true,
+    "url": "https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+    "checks": [
+      "route cards",
+      "route simulators",
+      "route wiki",
+      "route cheatsheet",
+      "route quiz",
+      "keyboard reveals answer",
+      "visible focus",
+      "progress survives reload",
+      "quiz answer",
+      "diagram step",
+      "cheatsheet rows",
+      "overflow cards 320",
+      "overflow simulators 320",
+      "overflow wiki 320",
+      "overflow cheatsheet 320",
+      "overflow quiz 320",
+      "overflow cards 390",
+      "overflow simulators 390",
+      "overflow wiki 390",
+      "overflow cheatsheet 390",
+      "overflow quiz 390",
+      "overflow cards 430",
+      "overflow simulators 430",
+      "overflow wiki 430",
+      "overflow cheatsheet 430",
+      "overflow quiz 430",
+      "overflow cards 1440",
+      "overflow simulators 1440",
+      "overflow wiki 1440",
+      "overflow cheatsheet 1440",
+      "overflow quiz 1440",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/css/style.css?v=20",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/cards.js?v=20",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/simulators.js?v=20",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/data/quiz.js?v=20",
+      "HTTP 200 https://aleksbeloushkin-srb.github.io/golang-runtime-prep/js/app.js?v=20",
+      "published corpus 38/22/40",
+      "c10 published syscall version distinction",
+      "sim2 published syscall step",
+      "sim2 expanded syscall 390",
+      "sim2 expanded syscall 1440"
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "durationMs": 2817,
+    "scope": "Publication smoke plus corpus counts, rendered c10 syscall distinction and sim2 syscall step at 390/1440px. No repeat of local Go tests or full corpus review."
+  },
+  "initialAttempt": "First browser attempt timed out before page readiness; second attempt passed. No application changes. Exact initial loading cause not established.",
+  "reproduction": {
+    "baseRunner": "scripts/browser-smoke.mjs",
+    "baseRunnerSha256": "a8b4296230ec220c53a8338d967562fc18c0b9bfd4dae13fcd8009aecf07547f",
+    "insertBeforeFinalBrowserErrorCheck": "\n  await check('published corpus 38/22/40', \"CARDS.length===38 && QUIZ_QUESTIONS.length===22 && SIMULATORS.reduce((n,s)=>n+s.steps.length,0)===40\");\n  await route('cards/c10');await ready(\"getFilteredCards()[state.index].id==='c10'\");await evaluate('toggleAnswer()');\n  await check('c10 published syscall version distinction', \"document.getElementById('card-answer-box').textContent.includes('_Psyscall_unused') && CARDS.find(c=>c.id==='c10').shortRU.includes('1.26')\");\n  await route('simulators');await evaluate(\"document.querySelectorAll('#sim2-steps .step-pill')[5].click()\");\n  await check('sim2 published syscall step',\"document.getElementById('sim2-grid').textContent.includes('_Psyscall_unused') && document.getElementById('sim2-desc').textContent.includes('1.25')\");\n  for(const width of [390,1440]){\n    await call('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:false});\n    await check('sim2 expanded syscall '+width, \"document.documentElement.scrollWidth<=innerWidth\");\n  }\n",
+    "navigationDiagnostic": "Check Page.navigate.errorText before waiting for page readiness."
+  },
+  "limits": "Reused local semantic evidence for identical deployed bytes. No new visual screenshot review, physical phone, Safari, screen reader or Go test execution."
+}
