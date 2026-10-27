@@ -72,7 +72,8 @@ const CARDS = [
 if cache.Get(key) == nil {
     cache.Set(key, value)
 }
-// Design one operation, e.g. LoadOrStore, around the required invariant.`
+// Design one operation, e.g. LoadOrStore, around the required invariant.`,
+    quizIds: ["q12", "q13"]
   },
   {
     id: "c3",
@@ -370,7 +371,8 @@ func Await(ctx context.Context, work func(context.Context) error) error {
 	case <-ctx.Done():
 		return ctx.Err() // Does not wait for work to stop.
 	}
-}`
+}`,
+    quizIds: ["q10", "q16"]
   },
 
   // ==========================================
@@ -508,23 +510,68 @@ func Drain(a, b <-chan int, consume func(int)) {
 }`
   },
   {
-    id: "c15",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: null,
-    qEN: "Q15: Channels vs. Mutexes — when should you use a channel and when should you use a sync.Mutex?",
-    qRU: "Каналы против Мьютексов — когда в Go нужно использовать каналы, а когда sync.Mutex?",
-    shortEN: "Use channels when passing ownership of data, distributing work across pipelines, or coordinating lifecycle/timeouts with 'select' and 'context.Context'. Use 'sync.Mutex' (or 'sync.RWMutex' / atomics) when protecting internal state, caches, or counters inside a struct where ownership does not change.",
-    detailsEN: [
-      "Use Channels For: 1) Transferring data ownership between goroutines; 2) Worker pools, fan-in/fan-out pipelines; 3) Waiting on multiple events with timeouts via 'select' (note: you CANNOT put a sync.Mutex inside a select statement!).",
-      "Use Mutex / Atomic For: 1) In-memory caches (map + RWMutex), metrics, counters, or struct fields; 2) Critical sections requiring ultra-low latency (an uncontended sync.Mutex takes ~15 ns via a single CAS, whereas a channel operation acquires an internal lock AND copies data)."
+    "id": "c15",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "Q15: Channels or a mutex — who owns the data, and what must happen together?",
+    "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
+    "shortEN": "Use a channel to communicate work, results or lifecycle events. Use a mutex to protect an invariant in shared state. Sending a pointer does not enforce exclusive ownership: the sender and receiver still need an agreement about later access. Choose by the coordination problem, then measure performance.",
+    "detailsEN": [
+      "A channel send copies its value. A pointer or slice can still refer to shared mutable memory. For an ownership-transfer protocol, the sender stops accessing that memory after handing it over, or both sides synchronize access. The compiler does not enforce this protocol.",
+      "A mutex should cover the whole operation: check balance AND withdraw, or look up AND install a missing entry. Locking each field access separately can avoid a data race yet leave a logic race. All accesses to protected mutable state must follow the same protocol.",
+      "RWMutex allows concurrent readers, but RLock does not permit writes. A pending writer can block new readers; there is no atomic read-to-write upgrade. Extra bookkeeping can outweigh parallelism for short reads: RWMutex is not automatically faster than Mutex.",
+      "Channels compose with select for cancellation and communication. Mutex.Lock has no context parameter and cannot be a select case. An atomic operation covers its specified value, not an arbitrary multi-field invariant; an actor also needs bounded queues and an exit path."
     ],
-    practicalRU: "В высоконагруженных сервисах (например, LFU/LRU-кешах в памяти) попытка заменить sync.RWMutex на горутину-актор с каналом убивает пропускную способность на чтение в 10–20 раз: канал сериализует все запросы через один мьютекс 'hchan.lock', тогда как шардрованный RWMutex позволяет десяткам ядер читать параллельно.",
-    code: `// Rule of thumb:
-// 1. Coordinating goroutines / timeouts / pipelines -> chan + select
-// 2. Protecting struct state / in-memory cache      -> sync.Mutex / sync.RWMutex`
+    "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
+    "shortRU": "Канал подходит для передачи работы, результатов и событий жизненного цикла. Мьютекс защищает инвариант общего состояния. Отправка указателя не обеспечивает исключительное владение: отправитель и получатель должны договориться о дальнейшем доступе. Выбирай по задаче координации, затем измеряй производительность.",
+    "detailsRU": [
+      "Отправка в канал копирует значение. Указатель или срез всё ещё может ссылаться на общую изменяемую память. В протоколе передачи владения отправитель прекращает обращаться к ней после передачи либо обе стороны синхронизируют доступ. Компилятор этот протокол не обеспечивает.",
+      "Мьютекс должен охватывать целую операцию: проверить баланс И списать, найти И установить отсутствующий элемент. Отдельные блокировки вокруг каждого обращения могут убрать data race, но оставить логическую гонку. Все обращения к защищённому изменяемому состоянию следуют одному протоколу.",
+      "RWMutex допускает параллельных читателей, но RLock не разрешает запись. Ожидающий писатель может задержать новых читателей; атомарного повышения read-lock до write-lock нет. Для короткого чтения дополнительные расходы могут перевесить параллелизм: RWMutex не всегда быстрее Mutex.",
+      "Каналы сочетаются с select для отмены и обмена. Mutex.Lock не принимает context и не может быть веткой select. Атомарная операция защищает указанное значение, а не произвольный инвариант нескольких полей; актору тоже нужны ограничение очереди и путь завершения."
+    ],
+    "practicalEN": "Start with the invariant: a balance must not become negative. Keep its check and update under one lock. Do not promise a universal nanosecond cost or a 10× actor slowdown; benchmark the actual workload. Return snapshots rather than exposing mutable state after unlocking.",
+    "versionNote": "Контракты Mutex/RWMutex и передачи значений применимы к Go 1.17, 1.25 и 1.26. Производительность зависит от нагрузки и реализации; фиксированных коэффициентов здесь нет.",
+    "sources": [
+      {
+        "title": "Mutex contract — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/mutex.go"
+      },
+      {
+        "title": "RWMutex — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/rwmutex.go"
+      },
+      {
+        "title": "Go memory model — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_mem.html"
+      }
+    ],
+    "quizIds": [
+      "q8",
+      "q12",
+      "q13"
+    ],
+    "practice": {
+      "kind": "Инвариант → граница операции",
+      "promptEN": "What breaks if the balance check runs before Lock? Does sending *Account through a channel fix it?",
+      "promptRU": "Что сломается, если проверять баланс до Lock? Исправит ли это отправка *Account через канал?",
+      "pointsEN": [
+        "Two withdrawals can both pass a stale check.",
+        "A channel only transfers the pointer value; exclusive access needs an ownership protocol.",
+        "Keep check and update together; return a copied result."
+      ],
+      "pointsRU": [
+        "Два списания могут пройти проверку устаревшего баланса.",
+        "Канал передаст значение указателя; исключительный доступ требует протокола владения.",
+        "Держи проверку и изменение вместе; возвращай копию результата."
+      ],
+      "followUpEN": "If each worker owns a distinct result index, do they still need one shared mutex? State the assumptions.",
+      "followUpRU": "Если каждый worker владеет своим индексом результата, нужен ли общий мьютекс? Назови условия."
+    }
   },
   {
     "id": "c16",
@@ -834,49 +881,155 @@ func Drain(a, b <-chan int, consume func(int)) {
   },
 
   {
-    id: "c21",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q21: How does sync.Mutex work under the hood (Fast-path CAS, Spinning, and Normal vs. Starvation Mode)?",
-    qRU: "Как устроен sync.Mutex под капотом (быстрый путь через CAS, активное вращение spinning и два режима: Normal vs. Starvation Mode 1ms)?",
-    shortEN: "A sync.Mutex is an 8-byte struct (a 32-bit state word encoding Locked, Woken, Starving flags plus waiter count, and a 32-bit semaphore). It first attempts a single user-space CAS. On contention, it spins briefly if the owner is running on another CPU core, then parks via runtime_Semacquire. To balance throughput and tail latency, it switches between Normal Mode and Starvation Mode (if any waiter waits > 1 ms).",
-    detailsEN: [
-      "Fast Path (Uncontended): A single 'atomic.CompareAndSwapInt32(&m.state, 0, mutexLocked)' instruction in user space (~15 ns).",
-      "Active Spinning: Before going to sleep, an arriving goroutine spins for ~4 iterations (30 PAUSE instructions each) ONLY if the machine is multicore and the local P queue is empty.",
-      "Normal Mode (High Throughput): Newly arriving goroutines on the CPU race against freshly woken goroutines from the semaphore queue. Running goroutines usually win because they are already on the CPU (great throughput, risk of tail latency).",
-      "Starvation Mode (> 1 ms wait): If a woken goroutine fails to acquire the lock for over 1 ms, the mutex flips the 'mutexStarving' bit. Unlocking now hands ownership DIRECTLY to the first waiter at the head of the FIFO queue (no spinning, zero tail-latency starvation)."
+    "id": "c21",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Q21: How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
+    "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
+    "shortEN": "A Mutex protects shared state through mutual exclusion and synchronization. In the checked runtime, an uncontended Lock first tries a CAS; contention can lead to brief spinning and then parking. Normal mode allows competition, while starvation mode favors waiting goroutines. The 1 ms threshold is an implementation policy, not a maximum wait time.",
+    "detailsEN": [
+      "The zero value is ready to use. Do not copy a Mutex after first use. Unlock synchronizes before a later successful Lock; a failed TryLock establishes no synchronization and gives no permission to read protected fields.",
+      "The public API does not associate a Mutex with a particular goroutine: one goroutine may lock and another unlock under a valid protocol. There is no recursive-lock exception. If the current owner calls Lock again and nobody can unlock, it waits on itself.",
+      "In Go 1.25.0/1.26.1, the internal mutex has an int32 state and uint32 semaphore. State includes locked/woken/starving flags and a waiter count. This layout and the CAS fast path are implementation details, not portable timing or size promises.",
+      "Spinning eligibility uses runtime heuristics: limited attempts, CPU/P availability and an empty local run queue. It does not inspect an owner goroutine and prove that owner is running. If spinning is unsuitable or unsuccessful, the goroutine can park.",
+      "Normal mode: wake a waiter → it competes with arrivals → it may wait again. In the slow path, prolonged waiting beyond the 1 ms threshold can switch the mutex to starvation mode while it is still locked. Unlock then hands ownership to the front waiter. The mode can end when the last waiter runs or its wait was short; none of this bounds scheduling or lock-hold time."
     ],
-    practicalRU: "В продакшене для расследования тормозов на мьютексах включают профиль блокировок: 'runtime.SetMutexProfileFraction(5)' и снимают 'pprof/mutex'. Если на каком-то мьютексе висят десятки горутин дольше 1 мс, он переходит в Starvation Mode, отключает оптимизацию горячего ядра и резко снижает общую пропускную способность сервиса.",
-    code: `// Enabling Mutex contention profiling in production (samples 1 out of 5 events):
-runtime.SetMutexProfileFraction(5)
-// Then inspect via: go tool pprof http://localhost:6060/debug/pprof/mutex`
+    "practicalRU": "Ищи конкуренцию через mutex- и block-профили, затем сокращай критические секции или меняй владение. SetMutexProfileFraction(5) задаёт в среднем одно из пяти событий конкуренции за mutex, а не каждый пятый Lock. Профиль показывает конкуренцию, но не доказывает, что сбой вызван starvation mode.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tmu.Lock()\n\tfmt.Println(mu.TryLock()) // false: already locked\n\tmu.Unlock()\n\tif mu.TryLock() {\n\t\tfmt.Println(\"acquired\")\n\t\tmu.Unlock()\n\t}\n}",
+    "shortRU": "Mutex защищает общее состояние взаимным исключением и синхронизацией. В проверенном рантайме свободный Lock сначала пробует CAS; при конкуренции возможны короткое вращение и парковка. Обычный режим допускает соревнование, а starvation mode отдаёт предпочтение ожидающим. Порог 1 мс — политика реализации, а не максимальное время ожидания.",
+    "detailsRU": [
+      "Нулевое значение готово к работе. После первого использования Mutex нельзя копировать. Unlock синхронизируется с последующим успешным Lock; неуспешный TryLock не создаёт синхронизации и не разрешает читать защищённые поля.",
+      "API не привязывает Mutex к определённой горутине: при корректном протоколе одна может захватить его, а другая освободить. Исключения для рекурсивного захвата нет. Если владелец снова вызывает Lock и освободить мьютекс некому, он ждёт самого себя.",
+      "В Go 1.25.0/1.26.1 внутренний mutex содержит int32 state и uint32 sema. В state находятся флаги locked/woken/starving и число ожидающих. Эта раскладка и CAS на быстром пути — детали реализации, а не переносимая гарантия размера или времени.",
+      "Допуск к spinning основан на эвристиках: ограничении попыток, доступности CPU/P и пустой локальной очереди. Рантайм не проверяет горутину-владельца, чтобы доказать, что она сейчас выполняется. Когда spinning не подходит или не помог, горутина может парковаться.",
+      "Обычный режим: разбудили ожидающего → он соревнуется с новыми → может снова ждать. В медленном пути ожидание дольше порога 1 мс может включить starvation mode, пока mutex ещё захвачен. Unlock передаёт владение первому ожидающему. Режим может закончиться у последнего ожидающего или после короткого ожидания; это не ограничивает задержки планировщика и время удержания lock."
+    ],
+    "practicalEN": "Use mutex and block profiles to locate contention, then shorten critical sections or change ownership. SetMutexProfileFraction(5) requests roughly one in five mutex contention events, not every fifth Lock. A profile is evidence about contention, not proof that starvation mode caused an outage.",
+    "versionNote": "TryLock появился в Go 1.18; пример не подходит для 1.17. CAS/режимы сверены по Go 1.25.0 и 1.26.1: существенной смены описанного алгоритма нет. Порог 1 мс не является обещанием API.",
+    "sources": [
+      {
+        "title": "Mutex contract — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/mutex.go"
+      },
+      {
+        "title": "Mutex implementation — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/sync/mutex.go"
+      },
+      {
+        "title": "Mutex implementation — go1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/sync/mutex.go"
+      },
+      {
+        "title": "Spinning heuristics — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "Profiling API — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mprof.go"
+      }
+    ],
+    "quizIds": [
+      "q8",
+      "q13"
+    ],
+    "practice": {
+      "kind": "CAS → ожидание → владение",
+      "promptEN": "A goroutine waited 2 ms. Must it hold the mutex now? Can a failed TryLock justify reading the balance?",
+      "promptRU": "Горутина ждала 2 мс. Обязана ли она уже получить Mutex? Разрешает ли неуспешный TryLock прочитать баланс?",
+      "pointsEN": [
+        "No: 1 ms is a slow-path policy threshold, not a deadline.",
+        "Waking in normal mode is not ownership; in starvation mode handoff favors the queued waiter.",
+        "Failed TryLock provides neither mutual exclusion nor a synchronizes-before edge."
+      ],
+      "pointsRU": [
+        "Нет: 1 мс — порог политики медленного пути, не дедлайн.",
+        "Пробуждение в normal mode ещё не владение; starvation handoff отдаёт преимущество ожидающему.",
+        "Неуспешный TryLock не даёт ни взаимного исключения, ни отношения synchronizes-before."
+      ],
+      "followUpEN": "Sketch the dependency cycle in q8. Why does adding another P not remove it?",
+      "followUpRU": "Нарисуй цикл ожидания в q8. Почему ещё один P его не устраняет?"
+    }
   },
   {
-    id: "c22",
-    mod: "m3",
-    modName: "3. Channels, Select & Sync",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q22: How do sync.WaitGroup, sync.Once, and context.Context work under the hood (and what are their classic pitfalls)?",
-    qRU: "Как устроены внутри sync.WaitGroup, sync.Once и context.Context (и какие классические баги с ними случаются)?",
-    shortEN: "sync.WaitGroup packs two 32-bit counters (active tasks + waiting goroutines) into a single 64-bit atomic uint64 plus a semaphore. sync.Once uses an atomic 'done' flag paired with a mutex so concurrent callers block until the initialization function finishes. context.Context forms an immutable parent-to-child tree where cancellation propagates downward by closing a lazily allocated 'done' channel.",
-    detailsEN: [
-      "sync.WaitGroup Internals & Pitfall: Packs counter (high 32 bits) and waiter count (low 32 bits) into one atomic.Uint64 for single-CAS updates. Pitfall: always call 'wg.Add(1)' BEFORE 'go fn()', and never pass WaitGroup by value (copying breaks the atomic state).",
-      "sync.Once Pitfall: Why not just 'atomic.CompareAndSwap(0, 1)' without a mutex? Because if G1 wins CAS and takes 50ms to initialize a DB client, G2 would see CAS fail and immediately return an uninitialized nil DB client! sync.Once uses 'atomic.Load' on the fast path (~1 ns) and 'Mutex' on the slow path so G2 waits until G1 finishes.",
-      "context.Context Internals: 'cancelCtx' stores a 'map[canceler]struct{}' of child contexts under a mutex and a 'done atomic.Value' channel. Calling 'cancel()' closes 'done', cancels all children recursively, and detaches itself from the parent."
+    "id": "c22",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Q22: WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?",
+    "qRU": "WaitGroup, Once и Context: кто ждёт, публикует инициализацию и просит отмену?",
+    "shortEN": "WaitGroup waits for counted tasks; Once makes callers wait for a single initialization; Context carries cancellation, deadlines and request-scoped values. These are different contracts. Waiting does not serialize workers, cancellation does not join them, and a one-time initializer is not a retry loop.",
+    "detailsEN": [
+      "WaitGroup: register an initial task before Wait can observe a zero counter. With Add/Done, normally call Add before starting the goroutine. Do not copy after first use; reuse for a new batch only after all previous Wait calls returned. Wait publishes completed work to its waiter, but it does not protect concurrent writes between workers.",
+      "WaitGroup.Go was added in Go 1.25. It registers and starts a task; call wg.Go(f), not go wg.Go(f). The function must not panic. Go 1.26.1 re-panics without Done for a recovered non-nil panic, whereas 1.25.0 used defer Done. This prevents Wait from letting main exit before that panic finishes; it does not make panicking callbacks supported.",
+      "Implementation history: Go 1.17 used three uint32 words to obtain an aligned 64-bit state plus a semaphore. Go 1.25/1.26 use atomic.Uint64: high 32 bits count tasks; the low part contains a synctest flag and 31 waiter bits. Memorize the contract first, not a permanent two-counter layout.",
+      "Once.Do publishes initialization only after f finishes. A CAS that marks done before f runs would let losing callers return too early. Recursive Do on the same Once deadlocks. If f panics, Once considers that invocation complete: later Do calls do not retry f. Once itself must not be copied after use.",
+      "Cancellation is a request: work must observe Done or use a context-aware API, and its owner still waits for completion where needed. Call the CancelFunc to release associated resources. Context methods are safe for concurrent use; mutable objects stored in values are not automatically protected.",
+      "WithoutCancel (Go 1.21+) keeps value lookup but removes the parent deadline, cancellation and cause: Done is nil. Add an explicit timeout if using it. This is suitable only for intentionally detached, owned best-effort work; it neither guarantees delivery nor connects the task to service shutdown. Mandatory audit needs a durable handoff or completion before success."
     ],
-    practicalRU: "Частый баг с контекстом в продакшене: когда внутри HTTP-хендлера запускают фоновую задачу в горутине (например, отправку события в Kafka или аудит в БД) и передают туда 'r.Context()'. Как только HTTP-ответ отдан клиенту (через 5 мс), net/http автоматически отменяет 'r.Context()', и фоновая запись в БД падает с 'context canceled'! Для фоновых задач в Go 1.21+ нужно использовать 'context.WithoutCancel(r.Context())' с отдельным таймаутом.",
-    code: `// Safe background task inside an HTTP handler (Go 1.21+):
-// Detaches from HTTP request cancellation while keeping trace IDs/values!
-bgCtx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Second)
-go func() {
-    defer cancel()
-    saveAuditLog(bgCtx)
-}()`
+    "practicalRU": "Задай три вопроса: кто регистрирует задачу и ждёт её, кто публикует инициализированное состояние, кто отменяет? Фоновая работа требует решения о жизненном цикле. Таймаут и отдельная горутина не заменяют надёжную очередь.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\tvar once sync.Once\n\tvar base int\n\tresults := make([]int, 2)\n\tfor i := range results {\n\t\twg.Go(func() {\n\t\t\tonce.Do(func() { base = 42 })\n\t\t\tresults[i] = base\n\t\t})\n\t}\n\twg.Wait()\n\tfmt.Println(results) // [42 42]\n}",
+    "shortRU": "WaitGroup ждёт учтённые задачи; Once заставляет вызывающих дождаться единственной инициализации; Context передаёт отмену, дедлайны и значения запроса. Это разные контракты. Ожидание не сериализует workers, отмена не ждёт их завершения, а однократная инициализация не является циклом повторных попыток.",
+    "detailsRU": [
+      "WaitGroup: зарегистрируй первую задачу до того, как Wait сможет увидеть нулевой счётчик. С Add/Done обычно вызывай Add до запуска горутины. После первого использования нельзя копировать; новую группу задач начинай только после возврата всех предыдущих Wait. Wait делает завершённую работу видимой ожидающему, но не защищает записи workers друг от друга.",
+      "WaitGroup.Go добавлен в Go 1.25. Он регистрирует и запускает задачу: вызывай wg.Go(f), а не go wg.Go(f). Функция не должна паниковать. Go 1.26.1 повторяет перехваченный ненулевой panic без Done, тогда как 1.25.0 использовал defer Done. Это не даёт Wait выпустить main до завершения такого panic; паника callback всё равно нарушает контракт.",
+      "История реализации: Go 1.17 использовал три слова uint32 для выровненного 64-битного состояния и семафора. В Go 1.25/1.26 используется atomic.Uint64: старшие 32 бита — задачи, младшая часть — флаг synctest и 31 бит ожидающих. Сначала запоминай контракт, а не вечную раскладку из двух счётчиков.",
+      "Once.Do публикует инициализацию только после завершения f. CAS с установкой done до вызова f позволил бы проигравшим вернуться слишком рано. Рекурсивный Do того же Once блокируется навсегда. После panic в f Once считает вызов выполненным: следующие Do не повторят f. Once после использования тоже нельзя копировать.",
+      "Отмена — просьба: работа должна проверять Done или использовать API с поддержкой контекста, а владелец при необходимости отдельно ждёт завершения. Вызывай CancelFunc для освобождения связанных ресурсов. Методы Context безопасны при параллельных вызовах; изменяемые объекты в values автоматически не защищаются.",
+      "WithoutCancel (Go 1.21+) сохраняет поиск values, но убирает дедлайн, отмену и cause родителя: Done равен nil. При использовании добавь явный таймаут. Это только для осознанно отделённой best-effort работы с владельцем; доставки и остановки вместе с сервисом он не обеспечивает. Обязательному аудиту нужна надёжная передача или завершение до ответа об успехе."
+    ],
+    "practicalEN": "Ask three questions: who registers and joins the task, who publishes initialized state, and who cancels it? Treat background work as a lifecycle decision. A timeout plus a detached goroutine is not a durable queue.",
+    "versionNote": "Пример: Go 1.25+ (WaitGroup.Go); отдельная переменная каждой итерации при := — семантика модулей Go 1.22+. Для Go 1.17: Add до go, defer Done и явная передача i аргументом. WithoutCancel — 1.21+. Различие panic-пути проверено по тегам 1.25.0 и 1.26.1.",
+    "sources": [
+      {
+        "title": "WaitGroup — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/waitgroup.go"
+      },
+      {
+        "title": "WaitGroup — go1.25.0",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/sync/waitgroup.go"
+      },
+      {
+        "title": "WaitGroup — go1.17",
+        "url": "https://github.com/golang/go/blob/go1.17/src/sync/waitgroup.go"
+      },
+      {
+        "title": "Once — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/once.go"
+      },
+      {
+        "title": "Context — go1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+      }
+    ],
+    "quizIds": [
+      "q7",
+      "q10",
+      "q12",
+      "q16",
+      "q19"
+    ],
+    "practice": {
+      "kind": "Зарегистрировать → выполнить → дождаться",
+      "promptEN": "Why is the example race-free? Would WaitGroup alone make results = append(results, base) safe? What happens if Once initialization panics?",
+      "promptRU": "Почему пример без гонок? Сделает ли один WaitGroup безопасным results = append(results, base)? Что будет после panic в инициализации Once?",
+      "pointsEN": [
+        "Once publishes base before each Do returns. Each task owns a distinct result index; Wait precedes reading results.",
+        "Shared append is still a race between workers; Wait only joins them.",
+        "Once.Do does not retry after a panic. WaitGroup.Go callbacks must not panic."
+      ],
+      "pointsRU": [
+        "Once публикует base до возврата каждого Do. Каждая задача владеет отдельным индексом; чтение results идёт после Wait.",
+        "Общий append всё ещё создаёт гонку workers; Wait лишь ждёт их.",
+        "Once.Do не повторяет f после panic. Callback WaitGroup.Go не должен паниковать."
+      ],
+      "followUpEN": "After cancel(), can the caller assume all workers stopped? Describe the missing join.",
+      "followUpRU": "Можно ли после cancel() считать всех workers остановленными? Опиши недостающее ожидание."
+    }
   },
 
   // ==========================================
@@ -1367,7 +1520,8 @@ go func() {
       ],
       "followUpEN": "Replace []int with []*int. Does copying the slice also copy the pointed-to integers?",
       "followUpRU": "Замени []int на []*int. Копируются ли вместе со срезом числа, на которые указывают элементы?"
-    }
+    },
+    quizIds: ["q12"]
   },
   {
     "id": "c30",
@@ -1497,7 +1651,8 @@ go func() {
       ],
       "followUpEN": "Does a limit of 1024 slots per table mean a map can contain only 1024 keys or that every insert has constant latency?",
       "followUpRU": "Означает ли лимит 1024 слота на таблицу, что в map максимум 1024 ключа или что каждая вставка имеет постоянную задержку?"
-    }
+    },
+    quizIds: ["q13"]
   },
   {
     "id": "c32",
@@ -1737,7 +1892,8 @@ go func() {
       ],
       "followUpEN": "If the deferred closure instead accepted n as an int argument, would incrementing that parameter change the result?",
       "followUpRU": "Если замыкание принимает n аргументом типа int, изменит ли увеличение этого параметра возвращаемый результат?"
-    }
+    },
+    quizIds: ["q19"]
   },
   {
     "id": "c36",

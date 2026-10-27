@@ -1,0 +1,530 @@
+{
+  "date": "2026-10-27",
+  "portion": 13,
+  "base": "5d2fb90a7c77f1d2ae705c4872145f5f3832bda9",
+  "branch": "improve/sync-context-resource-review",
+  "scope": {
+    "fullyReviewedCards": [
+      "c15",
+      "c21",
+      "c22"
+    ],
+    "fullyReviewedOriginalQuiz": [
+      "q7",
+      "q8",
+      "q10",
+      "q12",
+      "q13",
+      "q16",
+      "q19"
+    ],
+    "backlinksOnly": [
+      "c2",
+      "c12",
+      "c29",
+      "c31",
+      "c35"
+    ],
+    "other": "cache v19, documentation, isolated Go/browser fixtures",
+    "diagrams": "No step edits; related sim5 CAS step and cheatsheet row 8 checked for consistency. sim1/sim2 remain pending."
+  },
+  "mode": "Content-focused: primary source review, EN/RU and linked content, all affected code examples, negative cases, shared smoke and targeted browser. No unrelated historical suite rerun.",
+  "go": {
+    "toolchain": "go1.26.1 darwin/arm64",
+    "module": "docs/verification/fixtures/sync-resources",
+    "moduleDirective": "go 1.25.0",
+    "externalDependency": "golang.org/x/sync v0.20.0 (fixtures only)",
+    "commands": [
+      "gofmt -w docs/verification/fixtures/sync-resources",
+      "go mod tidy",
+      "go test -race -count=1 -timeout=45s -v ./...",
+      "go vet ./..."
+    ],
+    "result": "All 12 behavioral test functions plus subcases passed under -race. Vet passed for normal packages. 17 displayed code blocks exactly match gofmt fixture files.",
+    "examplesAndNegativeCases": [
+      {
+        "command": "go vet ./...",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": ""
+      },
+      {
+        "command": "go run ./c15",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": "true false\n"
+      },
+      {
+        "command": "go run ./c21",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": "false\nacquired\n"
+      },
+      {
+        "command": "go run ./c22",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": "[42 42]\n"
+      },
+      {
+        "command": "go run ./q7",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": "working\n"
+      },
+      {
+        "command": "go run ./q8",
+        "exitCode": 0,
+        "expectedFailure": false,
+        "diagnostic": "1\n"
+      },
+      {
+        "command": "go run ./testdata/q7",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diagnostic": "fatal error: all goroutines are asleep - deadlock!\nworking\n"
+      },
+      {
+        "command": "go run ./testdata/q8",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diagnostic": "fatal error: all goroutines are asleep - deadlock!\n\ngoroutine 1 [sync.Mutex.Lock]:"
+      },
+      {
+        "command": "go vet ./testdata/q7",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diagnostic": "testdata/q7/example.go:8:16: worker passes lock by value: sync.WaitGroup contains sync.noCopy\ntestdata/q7/example.go:12:12: call of worker copies lock value: sync.WaitGroup contains sync.noCopy\n"
+      },
+      {
+        "command": "go test -race -count=1 ./testdata/q12",
+        "exitCode": 1,
+        "expectedFailure": true,
+        "diagnostic": "WARNING: DATA RACE; race detected during execution of test"
+      }
+    ],
+    "covered": [
+      "Concurrent balance invariant and nonpositive input",
+      "Once publication and no retry after panic",
+      "Shared-append race observed; distinct-index correction including empty input",
+      "Single cache creation and pointer identity; explicit stale-check interleaving model without data race",
+      "Real httptest.Server cancellation after handler return; synchronous success and failure responses",
+      "errgroup success still cancels group context; first error, join, canceled parent and no save on error",
+      "WithoutCancel values/nil Done/no deadline/no cause; separate timeout with synctest fake time",
+      "Real database/sql plus controlled driver: early break, EOF, 100 pages with pool size 1, Query/Scan/Next/Close and combined Scan+Close errors",
+      "Original Rows retained at pool capacity 2; real pool wait observed through DB.Stats then canceled and resources released"
+    ],
+    "limitations": [
+      "Go 1.17/1.25 toolchains not executed; differences checked from tagged source and API manifests.",
+      "No PostgreSQL or network database driver; SQL dialect, pagination consistency and durable audit delivery are outside these fixtures.",
+      "No bound on mutex latency, fixed operation cost, full race-freedom proof or complete scheduler trace is asserted.",
+      "q13 negative interleaving is an explicit model, not a forced execution of the uninstrumented original Get method.",
+      "WaitGroup.Go panic-path version difference reviewed from source; no execution on Go 1.25."
+    ]
+  },
+  "sourceReview": [
+    "Mutex spin heuristics do not inspect the owner goroutine; normal wakeup differs from starvation handoff. 1 ms is not a wait SLA. Checked internal mutex files 1.25.0/1.26.1 are identical.",
+    "WaitGroup 1.17 alignment layout versus 1.25/1.26 atomic state with synctest flag; Go callback contract and changed 1.26.1 non-nil panic handling.",
+    "Once publishes after initialization; panic consumes Do without retry. Cancellation is not joining.",
+    "Request.Context canceled when ServeHTTP returns, potentially earlier; WriteHeader alone does not cancel it.",
+    "errgroup v0.20.0 cancels the derived context on error or Wait return; short declaration in same function body reuses ctx parameter.",
+    "Rows.Next exhaustion of final result set closes automatically; break does not. Pool waiting observes cancellation. errors.Join keeps primary and close errors.",
+    "TryLock API 1.18; errors.Join 1.20; WithoutCancel 1.21."
+  ],
+  "sources": [
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/waitgroup.go",
+      "sha256": "274e43a7cbc76eb0da4635a2680785200dfaf94d85e2d55cdd5122c76a4791d9"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/sync/waitgroup.go",
+      "sha256": "8d158bdcf962cb5022046df3b09eedc92879d7a592f9ffb51ab6d23dc7e44348"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.17/src/sync/waitgroup.go",
+      "sha256": "8313fae224f49a2741f3a8b4afc487efb8c2b668daf84eeee4d61e64413a084a"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/sync/mutex.go",
+      "sha256": "0535ca03e44cb62cf3e4a511b989ffd0f08ec899d864e2a817b77c4025bec48c"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.25.0/src/internal/sync/mutex.go",
+      "sha256": "0535ca03e44cb62cf3e4a511b989ffd0f08ec899d864e2a817b77c4025bec48c"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/rwmutex.go",
+      "sha256": "4ecc9b2fa7771cbe37e1670e4caefd7a28939683bfe1614fcf5e9d545261d17f"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/once.go",
+      "sha256": "3bc00bab32acd134ddf50c87fdbd1dd70502f224b7684a801a077dfe0a05eb3f"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go",
+      "sha256": "765f99f7cc0710b0117ffa183e432524f429c21496fcbad9b63fb9886fdbaac7"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/net/http/request.go",
+      "sha256": "4a34a9e157a606a046d5b9f8f761c571c4762668fa351d92048515a595939c38"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/database/sql/sql.go",
+      "sha256": "683b3e35d41b37f4c80500467fb5a56fab7cc5de922b2c3818aae6bfea971fba"
+    },
+    {
+      "url": "https://github.com/golang/sync/blob/v0.20.0/errgroup/errgroup.go",
+      "sha256": "20320a3c626a081ee5c19cadd926a6cb819bb2aafd5e8d4e9faf36dae5c99e35"
+    },
+    {
+      "url": "https://github.com/golang/sync/blob/v0.20.0/singleflight/singleflight.go",
+      "sha256": "e346ce6a2ab6ea268e1f1ed1b6e46f2d4f1f2c18319845f0a4f29c28d50a1331"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go",
+      "sha256": "b0ea864c1dd251cd9146644863ae9126ca57761dff05862dc80ab0799925fec6"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_mem.html",
+      "sha256": "a7372b4f36c9525ecc7531bbdbb9e53746ae3f58367a25fe8084d5a35bb8ee7c"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/mutex.go",
+      "sha256": "3dec4264678744c4ce15a05ba0cc88e5e8b155f071b71d74eb7ed229ca72c114"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mprof.go",
+      "sha256": "cd26b885d64fa60668250491c3ea127d3364874059ed390d8cb9de570ecbb234"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.18/api/go1.18.txt",
+      "sha256": "dd1f8450e45eb5a98d4afcd610e9ccc3f81c03a63cac609584a0f1c04825cd4b"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.20/api/go1.20.txt",
+      "sha256": "c66b298d1989b7017d49bb9beda02f5a103d64e332098527ab24972ccc8cc4ee"
+    },
+    {
+      "url": "https://github.com/golang/go/blob/go1.21.0/api/go1.21.txt",
+      "sha256": "0daf3ac7664c08c5eb6d4c427d102e4059734ab1538e36853c9141c892b3eabb"
+    }
+  ],
+  "reusedSources": [
+    "Go 1.26.1 spec cached from prior maps audit: short variable declaration, channel value transfer and synchronization semantics.",
+    "Local /usr/local/go/src/errors/join.go read under Go 1.26.1 for combined errors; API 1.20 manifest checked."
+  ],
+  "structural": {
+    "ok": true,
+    "base": "5d2fb90a7c77f1d2ae705c4872145f5f3832bda9",
+    "counts": {
+      "cards": 38,
+      "quiz": 22,
+      "simulators": 7,
+      "cheatsheet": 12
+    },
+    "changes": {
+      "cards": {
+        "changed": [
+          "c2",
+          "c12",
+          "c15",
+          "c21",
+          "c22",
+          "c29",
+          "c31",
+          "c35"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "quiz": {
+        "changed": [
+          "q7",
+          "q8",
+          "q10",
+          "q12",
+          "q13",
+          "q16",
+          "q19"
+        ],
+        "removed": [],
+        "orderChanged": false
+      },
+      "simulators": {
+        "changed": [],
+        "removed": [],
+        "orderChanged": false
+      },
+      "cheatsheetChanged": false
+    },
+    "errors": [],
+    "durationMs": 276,
+    "scope": "Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion."
+  },
+  "browser": {
+    "smoke": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "route cards",
+        "route simulators",
+        "route wiki",
+        "route cheatsheet",
+        "route quiz",
+        "keyboard reveals answer",
+        "visible focus",
+        "progress survives reload",
+        "quiz answer",
+        "diagram step",
+        "cheatsheet rows",
+        "overflow cards 320",
+        "overflow simulators 320",
+        "overflow wiki 320",
+        "overflow cheatsheet 320",
+        "overflow quiz 320",
+        "overflow cards 390",
+        "overflow simulators 390",
+        "overflow wiki 390",
+        "overflow cheatsheet 390",
+        "overflow quiz 390",
+        "overflow cards 430",
+        "overflow simulators 430",
+        "overflow wiki 430",
+        "overflow cheatsheet 430",
+        "overflow quiz 430",
+        "overflow cards 1440",
+        "overflow simulators 1440",
+        "overflow wiki 1440",
+        "overflow cheatsheet 1440",
+        "overflow quiz 1440",
+        "HTTP 200 http://127.0.0.1:8000/",
+        "HTTP 200 http://127.0.0.1:8000/css/style.css?v=19",
+        "HTTP 200 http://127.0.0.1:8000/data/cards.js?v=19",
+        "HTTP 200 http://127.0.0.1:8000/data/simulators.js?v=19",
+        "HTTP 200 http://127.0.0.1:8000/data/quiz.js?v=19",
+        "HTTP 200 http://127.0.0.1:8000/js/app.js?v=19"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 600,
+      "scope": "Shared smoke only. No Go correctness, targeted translation/content checks, visual review or broad regression."
+    },
+    "targeted": {
+      "ok": true,
+      "url": "http://127.0.0.1:8000/",
+      "checks": [
+        "c15 hidden before attempt",
+        "c15 keyboard reveal",
+        "c15 bilingual text and code",
+        "c15 sources",
+        "c15 prompt before solution",
+        "c15 solution opens",
+        "c21 hidden before attempt",
+        "c21 keyboard reveal",
+        "c21 bilingual text and code",
+        "c21 sources",
+        "c21 prompt before solution",
+        "c21 solution opens",
+        "c22 hidden before attempt",
+        "c22 keyboard reveal",
+        "c22 bilingual text and code",
+        "c22 sources",
+        "c22 prompt before solution",
+        "c22 solution opens",
+        "q7 initially hidden",
+        "q7 option 0",
+        "q7 option 1",
+        "q7 option 2",
+        "q7 option 3",
+        "q7 option 4",
+        "q7 option 5",
+        "q7 EN RU explanations",
+        "q7 corrected code opens",
+        "q7 linked both ways c22",
+        "q8 initially hidden",
+        "q8 option 0",
+        "q8 option 1",
+        "q8 option 2",
+        "q8 option 3",
+        "q8 option 4",
+        "q8 option 5",
+        "q8 EN RU explanations",
+        "q8 corrected code opens",
+        "q8 linked both ways c21",
+        "q8 linked both ways c15",
+        "q10 initially hidden",
+        "q10 option 0",
+        "q10 option 1",
+        "q10 option 2",
+        "q10 option 3",
+        "q10 option 4",
+        "q10 option 5",
+        "q10 EN RU explanations",
+        "q10 corrected code opens",
+        "q10 linked both ways c12",
+        "q10 linked both ways c22",
+        "q12 initially hidden",
+        "q12 option 0",
+        "q12 option 1",
+        "q12 option 2",
+        "q12 option 3",
+        "q12 option 4",
+        "q12 option 5",
+        "q12 EN RU explanations",
+        "q12 corrected code opens",
+        "q12 linked both ways c2",
+        "q12 linked both ways c15",
+        "q12 linked both ways c22",
+        "q12 linked both ways c29",
+        "q13 initially hidden",
+        "q13 option 0",
+        "q13 option 1",
+        "q13 option 2",
+        "q13 option 3",
+        "q13 option 4",
+        "q13 option 5",
+        "q13 EN RU explanations",
+        "q13 corrected code opens",
+        "q13 linked both ways c2",
+        "q13 linked both ways c15",
+        "q13 linked both ways c21",
+        "q13 linked both ways c31",
+        "q16 initially hidden",
+        "q16 option 0",
+        "q16 option 1",
+        "q16 option 2",
+        "q16 option 3",
+        "q16 option 4",
+        "q16 option 5",
+        "q16 EN RU explanations",
+        "q16 corrected code opens",
+        "q16 linked both ways c22",
+        "q16 linked both ways c12",
+        "q19 initially hidden",
+        "q19 option 0",
+        "q19 option 1",
+        "q19 option 2",
+        "q19 option 3",
+        "q19 option 4",
+        "q19 option 5",
+        "q19 EN RU explanations",
+        "q19 corrected code opens",
+        "q19 linked both ways c35",
+        "q19 linked both ways c22",
+        "c15 expanded 320",
+        "c21 expanded 320",
+        "c22 expanded 320",
+        "q7 expanded 320",
+        "q8 expanded 320",
+        "q10 expanded 320",
+        "q12 expanded 320",
+        "q13 expanded 320",
+        "q16 expanded 320",
+        "q19 expanded 320",
+        "wiki expanded 320",
+        "cheatsheet 320",
+        "c15 expanded 390",
+        "c21 expanded 390",
+        "c22 expanded 390",
+        "q7 expanded 390",
+        "q8 expanded 390",
+        "q10 expanded 390",
+        "q12 expanded 390",
+        "q13 expanded 390",
+        "q16 expanded 390",
+        "q19 expanded 390",
+        "wiki expanded 390",
+        "cheatsheet 390",
+        "c15 expanded 430",
+        "c21 expanded 430",
+        "c22 expanded 430",
+        "q7 expanded 430",
+        "q8 expanded 430",
+        "q10 expanded 430",
+        "q12 expanded 430",
+        "q13 expanded 430",
+        "q16 expanded 430",
+        "q19 expanded 430",
+        "wiki expanded 430",
+        "cheatsheet 430",
+        "c15 expanded 1440",
+        "c21 expanded 1440",
+        "c22 expanded 1440",
+        "q7 expanded 1440",
+        "q8 expanded 1440",
+        "q10 expanded 1440",
+        "q12 expanded 1440",
+        "q13 expanded 1440",
+        "q16 expanded 1440",
+        "q19 expanded 1440",
+        "wiki expanded 1440",
+        "cheatsheet 1440",
+        "cards/c15 doubled actual text",
+        "cards/c21 doubled actual text",
+        "cards/c22 doubled actual text",
+        "quiz/q7 doubled actual text",
+        "quiz/q8 doubled actual text",
+        "quiz/q10 doubled actual text",
+        "quiz/q12 doubled actual text",
+        "quiz/q13 doubled actual text",
+        "quiz/q16 doubled actual text",
+        "quiz/q19 doubled actual text",
+        "cheatsheet doubled actual text"
+      ],
+      "errors": [],
+      "consoleErrors": [],
+      "durationMs": 2765,
+      "scope": "Targeted c15/c21/c22 and q7/q8/q10/q12/q13/q16/q19, backlinks, wiki and unchanged cheatsheet layout; four widths and actual font-size doubling. Not full scheduler/diagram review."
+    },
+    "visualReview": [
+      "sync-card-390.png",
+      "sync-card-1440.png",
+      "sync-quiz-390.png"
+    ],
+    "limitations": [
+      "Chromium emulated widths; no physical phone, Safari or screen reader.",
+      "No shared UI/storage changes; broad historical regression was not repeated."
+    ]
+  },
+  "assets": [
+    {
+      "path": "index.html",
+      "sha256": "c3e97c80f9fee0c24a1442039b82155d74ded052fd31372ff76d355c8fee1d1a"
+    },
+    {
+      "path": "css/style.css",
+      "sha256": "13f629072e84ccd8031b5ee0f22618c69254d79f47b4a632ec43b888a1d2526c"
+    },
+    {
+      "path": "js/app.js",
+      "sha256": "4caf4d1ca6857dc1f3077d36084075f177dee78c59b660c92280e90691d8a845"
+    },
+    {
+      "path": "data/cards.js",
+      "sha256": "d58c324da76f98db0acd2e64b6571afd41e46a4739629b4b0742f2c365d3f6b1"
+    },
+    {
+      "path": "data/quiz.js",
+      "sha256": "510b300fc3adaede377aeb141e9c3e011d48ab718ba0c34b06e8e56e71e0f22e"
+    },
+    {
+      "path": "data/simulators.js",
+      "sha256": "3598bfc75e49bfa37e99b1f99918a71e9966cb5291873209b6f4485a74440c4a"
+    }
+  ],
+  "remaining": {
+    "cards": [
+      "c1",
+      "c3",
+      "c4",
+      "c5",
+      "c7",
+      "c8",
+      "c9",
+      "c10",
+      "c11"
+    ],
+    "originalQuiz": [],
+    "next": "Remaining cards plus sim1/sim2, then final cross-corpus review. Claude plan and SRS/agent are separate future work."
+  }
+}
