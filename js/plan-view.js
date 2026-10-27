@@ -241,8 +241,20 @@ function planTaskItem(task, week) {
       ...extras
     ]),
     links.length ? planEl("nav", { className: "related-links plan-links", "aria-label": "Материалы к задаче" }, links) : null,
+    planAcceptBlock(task),
     lcNode,
     task.talk ? planTalkBlock(task.talk) : null
+  ]);
+}
+
+// Критерий готовности задачи и упражнение, которого на сайте пока нет.
+function planAcceptBlock(task) {
+  const entry = PLAN.acceptance && PLAN.acceptance[task.id];
+  const accept = entry ? entry.accept : (task.lc && PLAN.lcAccept) || "";
+  if (!accept) return null;
+  return planEl("div", { className: "plan-accept" }, [
+    planEl("p", null, [planEl("strong", { text: "Готово, когда: " }), accept]),
+    entry && entry.exercise ? planEl("p", { className: "plan-gap" }, [planEl("strong", { text: "На сайте пока нет: " }), entry.exercise]) : null
   ]);
 }
 

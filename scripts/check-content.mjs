@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createContext, runInContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
@@ -6,12 +6,72 @@ import { resolve } from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const dataFiles = ['data/cards.js', 'data/quiz.js', 'data/simulators.js'];
+const planFile = 'data/plan.js';
 
 // Only evaluate trusted repository data. VM isolation is not a security boundary.
 export function loadContent(read) {
   const context = createContext({});
   for (const file of dataFiles) runInContext(read(file), context, { filename: file, timeout: 1000 });
   return JSON.parse(runInContext('JSON.stringify({cards:CARDS, quiz:QUIZ_QUESTIONS, simulators:SIMULATORS, cheatsheet:CHEATSHEET_ROWS})', context, { timeout: 1000 }));
+}
+
+// data/plan.js is optional: older commits do not have it. Returns null when absent.
+export function loadPlan(read) {
+  let source;
+  try { source = read(planFile); } catch { return null; }
+  const context = createContext({});
+  runInContext(source, context, { filename: planFile, timeout: 1000 });
+  return JSON.parse(runInContext('JSON.stringify(PLAN)', context, { timeout: 1000 }));
+}
+
+export function planTaskIds(plan) {
+  return (plan?.weeks || []).flatMap(week => (week?.days || []).flatMap(day => (day?.tasks || []).map(task => task?.id)));
+}
+
+export function validatePlan(plan, data) {
+  const errors = [];
+  const require = (condition, message) => { if (!condition) errors.push(message); };
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  require(isObject(plan) && Array.isArray(plan.weeks) && plan.weeks.length > 0, 'plan: expected PLAN.weeks');
+  if (errors.length) return errors;
+  for (const key of ['leetcodeIndex', 'talks', 'acceptance']) require(plan[key] === undefined || isObject(plan[key]), `plan: ${key} must be an object`);
+  if (errors.length) return errors;
+  const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)) };
+  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
+  const weekIds = new Set(), taskIds = new Set();
+  plan.weeks.forEach((week, w) => {
+    const label = `plan.weeks[${w}]`;
+    if (!isObject(week)) { errors.push(`${label}: expected object`); return; }
+    require(text(week.id) && !weekIds.has(week.id), `${label}: missing or duplicate week ID ${week.id}`);
+    weekIds.add(week.id);
+    fields(week, ['title', 'goal', 'done'], `${label}`);
+    require(Array.isArray(week.days) && week.days.length > 0, `${label}: missing days`);
+    (Array.isArray(week.days) ? week.days : []).forEach((day, d) => {
+      const dayLabel = `${label}.days[${d}]`;
+      if (!isObject(day) || !Array.isArray(day.tasks) || !day.tasks.length) { errors.push(`${dayLabel}: expected tasks`); return; }
+      require(text(day.label), `${dayLabel}: missing label`);
+      for (const task of day.tasks) {
+        if (!isObject(task)) { errors.push(`${dayLabel}: expected task object`); continue; }
+        require(text(task.id) && !taskIds.has(task.id), `${dayLabel}: missing or duplicate task ID ${task.id}`);
+        taskIds.add(task.id);
+        require(text(task.text), `${task.id}: missing text`);
+        for (const id of task.links || []) require(siteHas(id), `${task.id}: unknown site ID ${id}`);
+        for (const ref of task.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `${task.id}: reference needs title and https URL`);
+        if (task.lc !== undefined) require(Boolean(plan.leetcodeIndex?.[task.lc]), `${task.id}: unknown LeetCode ${task.lc}`);
+        if (task.talk !== undefined) require(Boolean(plan.talks?.[task.talk]), `${task.id}: unknown talk ${task.talk}`);
+      }
+    });
+  });
+  for (const [id, entry] of Object.entries(plan.acceptance || {})) {
+    require(taskIds.has(id), `plan.acceptance: unknown task ID ${id}`);
+    require(isObject(entry) && text(entry.accept), `plan.acceptance.${id}: missing accept`);
+    if (isObject(entry) && entry.exercise !== undefined) require(text(entry.exercise), `plan.acceptance.${id}: empty exercise`);
+  }
+  for (const item of plan.predict || []) fields(item || {}, ['id', 'code', 'output', 'why'], `plan.predict ${item?.id}`);
+  return errors;
+
+  function fields(object, keys, label) { keys.forEach(key => require(text(object[key]), `${label}: missing/empty ${key}`)); }
 }
 
 export function validateContent(data) {
@@ -105,19 +165,30 @@ function main() {
   if (args.length && !(args.length === 2 && args[0] === '--base')) throw Error('Usage: node scripts/check-content.mjs [--base <commit>]');
   const started = performance.now();
   const read = file => readFileSync(resolve(root, file), 'utf8');
-  for (const file of [...dataFiles, 'js/app.js']) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
+  const hasPlan = existsSync(resolve(root, planFile));
+  const scripts = [...dataFiles, 'js/app.js', ...(hasPlan ? [planFile, 'js/plan-view.js'] : [])];
+  for (const file of scripts) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
   const data = loadContent(read);
   const errors = validateContent(data);
+  const plan = hasPlan ? loadPlan(read) : null;
+  if (plan && !errors.length) errors.push(...validatePlan(plan, data));
   let base = null, changes = null;
   if (args.length) {
-    const git = argv => execFileSync('git', argv, { cwd: root, encoding: 'utf8' });
+    const git = argv => execFileSync('git', argv, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     base = git(['rev-parse', '--verify', '--end-of-options', `${args[1]}^{commit}`]).trim();
     changes = changedContent(loadContent(file => git(['show', `${base}:${file}`])), data);
     for (const group of ['cards', 'quiz', 'simulators']) {
       if (changes[group].removed.length) errors.push(`${group}: stable IDs removed: ${changes[group].removed.join(', ')}`);
     }
+    // Plan task IDs are progress keys in go_prep_plan_v1; removing one silently drops a saved mark.
+    const basePlan = loadPlan(file => git(['show', `${base}:${file}`]));
+    if (basePlan) {
+      const current = new Set(planTaskIds(plan));
+      changes.planRemoved = planTaskIds(basePlan).filter(id => !current.has(id));
+      if (changes.planRemoved.length) errors.push(`plan: stable task IDs removed: ${changes.planRemoved.join(', ')}`);
+    }
   }
-  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
+  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), ...(plan ? { planWeeks: plan.weeks.length, planTasks: planTaskIds(plan).length, planAcceptance: Object.keys(plan.acceptance || {}).length } : {}) }, changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
   if (errors.length) process.exitCode = 1;
 }
 
