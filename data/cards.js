@@ -3,25 +3,65 @@ const CARDS = [
   // МОДУЛЬ 1: ГОРУТИНЫ, СТЕК И РЕГИСТРЫ CPU (Q1 - Q6)
   // ==========================================
   {
-    id: "c1",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim1",
-    qEN: "Q1: What is a goroutine and how does it differ from an OS thread?",
-    qRU: "Что такое горутина простыми словами и чем она отличается от потока операционной системы (OS Thread)?",
-    shortEN: "A goroutine is a lightweight user-space execution thread managed entirely by the Go runtime scheduler rather than the OS kernel. Unlike OS threads, goroutines start with a tiny 2 KB stack, grow dynamically, and switch context in user space in ~10–20 nanoseconds.",
-    detailsEN: [
-      "Stack Size: OS threads have a fixed 1–8 MB stack allocated with guard pages; goroutines start with just 2 KB on the heap and grow/shrink dynamically up to 1 GB.",
-      "Context Switching Speed: OS thread switches require a kernel trap (~1–2 microseconds) saving all CPU/SIMD registers; goroutines switch cooperatively in user space (~10–20 nanoseconds) saving only 3–4 registers (SP, PC, BP, R14).",
-      "Scheduling (M:N): Thousands of goroutines are multiplexed onto a handful of OS threads equal to GOMAXPROCS.",
-      "Identity: Goroutines have no user-accessible thread ID or handle in code."
+    "id": "c1",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim1",
+    "qEN": "What is a goroutine, and how does it differ from an OS thread?",
+    "qRU": "Что такое горутина и чем она отличается от потока ОС?",
+    "shortEN": "A goroutine is a function executing concurrently with other goroutines. The Go runtime schedules goroutines onto OS threads and manages their growable stacks. Goroutines are relatively cheap, but their memory, work and lifetime still need limits.",
+    "detailsEN": [
+      "Concurrency does not require simultaneous execution. GOMAXPROCS limits how many OS threads can execute user Go code at once; it is not the total number of goroutines or threads.",
+      "In the checked runtime, stackMin is 2 KiB, but platform rounding and stack reuse policies matter. A goroutine also needs a descriptor and can retain heap objects. Multiplying its count by 2 KiB is not a process-memory estimate.",
+      "Thread stack reservation, committed memory and RSS are different quantities. Neither goroutine switching time nor an OS-thread stack size is a portable constant; measure the workload instead of memorizing nanoseconds.",
+      "A go statement provides no join handle. Arrange completion with synchronization and give each goroutine an owner and a way to finish. Returning from main does not wait for other goroutines."
     ],
-    practicalRU: "В продакшене ты можешь спокойно создать 100 000 горутин под входящие соединения (это займёт всего ~200 МБ RAM), тогда как 100 000 потоков ОС (по 2 МБ) потребовали бы 200 ГБ и уронили сервер по OOM или забили бы ядро переключениями контекста.",
-    code: `// Memory footprint comparison:
-// 100,000 OS Threads * 2 MB   = ~200 GB Virtual Memory (OOM)
-// 100,000 Goroutines * 2 KB   = ~200 MB Heap Memory (Runs effortlessly)`
+    "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
+    "shortRU": "Горутина — это функция, которая выполняется конкурентно с другими горутинами. Рантайм Go распределяет их по потокам ОС и управляет растущими стеками. Горутины сравнительно недороги, но их память, работу и время жизни всё равно нужно ограничивать.",
+    "detailsRU": [
+      "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
+      "В проверенном рантайме stackMin равен 2 КиБ, но важны округление для платформы и политика переиспользования стека. Кроме того, у горутины есть дескриптор, а её ссылки могут удерживать объекты кучи. Число горутин × 2 КиБ не даёт оценку памяти процесса.",
+      "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Время переключения горутин и размер стека потока ОС не являются переносимыми константами; измеряй свою нагрузку вместо заучивания наносекунд.",
+      "Оператор go не возвращает дескриптор для join. Организуй ожидание через синхронизацию и определи владельца и путь завершения каждой горутины. Возврат из main не ждёт остальные горутины."
+    ],
+    "practicalEN": "For a server, bound active work and queued requests separately. A parked goroutine uses no CPU for that wait, but its stack and reachable request data can still consume memory.",
+    "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
+    "sources": [
+      {
+        "title": "Go specification: go statements",
+        "url": "https://go.dev/ref/spec#Go_statements"
+      },
+      {
+        "title": "go1.26.1: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/debug.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "One hundred thousand goroutines are waiting on channels. Can you predict RSS from that count alone?",
+      "promptRU": "Сто тысяч горутин ждут на каналах. Можно ли по одному этому числу предсказать RSS?",
+      "pointsEN": [
+        "No: include allocated stacks, descriptors, retained data and other runtime/process memory.",
+        "Waiting does not imply leaking. Check ownership, a reachable completion path and whether the population keeps growing."
+      ],
+      "pointsRU": [
+        "Нет: нужны выделенные стеки, дескрипторы, удерживаемые данные и остальная память рантайма и процесса.",
+        "Ожидание само по себе не означает утечку. Проверь владельца, достижимый путь завершения и рост числа горутин."
+      ],
+      "followUpEN": "What changes if each waiter retains a 1 MiB request body?",
+      "followUpRU": "Что изменится, если каждый ожидающий удерживает тело запроса размером 1 МиБ?"
+    }
   },
   {
     id: "c2",
@@ -76,72 +116,179 @@ if cache.Get(key) == nil {
     quizIds: ["q12", "q13"]
   },
   {
-    id: "c3",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim1",
-    qEN: "Q3: How is a goroutine created under the hood (runtime.newproc) and why does it have no ID or handle in code?",
-    qRU: "Как создаётся горутина под капотом (runtime.newproc) и почему у неё нет ID или объекта-дескриптора в коде?",
-    shortEN: "In code, 'go fn()' is a concurrently executing function call that returns no handle. The compiler translates it into runtime.newproc(funcval), which switches to the g0 system stack, pulls or allocates a runtime.g struct with a 2 KB stack, initializes g.sched (gobuf), and places it into P.runnext.",
-    detailsEN: [
-      "Why No ID/Handle: Go designers omitted goroutine IDs to prevent Thread-Local Storage (TLS) abuse and unsafe external .kill() calls that would leave mutexes locked and memory corrupted. Cancellation is strictly cooperative via context.Context.",
-      "Reuse via gFree Pool: runtime.newproc1 first checks the processor's local P.gFree pool (and global sched.gFree) for a dead goroutine to reuse its existing 2 KB stack without hitting the heap allocator.",
-      "The goexit Stack Trick: newproc1 pushes the address of runtime.goexit at the very bottom of the new stack so when fn() finishes and executes RET, the CPU automatically jumps into goexit."
+    "id": "c3",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim1",
+    "qEN": "What happens when Go starts a goroutine?",
+    "qRU": "Что происходит при запуске горутины?",
+    "shortEN": "A go statement evaluates the function and its arguments in the caller, then runs the call in a new goroutine. In the checked runtime, newproc prepares reusable or new goroutine state, initializes a start context and makes the goroutine runnable. Runnable does not mean running.",
+    "detailsEN": [
+      "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations.",
+      "The runtime initializes saved SP/PC state and, on the illustrated amd64 path, a return path through goexit. These are data for a future execution, not the CPU registers of an already running goroutine.",
+      "newproc requests runnext placement with runqput(..., true), but runtime conditions can choose an ordinary queue. A scheduler later transitions the G from runnable to running. The language promises neither immediate execution nor FIFO launch order.",
+      "The runtime has internal goroutine IDs, but the language exposes no goroutine handle, public current-ID API or operation to kill another goroutine. Use explicit request IDs, cancellation and completion signals; do not parse stack dumps as an identity API."
     ],
-    practicalRU: "Благодаря пулу P.gFree создание короткоживущих горутин в Go почти не нагружает аллокатор памяти: если горутина завершилась, не вырастив стек, следующая строчка 'go fn()' мгновенно переиспользует её структуру runtime.g и 2 КБ стек за 0 аллокаций в куче.",
-    code: `// src/runtime/proc.go
-func newproc(fn *funcval) {
-    gp := getg()
-    pc := getcallerpc()
-    systemstack(func() {
-        newg := newproc1(fn, gp, pc) // grabs G from P.gFree or allocates 2KB on g0
-        pp := getg().m.p.ptr()
-        runqput(pp, newg, true)      // places newg into P.runnext (LIFO slot)
-    })
-}`
+    "practicalRU": "Передавай значения явно, если работнику нужен снимок состояния. Замыкание, которое позже читает изменяемое общее состояние, имеет другую семантику и может создать гонку.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
+    "shortRU": "Оператор go вычисляет функцию и её аргументы в вызывающей горутине, а сам вызов выполняет в новой. В проверенном рантайме newproc подготавливает переиспользуемое или новое состояние горутины, настраивает стартовый контекст и делает её готовой к запуску. Готова — ещё не значит выполняется.",
+    "detailsRU": [
+      "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений.",
+      "Рантайм инициализирует сохранённые SP/PC и в показанном amd64-пути — возврат через goexit. Это данные будущего исполнения, а не регистры CPU уже работающей горутины.",
+      "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
+      "У рантайма есть внутренние ID горутин, но язык не предоставляет дескриптор горутины, публичный API текущего ID или операцию убийства другой горутины. Используй явные ID запросов, отмену и сигналы завершения; разбор stack dump не заменяет API идентификации."
+    ],
+    "practicalEN": "Pass values explicitly when the worker needs a snapshot. A closure that reads shared mutable state later has different semantics and may race.",
+    "versionNote": "Порядок вычисления go — гарантия языка во всех рассматриваемых версиях. newproc1/gfget/runnext — Go 1.26.1; сигнатуры внутренних функций не являются API. В Go 1.17 нет современной startingStackSize-политики.",
+    "sources": [
+      {
+        "title": "Go specification: go statements",
+        "url": "https://go.dev/ref/spec#Go_statements"
+      },
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "go1.17: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/proc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "Why does this program send 1 even if the worker starts after n becomes 2?",
+      "promptRU": "Почему программа отправляет 1, даже если работник запустился после присваивания n = 2?",
+      "pointsEN": [
+        "The argument n is evaluated by the caller before the new goroutine executes the function body.",
+        "The worker receives its own int parameter. The receive also keeps main alive until the value is delivered."
+      ],
+      "pointsRU": [
+        "Аргумент n вычисляется вызывающей горутиной до исполнения тела новой горутиной.",
+        "Работник получает собственный параметр int. Приём также удерживает main до передачи значения."
+      ],
+      "followUpEN": "What if the worker instead closes over n and reads it without synchronization?",
+      "followUpRU": "Что будет, если работник захватит n замыканием и прочитает без синхронизации?"
+    }
   },
   {
-    id: "c4",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: "sim1",
-    qEN: "Q4: Where does a goroutine live in memory? Why is its stack allocated on the heap, and how does the CPU treat it as a stack?",
-    qRU: "Где горутина физически живёт в памяти? Почему её стек выделяется в куче (хипе), но работает как стек процессора?",
-    shortEN: "Physically, both the runtime.g descriptor and the goroutine's 2 KB contiguous stack are allocated in the process heap by Go's memory allocator. However, to the CPU core, any memory address loaded into the hardware Stack Pointer register (RSP) behaves as the active call stack.",
-    detailsEN: [
-      "Logical Stack vs. Physical Heap: OS threads have stacks allocated by the OS kernel in virtual memory segments. Because Go manages potentially millions of resizable goroutine stacks in user space, it allocates those 2 KB buffers inside its own heap spans.",
-      "Hardware Mechanics: When the scheduler switches to a goroutine, it loads the top address of that 2 KB heap buffer into the CPU's RSP register. From that cycle on, PUSH, POP, CALL, RET, and local variable offsets operate at full hardware stack speed."
+    "id": "c4",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim1",
+    "qEN": "Where is a goroutine stack allocated, and what does StackInuse measure?",
+    "qRU": "Где выделяется стек горутины и что измеряет StackInuse?",
+    "shortEN": "A goroutine stack is a runtime-managed memory region for active calls. The runtime uses dedicated stack allocation paths and may move the stack when it grows. MemStats.StackInuse reports memory in stack spans, not the number of bytes currently occupied by live local variables.",
+    "detailsEN": [
+      "On the checked path, small stacks can use per-P caches and stack free lists; larger stacks use dedicated spans. Saying “the stack is in the heap” hides the difference from ordinary heap-object allocation through mallocgc.",
+      "On amd64, RSP points into the currently active stack. The saved g.sched.sp is a resume position, while g.stack.lo/hi describe the allocated region. A register contains an address, not the stack itself.",
+      "Unused stack spans can return to the heap. Shrinking a stack, freeing a span and returning physical pages to the OS are different events; none promises an immediate matching RSS drop.",
+      "StackSys includes stack memory obtained for the runtime, including some OS-thread stacks, but it does not account for every C stack. ReadMemStats gives process-wide runtime counters, not a per-goroutine allocation report."
     ],
-    practicalRU: "В дампах памяти pprof (--inuse_space) ты можешь заметить расхождение между 'heap_inuse' и 'stack_inuse'. Память под стеки горутин выделяется из того же mheap рантайма, но учитывается отдельно в runtime.MemStats.StackInuse. Если сервис держит 200 000 спящих горутин, которые в пике раздували стек до 64 КБ, память не вернётся ОС до срабатывания GC shrinkstack.",
-    code: `// Checking stack memory usage in production via runtime.MemStats:
-var m runtime.MemStats
-runtime.ReadMemStats(&m)
-// m.StackInuse -> bytes currently used by goroutine stacks (carved from heap)`
+    "practicalRU": "Сравнивай динамику на характерной нагрузке, а в профиле горутин ищи владельцев и места ожидания. Разность двух снимков нельзя называть универсальной ценой одной горутины.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\tvar stats runtime.MemStats\n\truntime.ReadMemStats(&stats)\n\t// Values depend on the process and workload; these are not RSS or live frames.\n\tfmt.Println(\"stack spans:\", stats.StackInuse, \"bytes\")\n\tfmt.Println(\"goroutines:\", runtime.NumGoroutine())\n}",
+    "shortRU": "Стек горутины — область памяти под активные вызовы, которой управляет рантайм. У него есть отдельные пути выделения стеков; при росте стек может перемещаться. MemStats.StackInuse показывает память в спанах стеков, а не число байтов, занятых сейчас живыми локальными переменными.",
+    "detailsRU": [
+      "В проверенном пути небольшие стеки могут использовать кеши P и списки свободных стеков; более крупные получают отдельные спаны. Фраза «стек лежит в куче» скрывает отличие от выделения обычного объекта через mallocgc.",
+      "На amd64 RSP указывает внутрь активного стека. Сохранённый g.sched.sp задаёт позицию продолжения, а g.stack.lo/hi описывают выделенную область. В регистре хранится адрес, а не сам стек.",
+      "Неиспользуемые спаны стеков могут вернуться в кучу. Уменьшение стека, освобождение спана и возврат физических страниц ОС — разные события; ни одно не обещает немедленного соответствующего падения RSS.",
+      "StackSys включает полученную рантаймом память стеков, в том числе некоторые стеки потоков ОС, но не учитывает каждый стек C. ReadMemStats выдаёт общие счётчики рантайма, а не отчёт о выделениях отдельной горутины."
+    ],
+    "practicalEN": "Compare trends under a representative workload and inspect goroutine profiles for owners and wait sites. Do not subtract two snapshots and call the result the universal cost of one goroutine.",
+    "versionNote": "Поля MemStats — публичная документация; устройство stack spans и кешей проверено по Go 1.26.1. Счётчики не эквивалентны RSS ни в Go 1.17, ни в 1.25/1.26.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/mstats.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mstats.go"
+      },
+      {
+        "title": "go1.26.1: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "go1.26.1: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "StackInuse is unchanged after a function returns. Does that prove the function leaked memory?",
+      "promptRU": "StackInuse не изменился после возврата из функции. Доказывает ли это утечку?",
+      "pointsEN": [
+        "No. The goroutine may retain allocated stack capacity, and the runtime can cache stack storage.",
+        "Inspect repeated growth, ownership and reachability. Stack capacity, live frames and RSS answer different questions."
+      ],
+      "pointsRU": [
+        "Нет. У горутины может сохраниться ёмкость стека, а рантайм может кешировать память стеков.",
+        "Проверь повторяющийся рост, владение и достижимость. Ёмкость стека, живые кадры и RSS отвечают на разные вопросы."
+      ],
+      "followUpEN": "Which additional evidence would distinguish retained capacity from unbounded live goroutines?",
+      "followUpRU": "Какие дополнительные данные отличат сохранённую ёмкость от неограниченного роста числа живых горутин?"
+    }
   },
   {
-    id: "c5",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim1",
-    qEN: "Q5: How does dynamic stack growth and shrinking (morestack, copystack, adjustpointers) work under the hood?",
-    qRU: "Как работает динамическое расширение и сжатие стека горутины (morestack, copystack) и что происходит с указателями на стек?",
-    shortEN: "Every non-leaf function prologue compares the CPU's RSP register against g.stackguard0. If stack space is exhausted, it jumps to runtime.morestack on the g0 stack, allocates a new contiguous block twice the size (copystack), copies existing stack frames via memmove, shifts internal stack pointers by delta, and resumes execution.",
-    detailsEN: [
-      "Compiler Prologue Check: Stacks grow downward (from stack.hi to stack.lo). If RSP <= g.stackguard0, the function calls runtime.morestack_noctxt.",
-      "Doubling on g0 (copystack): Switches to the M's g0 stack, sets status to _Gcopystack, allocates a 2x larger contiguous block (2 KB -> 4 KB -> 8 KB, up to 1 GB on 64-bit), and copies active frames.",
-      "Adjusting Stack Pointers (adjustpointers): Using compiler-generated stack bitmaps, the runtime finds every pointer on the stack pointing into the old stack range [old.lo, old.hi) and adds the offset delta = new.hi - old.hi.",
-      "Stack Shrinking: During Concurrent Mark in GC, if a goroutine uses less than 25% (1/4) of its stack, GC shrinks it by half (down to 2 KB)."
+    "id": "c5",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim1",
+    "qEN": "How does a goroutine stack grow, and why do pointers remain valid?",
+    "qRU": "Как растёт стек горутины и почему указатели остаются корректными?",
+    "shortEN": "When a stack check detects insufficient space, the runtime can allocate a larger stack, copy active frames and adjust stack pointers using compiler metadata. Ordinary Go pointers remain valid across growth; a stack address is not a permanent numeric identity.",
+    "detailsEN": [
+      "Stack checks lead through morestack/newstack on the growth path. Not every function has the same prologue: small leaf functions and nosplit code have special rules. A tripped guard can also request preemption, not just allocation.",
+      "For normal growth, Go 1.26.1 starts with twice the old size and can double again until the needed frame fits. copystack relocates active frames and uses pointer maps to fix references; channel-related references require coordinated updates too.",
+      "Shrinking is a separate operation at safe points. The checked implementation can halve the stack when usage including a safety allowance is below one quarter, subject to minimum size and safety checks. Returning from a call does not itself guarantee shrinking.",
+      "The default per-goroutine growth limit is 1 GB on 64-bit systems and 250 MB on 32-bit systems; debug.SetMaxStack changes the limit for future growth. Exceeding it crashes the program. A uintptr is an integer, not a GC-tracked pointer you may keep across arbitrary operations."
     ],
-    practicalRU: "Практический кейс (Hot Split / Stack Copy Storm): если в горячем цикле воркер постоянно вызывает глубокую цепочку функций, раздувая стек с 2 КБ до 32 КБ, а потом засыпает на канале и во время GC стек сжимается обратно — в CPU pprof ты увидишь 15–20% времени в 'runtime.newstack' и 'runtime.copystack'. Лечится переиспользованием воркеров из пула вместо постоянного пересоздания горутин.",
-    code: `// Compiler-inserted function prologue on amd64:
-CMPQ SP, 16(R14)       // compare RSP against g.stackguard0 (R14 holds *g)
-JLS  morestack_noctxt  // if RSP <= stackguard0 -> switch to g0 & double stack`
+    "practicalRU": "Используй обычные указатели и ограничивай глубину рекурсии. Если в профиле заметно копирование стеков, сначала изучи глубину вызовов и крупные кадры; worker pool не является универсальным лечением роста стека.",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc descend(depth int, value *int) int {\n\tvar frame [1024]byte\n\tframe[0] = byte(depth)\n\tif depth == 0 {\n\t\t*value = 42\n\t\treturn 0\n\t}\n\tsum := descend(depth-1, value)\n\treturn sum + int(frame[0]) // Keep frame data live across the call.\n}\n\nfunc main() {\n\tvalue := 0\n\tsum := descend(64, &value)\n\tfmt.Println(value, sum) // 42 2080; not a measurement of stack addresses.\n}",
+    "shortRU": "Когда проверка стека обнаруживает нехватку места, рантайм может выделить больший стек, скопировать активные кадры и исправить указатели по метаданным компилятора. Обычные Go-указатели остаются корректными при росте; адрес в стеке не является постоянным числовым идентификатором.",
+    "detailsRU": [
+      "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
+      "Для обычного роста Go 1.26.1 начинает с удвоенного размера и при необходимости удваивает снова, чтобы вместить нужный кадр. copystack переносит активные кадры и исправляет ссылки по картам указателей; ссылки, связанные с каналами, тоже требуют согласованного обновления.",
+      "Уменьшение — отдельная операция в безопасных точках. Проверенная реализация может уменьшить стек вдвое, если использование с защитным запасом меньше четверти, с учётом минимального размера и проверок безопасности. Сам возврат из вызова не гарантирует уменьшения.",
+      "Стандартный предел роста одной горутины — 1 ГБ на 64-битных системах и 250 МБ на 32-битных; debug.SetMaxStack меняет предел будущего роста. Превышение аварийно завершает программу. uintptr — целое число, а не отслеживаемый GC указатель, который можно сохранять через произвольные операции."
+    ],
+    "practicalEN": "Use ordinary pointers and keep deep recursion bounded. If stack copying appears in a profile, first examine call depth and large frames; a worker pool is not a universal fix for stack growth.",
+    "versionNote": "Копируемые стеки есть в 1.17/1.25/1.26. Конкретные пороги, карты и алгоритм описаны по Go 1.26.1; тест результата не доказывает конкретный момент перемещения стека.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "go1.26.1: runtime/debug/garbage.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug/garbage.go"
+      },
+      {
+        "title": "unsafe.Pointer: conversion rules",
+        "url": "https://pkg.go.dev/unsafe#Pointer"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "A pointer refers to a caller’s local variable while deeper calls grow the stack. Must application code repair that pointer?",
+      "promptRU": "Указатель ссылается на локальную переменную вызывающего, пока вложенные вызовы наращивают стек. Нужно ли приложению исправлять этот указатель?",
+      "pointsEN": [
+        "No. The runtime and compiler preserve ordinary Go pointer semantics, including during stack relocation.",
+        "Do not replace the pointer with a stored uintptr and assume the same safety. Do not infer physical placement from correct output alone."
+      ],
+      "pointsRU": [
+        "Нет. Рантайм и компилятор сохраняют семантику обычных Go-указателей, в том числе при переносе стека.",
+        "Нельзя заменить указатель сохранённым uintptr и рассчитывать на ту же безопасность. По одному правильному результату нельзя установить физическое размещение."
+      ],
+      "followUpEN": "If recursion is unbounded, does automatic growth make the algorithm safe?",
+      "followUpRU": "Если рекурсия не ограничена, делает ли автоматический рост алгоритм безопасным?"
+    }
   },
   {
     "id": "c6",
@@ -206,113 +353,311 @@ JLS  morestack_noctxt  // if RSP <= stackguard0 -> switch to g0 & double stack`
   // МОДУЛЬ 2: ПЛАНИРОВЩИК GMP, ВЫТЕСНЕНИЕ И WORK STEALING (Q7 - Q12)
   // ==========================================
   {
-    id: "c7",
-    mod: "m2",
-    modName: "2. GMP Scheduler",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: "sim1",
-    qEN: "Q7: How does the Go GMP scheduler model work, and what is GOMAXPROCS?",
-    qRU: "Из чего состоит модель планировщика GMP в Go и за что отвечает GOMAXPROCS?",
-    shortEN: "The Go scheduler uses three core entities — G (Goroutine), M (Machine / OS thread), and P (Logical Processor) — to multiplex M goroutines onto N OS threads. GOMAXPROCS controls the exact number of logical processors (P), which limits how many OS threads can simultaneously execute Go user code.",
-    detailsEN: [
-      "G (Goroutine): The task to execute, containing its stack, instruction pointer, and scheduling state.",
-      "M (Machine): A real OS kernel thread managed by the operating system.",
-      "P (Processor): A logical resource/context (count = GOMAXPROCS) that holds a lock-free Local Run Queue (LRQ of 256 goroutines) and a per-P memory cache (mcache). An M must hold a P to run Go code ( though M can run blocked syscalls without a P)."
+    "id": "c7",
+    "mod": "m2",
+    "modName": "2. GMP Scheduler",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim2",
+    "qEN": "How do G, M and P relate to GOMAXPROCS?",
+    "qRU": "Как G, M и P связаны с GOMAXPROCS?",
+    "shortEN": "G is a goroutine, M is an OS thread, and P holds the runtime resources needed to execute user Go code. GOMAXPROCS controls the number of Ps. The runtime can have more threads than Ps, for example when threads are in blocking system calls.",
+    "detailsEN": [
+      "A P is a runtime object, not a physical CPU or a permanently pinned core. The OS schedules Ms on available CPUs. In the phrase “M:N scheduling”, M and N are generic counts, not the runtime type names.",
+      "Each P has a local runnable queue and a separate runnext slot. Global queues, polling, timers and work stealing help distribute work. More runnable goroutines do not automatically create more parallel Go execution.",
+      "Go 1.25 introduced container-aware GOMAXPROCS defaults and periodic updates. On Linux the policy considers CPU affinity and cgroup quota as well as logical CPUs. Explicit environment or runtime.GOMAXPROCS settings disable automatic updates; compatibility settings and the module language version matter.",
+      "GOMAXPROCS is not an application concurrency limit. Database pools, remote-service limits and request backpressure need their own budgets. With GOMAXPROCS=1, interleavings and data races are still possible."
     ],
-    practicalRU: "Классическая проблема продакшена в Kubernetes: если под запущен на 64-ядерной ноде с лимитом CPU в 2 ядра (CFS quota = 2000m), стандартный runtime.NumCPU() вернёт 64 и создаст 64 структуры P! Потоки начнут конкурировать, сжигая всю квоту за пару миллисекунд и уходя в жестокий CPU Throttling (рост p99 latency в 10 раз). Решение — библиотекой uber-go/automaxprocs (или нативно в Go 1.25+) выставлять GOMAXPROCS по лимиту cgroups контейнера.",
-    code: `// Always align GOMAXPROCS with container cgroup CPU limits in Kubernetes:
-// If Node has 64 cores but K8s pod limit is 2 CPU:
-// GOMAXPROCS=64 -> massive CFS CPU throttling!
-// GOMAXPROCS=2  -> optimal scheduling with zero lock contention.`
+    "practicalRU": "Начни со стандартной настройки рантайма, наблюдай throttling и задержки и подбирай значение на реальной нагрузке. Число 2 или количество CPU хоста не является универсальным рецептом для контейнера.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\t// A non-positive argument queries the setting without changing it.\n\tfmt.Println(\"parallel Go execution limit:\", runtime.GOMAXPROCS(0))\n\t// This is not the number of threads or an external-service concurrency limit.\n}",
+    "shortRU": "G — горутина, M — поток ОС, а P содержит ресурсы рантайма для исполнения пользовательского Go-кода. GOMAXPROCS задаёт число P. Потоков может быть больше, чем P, например из-за блокирующих системных вызовов.",
+    "detailsRU": [
+      "P — объект рантайма, а не физический CPU или навсегда закреплённое ядро. ОС распределяет M по доступным CPU. В выражении «планирование M:N» буквы M и N обозначают количества, а не имена типов рантайма.",
+      "У каждого P есть локальная очередь готовых горутин и отдельный слот runnext. Общие очереди, опрос событий, таймеры и перехват работы помогают распределять нагрузку. Больше готовых горутин не означает больше параллельно исполняемого Go-кода.",
+      "Go 1.25 ввёл учитывающий контейнеры GOMAXPROCS по умолчанию и периодические обновления. На Linux политика учитывает CPU affinity, квоту cgroup и логические CPU. Явная настройка через окружение или runtime.GOMAXPROCS отключает автообновления; важны настройки совместимости и версия языка модуля.",
+      "GOMAXPROCS не ограничивает конкурентность приложения. Пулу БД, обращениям к внешнему сервису и приёму запросов нужны свои бюджеты. При GOMAXPROCS=1 всё ещё возможны чередование операций и гонки данных."
+    ],
+    "practicalEN": "Start with the runtime default, observe throttling and latency, and tune against actual load. Choosing 2 or the host CPU count is not a universal container prescription.",
+    "versionNote": "В 1.17 стандартный runtime не имел современной container-aware политики. В 1.25 она появилась; 1.26 сохраняет этот API. Для совместимого поведения старых модулей см. containermaxprocs/updatemaxprocs в документации runtime.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/HACKING.md",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/HACKING.md"
+      },
+      {
+        "title": "go1.26.1: runtime/debug.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+      },
+      {
+        "title": "go1.25.0: runtime/debug.go",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/debug.go"
+      },
+      {
+        "title": "Go 1.25: runtime",
+        "url": "https://go.dev/doc/go1.25#runtime"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "GOMAXPROCS is 2 and the process has 30 threads. Is that necessarily a bug?",
+      "promptRU": "GOMAXPROCS равен 2, а у процесса 30 потоков. Это обязательно ошибка?",
+      "pointsEN": [
+        "No. Two Ps bound parallel execution of user Go code, not all OS threads. Inspect syscall/cgo activity and thread ownership.",
+        "CPU-bound work in foreign C code is not capped in the same way by GOMAXPROCS. Apply a separate concurrency limit when needed."
+      ],
+      "pointsRU": [
+        "Нет. Два P ограничивают параллельное исполнение пользовательского Go-кода, а не все потоки ОС. Изучи syscall/cgo и назначение потоков.",
+        "Вычисления во внешнем C-коде не ограничиваются GOMAXPROCS тем же способом. При необходимости задавай отдельный предел конкурентности."
+      ],
+      "followUpEN": "Would setting GOMAXPROCS to 1 make an unprotected shared map safe?",
+      "followUpRU": "Станет ли общая map без синхронизации безопасной при GOMAXPROCS=1?"
+    }
   },
   {
-    id: "c8",
-    mod: "m2",
-    modName: "2. GMP Scheduler",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q8: How does goroutine preemption work in Go (Cooperative vs. Asynchronous via sysmon & SIGURG)?",
-    qRU: "Как в планировщике Go работает вытеснение горутин (кооперативное против асинхронного через sysmon и сигнал SIGURG)?",
-    shortEN: "Since Go 1.14, Go uses hybrid preemption: cooperative preemption at blocking operations and function prologues (stackPreempt), combined with asynchronous signal-based preemption where the background sysmon thread sends a SIGURG signal to any OS thread running the same goroutine for more than 10 ms.",
-    detailsEN: [
-      "Cooperative Preemption: Voluntary switches at channel operations, mutex locks, network I/O, or function prologues when the runtime poisons g.stackguard0 with stackPreempt.",
-      "Asynchronous Preemption (Go 1.14+): Solves tight loops with no function calls (e.g., heavy math or 'for {}'). The background sysmon thread (running without a P) scans P statuses every 20us–10ms.",
-      "SIGURG Mechanics: If a goroutine runs for > 10 ms (forcePreemptNS), sysmon sends an OS signal SIGURG to its thread M. The kernel invokes Go's signal handler (asyncPreempt), which saves all CPU registers on the stack, moves the preempted G to the Global Run Queue (GRQ), and schedules the next goroutine."
+    "id": "c8",
+    "mod": "m2",
+    "modName": "2. GMP Scheduler",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim2",
+    "qEN": "How does Go preempt a CPU-bound goroutine?",
+    "qRU": "Как Go вытесняет горутину, занятую вычислениями?",
+    "shortEN": "Go can request preemption so other goroutines get a chance to run. Supported platforms have asynchronous preemption as well as checks at safe points. A request is not an immediate switch: the runtime must find a safe place to suspend the current Go execution.",
+    "detailsEN": [
+      "The checked sysmon/retake implementation uses a 10 ms threshold while observing an unchanged scheduling tick. This is not a strict CPU quantum, a guaranteed latency bound or a statement that sysmon wakes exactly every 10 ms. runnext goroutines can share a tick.",
+      "On supported Unix paths, SIGURG is used to interrupt a thread. The handler checks whether the interrupted code is at an asynchronous safe point and can arrange a call to asyncPreempt after resuming. That path saves registers and enters the scheduler; the signal handler does not simply schedule arbitrary Go code.",
+      "If the point is unsafe, preemption must wait or retry. runtime code, foreign C execution and platform mechanisms have different constraints. Preempting a goroutine does not cancel its operation or release its locks.",
+      "runtime.Gosched yields voluntarily but creates no application-level ordering guarantee. Use channels, locks or other synchronization for ordering, and check cancellation explicitly in long-running application loops."
     ],
-    practicalRU: "Почему в отладчике GDB/Delve или при запуске strace на Go-бинаре постоянно мелькают сигналы 'SIGURG (Urgent I/O condition)'? Новички думают, что это сетевая ошибка, а на самом деле это штатная работа асинхронного вытеснения sysmon! Также: если внутри цикла есть инлайненные функции без safepoints или Cgo-вызов, SIGURG не сможет вытеснить C-код — это может задержать фазу STW сборщика мусора.",
-    code: `// Asynchronous Preemption Timeline:
-// [G1 tight loop > 10ms] -> [sysmon detects P1] -> [kill(M1, SIGURG)]
-// -> [asyncPreempt saves registers] -> [G1 pushed to GRQ] -> [M1 runs G2]`
+    "practicalRU": "В длительном вычислении проверяй ctx.Done на подходящей границе работы. Справедливость планировщика и скорость реакции вашего протокола отмены — разные вопросы.",
+    "code": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n)\n\nfunc sum(ctx context.Context, n int) (int, error) {\n\ttotal := 0\n\tfor i := 0; i < n; i++ {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn 0, ctx.Err()\n\t\tdefault:\n\t\t}\n\t\ttotal += i\n\t}\n\treturn total, nil\n}\n\nfunc main() {\n\tctx, cancel := context.WithCancel(context.Background())\n\tcancel()\n\t_, err := sum(ctx, 100)\n\tfmt.Println(err) // context canceled; the application checks the signal.\n}",
+    "shortRU": "Go может запросить вытеснение, чтобы дать шанс другим горутинам. На поддерживаемых платформах есть асинхронное вытеснение и проверки в безопасных точках. Запрос не равен немедленному переключению: рантайм должен найти безопасное место для приостановки Go-кода.",
+    "detailsRU": [
+      "В проверенной реализации sysmon/retake использует порог 10 мс при наблюдении неизменного тика планировщика. Это не строгий квант CPU, не гарантия задержки и не утверждение, что sysmon просыпается ровно каждые 10 мс. Горутины runnext могут разделять один тик.",
+      "В поддерживаемых Unix-путях для прерывания потока используется SIGURG. Обработчик проверяет асинхронную безопасную точку и может подготовить вызов asyncPreempt после возобновления. Этот путь сохраняет регистры и входит в планировщик; обработчик сигнала не начинает просто исполнять произвольный Go-код.",
+      "Если точка небезопасна, вытеснение ждёт или повторяется. У кода рантайма, внешнего C-кода и механизмов платформы разные ограничения. Вытеснение горутины не отменяет её операцию и не освобождает блокировки.",
+      "runtime.Gosched добровольно уступает исполнение, но не создаёт гарантию порядка событий приложения. Для порядка нужны каналы, блокировки или другая синхронизация, а в длительных циклах приложения отмену нужно проверять явно."
+    ],
+    "practicalEN": "For a long computation, check ctx.Done at a suitable work boundary. Scheduler fairness and the responsiveness of your cancellation protocol are separate concerns.",
+    "versionNote": "Асинхронное вытеснение появилось в Go 1.14, то есть уже есть в 1.17; поддержка зависит от платформы. Порог и описанный Unix-путь проверены по Go 1.26.1, не являются гарантией языка.",
+    "sources": [
+      {
+        "title": "Go 1.14: runtime",
+        "url": "https://go.dev/doc/go1.14#runtime"
+      },
+      {
+        "title": "go1.26.1: runtime/preempt.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/preempt.go"
+      },
+      {
+        "title": "go1.26.1: runtime/signal_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/signal_unix.go"
+      },
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "A loop has run for 12 ms. Can you promise that another goroutine has already run, or that cancellation has been observed?",
+      "promptRU": "Цикл исполнялся 12 мс. Можно ли обещать, что другая горутина уже получила CPU или отмена уже замечена?",
+      "pointsEN": [
+        "Neither follows from the elapsed time. Preemption is best effort and depends on safe points and scheduling.",
+        "The application must check cancellation; yielding or preemption alone does not terminate its loop."
+      ],
+      "pointsRU": [
+        "Ни то ни другое не следует из прошедшего времени. Вытеснение зависит от безопасных точек и планирования и не имеет такой гарантии.",
+        "Приложение само должно проверять отмену; уступка CPU или вытеснение не завершает его цикл."
+      ],
+      "followUpEN": "Where would you place cancellation checks if one unit of work takes a second?",
+      "followUpRU": "Где поставить проверки отмены, если одна единица работы занимает секунду?"
+    }
   },
   {
-    id: "c9",
-    mod: "m2",
-    modName: "2. GMP Scheduler",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q9: How does the Go scheduler find runnable goroutines (runtime.findrunnable) and how does Work Stealing work?",
-    qRU: "В каком порядке планировщик ищет работу (runtime.findrunnable), зачем нужно правило 61-го тика и как работает кража задач (Work Stealing)?",
-    shortEN: "In runtime.findrunnable, a processor P checks the Global Run Queue (GRQ) every 61st tick for fairness, then checks its local runnext and LRQ, then the GRQ, then the network poller (netpoller), and finally steals half of the runnable goroutines from a randomly chosen processor's LRQ using lock-free CAS.",
-    detailsEN: [
-      "1/61 Fairness Rule (schedtick % 61 == 0): Every 61st scheduler tick, P checks the GRQ before its local queue. Without this, two local goroutines ping-ponging over a channel would monopolize P forever and starve the GRQ. (61 is chosen because it is prime, avoiding harmonic collisions with queue sizes).",
-      "Lookup Sequence: 1) 1/61 GRQ check -> 2) P.runnext & P.runq[256] (lock-free) -> 3) GRQ (under mutex, grabs a batch) -> 4) netpoller -> 5) Work Stealing.",
-      "Work Stealing (runqsteal): P iterates over all other Ps in a randomized order (up to 4 passes) and atomically steals 50% of the victim's LRQ from its tail via CAS (and checks the victim's runnext on the final pass)."
+    "id": "c9",
+    "mod": "m2",
+    "modName": "2. GMP Scheduler",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim2",
+    "qEN": "How does the scheduler find work and steal from another P?",
+    "qRU": "Как планировщик находит работу и забирает её у другого P?",
+    "shortEN": "The scheduler considers several work sources, including local and global queues, network readiness, timers and work on other Ps. A periodic global-queue check helps fairness. Stealing redistributes runnable goroutines; it does not move a goroutine that is currently running.",
+    "detailsEN": [
+      "In Go 1.26.1, findRunnable handles special work such as GC coordination and timers before parts of ordinary queue selection. The simplified sequence “global, local, poll, steal” is not a complete priority contract.",
+      "When schedtick % 61 == 0 and the global queue is observed non-empty, the runtime attempts a fairness check. A tick is not a millisecond or necessarily one goroutine: runnext can inherit the current time slice. The constant 61 is an implementation choice, not a language guarantee.",
+      "The checked runqgrab takes ceil(n/2) entries from the head of a victim’s ordinary local queue, using CAS to claim them. Concurrent changes can cause retries. runqsteal returns one of the batch for execution and queues the rest; stealing runnext is a separate possibility when allowed.",
+      "For a stable victim queue [A,B,C,D,E], head on the left, the batch is [A,B,C]. runqsteal returns C and queues A,B on the thief; D,E remain on the victim. This is a source-level example under stated assumptions, not a prediction of application output."
     ],
-    practicalRU: "Как увидеть перекос планировщика в продакшене: запусти бинарь с переменной окружения 'GODEBUG=schedtrace=1000'. Каждую секунду рантайм будет печатать в лог строку состояния: 'runqueue=0 [12 0 0 0]'. Если глобальная очередь огромная или у одного P очередь забита, а остальные 0 — значит, горутины заблокированы в Cgo/syscall или нет точек переключения.",
-    code: `// Run in production/staging to inspect scheduler queues every 1000ms:
-// GODEBUG=schedtrace=1000 ./myservice
-// Output: SCHED 1004ms: gomaxprocs=4 idleprocs=1 threads=8 spinningthreads=1 runqueue=2 [4 0 2 0]`
+    "practicalRU": "Используй schedtrace для общего снимка и execution trace для временной картины. Один снимок неравных очередей сам по себе не доказывает проблему cgo, безопасной точки или планировщика.",
+    "code": "// Source-level model, NOT executable Go and NOT a scheduling guarantee.\n// Assumptions: no concurrent queue changes; ordinary queue, head at left.\n// Before: victim [A B C D E], thief []\n// Grab:   n=5 -> n-n/2=3 -> [A B C]\n// After:  victim [D E], thief [A B], returned for execution: C\n// runnext, timers, concurrent retries and other scheduler work are omitted.",
+    "shortRU": "Планировщик рассматривает несколько источников работы: локальные и общую очереди, готовность сети, таймеры и работу других P. Периодическая проверка общей очереди помогает справедливости. Перехват работы перераспределяет готовые горутины, а не перемещает уже исполняющуюся.",
+    "detailsRU": [
+      "В Go 1.26.1 findRunnable обрабатывает специальную работу, например координацию GC и таймеры, до части обычного выбора очередей. Упрощённая последовательность «общая, локальная, сеть, кража» не является полным контрактом приоритетов.",
+      "При schedtick % 61 == 0 и наблюдаемой непустой общей очереди рантайм пробует проверку справедливости. Тик — не миллисекунда и не обязательно одна горутина: runnext может наследовать текущий квант. Константа 61 — выбор реализации, а не гарантия языка.",
+      "Проверенный runqgrab берёт ceil(n/2) элементов с головы обычной локальной очереди жертвы и закрепляет их через CAS. Конкурентные изменения могут вызвать повтор. runqsteal возвращает один элемент пачки для исполнения, остальные ставит в очередь; перехват runnext — отдельная возможность, когда она разрешена.",
+      "Для неизменной очереди жертвы [A,B,C,D,E] с головой слева пачка равна [A,B,C]. runqsteal возвращает C, а A,B ставит в очередь забирающего P; D,E остаются у жертвы. Это пример по исходникам при заданных условиях, а не предсказание вывода приложения."
+    ],
+    "practicalEN": "Use schedtrace for a coarse snapshot and execution tracing for timelines. An uneven queue snapshot alone does not prove cgo, a stuck safe point or a scheduler defect.",
+    "versionNote": "Конкретный путь описан по 1.26.1 и сопоставлен с 1.25.0. В Go 1.17 имя findrunnable было со строчной r, а проверка %61 находилась в schedule. Не переносить расположение функций между версиями механически.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.25.0: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.17: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.17/src/runtime/proc.go"
+      },
+      {
+        "title": "runtime: GODEBUG diagnostics",
+        "url": "https://pkg.go.dev/runtime#hdr-Environment_Variables"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "A victim queue contains five runnable goroutines. Does “steal half” mean two, and are they taken from the tail?",
+      "promptRU": "В очереди жертвы пять готовых горутин. Значит ли «забрать половину» взять две, и берутся ли они с хвоста?",
+      "pointsEN": [
+        "Under the illustrated stable-queue path, it takes three from the head: n - n/2 with integer division.",
+        "The thief returns one for immediate execution and places the other two in its queue. Concurrent mutation can change the attempt."
+      ],
+      "pointsRU": [
+        "В показанном пути неизменной очереди берутся три с головы: n - n/2 при целочисленном делении.",
+        "Забирающий P возвращает одну для исполнения и ставит две в свою очередь. Конкурентное изменение может повлиять на попытку."
+      ],
+      "followUpEN": "What changes if the ordinary queue is empty but runnext is occupied?",
+      "followUpRU": "Что меняется, если обычная очередь пуста, но runnext занят?"
+    }
   },
   {
-    id: "c10",
-    mod: "m2",
-    modName: "2. GMP Scheduler",
-    level: "senior",
-    levelLabel: "🟡 Senior (Runtime)",
-    simId: null,
-    qEN: "Q10: How does Go handle network I/O (netpoller) vs. blocking system calls (syscall handoff) and Cgo?",
-    qRU: "Чем обработка сетевого ввода-вывода (netpoller) отличается от блокирующих системных вызовов (syscall handoff) и Cgo?",
-    shortEN: "Network I/O is multiplexed asynchronously via the OS epoll/kqueue/IOCP inside Go's netpoller: only the goroutine (G) parks in _Gwaiting while M and P keep running other tasks. In contrast, a blocking syscall or Cgo call blocks the underlying OS thread (M1) in the kernel, so the runtime detaches P (_Psyscall) and hands it off to another OS thread (M2).",
-    detailsEN: [
-      "Network Poller (netpoller): All Go net.Conn sockets are opened non-blocking. When read/write returns EAGAIN, G calls gopark and waits inside the epoll/kqueue structure. Zero OS threads are blocked.",
-      "Blocking Syscall & Cgo (Handoff): File I/O on Linux (without io_uring) and Cgo calls block the OS thread M1. Before entering the syscall, G sets status to _Gsyscall and detaches P into _Psyscall.",
-      "sysmon Retake: If the syscall takes longer than ~20 microseconds (or immediately in entersyscallblock), sysmon retakes P via CAS and assigns it to an idle M2 (or spawns a new OS thread) so P's local queue continues executing.",
-      "Exiting Syscall: When M1 wakes up, it tries to re-acquire its old P or any free P; if none are free, it puts G into the Global Run Queue (GRQ) and M1 goes to the idle thread pool."
+    "id": "c10",
+    "mod": "m2",
+    "modName": "2. GMP Scheduler",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim2",
+    "qEN": "How do network polling, blocking syscalls and cgo affect G, M and P?",
+    "qRU": "Как ожидание сети, блокирующий syscall и cgo влияют на G, M и P?",
+    "shortEN": "An ordinary pollable network wait can park a goroutine while its thread runs other work. A blocking syscall or foreign call can instead occupy an OS thread. The runtime can make its P available elsewhere so Go work continues; the precise handoff protocol differs between Go 1.25 and 1.26.",
+    "detailsEN": [
+      "On the standard Unix pollable-socket path, a read that would block waits through the runtime netpoller. There is no dedicated blocked OS thread per waiting socket. This is not a promise about every net.Conn implementation, every file or every platform.",
+      "In Go 1.25, ordinary entersyscall detaches M from P and puts P in _Psyscall. The runtime can retake it; a quick return may reclaim it. entersyscallblock explicitly hands off P for a known blocking call. Handoff is not guaranteed at the instant every syscall starts.",
+      "In Go 1.26.1, ordinary entersyscall can keep M and P attached while G is in _Gsyscall; _Psyscall is now the unused slot _Psyscall_unused. Retaking uses setBlockOnExitSyscall to hold the G state, validate the links, detach P and then permit return to proceed. Known-blocking and GC paths can give up P sooner.",
+      "A returning call needs a P before normal user Go execution resumes. If none is available, the goroutine can become runnable and wait. cgo can occupy threads even while computing rather than waiting; GOMAXPROCS does not cap that foreign CPU work.",
+      "A new thread is not necessarily created for each call: idle threads may be reused. Still, unbounded blocking calls can exhaust resources or hit the runtime thread limit (initially 10,000, configurable with debug.SetMaxThreads). Limit operations at their owner, not by assuming a fixed goroutine-to-thread ratio."
     ],
-    practicalRU: "Реальный кейс падения сервера ('cgo / disk I/O thread explosion'): если сервис вызывает медленную C-библиотеку через Cgo или читает с зависшего NFS-диска из 15 000 горутин одновременно, для КАЖДОЙ заблокированной горутины рантайм создаст отдельный поток ОС (M)! При превышении лимита в 10 000 потоков (debug.SetMaxThreads) рантайм мгновенно убьёт процесс с 'runtime: program exceeds 10000-thread limit'. Решение: всегда ограничивать параллелизм к диску и Cgo семафором (буферизованным каналом или worker pool).",
-    code: `// Limiting concurrent Cgo or blocking Disk I/O to prevent OS thread explosion:
-var cgoSem = make(chan struct{}, 32) // max 32 OS threads blocked in Cgo at once
-
-func CallCLibrary() {
-    cgoSem <- struct{}{}
-    defer func() { <-cgoSem }()
-    C.heavy_blocking_c_function()
-}`
+    "practicalRU": "Пример ограничивает вызовы, допущенные через один общий лимитер. Отмена может остановить ожидание допуска; после старта сам callback должен поддерживать отмену. Контекст не прерывает произвольный C-код принудительно.",
+    "code": "package admission\n\nimport \"context\"\n\n// Share one Limit across callers. It bounds admitted work, not OS threads.\ntype Limit chan struct{}\n\nfunc (limit Limit) Do(ctx context.Context, work func(context.Context) error) error {\n\tif err := ctx.Err(); err != nil {\n\t\treturn err\n\t}\n\tselect {\n\tcase limit <- struct{}{}:\n\t\tdefer func() { <-limit }()\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\t}\n\tif err := ctx.Err(); err != nil {\n\t\treturn err\n\t}\n\t// Cancellation can race with this call; work must also cooperate.\n\treturn work(ctx)\n}\n\n// Construct with make(Limit, 32); keep it shared and never close it.",
+    "shortRU": "Обычное ожидание поллируемой сети может припарковать горутину, пока её поток выполняет другую работу. Блокирующий syscall или внешний вызов может занять поток ОС. Рантайм может передать его P для продолжения Go-работы; точный протокол различается в Go 1.25 и 1.26.",
+    "detailsRU": [
+      "В стандартном Unix-пути поллируемого сокета чтение, которое заблокировалось бы, ожидает через netpoller рантайма. Отдельный заблокированный поток на каждый ожидающий сокет не нужен. Это не обещание для каждой реализации net.Conn, каждого файла или каждой платформы.",
+      "В Go 1.25 обычный entersyscall отсоединяет M от P и переводит P в _Psyscall. Рантайм может забрать P, а быстрый возврат — вернуть его. entersyscallblock явно передаёт P для заведомо блокирующего вызова. Передача не гарантирована в момент начала любого syscall.",
+      "В Go 1.26.1 обычный entersyscall может оставить M и P связанными, пока G находится в _Gsyscall; прежний _Psyscall стал неиспользуемым слотом _Psyscall_unused. При изъятии setBlockOnExitSyscall удерживает состояние G, проверяет связи, отсоединяет P и затем разрешает продолжение возврата. Заведомо блокирующий путь и GC могут отдать P раньше.",
+      "После возврата нужен P, прежде чем продолжится обычный пользовательский Go-код. Если P нет, горутина может стать runnable и ждать. cgo может занимать потоки даже вычислениями, а не ожиданием; GOMAXPROCS не ограничивает такую работу внешнего кода.",
+      "Для каждого вызова необязательно создаётся новый поток: свободные могут переиспользоваться. Но неограниченные блокирующие вызовы способны исчерпать ресурсы или предел потоков рантайма (изначально 10 000, настраивается debug.SetMaxThreads). Ограничивай операции у их владельца, не предполагая фиксированного отношения горутин к потокам."
+    ],
+    "practicalEN": "The example bounds callbacks admitted through one shared limit. Cancellation can stop waiting for admission; once work starts, the callback must itself cooperate. A context does not forcibly interrupt arbitrary C code.",
+    "versionNote": "Существенная граница 1.25 → 1.26: _Psyscall больше не действующее состояние P. Старый путь 1.17/1.25 нельзя выдавать за схему 1.26.1. RawSyscall и особые runtime-пути здесь не моделируются.",
+    "sources": [
+      {
+        "title": "go1.25.0: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+      },
+      {
+        "title": "go1.26.1: internal/poll/fd_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/poll/fd_unix.go"
+      },
+      {
+        "title": "go1.26.1: runtime/cgocall.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/cgocall.go"
+      },
+      {
+        "title": "go1.26.1: runtime/debug/garbage.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug/garbage.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "A syscall returns after its P was taken, and no P is free. Can the same M immediately continue user Go code?",
+      "promptRU": "Syscall вернулся после изъятия P, а свободных P нет. Может ли тот же M сразу продолжить пользовательский Go-код?",
+      "pointsEN": [
+        "No: a P is required. The G can be queued while the M stops; resumption need not use the same M.",
+        "Distinguish a blocked OS thread from a parked G in a pollable network wait. Do not label the Go 1.26 path _Psyscall."
+      ],
+      "pointsRU": [
+        "Нет: нужен P. G может попасть в очередь, пока M остановится; продолжение необязательно будет на том же M.",
+        "Различай заблокированный поток ОС и припаркованную G при поллируемом ожидании сети. Не подписывай путь Go 1.26 как _Psyscall."
+      ],
+      "followUpEN": "Does a 32-slot limiter guarantee that the process has at most 32 OS threads?",
+      "followUpRU": "Гарантирует ли лимитер на 32 слота не более 32 потоков ОС во всём процессе?"
+    }
   },
   {
-    id: "c11",
-    mod: "m2",
-    modName: "2. GMP Scheduler",
-    level: "deep",
-    levelLabel: "🔴 Deep Dive + Prod Cases",
-    simId: "sim1",
-    qEN: "Q11: Why does each processor (P) have a 1-element LIFO slot (runnext) alongside its 256-element FIFO queue (runq)?",
-    qRU: "Зачем у каждого процессора P есть одноэлементный LIFO-стек (runnext) перед обычной FIFO-очередью на 256 горутин?",
-    shortEN: "P.runnext is a single-slot high-priority LIFO queue designed to maximize L1/L2 CPU cache locality for newly spawned or channel-unblocked goroutines without starving older tasks in the FIFO queue.",
-    detailsEN: [
-      "L1/L2 Cache Locality: When G1 spawns G2 (newproc) or unblocks G2 on a channel (goready), the data G2 is about to process is currently hot in the CPU core's L1/L2 cache (~1 ns access). Running G2 immediately avoids costly L3/RAM cache misses.",
-      "Why Capacity is Strictly 1: A multi-element LIFO stack would cause starvation of older goroutines at the bottom. With a 1-slot LIFO, placing a new goroutine into P.runnext via atomic CAS displaces any previous occupant into the tail of the 256-element FIFO ring buffer (runq)."
+    "id": "c11",
+    "mod": "m2",
+    "modName": "2. GMP Scheduler",
+    "level": "deep",
+    "levelLabel": "🔴 Deep Dive + Prod Cases",
+    "simId": "sim1",
+    "qEN": "What is P.runnext, and how does it interact with fairness?",
+    "qRU": "Что такое P.runnext и как он связан со справедливостью?",
+    "shortEN": "runnext is a single preferred runnable-goroutine slot next to a P’s ordinary local queue. It can reduce scheduling overhead for related goroutines by letting the selected goroutine inherit the current time slice. It is a runtime optimization, not a promise about who runs next.",
+    "detailsEN": [
+      "With next=true, runqput can replace the current slot using CAS and move the previous occupant to the ordinary queue; queue overflow has its own path. Calling this a one-element LIFO stack hides the displacement into another queue.",
+      "runqget checks runnext before the ordinary local queue and reports inheritTime=true for that path. execute then does not increment schedtick. This local preference does not override all other scheduler work or guarantee immediate execution after go or a channel operation.",
+      "A chain of goroutines can keep replacing runnext while sharing a tick. sysmon preemption helps prevent monopolizing a P. The slot’s capacity of one is not by itself a fairness proof; the checked runtime disables this optimization without sysmon and can randomize its use in some builds.",
+      "Related execution may benefit locality, but neither a hot L1 cache nor a fixed switching time is guaranteed. Correct synchronization must work regardless of whether runnext is used or the goroutine moves to another P."
     ],
-    practicalRU: "В высоконагруженных пайплайнах (где горутина A читает из сокета и кидает структуру в канал горутине B) слот P.runnext позволяет передавать управление от A к B на том же самом ядре CPU за ~15 нс с горячим L1-кешем. Именно поэтому в Go пайплайн на каналах часто работает быстрее, чем очередь с воркерами на разных ядрах, перекидывающих кэш-линии между сокетами CPU.",
-    code: `// src/runtime/proc.go — inside runqput(pp *p, gp *g, next bool)
-oldnext := pp.runnext
-if pp.runnext.cas(oldnext, guintptr(unsafe.Pointer(gp))) {
-    if oldnext == 0 { return }
-    gp = oldnext.ptr() // displaced old goroutine goes fairly to FIFO runq[256]
-}`
+    "practicalRU": "Объясняй через «один предпочтительный кандидат, остальные остаются в очереди». Не оправдывай передачу данных без синхронизации предполагаемым порядком runnext.",
+    "code": "// Source-level model, NOT executable Go. No concurrent queue changes.\n// Before: runnext=A, ordinary queue=[X Y]\n// runqput(P, B, true), assuming runnext is enabled and the queue has room:\n// After:  runnext=B, ordinary queue=[X Y A]\n// runqget(P) can return B with inheritTime=true.\n// This is a local queue rule, not an application execution-order guarantee.",
+    "shortRU": "runnext — отдельный слот для одной предпочтительной готовой горутины рядом с обычной локальной очередью P. Он может снизить накладные расходы для связанных горутин, передав выбранной горутине остаток текущего кванта. Это оптимизация рантайма, а не обещание, кто запустится следующим.",
+    "detailsRU": [
+      "При next=true runqput может заменить содержимое слота через CAS и перенести прежнего кандидата в обычную очередь; при переполнении есть отдельный путь. Название «LIFO-стек из одного элемента» скрывает перенос в другую очередь.",
+      "runqget проверяет runnext раньше обычной локальной очереди и возвращает inheritTime=true для этого пути. execute тогда не увеличивает schedtick. Локальный приоритет не отменяет остальную работу планировщика и не гарантирует немедленный запуск после go или операции с каналом.",
+      "Цепочка горутин может снова и снова заменять runnext, разделяя один тик. Вытеснение через sysmon помогает не монополизировать P. Ёмкость в один элемент сама по себе не доказывает справедливость; проверенный рантайм отключает оптимизацию без sysmon и может рандомизировать её использование в некоторых сборках.",
+      "Связанное исполнение может выиграть от локальности, но ни горячий L1-кеш, ни фиксированное время переключения не гарантированы. Корректная синхронизация должна работать и без runnext, и при переходе горутины на другой P."
+    ],
+    "practicalEN": "Explain it with “one preferred candidate, the rest remain queued”. Never use a presumed runnext order to justify an unsynchronized handoff.",
+    "versionNote": "Описаны runqput/runqget/execute/retake Go 1.26.1; соответствующие механизмы есть и в 1.25.0. Это внутреннее планирование, а не контракт языка или точная модель кешей CPU.",
+    "sources": [
+      {
+        "title": "go1.26.1: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.25.0: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+      }
+    ],
+    "practice": {
+      "kind": "Объясни и измени условие",
+      "promptEN": "A occupies runnext and B replaces it. Is A lost? Does B necessarily receive a fresh full time slice?",
+      "promptRU": "В runnext находится A, затем его заменяет B. Теряется ли A? Обязательно ли B получает новый полный квант?",
+      "pointsEN": [
+        "A is displaced into ordinary queue handling; it is not discarded.",
+        "The runnext path can inherit the current time slice. Preemption is needed to keep chains from monopolizing execution."
+      ],
+      "pointsRU": [
+        "A переходит в обработку обычной очереди, а не исчезает.",
+        "Путь runnext может наследовать текущий квант. Вытеснение нужно, чтобы цепочка не монополизировала исполнение."
+      ],
+      "followUpEN": "Why does a one-slot capacity fail to prove fairness for a ping-pong chain?",
+      "followUpRU": "Почему ёмкость в один слот не доказывает справедливость для цепочки ping-pong?"
+    }
   },
   {
     id: "c12",
