@@ -788,3 +788,19 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .lane-group { border-left-color: #a855f7; }
 .lane-var { border-left-color: var(--amber); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* Каналы и трёхцветная разметка GC: цвет фишки повторяет цвет множества, смысл несёт заголовок дорожки */
+.lane-chan { border-left-color: #14b8a6; }
+.lane-white { border-left-color: var(--text); }
+.lane-white .g-chip, .lane-white .g-chip.is-changed { background: #f8fafc; color: #0f172a; }
+.lane-white .g-chip { border-color: #cbd5e1; }
+.lane-white .g-flag { color: #334155; }
+.lane-white .g-changed { color: #b45309; }
+.lane-grey { border-left-color: #64748b; }
+.lane-grey .g-chip, .lane-grey .g-chip.is-changed { background: #475569; color: #f8fafc; }
+.lane-grey .g-chip { border-color: #94a3b8; }
+.lane-grey .g-flag { color: #e2e8f0; }
+.lane-grey .g-changed { color: #fcd34d; }
+.lane-black { border-left-color: #000; }
+.lane-black .g-chip, .lane-black .g-chip.is-changed { background: #000; color: #f8fafc; }
+.lane-black .g-chip { border-color: #64748b; }
+.lane-black .g-flag { color: #cbd5e1; }

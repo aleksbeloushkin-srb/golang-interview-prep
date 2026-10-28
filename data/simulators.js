@@ -2234,11 +2234,12 @@ const SIMULATORS = [
   // =========================================================================
   {
     "id": "sim3",
-    "title": "Диаграмма 3: Канал — от ожидания до продолжения",
-    "subtitle": "Один допустимый путь: G1 первой читает из открытого небуферизованного chan int, G2 позже отправляет 42. Обычная операция без select. Runtime Go 1.25.0/1.26.1; планировщик может вставлять другую работу между показанными событиями.",
+    "title": "Диаграмма 3: Канал — ожидание, буфер и close",
+    "subtitle": "Шаги 1–5: один допустимый путь — G1 первой читает из открытого небуферизованного chan int, G2 позже отправляет 42 (без select). Шаги 6–9: кольцевой буфер, полный буфер с ждущим отправителем, close и сводная таблица nil / открыт / закрыт. Runtime Go 1.25.0/1.26.1; планировщик может вставлять другую работу между показанными событиями.",
     "cardId": "c17",
     "cardLabel": "Q17: передача и парковка →",
-    "learningHint": "Как запомнить: проследи отдельно значение 42, запись sudog и состояние G1. Перед следующим шагом ответь на вопрос, затем сравни. После всей схемы закрой её и восстанови цепочку своими словами; позже повтори с буфером и с переданным срезом.",
+    "boardLegend": "Схема — один допустимый порядок событий, не трасса. Дорожки: отправитель, канал (hchan) и получатель; на шагах 4–5 — ещё P отправителя. Очереди и буфер читаются слева направо. Рамкой выделено то, что изменилось на шаге.",
+    "learningHint": "Как запомнить: проследи отдельно значение 42, запись sudog и состояние G1. Перед следующим шагом ответь на вопрос, затем сравни. После шагов 1–5 закрой схему и восстанови цепочку «копия → готовность → запуск»; таблицу шага 9 повтори по памяти через день.",
     "sources": [
       {
         "title": "chan.go — Go 1.25.0",
@@ -2251,6 +2252,10 @@ const SIMULATORS = [
       {
         "title": "stack.go — Go 1.26.1",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+      },
+      {
+        "title": "proc.go — Go 1.26.1 (goready → runnext)",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
       }
     ],
     "steps": [
@@ -2258,12 +2263,110 @@ const SIMULATORS = [
         "title": "1. Зарегистрировать ожидание",
         "desc": "G1 захватила lock, но значения и отправителя нет. В recvq добавлен sudog со ссылкой на G1 и место результата x. Перед gopark установлен parkingOnChan. Это ещё подготовка к парковке: G1 выполняется, lock остаётся захвачен.",
         "descEN": "The receiver holds the channel lock and finds no value or sender. It registers a sudog and marks that it is about to park. It is still running; the channel has not been unlocked yet.",
-        "scene": {
-          "sender": "Ещё не отправляет",
-          "channel": "recvq: [заявка G1] · cap=0",
-          "receiver": "RUNNING · x ещё не получен",
-          "transfer": "Передачи значения ещё нет."
-        },
+        "board": [
+          {
+            "hl": [
+              "sudog G1",
+              "parkingOnChan"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "ещё не у канала"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 0",
+                "slots": [
+                  {
+                    "label": "lock",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "держит"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [
+                      {
+                        "g": "sudog G1",
+                        "flag": "elem → &x"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "буфер",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "x",
+                    "items": [
+                      {
+                        "g": "?",
+                        "flag": "ещё пусто"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "флаги",
+                    "items": [
+                      {
+                        "g": "parkingOnChan",
+                        "flag": "true"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что произошло",
+              "items": [
+                "G1 берёт lock: отправителя нет, буфера нет",
+                "sudog со ссылкой на G1 и адрес x встаёт в recvq",
+                "parkingOnChan = true; дальше gopark, lock всё ещё у G1"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Состояние ожидания",
@@ -2317,12 +2420,116 @@ const SIMULATORS = [
         "title": "2. Безопасно припарковаться",
         "desc": "Путь park_m на системном стеке переводит G1 в waiting. chanparkcommit устанавливает activeStackChans, снимает parkingOnChan и только затем отпускает lock. Теперь копирование стека должно согласовываться с каналом; стек не закреплён навсегда.",
         "descEN": "On the system-stack parking path, the receiver becomes waiting. chanparkcommit sets activeStackChans, clears parkingOnChan and unlocks. Stack copying must now coordinate with the channel; the stack is not permanently pinned.",
-        "scene": {
-          "sender": "Может подойти к каналу",
-          "channel": "recvq: [заявка G1] · lock свободен",
-          "receiver": "WAITING · x ещё не получен",
-          "transfer": "G1 ждёт; значение 42 ещё не передано."
-        },
+        "board": [
+          {
+            "hl": [
+              "WAITING",
+              "activeStackChans",
+              "parkingOnChan",
+              "свободен"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "может подойти к ch"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 0",
+                "slots": [
+                  {
+                    "label": "lock",
+                    "items": [
+                      {
+                        "g": "свободен"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [
+                      {
+                        "g": "sudog G1",
+                        "flag": "elem → &x"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "буфер",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "WAITING",
+                        "flag": "gopark"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "x",
+                    "items": [
+                      {
+                        "g": "?",
+                        "flag": "ещё пусто"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "флаги",
+                    "items": [
+                      {
+                        "g": "activeStackChans",
+                        "flag": "true"
+                      },
+                      {
+                        "g": "parkingOnChan",
+                        "flag": "false"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Порядок в chanparkcommit",
+              "items": [
+                "park_m на системном стеке: G1 → waiting",
+                "activeStackChans = true, затем parkingOnChan = false",
+                "Только после этого unlock: теперь G2 может войти"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Порядок действий",
@@ -2371,12 +2578,119 @@ const SIMULATORS = [
         "title": "3. Передать значение",
         "desc": "G2 захватывает lock и извлекает sudog G1 из recvq. Для выбранного пути sendDirect копирует 42 в место x, минуя буфер. G1 ещё ждёт. Для int нет переносимых указателей; барьерный помощник учитывает тип, а его наличие не означает работу GC над указателями у каждого значения.",
         "descEN": "The sender locks the channel, removes the receiver’s waiter and copies 42 to the receive destination. The receiver is still waiting. The type-aware transfer supports pointers, but this int contains none.",
-        "scene": {
-          "sender": "RUNNING · отправляет 42",
-          "channel": "recvq: [] · lock у G2",
-          "receiver": "WAITING · в месте x уже 42",
-          "transfer": "Копирование: G2 → место x у G1. Промежуточного буфера нет."
-        },
+        "board": [
+          {
+            "hl": [
+              "42",
+              "G2"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение",
+                    "items": [
+                      {
+                        "g": "42",
+                        "flag": "копия → x"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 0",
+                "slots": [
+                  {
+                    "label": "lock",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "держит"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "извлечён",
+                    "items": [
+                      {
+                        "g": "sudog G1",
+                        "flag": "ещё не освобождён"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "буфер",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "WAITING"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "x",
+                    "items": [
+                      {
+                        "g": "42",
+                        "flag": "записала G2"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "флаги",
+                    "items": [
+                      {
+                        "g": "activeStackChans",
+                        "flag": "true"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что произошло",
+              "items": [
+                "G2 берёт lock, recvq.dequeue() → sudog G1",
+                "sendDirect: 42 копируется прямо в x на стеке G1, буфер не нужен",
+                "G1 всё ещё WAITING: код после <-ch не выполнялся"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Значение и заявка",
@@ -2420,12 +2734,124 @@ const SIMULATORS = [
         "title": "4. Разрешить запуск",
         "desc": "G2 отпускает lock, затем вызывает goready для G1. G1 становится runnable. На этом снимке планировщик ещё не возобновил её код; такой промежуток может быть очень коротким. Не обещаются немедленный запуск, конкретное ядро или горячий L1.",
         "descEN": "The sender unlocks before making the receiver runnable. This snapshot is before the receiver resumes; the gap may be very short. Readiness does not promise immediate execution or a particular CPU.",
-        "scene": {
-          "sender": "Отправка завершена",
-          "channel": "recvq: [] · lock свободен",
-          "receiver": "RUNNABLE · в месте x уже 42",
-          "transfer": "Значение уже на месте; теперь G1 разрешено продолжить."
-        },
+        "board": [
+          {
+            "hl": [
+              "RUNNABLE",
+              "свободен",
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING",
+                        "flag": "продолжает"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 0",
+                "slots": [
+                  {
+                    "label": "lock",
+                    "items": [
+                      {
+                        "g": "свободен"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "буфер",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNABLE",
+                        "flag": "goready"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "x",
+                    "items": [
+                      {
+                        "g": "42"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "флаги",
+                    "items": [
+                      {
+                        "g": "activeStackChans",
+                        "flag": "true"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P, на котором работает G2",
+                "slots": [
+                  {
+                    "label": "текущая",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что произошло",
+              "items": [
+                "G2: unlock(&c.lock), затем goready(G1)",
+                "goready → runqput(next = true): G1 в runnext P отправителя; wakep может разбудить простаивающий P",
+                "RUNNABLE ≠ RUNNING: момент запуска решает планировщик; G1 может забрать другой P"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Два разных события",
@@ -2469,12 +2895,129 @@ const SIMULATORS = [
         "title": "5. Продолжить и освободить запись",
         "desc": "Планировщик возобновляет G1. Путь чтения очищает состояние ожидания, сбрасывает activeStackChans и возвращает sudog через releaseSudog. Затем пользовательский код получает x=42 и может продолжить обработку. Именно это отдельное событие отсутствовало в прежней схеме.",
         "descEN": "When scheduled, the receiver resumes, clears its waiting state and releases its sudog. The receive then completes with x=42, and user code can continue.",
-        "scene": {
-          "sender": "Может выполнять другую работу",
-          "channel": "recvq: [] · заявка освобождена",
-          "receiver": "RUNNING · чтение вернуло 42",
-          "transfer": "G1 продолжает код после чтения. Обработка 42 ещё может занимать время."
-        },
+        "board": [
+          {
+            "hl": [
+              "RUNNING",
+              "activeStackChans",
+              "releaseSudog"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "другая работа"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 0",
+                "slots": [
+                  {
+                    "label": "lock",
+                    "items": [
+                      {
+                        "g": "свободен"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "буфер",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "x",
+                    "items": [
+                      {
+                        "g": "42",
+                        "flag": "<-ch вернуло"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "флаги",
+                    "items": [
+                      {
+                        "g": "activeStackChans",
+                        "flag": "false"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "sudog",
+                    "items": [
+                      {
+                        "g": "releaseSudog"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P",
+                "slots": [
+                  {
+                    "label": "текущая",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "runnext",
+                    "items": []
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что произошло",
+              "items": [
+                "Планировщик запускает G1; из runnext она наследует остаток кванта",
+                "После gopark: waiting = nil, activeStackChans = false, releaseSudog",
+                "Цепочка: копия → готовность → запуск"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Завершение ожидания",
@@ -2512,6 +3055,604 @@ const SIMULATORS = [
           "promptRU": "Теперь ёмкость 1, а ожидающего получателя нет. Куда может попасть первое значение?",
           "answerEN": "Into the free buffer slot. If a receiver is already waiting, the checked runtime can still transfer directly. Capacity alone does not determine the path.",
           "answerRU": "В свободную ячейку буфера. Если получатель уже ждёт, проверенный runtime всё ещё может передать значение напрямую. Одна ёмкость не определяет путь."
+        }
+      },
+      {
+        "title": "6. Буфер: кольцо sendx → recvx",
+        "desc": "Новый сценарий: ch := make(chan int, 3), получателей нет. G2 отправляет 1, затем 2. Каждая отправка под lock: значение копируется в buf[sendx], sendx сдвигается по кругу, qcount растёт; пока есть место, отправитель не паркуется. Получатель берёт buf[recvx] — порядок FIFO. Инварианты hchan: если qcount > 0, recvq пуста; если qcount < cap, sendq пуста. Поэтому при ждущем получателе буфер пуст, и отправка идёт напрямую, как в шагах 3–4.",
+        "descEN": "A new scenario: ch := make(chan int, 3) with no receivers. G2 sends 1, then 2. Each send runs under the lock: the value is copied into buf[sendx], sendx advances around the ring and qcount grows; while there is room the sender never parks. A receiver takes buf[recvx], so the order is FIFO. hchan invariants: if qcount > 0, recvq is empty; if qcount < cap, sendq is empty. So when a receiver is waiting the buffer is empty, and a send goes directly to it, as in steps 3–4.",
+        "board": [
+          {
+            "caption": "После двух отправок",
+            "hl": [
+              "1",
+              "2"
+            ],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 3",
+                "slots": [
+                  {
+                    "label": "buf · ячейки 0→2",
+                    "items": [
+                      {
+                        "g": "1",
+                        "flag": "recvx = 0"
+                      },
+                      {
+                        "g": "2"
+                      },
+                      {
+                        "g": "—",
+                        "flag": "sendx = 2"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "qcount",
+                    "items": [
+                      {
+                        "g": "2"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING",
+                        "flag": "не ждала"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Отправка (chansend)",
+              "items": [
+                "Ждёт получатель в recvq → передать ему напрямую (шаги 3–4)",
+                "Иначе есть место (qcount < cap) → buf[sendx] = v, sendx++ по кругу, qcount++",
+                "Иначе → sudog в sendq и парковка (как G1 в шагах 1–2)"
+              ]
+            }
+          },
+          {
+            "caption": "Приём — зеркально",
+            "list": {
+              "ordered": true,
+              "title": "Приём (chanrecv)",
+              "items": [
+                "Ждёт отправитель в sendq → взять значение с его участием (шаг 7)",
+                "Иначе qcount > 0 → v = buf[recvx], ячейка обнуляется, recvx++ по кругу, qcount−−",
+                "Иначе → sudog в recvq и парковка"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "The buffer is empty and G1 already waits in recvq. G2 sends 5. Does 5 go into the buffer?",
+          "promptRU": "Буфер пуст, а G1 уже ждёт в recvq. G2 отправляет 5. Попадёт ли 5 в буфер?",
+          "answerEN": "No. A waiting receiver gets the value directly, bypassing the buffer. That is why qcount > 0 and a waiting receiver never coexist.",
+          "answerRU": "Нет. Ждущий получатель получает значение напрямую, минуя буфер. Поэтому qcount > 0 и ждущий получатель одновременно не бывают."
+        }
+      },
+      {
+        "title": "7. Полный буфер и ждущий отправитель",
+        "desc": "Буфер полон: [1 2 3], recvx = sendx = 0. G3 пыталась отправить 4 и спит в sendq. G1 читает: под lock runtime отдаёт ей голову очереди — 1 из buf[recvx] — и сразу кладёт 4 от G3 в ту же ячейку: в полном буфере голова и хвост — одна ячейка. recvx сдвигается на 1, sendx = recvx, qcount остаётся 3, G3 получает goready. Дальше прочитаются 2, 3, 4: порядок FIFO сохранён. Отдать 4 сразу G1 нельзя — 4 обогнала бы 1, 2 и 3.",
+        "descEN": "The buffer is full: [1 2 3], recvx = sendx = 0. G3 tried to send 4 and sleeps in sendq. G1 receives: under the lock the runtime gives it the head of the queue, 1 from buf[recvx], and immediately puts G3's 4 into the same slot, because in a full ring the head and the tail are the same slot. recvx advances by 1, sendx = recvx, qcount stays 3, and G3 is readied. Next reads return 2, 3, 4, so FIFO order holds. Handing 4 straight to G1 would let it overtake 1, 2 and 3.",
+        "predict": {
+          "promptEN": "The buffer [1 2 3] is full and G3 waits in sendq with 4. G1 receives once. What does G1 get, where does 4 go, and what happens to G3?",
+          "promptRU": "Буфер [1 2 3] полон, в sendq ждёт G3 со значением 4. G1 читает один раз. Что получит G1, куда попадёт 4 и что станет с G3?"
+        },
+        "board": [
+          {
+            "caption": "До: буфер полон, G3 ждёт",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 3",
+                "slots": [
+                  {
+                    "label": "buf · ячейки 0→2",
+                    "items": [
+                      {
+                        "g": "1",
+                        "flag": "recvx = sendx = 0"
+                      },
+                      {
+                        "g": "2"
+                      },
+                      {
+                        "g": "3"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "qcount",
+                    "items": [
+                      {
+                        "g": "3"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [
+                      {
+                        "g": "sudog G3",
+                        "flag": "elem: 4"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "вызывает <-ch"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "caption": "После одного <-ch",
+            "hl": [
+              "4",
+              "1",
+              "RUNNABLE"
+            ],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 3",
+                "slots": [
+                  {
+                    "label": "buf · ячейки 0→2",
+                    "items": [
+                      {
+                        "g": "4",
+                        "flag": "хвост, от G3"
+                      },
+                      {
+                        "g": "2",
+                        "flag": "recvx = sendx = 1"
+                      },
+                      {
+                        "g": "3"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "qcount",
+                    "items": [
+                      {
+                        "g": "3"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "sendq",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 · получатель",
+                "slots": [
+                  {
+                    "label": "получила",
+                    "items": [
+                      {
+                        "g": "1"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G3 · отправитель",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNABLE",
+                        "flag": "goready"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что произошло",
+              "items": [
+                "G1 получает голову: buf[0] = 1",
+                "4 от G3 записывается в ту же ячейку buf[0] — теперь это хвост",
+                "recvx = 1, sendx = recvx, qcount = 3; G3 → goready",
+                "Порядок дальнейших чтений: 2, 3, 4"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why doesn't the runtime hand 4 from G3 directly to G1?",
+          "promptRU": "Почему runtime не отдаёт 4 от G3 прямо G1?",
+          "answerEN": "FIFO: 1, 2 and 3 were sent earlier and must be received first. A direct handoff happens only when the buffer is empty.",
+          "answerRU": "FIFO: 1, 2 и 3 отправлены раньше и должны быть получены первыми. Прямая передача бывает только при пустом буфере."
+        }
+      },
+      {
+        "title": "8. close: кто проснётся и что получит",
+        "desc": "closechan под lock ставит closed = 1 и собирает всех ждущих: каждому получателю из recvq записывается нулевое значение и ok = false; каждый отправитель из sendq после пробуждения упадёт с panic «send on closed channel». Будит всех goready уже после unlock. Данные в буфере не теряются: чтения после close сначала вернут 7 и 8 с ok = true и только потом 0, false; for range по каналу заканчивается, когда канал закрыт и буфер пуст. Закрывает канал сторона, которая отправляет; повторный close и close(nil) — panic.",
+        "descEN": "closechan sets closed = 1 under the lock and collects every waiter: each receiver from recvq gets the zero value and ok = false; each sender from sendq panics with \"send on closed channel\" once it wakes. All of them are readied after the unlock. Buffered data is not lost: receives after close return 7 and 8 with ok = true first, and only then 0, false; a for range loop over the channel ends when it is closed and the buffer is empty. The sending side closes the channel; closing twice or closing nil panics.",
+        "predict": {
+          "promptEN": "G1 and G4 wait in recvq of an empty channel, and close(ch) is called. What do they get? And if 7 and 8 were still buffered, what would three receives after close return?",
+          "promptRU": "В recvq пустого канала ждут G1 и G4, вызываем close(ch). Что они получат? А если в буфере ещё 7 и 8 — что вернут три чтения после close?"
+        },
+        "board": [
+          {
+            "caption": "Ждут получатели → close(ch)",
+            "hl": [
+              "closed = 1",
+              "0, false"
+            ],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "slots": [
+                  {
+                    "label": "closed",
+                    "items": [
+                      {
+                        "g": "closed = 1"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "recvq",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1 и G4 · получатели",
+                "slots": [
+                  {
+                    "label": "G1",
+                    "items": [
+                      {
+                        "g": "0, false",
+                        "flag": "RUNNABLE"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "G4",
+                    "items": [
+                      {
+                        "g": "0, false",
+                        "flag": "RUNNABLE"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "closechan",
+              "items": [
+                "lock; closed = 1",
+                "Все sudog из recvq: нулевое значение, ok = false",
+                "Все sudog из sendq: при пробуждении — panic",
+                "unlock, затем goready каждому"
+              ]
+            }
+          },
+          {
+            "caption": "В буфере 7 и 8 → close(ch)",
+            "hl": [
+              "0"
+            ],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch · hchan",
+                "tag": "cap = 3",
+                "slots": [
+                  {
+                    "label": "buf",
+                    "items": [
+                      {
+                        "g": "7"
+                      },
+                      {
+                        "g": "8"
+                      },
+                      {
+                        "g": "—"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "closed",
+                    "items": [
+                      {
+                        "g": "closed = 1"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "Три чтения после close",
+                "slots": [
+                  {
+                    "label": "v, ok :=",
+                    "items": [
+                      {
+                        "g": "7",
+                        "flag": "true"
+                      },
+                      {
+                        "g": "8",
+                        "flag": "true"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "false"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Сначала остаток буфера, потом нулевое значение и ok = false",
+                "for v := range ch завершится после 8"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Who should close a channel, and why not the receiver?",
+          "promptRU": "Кто должен закрывать канал и почему не получатель?",
+          "answerEN": "The sending side, ideally its single owner: only it knows that no more values will come. If a receiver closes the channel, a sender that is still running panics.",
+          "answerRU": "Отправляющая сторона, лучше её единственный владелец: только она знает, что значений больше не будет. Если закроет получатель, ещё работающий отправитель упадёт с panic."
+        }
+      },
+      {
+        "title": "9. Сводная таблица и ответ за минуту",
+        "desc": "Таблица, которую спрашивают на собеседовании: что делают отправка, приём и close с nil, открытым и закрытым каналом. «Блок навсегда» значит: горутина спит, и nil-канал её не разбудит. Если так заблокированы все горутины и ждать больше нечего (нет таймеров и сети), runtime завершит программу: fatal error: all goroutines are asleep - deadlock!",
+        "descEN": "The table interviewers ask for: what send, receive and close do with a nil, an open and a closed channel. \"Blocks forever\" means the goroutine sleeps and nothing on a nil channel will wake it. If every goroutine is blocked like this and nothing else can wake them (no timers or network), the runtime stops the program with fatal error: all goroutines are asleep - deadlock!",
+        "board": [
+          {
+            "caption": "Операция × состояние канала",
+            "hlQuiet": true,
+            "hl": [
+              "panic"
+            ],
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "ch <- v (отправка)",
+                "slots": [
+                  {
+                    "label": "nil",
+                    "items": [
+                      {
+                        "g": "блок навсегда"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "открыт, есть получатель или место",
+                    "items": [
+                      {
+                        "g": "передача или в буфер"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "открыт, места нет",
+                    "items": [
+                      {
+                        "g": "ждёт в sendq"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "закрыт",
+                    "items": [
+                      {
+                        "g": "panic"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "<-ch (приём)",
+                "slots": [
+                  {
+                    "label": "nil",
+                    "items": [
+                      {
+                        "g": "блок навсегда"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "открыт, есть данные или отправитель",
+                    "items": [
+                      {
+                        "g": "v, ok = true"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "открыт, пусто",
+                    "items": [
+                      {
+                        "g": "ждёт в recvq"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "закрыт",
+                    "items": [
+                      {
+                        "g": "остаток буфера, затем 0, false"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "close(ch)",
+                "slots": [
+                  {
+                    "label": "nil",
+                    "items": [
+                      {
+                        "g": "panic"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "открыт",
+                    "items": [
+                      {
+                        "g": "closed = 1, будит всех ждущих"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "закрыт",
+                    "items": [
+                      {
+                        "g": "panic"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "select, len и cap",
+                "slots": [
+                  {
+                    "label": "case с nil-каналом",
+                    "items": [
+                      {
+                        "g": "никогда не выбирается"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "default",
+                    "items": [
+                      {
+                        "g": "готовых нет — не ждать"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "len, cap у nil",
+                    "items": [
+                      {
+                        "g": "0"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "ordered": true,
+              "title": "Channels",
+              "items": [
+                "A channel is an hchan: a lock, an optional ring buffer with sendx and recvx, and two queues of waiting sudogs, recvq and sendq.",
+                "Send: if a receiver waits, copy the value straight to it and make it runnable; else put it in the buffer if there is room; else park in sendq.",
+                "Receive mirrors it; with a full buffer and a waiting sender it takes the head and puts the sender's value at the tail, keeping FIFO.",
+                "A woken goroutine is only runnable: goready puts it into runnext of the waker's P, and the scheduler decides when it runs.",
+                "close wakes every waiter: receivers get the zero value and ok = false, senders panic; buffered values are still delivered.",
+                "A nil channel blocks forever, which disables a select case; closing nil or closing twice panics."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why is a nil channel useful in select?",
+          "promptRU": "Чем nil-канал полезен в select?",
+          "answerEN": "A case on a nil channel is never ready, so setting a channel variable to nil disables that case, for example after its source has been closed.",
+          "answerRU": "Case с nil-каналом никогда не готов: присвоив переменной канала nil, можно выключить эту ветку — например, после закрытия её источника."
         }
       }
     ]
@@ -3723,6 +4864,7 @@ const SIMULATORS = [
     "subtitle": "От выделения ячейки к достижимости: корни → обход → защита меняющихся ссылок → освобождение. Цвета и граф — учебная модель; отдельные вопросы помогают восстановить её по памяти.",
     "cardId": "c27",
     "cardLabel": "Карточка Q27 (GC, GOGC и мягкий лимит) →",
+    "boardLegend": "Схема — учебная модель, не трасса runtime. Дорожки цветов — множества объектов: белые ещё не отмечены, серые найдены и ждут просмотра, чёрные просмотрены. Рамкой выделено то, что изменилось на шаге.",
     "versionNote": "Учебная модель runtime Go 1.26.1, не трасса исполнения. Green Tea: эксперимент в 1.25, по умолчанию в 1.26; организация scanning меняется, достижимость и необходимость барьера остаются. Цель кучи, trigger и мягкий лимит различаются; фиксированной длительности пауз нет.",
     "sources": [
       {
@@ -3763,6 +4905,145 @@ const SIMULATORS = [
         "title": "1. Размещение → свободная ячейка → пополнение кеша",
         "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью.",
         "descEN": "First the compiler determines lifetimes: storage may be on the stack, in registers or eliminated. For a required heap object, the fast path uses a free slot in the current P’s cached span. Refill may sweep a span or obtain pages from mheap. Pointer-free payloads skip pointer traversal but still need reachability tracking and reclamation.",
+        "board": [
+          {
+            "caption": "Путь выделения малого объекта",
+            "hl": [
+              "свободна"
+            ],
+            "hlLabel": "сюда",
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "Компилятор: escape analysis",
+                "slots": [
+                  {
+                    "label": "не убегает",
+                    "items": [
+                      {
+                        "g": "стек или регистры"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "убегает",
+                    "items": [
+                      {
+                        "g": "куча → mallocgc"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "mcache текущего P",
+                "tag": "без блокировки",
+                "slots": [
+                  {
+                    "label": "span класса 48 B",
+                    "items": [
+                      {
+                        "g": "занято"
+                      },
+                      {
+                        "g": "занято"
+                      },
+                      {
+                        "g": "свободна",
+                        "flag": "следующая"
+                      },
+                      {
+                        "g": "…"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "tiny: < 16 B без указателей",
+                    "items": [
+                      {
+                        "g": "общий блок 16 B"
+                      }
+                    ]
+                  }
+                ],
+                "note": "У каждого P свой кеш: по span на класс размера, отдельно для объектов с указателями и без."
+              },
+              {
+                "kind": "other",
+                "title": "mcentral класса 48 B",
+                "tag": "общий для всех P",
+                "slots": [
+                  {
+                    "label": "есть свободные",
+                    "items": [
+                      {
+                        "g": "span"
+                      },
+                      {
+                        "g": "span"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "заполнены",
+                    "items": [
+                      {
+                        "g": "span"
+                      }
+                    ]
+                  }
+                ],
+                "note": "Кеш опустел → берёт span со свободными ячейками; может доделать sweep этого span."
+              },
+              {
+                "kind": "other",
+                "title": "mheap",
+                "tag": "страницы 8 KiB",
+                "slots": [
+                  {
+                    "label": "свободные страницы",
+                    "items": [
+                      {
+                        "g": "…"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "объект > 32 KiB",
+                    "items": [
+                      {
+                        "g": "свой span"
+                      }
+                    ]
+                  }
+                ],
+                "note": "Нет span → новые страницы; нет страниц → память у ОС."
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Путь mallocgc",
+              "items": [
+                "Свободная ячейка в span из mcache → без блокировок",
+                "Ячеек нет → mcentral: span того же класса (sweep, синхронизация)",
+                "Нет span → mheap: страницы; нет страниц → у ОС",
+                "Больше ~32 KiB → отдельный span сразу из mheap"
+              ]
+            }
+          },
+          {
+            "caption": "scan и noscan",
+            "list": {
+              "items": [
+                "noscan: байты за []byte и string — GC их не просматривает",
+                "scan: структура с указателями (Holder{[]byte, string}) — GC читает её поля",
+                "Класс span = размер + признак noscan: объекты с указателями и без лежат в разных span"
+              ]
+            }
+          }
+        ],
         "check": {
           "promptEN": "The cached span is full. Can the next small allocation still be described as always lock-free? Is a string descriptor pointer-free?",
           "promptRU": "В кешированном span закончились ячейки. Можно ли всё ещё обещать следующей небольшой аллокации отсутствие блокировок? А дескриптор строки не содержит указателей?",
@@ -3841,6 +5122,101 @@ const SIMULATORS = [
         "title": "2. Достижимость: корни → A, B → C, D",
         "desc": "После подготовки мир запущен. Корни ведут к A и B; A ведёт к D, B — к C. У E нет пути от корней. В этом учебном снимке A и B найдены, но ещё не просмотрены. Обработка корней и кучи в runtime может чередоваться; при сканировании стека временно останавливается соответствующая горутина.",
         "descEN": "After setup, the program runs alongside GC. Roots point to A and B; A points to D, B to C. E has no path from a root. In this teaching snapshot, A and B are discovered but not yet scanned. Root jobs and heap scanning may interleave; scanning a stack temporarily stops that goroutine.",
+        "board": [
+          {
+            "hl": [
+              "A",
+              "B"
+            ],
+            "hlLabel": "найдено",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Корни",
+                "slots": [
+                  {
+                    "label": "стек G",
+                    "items": [
+                      {
+                        "g": "→ A"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "globals",
+                    "items": [
+                      {
+                        "g": "→ B"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "black",
+                "title": "Чёрные",
+                "tag": "просмотрены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "grey",
+                "title": "Серые",
+                "tag": "найдены, ждут просмотра",
+                "slots": [
+                  {
+                    "label": "работа",
+                    "items": [
+                      {
+                        "g": "A"
+                      },
+                      {
+                        "g": "B"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "white",
+                "title": "Белые",
+                "tag": "ещё не отмечены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "C",
+                        "flag": "B → C"
+                      },
+                      {
+                        "g": "D",
+                        "flag": "A → D"
+                      },
+                      {
+                        "g": "E",
+                        "flag": "E → E, нет пути"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Связи — граф, а не порядок",
+              "items": [
+                "Корни → A, B; A → D; B → C",
+                "E ссылается сам на себя, но пути от корней нет",
+                "Белый во время разметки — «ещё не отмечен», а не «мусор»"
+              ]
+            }
+          }
+        ],
         "check": {
           "promptEN": "C is still white but reachable through B. Can it already be treated as garbage?",
           "promptRU": "C ещё белый, но достижим через B. Можно ли уже считать его мусором?",
@@ -3914,6 +5290,145 @@ const SIMULATORS = [
         "title": "3. Перенос связи: почему C нельзя потерять",
         "desc": "GC просмотрел A: A стал чёрным, D — серым; B ещё серый, C белый. Горутина выполняет A.Next = B.Next, затем B.Next = nil. Без барьера обход мог бы пропустить C: A уже прошли, а в B ссылка исчезла. Барьер учитывает вставленную/удалённую ссылку и защищает C. Это возможное чередование в модели, а не воспроизводимая трасса Go.",
         "descEN": "GC has scanned A, making A black and D grey; B is still grey and C white. The program executes A.Next = B.Next, then B.Next = nil. A plain traversal could miss C: it has passed A, and B no longer points to C. Recording the inserted/deleted pointer protects C. This is a possible interleaving in a model, not an observable Go trace.",
+        "predict": {
+          "promptEN": "A is black (already scanned), B is grey, C is white and reachable only through B. The program runs A.Next = B.Next; B.Next = nil. Without a write barrier, what goes wrong? What does the barrier record?",
+          "promptRU": "A чёрный (уже просмотрен), B серый, C белый и достижим только через B. Программа выполняет A.Next = B.Next; B.Next = nil. Что сломается без барьера записи? Что барьер учтёт?"
+        },
+        "board": [
+          {
+            "caption": "До записи",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "black",
+                "title": "Чёрные",
+                "tag": "просмотрены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "A",
+                        "flag": "→ D"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "grey",
+                "title": "Серые",
+                "tag": "найдены, ждут просмотра",
+                "slots": [
+                  {
+                    "label": "работа",
+                    "items": [
+                      {
+                        "g": "B",
+                        "flag": "→ C"
+                      },
+                      {
+                        "g": "D"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "white",
+                "title": "Белые",
+                "tag": "ещё не отмечены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "C"
+                      },
+                      {
+                        "g": "E"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "caption": "После записи с барьером",
+            "hl": [
+              "C"
+            ],
+            "hlLabel": "барьер",
+            "lanes": [
+              {
+                "kind": "black",
+                "title": "Чёрные",
+                "tag": "просмотрены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "A",
+                        "flag": "→ C"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "grey",
+                "title": "Серые",
+                "tag": "найдены, ждут просмотра",
+                "slots": [
+                  {
+                    "label": "работа",
+                    "items": [
+                      {
+                        "g": "B",
+                        "flag": "→ nil"
+                      },
+                      {
+                        "g": "D"
+                      },
+                      {
+                        "g": "C",
+                        "flag": "учтён барьером"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "white",
+                "title": "Белые",
+                "tag": "ещё не отмечены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "E"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что учёл барьер",
+              "items": [
+                "A.Next = B.Next: старая цель D и новая цель C",
+                "B.Next = nil: старая цель C",
+                "C серый и будет просмотрен; без барьера остался бы белым и был бы освобождён, хотя A → C"
+              ]
+            }
+          }
+        ],
         "check": {
           "promptEN": "Why does B.Next = nil matter even though the new value is not a pointer to an object? Does a GC barrier make Move safe for concurrent callers?",
           "promptRU": "Почему важна запись B.Next = nil, хотя новое значение не указывает на объект? Делает ли GC-барьер Move безопасным для конкурентных вызовов?",
@@ -4001,6 +5516,148 @@ const SIMULATORS = [
       {
         "title": "4. Mark Termination (STW #2) и фоновая очистка (Concurrent Sweep)",
         "descEN": "After root jobs, scanning and buffered work are complete, runtime enters STW mark termination and disables the barrier when preparing sweep. In this model A, B, C and D are marked; E is not. Sweep reclaims E for reuse. D may have become unreachable in step 3, but its mark keeps it for this cycle: concurrent GC can retain floating garbage.",
+        "board": [
+          {
+            "caption": "Итог разметки и sweep",
+            "hl": [
+              "E"
+            ],
+            "hlLabel": "освобождается",
+            "lanes": [
+              {
+                "kind": "black",
+                "title": "Отмечены",
+                "tag": "живут этот цикл",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "A"
+                      },
+                      {
+                        "g": "B"
+                      },
+                      {
+                        "g": "C"
+                      },
+                      {
+                        "g": "D",
+                        "flag": "мог стать ненужным"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "white",
+                "title": "Не отмечены",
+                "slots": [
+                  {
+                    "label": "объекты",
+                    "items": [
+                      {
+                        "g": "E",
+                        "flag": "ячейку вернёт sweep"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Фазы",
+                "slots": [
+                  {
+                    "label": "STW #2",
+                    "items": [
+                      {
+                        "g": "mark termination"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "барьер",
+                    "items": [
+                      {
+                        "g": "выключен"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "sweep",
+                    "items": [
+                      {
+                        "g": "фоново и при аллокациях"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "D отмечен и переживёт цикл, даже если ссылок на него уже нет: проверит следующий цикл",
+                "Компактирования нет: живые объекты не двигаются"
+              ]
+            }
+          },
+          {
+            "caption": "Pacer: цель следующего цикла",
+            "hl": [
+              "220 MiB"
+            ],
+            "hlLabel": "результат",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Входные данные",
+                "slots": [
+                  {
+                    "label": "отмечено (live)",
+                    "items": [
+                      {
+                        "g": "100 MiB"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "корни: стеки и globals",
+                    "items": [
+                      {
+                        "g": "20 MiB"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "GOGC",
+                    "items": [
+                      {
+                        "g": "100"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "цель кучи",
+                    "items": [
+                      {
+                        "g": "220 MiB"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "items": [
+                "Цель = live + (live + корни) × GOGC / 100 = 100 + 120 = 220 MiB",
+                "Разметка начинается раньше цели (trigger), чтобы успеть",
+                "GOMEMLIMIT — мягкий лимит: может снизить цель, от OOM не защищает"
+              ]
+            }
+          }
+        ],
         "check": {
           "promptEN": "With 100 MiB live heap, 20 MiB roots and GOGC=100, must GC start at 200 MiB?",
           "promptRU": "При 100 MiB живой кучи, 20 MiB корней и GOGC=100 обязан ли GC начаться на 200 MiB?",
