@@ -187,6 +187,11 @@ export function validateContent(data) {
       if (!step || typeof step !== 'object') { errors.push(`${label}: expected object`); return; }
       fields(step, ['title', 'desc'], label);
       if (step.board !== undefined) errors.push(...validateBoard(step.board, label));
+      if (step.predict !== undefined) {
+        if (!step.predict || typeof step.predict !== 'object') errors.push(`${label}: invalid predict`);
+        else fields(step.predict, ['promptEN', 'promptRU'], `${label}.predict`);
+        require(step.board !== undefined, `${label}: predict requires a board to reveal`);
+      }
       if (step.check !== undefined) {
         if (!step.check || typeof step.check !== 'object') { errors.push(`${label}: invalid check`); return; }
         fields(step.check, ['promptEN', 'promptRU', 'answerEN', 'answerRU'], label);

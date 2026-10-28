@@ -429,6 +429,10 @@ const SIMULATORS = [
         "title": "4. Сделать G2 доступной планировщику",
         "desc": "После подготовки G2 становится runnable. Показан путь постановки через runqput с предпочтением runnext: прежний элемент этого слота может перейти в обычную очередь. Это готовность к запуску, без обещания немедленного выполнения или горячего кеша.",
         "descEN": "G2 becomes runnable and is queued. The illustrated path requests runnext placement, potentially displacing the previous entry. This does not promise when or on which CPU G2 will execute.",
+        "predict": {
+          "promptEN": "G2 is placed into runnext of P1, which already holds G5. Where does G5 go, and does G2 start running right away?",
+          "promptRU": "G2 ставят в runnext P1, где уже лежит G5. Куда денется G5 и запустится ли G2 сразу?"
+        },
         "board": [
           {
             "hl": [
@@ -654,6 +658,10 @@ const SIMULATORS = [
         "title": "6. Завершить G2",
         "desc": "После возврата doWork путь goexit вызывает mcall(goexit0). Выполнение переходит на g0; runtime завершает G2 и возвращается к планированию. Структура G может переиспользоваться; сохранение её стека зависит от размера и политики runtime.",
         "descEN": "After doWork returns, goexit reaches mcall(goexit0) and system-stack cleanup. G2 finishes; its state may be reused. Retaining its stack is a separate runtime policy decision.",
+        "predict": {
+          "promptEN": "doWork has returned. What happens to the G2 structure and its stack, and what does M1 run next?",
+          "promptRU": "doWork вернулась. Что станет со структурой G2 и её стеком и чем займётся M1?"
+        },
         "board": [
           {
             "hl": [
@@ -1056,6 +1064,10 @@ const SIMULATORS = [
         "title": "3. Безопасная точка → сохранение → планировщик",
         "desc": "Продолжение шага 2: обработчик обнаружил допустимую точку и подготовил возврат через asyncPreempt. После возобновления этот путь сохраняет регистры и входит в планировщик. В обычном пути уступки G1 становится runnable; следующий выбор зависит от доступной работы. Это не отменяет G1 и не снимает её блокировки.",
         "descEN": "Continuing step 2, the handler found a safe point and arranged asyncPreempt on resumption. That path saves registers and enters the scheduler. In the ordinary yield path G1 becomes runnable; the next selection depends on available work. Preemption neither cancels G1 nor releases its locks.",
+        "predict": {
+          "promptEN": "G1 has been preempted at a safe point. Where does it go after an ordinary preemption in Go 1.26.1, and what happens to a mutex it holds?",
+          "promptRU": "G1 вытеснили в безопасной точке. Куда она попадёт при обычном вытеснении в Go 1.26.1 и что будет с мьютексом, который она держит?"
+        },
         "board": [
           {
             "hl": [
@@ -1283,6 +1295,10 @@ const SIMULATORS = [
         "title": "5. После перехвата: одна к исполнению, две в очередь",
         "desc": "Продолжение шага 4: runqsteal возвращает последний элемент взятой пачки, C, для исполнения, а A и B публикует в очереди P2. В P1 остаются D и E. Все пять G учтены, уже работающую G не перемещали. Это модель успешного пути без конкурирующих изменений; выбор жертвы и общее расписание не обещаны.",
         "descEN": "Continuing step 4, runqsteal returns C, the last element of the grabbed batch, for execution. A and B are queued on P2; D and E remain on P1. All five are accounted for. This models a successful stable-queue path, not a guaranteed program schedule.",
+        "predict": {
+          "promptEN": "P2 has stolen the batch A, B, C. Which G runs on P2 right away, which go to its queue, and what stays on P1?",
+          "promptRU": "P2 перехватил пачку A, B, C. Какая G сразу пойдёт на исполнение на P2, какие — в его очередь и что останется у P1?"
+        },
         "board": [
           {
             "hl": [
@@ -1552,6 +1568,10 @@ const SIMULATORS = [
         "title": "7. Syscall вернулся: для Go-кода снова нужен P",
         "desc": "В обеих версиях возврат к обычному Go-коду требует P. Если P можно сохранить или получить, исполнение продолжается. Если P недоступен, G1 может попасть в очередь, а M1 остановиться. Поэтому число M не равно GOMAXPROCS; один syscall также не означает обязательное создание нового M. При cgo внешний код может вычислять, а не только ждать в ядре.",
         "descEN": "In both versions, resuming normal user Go code requires a P. The thread may keep or acquire one. Otherwise G1 can be queued while M1 stops. Thread count need not equal GOMAXPROCS, and a syscall need not create a new thread. Foreign cgo code may compute rather than wait in the kernel.",
+        "predict": {
+          "promptEN": "G1's system call has returned. What happens if P1 was handed to another thread and no P is free?",
+          "promptRU": "Системный вызов G1 завершился. Что будет, если P1 уже отдан другому потоку и свободного P нет?"
+        },
         "board": [
           {
             "caption": "P удалось сохранить или получить",
@@ -1697,6 +1717,10 @@ const SIMULATORS = [
         "title": "8. Сеть: припарковать G, сохранить поток для работы",
         "desc": "Отдельный стандартный Unix-сценарий поллируемого сокета: чтение пока невозможно, поэтому G1 ждёт через netpoller. M1 с P1 может исполнять другую G; нет отдельного занятого потока на каждый ожидающий сокет. Событие готовности позволяет возобновить G1 и повторить I/O, но не гарантирует немедленного запуска или наличия всех запрошенных байтов. Пользовательская реализация net.Conn может вести себя иначе.",
         "descEN": "For a standard pollable Unix socket, a read that would block parks G1 through netpoll. M1 with P1 can run another G. Readiness permits resumption and an I/O retry; it guarantees neither immediate scheduling nor all requested bytes. A custom net.Conn implementation may behave differently.",
+        "predict": {
+          "promptEN": "A socket read cannot proceed yet. Does G1 keep thread M1 busy while it waits, and where does G1 go when the socket becomes ready?",
+          "promptRU": "Чтение из сокета пока невозможно. Держит ли G1 поток M1 занятым на время ожидания и куда попадёт G1, когда сокет станет готов?"
+        },
         "board": [
           {
             "caption": "Чтение пока невозможно",

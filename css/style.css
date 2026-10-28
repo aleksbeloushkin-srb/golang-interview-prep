@@ -777,3 +777,9 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .sim-table { margin-top: 16px; }
 .sim-table > summary { color: var(--accent); cursor: pointer; }
 .lane-g { border-left-color: var(--accent); }
+.board-predict { margin-top: 16px; padding: 12px 14px; border: 1px dashed var(--accent); border-radius: 10px; background: rgba(56, 189, 248, 0.06); }
+.board-predict h4 { font-size: 0.9rem; margin-bottom: 6px; }
+.board-predict p { margin: 4px 0; }
+.board-reveal { margin-top: 12px; }
+.board-reveal > summary { color: var(--accent); cursor: pointer; font-weight: 600; }
+.board-reveal-body > .short-answer { margin-top: 12px; }

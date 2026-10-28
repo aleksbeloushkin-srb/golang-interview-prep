@@ -381,8 +381,21 @@ function renderSimStep(simIdx, stepIdx) {
   });
 
   document.getElementById(`${sim.id}-status`).textContent = `Шаг ${stepIdx + 1} из ${sim.steps.length}: ${step.title.replace(/^\d+\.\s*/, "")}`;
-  document.getElementById(`${sim.id}-desc`).textContent = step.desc;
-  document.getElementById(`${sim.id}-board`).innerHTML = step.board ? boardHtml(step.board, sim.boardLegend) : "";
+  // На шаге с predict объяснение и схема скрыты, пока ученик не ответит сам. Описание возвращается
+  // на обычное место перед перерисовкой, иначе оно исчезло бы вместе со старым содержимым схемы.
+  const descEl = document.getElementById(`${sim.id}-desc`);
+  const boardEl = document.getElementById(`${sim.id}-board`);
+  if (descEl.nextElementSibling !== boardEl) boardEl.before(descEl);
+  descEl.textContent = step.desc;
+  boardEl.innerHTML = step.board ? boardHtml(step.board, sim.boardLegend) : "";
+  if (step.predict && step.board) {
+    boardEl.innerHTML = `<div class="board-predict">
+        <h4>Сначала предскажи сам</h4>
+        <p lang="en">${escapeHtml(step.predict.promptEN)}</p><p lang="ru">${escapeHtml(step.predict.promptRU)}</p>
+      </div>
+      <details class="board-reveal"><summary>Показать ответ: объяснение и схема</summary><div class="board-reveal-body">${boardEl.innerHTML}</div></details>`;
+    boardEl.querySelector(".board-reveal-body").prepend(descEl);
+  }
   document.getElementById(`${sim.id}-scene`).innerHTML = step.scene ? `
     <div class="channel-scene" aria-label="Состояние участников передачи">
       <div class="channel-part channel-sender"><h4>Отправитель G2</h4><p>${escapeHtml(step.scene.sender)}</p></div>
