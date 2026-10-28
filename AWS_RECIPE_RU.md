@@ -25,8 +25,8 @@
 
 ## 2. Вход через Google
 
-1. **Префикс домена Cognito** выбрать заранее, например `go-prep-aleks` → домен входа `https://go-prep-aleks.auth.eu-north-1.amazoncognito.com`. Слова aws, amazon и cognito в префиксе запрещены.
-2. **Google Cloud Console** → новый проект `golang-runtime-prep` → Google Auth Platform:
+1. **Префикс домена Cognito** выбрать заранее, `golang-interview-prep` → домен входа `https://golang-interview-prep.auth.eu-north-1.amazoncognito.com`. Слова aws, amazon и cognito в префиксе запрещены.
+2. **Google Cloud Console** → новый проект `golang-interview-prep` → Google Auth Platform:
    - Branding: имя приложения, адрес поддержки.
    - Audience: External, статус Testing, в Test users — свой Gmail. В режиме Testing войти могут только перечисленные тестовые пользователи: это удобная защита, пока сайт личный.
    - Clients → Create client → Web application. Authorized JavaScript origins: домен входа из п. 1. Authorized redirect URIs: тот же домен + `/oauth2/idpresponse`.
@@ -37,10 +37,10 @@
      --secret-string '{"clientId":"<ID>.apps.googleusercontent.com","clientSecret":"<SECRET>"}'
    ```
    Хранение секрета ≈ $0.40 в месяц.
-4. **Cognito** создаст CDK (раздел 4): пул пользователей (уровень Essentials по умолчанию; 10 000 активных пользователей в месяц бесплатно без срока), Google как внешний провайдер со scope `openid email profile`, клиент без секрета с Authorization Code + PKCE, callback и logout — `https://aleksbeloushkin-srb.github.io/golang-runtime-prep/` и `http://localhost:8000/`.
+4. **Cognito** создаст CDK (раздел 4): пул пользователей (уровень Essentials по умолчанию; 10 000 активных пользователей в месяц бесплатно без срока), Google как внешний провайдер со scope `openid email profile`, клиент без секрета с Authorization Code + PKCE, callback и logout — `https://aleksbeloushkin-srb.github.io/golang-interview-prep/` и `http://localhost:8000/`.
 5. **На сайте** (отдельный PR, `js/auth.js` и `js/config.js` с публичными значениями): кнопка «Войти через Google» ведёт на `/oauth2/authorize` с `identity_provider=Google` (страница Cognito пропускается), `code_challenge` (S256) и `state`. После возврата скрипт меняет `?code=` на токены через `/oauth2/token`, убирает код из адреса (`history.replaceState`, маршрут после `#` сохраняется) и держит access-токен в памяти. Без входа всё работает как сейчас на localStorage.
 
-## 3. Репозиторий бэкенда `golang-runtime-prep-api`
+## 3. Репозиторий бэкенда `golang-interview-prep-api`
 
 Создайте пустой репозиторий (публичный или приватный) и подключите его к сессии Claude. Структура:
 

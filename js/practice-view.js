@@ -209,7 +209,7 @@ function handlePracticeRoute() {
     document.title = `${task.code}. ${task.title} — Практикум`;
   } else {
     renderPracticeIndex(view);
-    document.title = "Практикум — Go Runtime Interview Wiki";
+    document.title = "Практикум — Go Interview Prep";
   }
   // Новый экран: фокус на заголовок, чтобы читалка и клавиатура начинали с него.
   const heading = document.getElementById("practice-title");
