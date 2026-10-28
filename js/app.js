@@ -592,7 +592,13 @@ function initQuiz() {
       <p style="font-weight:600; margin-bottom:6px;">🇷🇺 ${escapeHtml(q.ru)}</p>
       <p class="muted-text" style="font-style:italic; margin-bottom:12px;">🇬🇧 ${escapeHtml(q.en)}</p>
       <pre class="code-block">${escapeHtml(q.code)}</pre>
-      <div style="margin: 16px 0;">${optionsHtml}</div>
+      <div class="quiz-own">
+        <label for="${q.id}-own">Твой ответ: что выведет код или в чём дефект и как исправить</label>
+        <textarea id="${q.id}-own" rows="3" spellcheck="false"></textarea>
+        <button type="button" class="btn btn-sm" aria-controls="${q.id}-options" onclick="revealQuizOptions('${q.id}')">Показать варианты</button>
+        <span class="quiz-own-status" id="${q.id}-own-status" role="status"></span>
+      </div>
+      <div class="quiz-options" id="${q.id}-options" style="margin: 16px 0;">${optionsHtml}</div>
       <div id="${q.id}-result" class="hidden" style="margin-top:12px; padding:14px; border-radius:8px; background:rgba(56,189,248,0.1); border-left:4px solid var(--accent);">
         <strong id="${q.id}-title-res"></strong>
         <p style="margin-top:8px; font-size:0.92rem;"><strong>🇷🇺 Почему так:</strong> <span id="${q.id}-exp-ru"></span></p>
@@ -604,6 +610,49 @@ function initQuiz() {
     `;
     container.appendChild(card);
   });
+}
+
+// Режим «сначала свой ответ»: варианты скрыты, пока не записан свой ответ.
+// Выбор режима — удобство одного браузера; без localStorage режим просто выключен.
+const QUIZ_MODE_KEY = "go_prep_quiz_answer_first_v1";
+
+function setQuizAnswerFirst(on) {
+  const container = document.getElementById("quiz-container");
+  if (container) container.classList.toggle("answer-first", on);
+  try {
+    localStorage.setItem(QUIZ_MODE_KEY, on ? "1" : "0");
+  } catch {
+    // Хранилище недоступно: режим работает до перезагрузки.
+  }
+}
+
+function initQuizMode() {
+  const toggle = document.getElementById("quiz-answer-first");
+  if (!toggle) return;
+  let on = false;
+  try {
+    on = localStorage.getItem(QUIZ_MODE_KEY) === "1";
+  } catch {
+    on = false;
+  }
+  toggle.checked = on;
+  document.getElementById("quiz-container").classList.toggle("answer-first", on);
+  toggle.addEventListener("change", () => setQuizAnswerFirst(toggle.checked));
+}
+
+function revealQuizOptions(qId) {
+  const own = document.getElementById(`${qId}-own`);
+  const status = document.getElementById(`${qId}-own-status`);
+  if (!own.value.trim()) {
+    status.textContent = "Сначала запиши свой ответ — хотя бы одну фразу.";
+    own.focus();
+    return;
+  }
+  status.textContent = "Варианты открыты: сравни со своим ответом.";
+  const options = document.getElementById(`${qId}-options`);
+  options.classList.add("revealed");
+  const first = options.querySelector("input");
+  if (first) first.focus();
 }
 
 function checkQuizAnswer(qId, selectedIdx, correctIdx) {
@@ -742,5 +791,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initSimulators();
   initWikiAndCheatsheet();
   initQuiz();
+  initQuizMode();
   handleRoute();
 });

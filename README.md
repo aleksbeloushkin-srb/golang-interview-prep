@@ -22,7 +22,7 @@
 * 🔬 **[2. Интерактивные диаграммы рантайма (9 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[3. Полная база знаний (Wiki — все 44 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[5. Code Traps & Production Code Review Quiz (35 задач)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском.
+* 🧠 **[5. Code Traps & Production Code Review Quiz (35 задач)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 
