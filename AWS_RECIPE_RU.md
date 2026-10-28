@@ -1,43 +1,38 @@
 <!-- {% raw %} -->
 **Рецепт: вход через Google, сервер на AWS и деплой из GitHub Actions**
 
-28 октября 2026. Пошаговое продолжение [`DEPLOYMENT_PROPOSAL_RU.md`](DEPLOYMENT_PROPOSAL_RU.md). Ничего не развёрнуто. Цены — порядок величин, перед запуском проверить в AWS Pricing Calculator. Версии GitHub Actions и CDK — по состоянию на эту дату.
+28 октября 2026, обновлено после регистрации. Пошаговое продолжение [`DEPLOYMENT_PROPOSAL_RU.md`](DEPLOYMENT_PROPOSAL_RU.md). Ничего не развёрнуто. Цены — порядок величин, перед запуском проверить в AWS Pricing Calculator. Версии GitHub Actions и CDK — по состоянию на эту дату.
 
-## 0. Кто что делает
+**Аккаунт создан в новом формате AWS** («Sign up for AWS (new)», с проектами): проект «Sky is the Limit», регион Europe (Stockholm) `eu-north-1`, Free plan до 28.04.2027, кредиты $100. Ниже всё под этот формат.
 
-| Шаг | Делает | Зачем так |
-|---|---|---|
-| Аккаунт AWS, MFA, бюджет, админ-пользователь | Вы, вручную (≈1 час) | Только владелец может открыть аккаунт и привязать оплату |
-| OAuth-клиент Google, секрет в Secrets Manager | Вы, по командам ниже (≈15 мин) | Секрет не должен попадать в чат, код или GitHub |
-| Роль GitHub → AWS (OIDC), `cdk bootstrap` | Вы, по командам ниже (≈15 мин) | Одноразово; дальше ключи AWS не нужны никому |
-| Код бэкенда, CDK, workflows, кнопка входа на сайте | Claude, через PR | Деплой идёт из GitHub Actions, у Claude нет доступа к AWS |
+## 0. Чем новый формат отличается и что это меняет
 
-## 1. Аккаунт AWS
+| Свойство нового формата | Что это значит для нас |
+|---|---|
+| Регион задан по адресу и не меняется: Stockholm `eu-north-1` (служебно разрешены ещё us-east-1 и us-west-2) | Всё разворачиваем в `eu-north-1`. Cognito, Lambda, API Gateway, DynamoDB, ECR там есть |
+| Root-пользователя нет, аккаунтом владеет Builder ID; IAM Identity Center и Organizations не поддерживаются | Шаги про root и Identity Center не нужны. Терминал — CloudShell в консоли или `aws login` |
+| IAM-роли и IAM-пользователи разрешены только для программного доступа | Для деплоя из GitHub подходит IAM-пользователь с ключом |
+| Политика AWS запрещает `iam:*Provider*` и в Free, и в Paid plan | **OIDC-провайдер GitHub создать нельзя.** Деплой — по ключу IAM-пользователя с минимальными правами (6.1) |
+| Free plan: $100 + до $100 за задания, 6 месяцев | До 28.04.2027 перейти на Paid (settings.aws.com → Billing → Upgrade) и поставить лимит расходов проекта (от $20). Переход необратим |
+| «Activate advanced features» — после Paid, необратимо, снимает лимит расходов | Не включать: нам это не нужно. Включение дало бы OIDC и выбор региона, но без лимита расходов |
 
-1. **Подготовить:** отдельный адрес для root (например, алиас `имя+aws@gmail.com`), телефон для SMS или звонка, карту Visa или Mastercard с разрешёнными онлайн-платежами за рубеж (банк может попросить подтверждение 3-D Secure).
-2. **Регистрация** на aws.amazon.com → «Create an AWS account»: адрес и имя аккаунта (`golang-runtime-prep`) → код из письма → пароль root (в менеджер паролей) → контакты: Personal, адрес в Сербии → проверка телефона → Basic support (бесплатно).
-3. **План — Paid.** Free plan заканчивается через 6 месяцев или когда закончатся кредиты; затем аккаунт приостанавливается, данные хранятся 90 дней, без перехода на Paid аккаунт удаляется. Кроме того, подключение AWS Organizations (нужно для IAM Identity Center, шаг 6) переводит аккаунт на Paid, и вернуться нельзя. Кредиты $100 при регистрации и до $100 за задания доступны в обоих планах. Если при регистрации предложат месячный лимит расходов проекта — поставить минимальный ($20).
-4. **MFA для root — сразу.** AWS требует MFA для root. Passkey или приложение TOTP; root дальше нужен только для оплаты и аварий. Ключи доступа для root не создавать.
-5. **Бюджет:** Billing and Cost Management → Budgets → Create budget → Monthly cost budget, $5 → оповещения на почту при 50, 80, 100% фактических и 100% прогноза. В «Advanced options» снять учёт кредитов (Credits): иначе кредиты гасят расходы, и бюджет молчит, пока они тают. В Billing preferences включить письма Free Tier alerts. Ловушки цены: NAT Gateway — десятки долларов в месяц даже без трафика, публичный IPv4 — около $3.6 в месяц; в нашей схеме их нет.
-6. **Админ без root:** в консоли выбрать регион Europe (Frankfurt) eu-central-1 → IAM Identity Center → Enable (включит AWS Organizations, это бесплатно) → Users → Add user (ваш email) → Permission sets → AdministratorAccess, сессия 8 часов → AWS accounts → назначить пользователя на аккаунт. Принять приглашение из письма, задать пароль и MFA. Ссылка на портал (вида `https://d-xxxxxxxxxx.awsapps.com/start`) — в Settings.
-7. **AWS CLI v2 на компьютере:**
-   ```bash
-   aws configure sso            # session: prep, start URL из шага 6, регион eu-central-1
-                                # профиль назвать prep-admin
-   aws sso login --profile prep-admin
-   aws sts get-caller-identity --profile prep-admin   # должен показать ваш аккаунт
-   ```
+## 1. Аккаунт (≈10 минут)
+
+1. **Вход.** Если вход через Google — включите в Google двухэтапную проверку. Если по почте и паролю — меню справа вверху → Profile → добавьте MFA (приложение-аутентификатор или passkey).
+2. **Бюджет:** в блоке «Explore AWS» задание «Set up a cost budget using AWS Budgets» (дают $20 кредитов) или поиск `Budgets` → Create budget → Monthly cost budget, $5 → письма при 50, 80, 100% факта и 100% прогноза. В «Advanced options» снять учёт кредитов (Credits): иначе кредиты гасят расходы, и бюджет молчит.
+3. **Не нажимать:** «Host my website» (сайт остаётся на GitHub Pages: у AWS-проекта есть срок Free plan и пауза при лимите), «Upgrade plan» (позже), «Activate advanced features».
+4. **Терминал:** значок `>_` (CloudShell) в верхней панели консоли. AWS CLI там уже вошёл в ваш проект. Альтернатива — AWS CLI v2 на компьютере и `aws login --profile prep`: доступ на 12 часов, продление до 90 дней.
 
 ## 2. Вход через Google
 
-1. **Префикс домена Cognito** выбрать заранее, например `go-prep-aleks` → домен входа `https://go-prep-aleks.auth.eu-central-1.amazoncognito.com`. Слова aws, amazon и cognito в префиксе запрещены.
+1. **Префикс домена Cognito** выбрать заранее, например `go-prep-aleks` → домен входа `https://go-prep-aleks.auth.eu-north-1.amazoncognito.com`. Слова aws, amazon и cognito в префиксе запрещены.
 2. **Google Cloud Console** → новый проект `golang-runtime-prep` → Google Auth Platform:
    - Branding: имя приложения, адрес поддержки.
    - Audience: External, статус Testing, в Test users — свой Gmail. В режиме Testing войти могут только перечисленные тестовые пользователи: это удобная защита, пока сайт личный.
    - Clients → Create client → Web application. Authorized JavaScript origins: домен входа из п. 1. Authorized redirect URIs: тот же домен + `/oauth2/idpresponse`.
-3. **Секрет — сразу в AWS**, не пересылая его никуда:
+3. **Секрет — сразу в AWS** (в CloudShell), не пересылая его никуда:
    ```bash
-   aws secretsmanager create-secret --profile prep-admin --region eu-central-1 \
+   aws secretsmanager create-secret --region eu-north-1 \
      --name prep/google-oauth \
      --secret-string '{"clientId":"<ID>.apps.googleusercontent.com","clientSecret":"<SECRET>"}'
    ```
@@ -66,7 +61,7 @@ runner.Dockerfile
 |---|---|---|
 | Auth | Cognito User Pool, домен, Google IdP, клиент | Секрет Google — из `prep/google-oauth`; вход только через Google; access-токен 1 ч |
 | Data | DynamoDB `TableV2` | `PK`/`SK`, on-demand, `RemovalPolicy.RETAIN`, TTL для счётчиков частоты |
-| Api | Lambda `provided.al2023`, arm64, 256 МБ, 10 с; HTTP API | JWT-авторизатор: issuer `https://cognito-idp.eu-central-1.amazonaws.com/<poolId>`, audience — id клиента (у access-токена Cognito нет `aud`, API Gateway проверяет `client_id`); CORS только для `https://aleksbeloushkin-srb.github.io` и `http://localhost:8000`; throttling стадии; логи 14 дней |
+| Api | Lambda `provided.al2023`, arm64, 256 МБ, 10 с; HTTP API | JWT-авторизатор: issuer `https://cognito-idp.eu-north-1.amazonaws.com/<poolId>`, audience — id клиента (у access-токена Cognito нет `aud`, API Gateway проверяет `client_id`); CORS только для `https://aleksbeloushkin-srb.github.io` и `http://localhost:8000`; throttling стадии; логи 14 дней |
 | Runner | Lambda из образа, x86_64, 2048 МБ, таймаут 25 с, `/tmp` 2048 МБ | VPC без NAT, только изолированные подсети: выхода в интернет нет; вызывает только API-Lambda (`grantInvoke`) |
 
 Сборка API-Lambda: `GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -tags lambda.norpc -o bootstrap ./cmd/api`.
@@ -93,38 +88,25 @@ runner.Dockerfile
 
 ## 6. GitHub Actions
 
-### 6.1 Связь GitHub → AWS без ключей (OIDC), один раз
+### 6.1 Доступ GitHub к AWS (один раз, в CloudShell)
 
-1. IAM → Identity providers → Add provider → OpenID Connect: URL `https://token.actions.githubusercontent.com`, audience `sts.amazonaws.com`.
-2. `cdk bootstrap aws://<ACCOUNT_ID>/eu-central-1 --profile prep-admin` — создаёт роли `cdk-hnb659fds-*`, бакет и репозиторий образов.
-3. Роль `gh-deploy-prep`. Репозитории, созданные после 15 июля 2026, получают в claim `sub` неизменяемые ID владельца и репозитория. ID узнать так: `gh api repos/aleksbeloushkin-srb/golang-runtime-prep-api --jq '.owner.id, .id'` (у владельца — `257011880`). Доверие только окружению `prod` этого репозитория:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [{
-       "Effect": "Allow",
-       "Principal": { "Federated": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com" },
-       "Action": "sts:AssumeRoleWithWebIdentity",
-       "Condition": { "StringEquals": {
-         "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-         "token.actions.githubusercontent.com:sub": "repo:aleksbeloushkin-srb@257011880/golang-runtime-prep-api@<REPO_ID>:environment:prod"
-       } }
-     }]
-   }
+Обычный путь — OIDC без ключей — в новом формате закрыт: управляющая политика AWS запрещает `iam:*Provider*`. Поэтому деплой идёт по ключу отдельного IAM-пользователя, который умеет только одно — принять роли CDK.
+
+1. **Подготовка CDK** (создаёт роли `cdk-hnb659fds-*`, бакет и репозиторий образов):
+   ```bash
+   ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+   npx --yes aws-cdk@2.1146.1 bootstrap aws://$ACCOUNT/eu-north-1
    ```
-   Права роли — только принять роли CDK, остальное делает CloudFormation:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [{
-       "Effect": "Allow",
-       "Action": "sts:AssumeRole",
-       "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/cdk-hnb659fds-*-<ACCOUNT_ID>-eu-central-1"
-     }]
-   }
+2. **Пользователь для GitHub:**
+   ```bash
+   aws iam create-user --user-name gh-deploy-prep
+   aws iam put-user-policy --user-name gh-deploy-prep --policy-name assume-cdk-roles \
+     --policy-document "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"sts:AssumeRole\",\"Resource\":\"arn:aws:iam::$ACCOUNT:role/cdk-hnb659fds-*-$ACCOUNT-eu-north-1\"}]}"
+   aws iam create-access-key --user-name gh-deploy-prep
    ```
-   Если `AssumeRoleWithWebIdentity` отклонён — сверить точный `sub` с документацией GitHub и поправить строку.
-4. GitHub → репозиторий API → Settings → Environments → `prod`: деплой только из `main` (по желанию — ручное подтверждение). Переменная окружения `AWS_DEPLOY_ROLE_ARN` (это не секрет).
+   Последняя команда покажет `AccessKeyId` и `SecretAccessKey` один раз.
+3. **GitHub** → репозиторий API → Settings → Environments → `prod`: деплой только из `main`. В секреты окружения: `AWS_ACCESS_KEY_ID` и `AWS_SECRET_ACCESS_KEY` — вставить прямо туда, никуда больше не пересылая.
+4. **Гигиена ключа:** ключ лежит только в секретах окружения `prod`; менять раз в 90 дней (`create-access-key`, обновить секреты, `delete-access-key` для старого); при подозрении на утечку — сразу `delete-access-key`. Если однажды включите advanced features, перейти на OIDC и удалить пользователя.
 
 ### 6.2 Workflows репозитория API
 
@@ -138,7 +120,6 @@ on:
   push:
     branches: [main]
 permissions:
-  id-token: write
   contents: read
 concurrency: deploy-prod
 jobs:
@@ -155,13 +136,14 @@ jobs:
       - run: go test -race ./...
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: eu-central-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
       - run: cdk deploy --all --require-approval never
         working-directory: infra
 ```
 
-Действия закреплены по SHA коммита: тег можно переписать, SHA — нет. Образ раннера собирается для x86_64 на обычном раннере GitHub без эмуляции; API-Lambda для arm64 собирается кросс-компиляцией Go.
+CDK сам принимает роли `cdk-hnb659fds-*`, поэтому самому пользователю других прав не нужно. Действия закреплены по SHA коммита: тег можно переписать, SHA — нет. Образ раннера собирается для x86_64 на обычном раннере GitHub без эмуляции; API-Lambda для arm64 собирается кросс-компиляцией Go.
 
 ### 6.3 Workflow для этого репозитория (сайт)
 
@@ -176,14 +158,17 @@ jobs:
 | ECR (образ раннера ≈ 1 ГБ), бакет CDK, логи | ≈ $0.10–0.30 |
 | Итого | ≈ $0.5–1, покрывается кредитами |
 
+Ловушки цены: NAT Gateway — десятки долларов в месяц даже без трафика, публичный IPv4 — около $3.6 в месяц; в нашей схеме их нет.
+
 ## 8. Порядок работ
 
 | Этап | Что | Результат |
 |---|---|---|
-| 0 | Разделы 1, 2.1–2.3, 6.1; пустой репозиторий API | `aws sts get-caller-identity` работает, секрет и роль созданы |
+| 0 | Раздел 1; 2.1–2.3; 6.1; пустой репозиторий API | Бюджет есть, секрет Google в AWS, ключ деплоя в GitHub |
 | 1 | Auth + Data + Api, кнопка входа, синхронизация отметок | Вход Google на сайте, отметки на телефоне и компьютере одинаковые |
 | 2 | Runner, первые 3 задачи практикума, затем все 11 | Код из браузера проходит скрытые тесты с `-race` |
 | 3 | История попыток и интервальное повторение на сервере | Формат согласован с Астрой и с предложением агента Google |
+| До 28.04.2027 | Upgrade на Paid и лимит расходов проекта | Сервис не остановится по окончании Free plan |
 
-Источники: [AWS Free Tier FAQ](https://aws.amazon.com/free/free-tier-faqs/), [The $0 AWS account in 2026](https://builder.aws.com/content/3Kkt4kNiDSUnO3n6db2weSNubzE/the-dollar0-aws-account-in-2026-free-plan-credits-guardrails), [MFA для root во всех типах аккаунтов](https://aws.amazon.com/about-aws/whats-new/2025/06/aws-iam-mfa-root-users-across-all-account-types), [IAM Identity Center: экземпляры организации и аккаунта](https://docs.aws.amazon.com/singlesignon/latest/userguide/identity-center-instances.html), [Cognito pricing](https://aws.amazon.com/cognito/pricing/), [JWT-авторизатор HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html), [квоты HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html), [OIDC GitHub в AWS](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws). Версии actions — теги репозиториев на 28.10.2026; версии CDK — npm.
+Источники: [Sign up for AWS (new)](https://docs.aws.amazon.com/accounts/latest/reference/sign-in-new.html), [сравнение форматов регистрации](https://docs.aws.amazon.com/accounts/latest/reference/sign-up-for-aws.html), [поддерживаемые сервисы](https://docs.aws.amazon.com/accounts/latest/reference/supported-services-sign-up-new.html), [управляющие политики проектов (SCP и RCP)](https://docs.aws.amazon.com/accounts/latest/reference/scps-and-rcps-for-projects.html), [переход на Paid](https://docs.aws.amazon.com/accounts/latest/reference/upgrade-account.html), [advanced features](https://docs.aws.amazon.com/accounts/latest/reference/activate-advanced-features.html), [подключение инструментов и `aws login`](https://docs.aws.amazon.com/accounts/latest/reference/connect-ai-coding-tool.html), [Cognito в Stockholm](https://aws.amazon.com/about-aws/whats-new/2020/11/amazon-cognito-available-stockholm-paris), [Cognito pricing](https://aws.amazon.com/cognito/pricing/), [JWT-авторизатор HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html), [квоты HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-quotas.html). Версии actions — теги репозиториев на 28.10.2026; версии CDK — npm.
 <!-- {% endraw %} -->

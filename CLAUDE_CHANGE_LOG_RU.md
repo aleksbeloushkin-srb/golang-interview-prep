@@ -187,3 +187,12 @@
 | Источники | AWS Free Tier FAQ; builder.aws.com «The $0 AWS account in 2026»; AWS What's New (MFA root, 06.2025); IAM Identity Center instances; Cognito pricing; API Gateway JWT authorizer и квоты HTTP API; GitHub docs OIDC in AWS (неизменяемые ID в `sub` для репозиториев после 15.07.2026); теги actions через `git ls-remote`; npm: aws-cdk 2.1146.1, aws-cdk-lib 2.275.0; ID владельца и репозитория — `gh api` |
 | Проверка (мои запуски) | Go 1.24.7: `CGO_ENABLED=0 go test -race` → «go: -race requires cgo», с `CGO_ENABLED=1` гонка находится. check-content ok; документы отрендерены python-liquid без ошибок (YAML с выражениями GitHub внутри блока raw) |
 | Ограничения | Ничего не развёрнуто; интерфейс регистрации AWS мог измениться — шаги описаны по документации и статьям, не пройдены вживую |
+
+## 28 октября 2026 — рецепт AWS под новый формат аккаунта
+
+| Поле | Запись |
+|---|---|
+| Повод | Аккаунт зарегистрирован в новом формате AWS (проекты, Builder ID): регион Stockholm задан по адресу, root и IAM Identity Center отсутствуют, Free plan до 28.04.2027 |
+| Стало | `AWS_RECIPE_RU.md`: раздел о том, что меняет новый формат; регион `eu-north-1` везде; шаги аккаунта без root и Identity Center (MFA входа, бюджет через задание Explore AWS за $20, CloudShell или `aws login`); вход Google без изменений по сути; деплой из GitHub — по ключу IAM-пользователя, которому разрешено только принять роли CDK, потому что управляющая политика AWS запрещает `iam:*Provider*` и OIDC-провайдер создать нельзя; гигиена ключа; переход на Paid до 28.04.2027. `DEPLOYMENT_PROPOSAL_RU.md` синхронизирован |
+| Источники | docs.aws.amazon.com/accounts: sign-in-new, sign-up-for-aws, supported-services-sign-up-new, scps-and-rcps-for-projects (DenyIAMRestrictedActions в Free и Paid, RegionFloor), upgrade-account, activate-advanced-features, connect-ai-coding-tool; Cognito в Stockholm (What's New, 11.2020) |
+| Проверка | check-content ok; python-liquid рендер без ошибок. Команды CloudShell не выполнялись: доступа к AWS у Claude нет |
