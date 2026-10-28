@@ -802,7 +802,7 @@ const SIMULATORS = [
   {
     "id": "sim2",
     "title": "Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание",
-    "subtitle": "Десять учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall, сеть и GOMAXPROCS — отдельные сценарии; шаг 10 — вся картина и ответ за минуту. Go 1.26.1 с явным сравнением 1.25.",
+    "subtitle": "Одиннадцать учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall, сеть и GOMAXPROCS — отдельные сценарии; шаг 10 — вся картина и ответ за минуту, шаг 11 — пять частых вопросов и где упрощают. Go 1.26.1 с явным сравнением 1.25.",
     "cardId": "c9",
     "cardLabel": "Q9: поиск и перехват работы →",
     "steps": [
@@ -1240,7 +1240,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Своей работы нет → findRunnable → перехват у P1."
+                "note": "Своей работы нет → M2 в режиме spinning ищет работу (таких M не больше половины занятых P) → перехват у P1."
               }
             ],
             "list": {
@@ -1667,7 +1667,8 @@ const SIMULATORS = [
                 "G2: runq P1 → исполнение — P1 отдан потоку M3 (handoffp)",
                 "G1 → GRQ: ждёт планирования",
                 "M1 останавливается",
-                "Поэтому число M не обязано совпадать с GOMAXPROCS: потоков может быть больше"
+                "Поэтому число M не обязано совпадать с GOMAXPROCS: потоков может быть больше",
+                "Потоков больше P: блокирующие syscall, cgo, runtime.LockOSThread; предел — debug.SetMaxThreads, по умолчанию 10 000"
               ]
             }
           }
@@ -2111,6 +2112,13 @@ const SIMULATORS = [
                 "tag": "поток без P",
                 "slots": [],
                 "note": "Долгий запуск → запрос вытеснения; долгий syscall → забрать P; опрос сети; GOMAXPROCS — не чаще раза в секунду."
+              },
+              {
+                "kind": "other",
+                "title": "Ядра CPU",
+                "tag": "управляет ОС",
+                "slots": [],
+                "note": "ОС раскладывает потоки M по ядрам; связь M ↔ ядро не фиксирована, а M в syscall ядро не занимает."
               }
             ],
             "list": {
@@ -2134,6 +2142,56 @@ const SIMULATORS = [
           "promptRU": "Не глядя: назови семь частей ответа за минуту по порядку, у каждой — одну границу.",
           "answerEN": "Why (M:N) → GMP → queues and the 61-tick fairness check → stealing half from the head → syscalls can lose P, network waits park in the netpoller → preemption is a request (sysmon, about 10 ms, signal) → GOMAXPROCS follows the container limit since 1.25. Boundary for all: no promised order or timing.",
           "answerRU": "Зачем (M:N) → GMP → очереди и проверка раз в 61 тик → перехват половины с головы → syscall может потерять P, сеть паркует в netpoller → вытеснение — запрос (sysmon, около 10 мс, сигнал) → GOMAXPROCS по лимиту контейнера с 1.25. Общая граница: ни порядок, ни время не обещаны."
+        }
+      },
+      {
+        "title": "11. Пять частых вопросов и где упрощают",
+        "desc": "Короткие ответы на пять вопросов, которые чаще всего задают про планировщик, и формулировки из популярных объяснений, которые на интервью лучше уточнить. Ответы сверены с исходниками Go 1.26.1; это не цитаты конкретного автора. Сначала ответь сам вслух, потом сверяйся.",
+        "descEN": "Short answers to the five most common scheduler questions, and phrasings from popular explanations that are worth making more precise in an interview. The answers were checked against the Go 1.26.1 source; they are not quotes from any particular author. Answer aloud first, then compare.",
+        "predict": {
+          "promptEN": "Answer aloud before opening: how does the scheduler work, what is GOMAXPROCS, why are there more threads than GOMAXPROCS, what changed in Go 1.14, and how is fairness ensured?",
+          "promptRU": "Ответь вслух до раскрытия: как работает планировщик, что такое GOMAXPROCS, почему потоков больше GOMAXPROCS, что изменилось в Go 1.14 и как обеспечивается справедливость?"
+        },
+        "board": [
+          {
+            "caption": "Пять вопросов — ответы на английском",
+            "list": {
+              "title": "Q → A",
+              "ordered": true,
+              "items": [
+                "How does the Go scheduler work? — The runtime multiplexes goroutines (G) onto OS threads (M). A thread needs a P to run Go code, and the number of Ps (GOMAXPROCS) bounds parallelism. Each P has runnext and a local run queue of up to 256 goroutines; a global queue and work stealing balance the load.",
+                "What is GOMAXPROCS? — The number of Ps: how many threads may run Go code at the same time, not the number of goroutines, threads or cores. Since Go 1.25 the Linux default follows the container CPU limit, rounded up and at least 2.",
+                "Why are there more threads than GOMAXPROCS? — Threads blocked in system calls or cgo, and threads locked with runtime.LockOSThread, cannot serve other goroutines, so the runtime starts more Ms to keep Ps busy. debug.SetMaxThreads caps them at 10,000 by default.",
+                "What changed in Go 1.14? — Asynchronous preemption: sysmon, which existed before, can interrupt a goroutine that has run for about 10 ms by sending SIGURG on Unix. Tight loops without calls no longer stall the scheduler or a GC stop. Side effect: slow system calls return EINTR more often.",
+                "How is fairness ensured? — A P mostly runs runnext and its local queue, but every 61 scheduler ticks it checks a non-empty global queue first. Idle Ps steal half of a busy P's queue. runnext shares the current time slice, and sysmon preemption bounds long runs."
+              ]
+            }
+          },
+          {
+            "caption": "Где упрощают — как сказать точнее",
+            "list": {
+              "title": "Упрощение → точнее",
+              "items": [
+                "«P — это ядро» → P — право исполнять Go-код; потоки по ядрам раскладывает ОС, связь M ↔ ядро не фиксирована",
+                "«Раз в 61 горутину» → раз в 61 тик планировщика P сначала проверяет GRQ, если она не пуста",
+                "«В глобальной очереди неготовые горутины» → там готовые (runnable) G; ждущие — в каналах, таймерах, netpoller",
+                "«Сетевой вызов блокирует M, как syscall» → ожидание сети паркует G в netpoller, поток свободен",
+                "«После syscall P вернётся к прежнему M» → M пытается вернуть свой P, но P мог уйти; тогда G идёт в GRQ, а M засыпает",
+                "«sysmon появился в Go 1.14» → sysmon был и раньше (отбирал P у долгих syscall, запрашивал кооперативное вытеснение); в 1.14 добавилось вытеснение сигналом",
+                "«Крадёт ровно половину» → n − ⌊n/2⌋, то есть половину с округлением вверх, с головы очереди",
+                "«Потоки никогда не останавливают» → свободный M недолго ищет работу (spinning, не больше половины занятых P), потом засыпает (stopm)",
+                "«Стек горутины 2–8 КБ» → новая G стартует с 2 КиБ (Linux), переиспользуемая — с адаптивного размера; стек растёт копированием",
+                "«GOMAXPROCS = лимит CPU контейнера» → min(CPU по affinity, max(⌈лимит⌉, 2)); requests не учитываются"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Without looking: why can a Go process have more threads than GOMAXPROCS, and what limits them?",
+          "promptRU": "Не глядя: почему у Go-процесса может быть больше потоков, чем GOMAXPROCS, и что их ограничивает?",
+          "answerEN": "Threads blocked in syscalls or cgo and threads locked by LockOSThread cannot run other goroutines, so the runtime adds Ms to keep Ps busy; debug.SetMaxThreads limits them, 10,000 by default.",
+          "answerRU": "Потоки в syscall или cgo и потоки, закреплённые через LockOSThread, не могут исполнять другие горутины, поэтому рантайм добавляет M, чтобы P не простаивали; предел — debug.SetMaxThreads, по умолчанию 10 000."
         }
       }
     ],

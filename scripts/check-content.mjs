@@ -116,10 +116,13 @@ export function validateBoard(board, label) {
   if (!panels.length) return [`${label}.board: empty`];
   panels.forEach((panel, p) => {
     const at = `${label}.board[${p}]`;
-    if (!isObject(panel) || !Array.isArray(panel.lanes) || !panel.lanes.length) { errors.push(`${at}: expected lanes`); return; }
+    // Панель — схема (lanes) или только список (например, вопросы и ответы); пустая панель — ошибка.
+    const hasList = isObject(panel) && isObject(panel.list);
+    if (!isObject(panel) || (panel.lanes === undefined ? !hasList : !Array.isArray(panel.lanes) || (!panel.lanes.length && !hasList))) { errors.push(`${at}: expected lanes`); return; }
+    const lanes = panel.lanes || [];
     if (panel.hl !== undefined && !(Array.isArray(panel.hl) && panel.hl.every(text))) errors.push(`${at}: hl must be a list of IDs`);
     if (panel.list !== undefined && !(isObject(panel.list) && Array.isArray(panel.list.items) && panel.list.items.every(text))) errors.push(`${at}: list.items must be text`);
-    panel.lanes.forEach((lane, l) => {
+    lanes.forEach((lane, l) => {
       if (!isObject(lane) || !text(lane.title) || !Array.isArray(lane.slots)) { errors.push(`${at}.lanes[${l}]: expected title and slots`); return; }
       lane.slots.forEach((slot, s) => {
         const ok = isObject(slot) && text(slot.label) && Array.isArray(slot.items)
