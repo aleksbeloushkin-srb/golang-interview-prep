@@ -1,0 +1,37 @@
+// Package generics: practice tasks W2-2 and W2-3. Replace each TODO with your solution.
+package generics
+
+import "cmp"
+
+func Map[T, U any](xs []T, f func(T) U) []U { panic("TODO") }
+
+func Filter[T any](xs []T, keep func(T) bool) []T { panic("TODO") }
+
+// Reduce folds xs into an accumulator that starts at init.
+func Reduce[T, A any](xs []T, init A, f func(A, T) A) A { panic("TODO") }
+
+// Set holds unique values. Why must T be comparable?
+type Set[T comparable] struct {
+	m map[T]struct{}
+}
+
+func NewSet[T comparable](items ...T) *Set[T] { panic("TODO") }
+
+func (s *Set[T]) Add(v T)        { panic("TODO") }
+func (s *Set[T]) Has(v T) bool   { panic("TODO") }
+func (s *Set[T]) Len() int       { panic("TODO") }
+func (s *Set[T]) Remove(v T)     { panic("TODO") }
+func (s *Set[T]) Each(f func(T)) { panic("TODO") }
+
+// W2-3: the same "maximum" two ways.
+
+// Max returns the largest element of any ordered type; ok is false for an empty slice.
+func Max[T cmp.Ordered](xs []T) (T, bool) { panic("TODO") }
+
+// Ranker is the interface way: each type decides what its score is.
+type Ranker interface {
+	Score() int
+}
+
+// Best returns the element with the highest Score; ok is false for an empty slice.
+func Best(xs []Ranker) (Ranker, bool) { panic("TODO") }

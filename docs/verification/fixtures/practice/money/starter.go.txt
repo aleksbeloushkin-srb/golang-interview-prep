@@ -1,0 +1,16 @@
+// Package money: practice task W1-1. Replace the TODO with your solution.
+package money
+
+// Money is an amount in minor units (cents) plus an ISO currency code.
+type Money struct {
+	Minor    int64
+	Currency string
+}
+
+// String formats the amount with the currency's number of decimals:
+// 1250 EUR → "12.50 EUR", -5 EUR → "-0.05 EUR", 1250 JPY → "1250 JPY", 1250 BHD → "1.250 BHD".
+// Currencies other than JPY (0 decimals) and BHD (3 decimals) use 2 decimals.
+func (m Money) String() string {
+	// TODO
+	panic("TODO")
+}

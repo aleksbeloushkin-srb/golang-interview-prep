@@ -2,6 +2,435 @@
 // (там же эталоны и тесты проверены: go vet, go test -race). scripts/check-content.mjs сверяет код с этими файлами.
 const PRACTICE = [
   {
+    "id": "p-money",
+    "code": "W1-1",
+    "week": 1,
+    "title": "Money: сумма в минорных единицах",
+    "titleEN": "Money in minor units",
+    "goalRU": "Хранить деньги целым числом минорных единиц с кодом валюты и печатать их через String() с нужным числом знаков после точки.",
+    "contractRU": [
+      "Money{Minor: 1250, Currency: \"EUR\"} печатается как «12.50 EUR», 5 — как «0.05 EUR», 0 — как «0.00 USD».",
+      "Отрицательная сумма: знак перед числом, «-12.50 EUR» и «-0.05 EUR».",
+      "Число знаков зависит от валюты: JPY — без дробной части («1250 JPY»), BHD — три знака («1.250 BHD»), остальные — два.",
+      "Money реализует fmt.Stringer, поэтому fmt.Println и %v печатают ту же строку.",
+      "Никакого float64 ни в хранении, ни в форматировании."
+    ],
+    "contractEN": [
+      "Money{Minor: 1250, Currency: \"EUR\"} prints as \"12.50 EUR\", 5 as \"0.05 EUR\", 0 as \"0.00 USD\".",
+      "A negative amount gets the sign in front: \"-12.50 EUR\" and \"-0.05 EUR\".",
+      "The number of decimals depends on the currency: JPY has none (\"1250 JPY\"), BHD has three (\"1.250 BHD\"), the rest have two.",
+      "Money implements fmt.Stringer, so fmt.Println and %v print the same string.",
+      "No float64, neither for storage nor for formatting."
+    ],
+    "planTasks": [
+      "w1-tue-3"
+    ],
+    "links": [
+      "c40"
+    ],
+    "hints": [
+      "Целая часть — Minor / 100, дробная — Minor % 100. Как напечатать 5 как «05»? Посмотри на %02d в fmt.",
+      "Для -5 деление даёт 0 и -5, и получится «0.-5». Отдели знак: работай с модулем числа, а «-» добавь в начало.",
+      "Число знаков храни в таблице map[string]int по валюте; для неизвестной валюты — 2. Ширину поля можно передать аргументом: %0*d."
+    ],
+    "talkEN": "I store money as an int64 number of minor units plus a currency code, so 12.50 euros is 1250. Integers keep sums exact, while float64 cannot represent most decimal fractions. String formats the absolute value as whole units and zero-padded minor units, then puts the sign in front, so minus five cents prints as -0.05 EUR. The number of decimals belongs to the currency: yen has none and the Bahraini dinar has three, so I look it up instead of hard-coding 100.",
+    "pitfalls": [
+      "float64 для денег → 0.1 + 0.2 != 0.3, ошибки копятся в суммах.",
+      "%d без нулей слева → «0.5 EUR» вместо «0.05 EUR».",
+      "Знак через % → «0.-5 EUR» и «-12.-50 EUR».",
+      "Делитель 100 зашит в код → JPY и BHD печатаются неверно."
+    ],
+    "followUps": [
+      "Добавь Add(other Money) (Money, error): разные валюты — ошибка, а не молчаливое сложение.",
+      "Раздели 100.00 EUR на три части без потери цента: 33.34, 33.33, 33.33.",
+      "Что будет с Minor = math.MinInt64 и почему его нельзя просто умножить на -1?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/money",
+    "files": {
+      "starter": {
+        "name": "money.go",
+        "code": "// Package money: practice task W1-1. Replace the TODO with your solution.\npackage money\n\n// Money is an amount in minor units (cents) plus an ISO currency code.\ntype Money struct {\n\tMinor    int64\n\tCurrency string\n}\n\n// String formats the amount with the currency's number of decimals:\n// 1250 EUR → \"12.50 EUR\", -5 EUR → \"-0.05 EUR\", 1250 JPY → \"1250 JPY\", 1250 BHD → \"1.250 BHD\".\n// Currencies other than JPY (0 decimals) and BHD (3 decimals) use 2 decimals.\nfunc (m Money) String() string {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "money_test.go",
+        "code": "package money\n\nimport \"testing\"\n\nfunc TestString(t *testing.T) {\n\ttests := []struct {\n\t\tname string\n\t\tin   Money\n\t\twant string\n\t}{\n\t\t{\"whole and cents\", Money{1250, \"EUR\"}, \"12.50 EUR\"},\n\t\t{\"only cents\", Money{5, \"EUR\"}, \"0.05 EUR\"},\n\t\t{\"zero\", Money{0, \"USD\"}, \"0.00 USD\"},\n\t\t{\"negative\", Money{-1250, \"EUR\"}, \"-12.50 EUR\"},\n\t\t{\"negative below one\", Money{-5, \"EUR\"}, \"-0.05 EUR\"},\n\t\t{\"no minor units\", Money{1250, \"JPY\"}, \"1250 JPY\"},\n\t\t{\"three decimals\", Money{1250, \"BHD\"}, \"1.250 BHD\"},\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tif got := tt.in.String(); got != tt.want {\n\t\t\t\tt.Errorf(\"String() = %q, want %q\", got, tt.want)\n\t\t\t}\n\t\t})\n\t}\n}\n\n// Money implements fmt.Stringer, so %v and Println use String.\nfunc TestStringer(t *testing.T) {\n\tvar _ interface{ String() string } = Money{}\n}"
+      },
+      "solution": {
+        "name": "money.go",
+        "code": "// Package money is the reference solution for practice task W1-1.\npackage money\n\nimport \"fmt\"\n\n// Money is an amount in minor units (cents) plus an ISO currency code.\n// Integers keep sums exact; float64 cannot represent 0.10 exactly.\ntype Money struct {\n\tMinor    int64\n\tCurrency string\n}\n\n// digits is the number of minor-unit digits per currency; unknown codes use 2.\nvar digits = map[string]int{\"JPY\": 0, \"BHD\": 3}\n\nfunc pow10(n int) int64 {\n\tp := int64(1)\n\tfor range n {\n\t\tp *= 10\n\t}\n\treturn p\n}\n\n// String formats the amount with the currency's number of decimals: 1250 EUR → \"12.50 EUR\".\nfunc (m Money) String() string {\n\td, ok := digits[m.Currency]\n\tif !ok {\n\t\td = 2\n\t}\n\tsign := \"\"\n\tv := m.Minor\n\tif v < 0 {\n\t\tsign = \"-\"\n\t\tv = -v // note: math.MinInt64 cannot be negated; amounts here are far smaller\n\t}\n\tif d == 0 {\n\t\treturn fmt.Sprintf(\"%s%d %s\", sign, v, m.Currency)\n\t}\n\tunit := pow10(d)\n\treturn fmt.Sprintf(\"%s%d.%0*d %s\", sign, v/unit, d, v%unit, m.Currency)\n}"
+      }
+    }
+  },
+  {
+    "id": "p-account",
+    "code": "W1-2",
+    "week": 1,
+    "title": "Account: pointer receiver и sentinel-ошибка",
+    "titleEN": "Account with a sentinel error",
+    "goalRU": "Счёт с Deposit, Withdraw и Transfer: методы меняют состояние, а нехватка средств — sentinel-ошибка, которую errors.Is находит через две обёртки.",
+    "contractRU": [
+      "Deposit и Withdraw с суммой 0 или меньше возвращают ошибку и не меняют баланс.",
+      "Withdraw больше баланса возвращает ошибку, обёрнутую через %w вокруг ErrInsufficientFunds; в тексте есть сумма и счёт; баланс не меняется.",
+      "Ошибка не равна самой ErrInsufficientFunds: у неё есть контекст, но errors.Is её находит.",
+      "Transfer добавляет второй уровень контекста «transfer A→B: …»; при ошибке балансы обоих счетов прежние.",
+      "Методы меняют счёт, поэтому ресивер — указатель."
+    ],
+    "contractEN": [
+      "Deposit and Withdraw with an amount of 0 or less return an error and leave the balance unchanged.",
+      "Withdrawing more than the balance returns an error that wraps ErrInsufficientFunds with %w; the message names the amount and the account; the balance does not change.",
+      "The error is not ErrInsufficientFunds itself: it carries context, yet errors.Is finds it.",
+      "Transfer adds a second level of context, \"transfer A→B: …\"; on failure both balances stay as they were.",
+      "The methods change the account, so the receiver is a pointer."
+    ],
+    "planTasks": [
+      "w1-wed-3",
+      "w2-thu-3"
+    ],
+    "links": [
+      "c39",
+      "q29",
+      "c34"
+    ],
+    "hints": [
+      "Сначала проверь сумму, потом баланс, и только затем меняй состояние: при любой ошибке баланс должен остаться прежним.",
+      "fmt.Errorf(\"withdraw %d from %s (balance %d): %w\", …, ErrInsufficientFunds) — контекст плюс причина в цепочке.",
+      "Transfer оборачивает ошибку Withdraw ещё раз через %w. Если Deposit на втором счёте не удался, деньги нужно вернуть на первый."
+    ],
+    "talkEN": "Deposit and Withdraw change the account, so they have pointer receivers; with value receivers they would change a copy. Insufficient funds is a sentinel error, because callers only need to branch on that condition. I wrap it with %w and add the amount and the account, so the message is useful and errors.Is still finds the cause. Transfer wraps once more, and a test checks that errors.Is works through both levels and that a failed operation leaves the balances unchanged.",
+    "pitfalls": [
+      "Ресивер-значение → Deposit меняет копию, баланс вызывающего не растёт.",
+      "%v вместо %w → errors.Is перестаёт находить ErrInsufficientFunds.",
+      "Сравнение err == ErrInsufficientFunds → ломается после первой обёртки.",
+      "Баланс меняется до проверки → после ошибки состояние уже испорчено."
+    ],
+    "followUps": [
+      "Сделай счёт безопасным для нескольких горутин: где нужен sync.Mutex и почему Transfer между двумя счетами может дать deadlock?",
+      "Добавь ErrAccountClosed и проверь, что errors.Is различает обе причины.",
+      "Верни из Withdraw ошибку-тип с полями Need и Have — что изменится у вызывающего?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/account",
+    "files": {
+      "starter": {
+        "name": "account.go",
+        "code": "// Package account: practice task W1-2. Replace each TODO with your solution.\npackage account\n\nimport \"errors\"\n\n// ErrInsufficientFunds is a sentinel: callers check the condition with errors.Is.\nvar ErrInsufficientFunds = errors.New(\"insufficient funds\")\n\n// Account balance is in minor units.\ntype Account struct {\n\tID      string\n\tbalance int64\n}\n\n// TODO: choose the receiver for each method: they change the account.\n\nfunc (a *Account) Balance() int64 { return a.balance }\n\n// Deposit adds amount; it must be positive.\nfunc (a *Account) Deposit(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Withdraw takes amount if the balance allows it; otherwise it returns an error\n// that wraps ErrInsufficientFunds and says which amount and account.\nfunc (a *Account) Withdraw(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Transfer moves amount between accounts. Its error starts with\n// \"transfer A→B: \" and still matches ErrInsufficientFunds with errors.Is.\nfunc Transfer(from, to *Account, amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "account_test.go",
+        "code": "package account\n\nimport (\n\t\"errors\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestDepositWithdraw(t *testing.T) {\n\ta := &Account{ID: \"A\"}\n\tif err := a.Deposit(1000); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tif err := a.Withdraw(300); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tif got := a.Balance(); got != 700 {\n\t\tt.Fatalf(\"Balance() = %d, want 700\", got)\n\t}\n}\n\nfunc TestInvalidAmounts(t *testing.T) {\n\ta := &Account{ID: \"A\"}\n\tfor _, amount := range []int64{0, -5} {\n\t\tif err := a.Deposit(amount); err == nil {\n\t\t\tt.Errorf(\"Deposit(%d) succeeded, want an error\", amount)\n\t\t}\n\t\tif err := a.Withdraw(amount); err == nil {\n\t\t\tt.Errorf(\"Withdraw(%d) succeeded, want an error\", amount)\n\t\t}\n\t}\n}\n\nfunc TestInsufficientFundsIsWrapped(t *testing.T) {\n\ta := &Account{ID: \"A\"}\n\ta.Deposit(100)\n\terr := a.Withdraw(500)\n\tif !errors.Is(err, ErrInsufficientFunds) {\n\t\tt.Fatalf(\"errors.Is(%v, ErrInsufficientFunds) = false\", err)\n\t}\n\tif err == ErrInsufficientFunds {\n\t\tt.Fatal(\"the error has no context; wrap it with %w and add the amount and account\")\n\t}\n\tif !strings.Contains(err.Error(), \"500\") {\n\t\tt.Fatalf(\"error %q does not mention the amount\", err)\n\t}\n\tif a.Balance() != 100 {\n\t\tt.Fatalf(\"a failed withdrawal changed the balance to %d\", a.Balance())\n\t}\n}\n\nfunc TestTwoLevelsOfWrapping(t *testing.T) {\n\tfrom, to := &Account{ID: \"A\"}, &Account{ID: \"B\"}\n\tfrom.Deposit(100)\n\terr := Transfer(from, to, 500)\n\tif !errors.Is(err, ErrInsufficientFunds) {\n\t\tt.Fatalf(\"errors.Is through two levels = false for %v\", err)\n\t}\n\tif !strings.HasPrefix(err.Error(), \"transfer A→B: withdraw 500 from A\") {\n\t\tt.Fatalf(\"unexpected message %q\", err)\n\t}\n\tif from.Balance() != 100 || to.Balance() != 0 {\n\t\tt.Fatalf(\"balances changed: %d and %d\", from.Balance(), to.Balance())\n\t}\n}"
+      },
+      "solution": {
+        "name": "account.go",
+        "code": "// Package account is the reference solution for practice task W1-2.\npackage account\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\n// ErrInsufficientFunds is a sentinel: callers check the condition with errors.Is.\nvar ErrInsufficientFunds = errors.New(\"insufficient funds\")\n\n// Account balance is in minor units. Methods change the account, so they use a pointer receiver.\ntype Account struct {\n\tID      string\n\tbalance int64\n}\n\nfunc (a *Account) Balance() int64 { return a.balance }\n\n// Deposit adds amount; it must be positive.\nfunc (a *Account) Deposit(amount int64) error {\n\tif amount <= 0 {\n\t\treturn fmt.Errorf(\"deposit %d to %s: amount must be positive\", amount, a.ID)\n\t}\n\ta.balance += amount\n\treturn nil\n}\n\n// Withdraw takes amount if the balance allows it. The error wraps\n// ErrInsufficientFunds with %w, so errors.Is still finds it.\nfunc (a *Account) Withdraw(amount int64) error {\n\tif amount <= 0 {\n\t\treturn fmt.Errorf(\"withdraw %d from %s: amount must be positive\", amount, a.ID)\n\t}\n\tif amount > a.balance {\n\t\treturn fmt.Errorf(\"withdraw %d from %s (balance %d): %w\", amount, a.ID, a.balance, ErrInsufficientFunds)\n\t}\n\ta.balance -= amount\n\treturn nil\n}\n\n// Transfer moves amount between accounts and adds a second level of context.\nfunc Transfer(from, to *Account, amount int64) error {\n\tif err := from.Withdraw(amount); err != nil {\n\t\treturn fmt.Errorf(\"transfer %s→%s: %w\", from.ID, to.ID, err)\n\t}\n\tif err := to.Deposit(amount); err != nil {\n\t\tfrom.balance += amount // undo; a real ledger would use a transaction\n\t\treturn fmt.Errorf(\"transfer %s→%s: %w\", from.ID, to.ID, err)\n\t}\n\treturn nil\n}"
+      }
+    }
+  },
+  {
+    "id": "p-validation",
+    "code": "W1-3",
+    "week": 1,
+    "title": "ValidationError и errors.As",
+    "titleEN": "A typed validation error",
+    "goalRU": "Вернуть ошибку-тип с полем, которое вызывающий достаёт через errors.As даже после двух уровней обёртки.",
+    "contractRU": [
+      "*ValidationError печатается как «invalid <field>: <reason>».",
+      "Validate проверяет email (должен содержать @) и возраст (не меньше 18) и возвращает *ValidationError для первого неверного поля.",
+      "Для корректного пользователя Validate и Register возвращают обычный nil, а не nil-указатель *ValidationError.",
+      "Register добавляет контекст через %w; errors.As достаёт *ValidationError с верным Field.",
+      "errors.As работает и через второй уровень — errors.Join с другой ошибкой."
+    ],
+    "contractEN": [
+      "*ValidationError prints as \"invalid <field>: <reason>\".",
+      "Validate checks the email (must contain @) and the age (at least 18) and returns a *ValidationError for the first invalid field.",
+      "For a valid user, Validate and Register return a plain nil, not a nil *ValidationError.",
+      "Register adds context with %w; errors.As extracts the *ValidationError with the right Field.",
+      "errors.As also works through a second level: errors.Join with another error."
+    ],
+    "planTasks": [
+      "w1-wed-3"
+    ],
+    "links": [
+      "c39",
+      "c33",
+      "q2"
+    ],
+    "hints": [
+      "Error() объявлен на *ValidationError, поэтому возвращай &ValidationError{…}, а в errors.As передавай адрес переменной типа *ValidationError.",
+      "Не заводи переменную var ve *ValidationError и не возвращай её как error, если ошибок нет: интерфейс с типом и nil-указателем не равен nil (C33, q2).",
+      "Register: if err := Validate(u); err != nil { return fmt.Errorf(\"register %q: %w\", u.Email, err) }."
+    ],
+    "talkEN": "I return a typed error when the caller needs data, here the name of the invalid field. ValidationError implements error on a pointer receiver, so I return a pointer and the caller uses errors.As with a *ValidationError target. Register wraps it with %w, so errors.As still finds it, even through errors.Join. When the user is valid I return a literal nil, because a nil pointer stored in an error interface is not a nil error.",
+    "pitfalls": [
+      "Возврат nil-указателя *ValidationError как error → err != nil у корректного пользователя.",
+      "Приведение err.(*ValidationError) вместо errors.As → не работает после обёртки.",
+      "errors.As(err, ve) без & → panic: target must be a non-nil pointer.",
+      "%v в Register → цепочка оборвана, errors.As ничего не находит."
+    ],
+    "followUps": [
+      "Собери все ошибки полей, а не только первую: errors.Join или срез — что удобнее вызывающему?",
+      "Добавь метод Is(target error) bool, чтобы errors.Is(err, ErrInvalid) находил любую ошибку валидации.",
+      "Преобразуй *ValidationError в HTTP 400 с именем поля (это будет на неделе 5)."
+    ],
+    "fixture": "docs/verification/fixtures/practice/validation",
+    "files": {
+      "starter": {
+        "name": "validation.go",
+        "code": "// Package validation: practice task W1-3. Replace each TODO with your solution.\npackage validation\n\n// ValidationError is a typed error: it carries data the caller can read with errors.As.\ntype ValidationError struct {\n\tField  string\n\tReason string\n}\n\n// Error formats \"invalid <field>: <reason>\".\nfunc (e *ValidationError) Error() string {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\ntype User struct {\n\tEmail string\n\tAge   int\n}\n\n// Validate returns a *ValidationError for the first invalid field:\n// email must contain \"@\", age must be at least 18. A valid user gives nil.\nfunc Validate(u User) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Register wraps Validate's error with context, keeping it reachable by errors.As.\nfunc Register(u User) error {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "validation_test.go",
+        "code": "package validation\n\nimport (\n\t\"errors\"\n\t\"testing\"\n)\n\nfunc TestValid(t *testing.T) {\n\tif err := Register(User{Email: \"a@b.c\", Age: 30}); err != nil {\n\t\tt.Fatalf(\"got %v, want nil\", err)\n\t}\n\t// A nil *ValidationError stored in error would not be == nil.\n\tif err := Validate(User{Email: \"a@b.c\", Age: 30}); err != nil {\n\t\tt.Fatalf(\"Validate returned a non-nil error %#v for a valid user\", err)\n\t}\n}\n\nfunc TestAsExtractsField(t *testing.T) {\n\ttests := []struct {\n\t\tname  string\n\t\tuser  User\n\t\tfield string\n\t}{\n\t\t{\"bad email\", User{Email: \"nope\", Age: 30}, \"email\"},\n\t\t{\"too young\", User{Email: \"a@b.c\", Age: 12}, \"age\"},\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\terr := Register(tt.user)\n\t\t\tvar ve *ValidationError\n\t\t\tif !errors.As(err, &ve) {\n\t\t\t\tt.Fatalf(\"errors.As found no *ValidationError in %v\", err)\n\t\t\t}\n\t\t\tif ve.Field != tt.field {\n\t\t\t\tt.Fatalf(\"Field = %q, want %q\", ve.Field, tt.field)\n\t\t\t}\n\t\t})\n\t}\n}\n\nfunc TestTwoLevelsOfWrapping(t *testing.T) {\n\terr := Register(User{Email: \"nope\", Age: 30})\n\touter := errors.Join(errors.New(\"batch item 3\"), err) // another layer, Go 1.20+\n\tvar ve *ValidationError\n\tif !errors.As(outer, &ve) || ve.Field != \"email\" {\n\t\tt.Fatalf(\"errors.As through two levels failed for %v\", outer)\n\t}\n}"
+      },
+      "solution": {
+        "name": "validation.go",
+        "code": "// Package validation is the reference solution for practice task W1-3.\npackage validation\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\n// ValidationError is a typed error: it carries data the caller can read with errors.As.\ntype ValidationError struct {\n\tField  string\n\tReason string\n}\n\nfunc (e *ValidationError) Error() string {\n\treturn fmt.Sprintf(\"invalid %s: %s\", e.Field, e.Reason)\n}\n\ntype User struct {\n\tEmail string\n\tAge   int\n}\n\n// Validate returns a *ValidationError for the first invalid field.\n// It returns a plain nil when the user is valid — never a nil *ValidationError,\n// which would make a non-nil error interface.\nfunc Validate(u User) error {\n\tif !strings.Contains(u.Email, \"@\") {\n\t\treturn &ValidationError{Field: \"email\", Reason: \"must contain @\"}\n\t}\n\tif u.Age < 18 {\n\t\treturn &ValidationError{Field: \"age\", Reason: \"must be at least 18\"}\n\t}\n\treturn nil\n}\n\n// Register adds context with %w, so callers can still reach the ValidationError.\nfunc Register(u User) error {\n\tif err := Validate(u); err != nil {\n\t\treturn fmt.Errorf(\"register %q: %w\", u.Email, err)\n\t}\n\treturn nil\n}"
+      }
+    }
+  },
+  {
+    "id": "p-deferpanic",
+    "code": "W1-4, W1-5",
+    "week": 1,
+    "title": "Порядок defer и SafeDiv",
+    "titleEN": "Defer order and SafeDiv",
+    "goalRU": "Показать порядок отложенных вызовов и превратить panic при делении на ноль в обычную ошибку.",
+    "contractRU": [
+      "DeferOrder откладывает три вызова в цикле и возвращает порядок, в котором они выполнились: [3 2 1].",
+      "SafeDiv(7, 2) возвращает 3 и nil.",
+      "SafeDiv(1, 0) не паникует наружу: возвращает 0 и ошибку, в тексте которой есть «divide by zero».",
+      "Результат меняется в отложенной функции, поэтому результаты именованные."
+    ],
+    "contractEN": [
+      "DeferOrder defers three calls in a loop and returns the order they ran in: [3 2 1].",
+      "SafeDiv(7, 2) returns 3 and nil.",
+      "SafeDiv(1, 0) does not let the panic escape: it returns 0 and an error whose text contains \"divide by zero\".",
+      "The deferred function changes the results, so the results are named."
+    ],
+    "planTasks": [
+      "w1-thu-4"
+    ],
+    "links": [
+      "c35",
+      "q3",
+      "q31",
+      "q32"
+    ],
+    "hints": [
+      "Отложенные вызовы выполняются после return, в обратном порядке. Если результат назван — func DeferOrder() (order []int) — отложенная функция может дописывать в него.",
+      "recover() возвращает не nil только внутри отложенной функции во время паники. Там же присвой err = fmt.Errorf(\"…: %v\", r).",
+      "Деление на ноль для целых — panic во время выполнения, а не ошибка компиляции, если делитель — переменная."
+    ],
+    "talkEN": "Deferred calls run when the function returns, last in, first out, so three defers in a loop run as 3, 2, 1. SafeDiv defers a closure that calls recover; if the division panicked, recover returns the panic value and the closure assigns an error to the named err result, so the caller gets an ordinary error. This only works in the same goroutine. For expected failures I would return an error directly; recover is for boundaries such as a request handler.",
+    "pitfalls": [
+      "recover вызван не в отложенной функции → всегда nil, паника идёт дальше.",
+      "Безымянные результаты → отложенная функция не может изменить возвращаемую ошибку (q31).",
+      "Паника в другой горутине → этот recover её не поймает, программа упадёт (q5, q32).",
+      "В модуле с go ниже 1.22 переменная цикла общая, и замыкания в DeferOrder увидят 4 4 4."
+    ],
+    "followUps": [
+      "Перенеси деление во вложенную функцию на два уровня глубже — ловит ли recover панику оттуда?",
+      "Передай i аргументом: defer func(n int) { … }(i) — когда вычисляется аргумент?",
+      "Почему http.Server восстанавливается после паники в handler, а паника в горутине, запущенной из handler, роняет процесс?"
+    ],
+    "note": "DeferOrder рассчитан на Go 1.22+: у каждой итерации цикла своя переменная i. go mod init, запущенный Go 1.22 или новее, записывает в go.mod версию не ниже 1.22, так что всё совпадёт.",
+    "fixture": "docs/verification/fixtures/practice/deferpanic",
+    "files": {
+      "starter": {
+        "name": "deferpanic.go",
+        "code": "// Package deferpanic: practice tasks W1-4 and W1-5. Replace each TODO with your solution.\npackage deferpanic\n\n// DeferOrder appends 1, 2, 3 to the result with three deferred calls made in that order\n// and returns what they produced. Predict the result before running the test.\nfunc DeferOrder() (order []int) {\n\t// TODO: a loop with defer\n\tpanic(\"TODO\")\n}\n\n// SafeDiv returns a / b. Division by zero must give an error, not a panic.\n// Do not check b == 0 directly: let the runtime panic and recover from it.\nfunc SafeDiv(a, b int) (q int, err error) {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "deferpanic_test.go",
+        "code": "package deferpanic\n\nimport (\n\t\"slices\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestDeferOrder(t *testing.T) {\n\tif got := DeferOrder(); !slices.Equal(got, []int{3, 2, 1}) {\n\t\tt.Fatalf(\"DeferOrder() = %v, want [3 2 1]\", got)\n\t}\n}\n\nfunc TestSafeDiv(t *testing.T) {\n\tq, err := SafeDiv(7, 2)\n\tif err != nil || q != 3 {\n\t\tt.Fatalf(\"SafeDiv(7, 2) = %d, %v; want 3, nil\", q, err)\n\t}\n}\n\nfunc TestSafeDivByZero(t *testing.T) {\n\tq, err := SafeDiv(1, 0) // must not panic: the test would crash\n\tif err == nil {\n\t\tt.Fatal(\"got nil error for division by zero\")\n\t}\n\tif q != 0 {\n\t\tt.Fatalf(\"q = %d, want 0 with an error\", q)\n\t}\n\tif !strings.Contains(err.Error(), \"divide by zero\") {\n\t\tt.Fatalf(\"error %q should mention the runtime panic\", err)\n\t}\n}"
+      },
+      "solution": {
+        "name": "deferpanic.go",
+        "code": "// Package deferpanic is the reference solution for practice tasks W1-4 and W1-5.\npackage deferpanic\n\nimport \"fmt\"\n\n// DeferOrder records the order in which three deferred calls run.\n// Deferred calls run last-in, first-out, so the result is [3 2 1].\nfunc DeferOrder() (order []int) {\n\tfor i := 1; i <= 3; i++ {\n\t\tdefer func() { order = append(order, i) }() // Go 1.22+: each iteration has its own i\n\t}\n\treturn nil\n}\n\n// SafeDiv returns a / b, turning a panic into an error. The deferred function\n// can set err because err is a named result.\nfunc SafeDiv(a, b int) (q int, err error) {\n\tdefer func() {\n\t\tif r := recover(); r != nil {\n\t\t\terr = fmt.Errorf(\"safediv %d/%d: %v\", a, b, r)\n\t\t}\n\t}()\n\treturn divide(a, b), nil\n}\n\n// divide panics on b == 0: the runtime raises \"integer divide by zero\".\nfunc divide(a, b int) int { return a / b }"
+      }
+    }
+  },
+  {
+    "id": "p-removeslice",
+    "code": "W2-1",
+    "week": 2,
+    "title": "Remove: на месте и с копией",
+    "titleEN": "Remove in place or with a copy",
+    "goalRU": "Удалить элемент из среза двумя способами и тестом показать, что удаление на месте меняет массив вызывающего.",
+    "contractRU": [
+      "RemoveInPlace(s, i) возвращает срез без s[i], сдвигая хвост в том же массиве; исходный срез вызывающего после этого — [1 3 4 4] для [1 2 3 4] и i = 1.",
+      "RemoveCopy(s, i) возвращает новый срез; исходный не меняется, и запись в результат его не задевает.",
+      "Удаление единственного и последнего элемента работает в обеих версиях.",
+      "Тест фиксирует поведение slices.Delete: с Go 1.22 хвост после новой длины обнуляется — [1 3 4 0]."
+    ],
+    "contractEN": [
+      "RemoveInPlace(s, i) returns the slice without s[i] by shifting the tail inside the same array; the caller's original slice then reads [1 3 4 4] for [1 2 3 4] and i = 1.",
+      "RemoveCopy(s, i) returns a new slice; the original stays the same, and writing to the result does not touch it.",
+      "Removing the only element and the last element works in both versions.",
+      "A test pins down slices.Delete: since Go 1.22 it zeroes the elements past the new length, giving [1 3 4 0]."
+    ],
+    "planTasks": [
+      "w2-tue-4"
+    ],
+    "links": [
+      "c29",
+      "q6"
+    ],
+    "hints": [
+      "append(s[:i], s[i+1:]...) пишет в тот же массив: у s[:i] хватает ёмкости.",
+      "Для независимой копии выдели новый массив: make([]int, 0, len(s)-1), затем два append.",
+      "Почему исходный срез оканчивается на 4 4? Его длина не изменилась, а последний элемент никто не перезаписал."
+    ],
+    "talkEN": "Removing with append(s[:i], s[i+1:]...) is cheap because it shifts the tail inside the same backing array, but the caller's slice shares that array, so it now sees shifted values and a stale duplicate at the end. If the caller's data must stay intact, I allocate a new slice and copy the two parts. slices.Delete also works in place, and since Go 1.22 it zeroes the tail, which helps the garbage collector when elements are pointers.",
+    "pitfalls": [
+      "Считать, что append(s[:i], s[i+1:]...) создаёт новый срез → порча данных вызывающего.",
+      "Забыть, что длина исходного среза не меняется → «лишний» последний элемент.",
+      "Удаление из среза указателей без обнуления хвоста → объекты удерживаются в памяти (до Go 1.22 для slices.Delete)."
+    ],
+    "followUps": [
+      "Удали все элементы, подходящие под условие, за один проход без лишних выделений (slices.DeleteFunc).",
+      "Сделай Remove обобщённым: func Remove[T any](s []T, i int) []T.",
+      "Что изменится, если вызывающий передал s[:2:2]?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/removeslice",
+    "files": {
+      "starter": {
+        "name": "removeslice.go",
+        "code": "// Package removeslice: practice task W2-1. Replace each TODO with your solution.\npackage removeslice\n\n// RemoveInPlace removes s[i] by shifting the tail left inside the same backing array.\nfunc RemoveInPlace(s []int, i int) []int {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// RemoveCopy returns a new slice without s[i] and leaves s untouched.\nfunc RemoveCopy(s []int, i int) []int {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "removeslice_test.go",
+        "code": "package removeslice\n\nimport (\n\t\"slices\"\n\t\"testing\"\n)\n\nfunc TestRemoveInPlaceChangesCallerArray(t *testing.T) {\n\torig := []int{1, 2, 3, 4}\n\tgot := RemoveInPlace(orig, 1)\n\tif !slices.Equal(got, []int{1, 3, 4}) {\n\t\tt.Fatalf(\"got %v, want [1 3 4]\", got)\n\t}\n\t// Same backing array: the caller's slice now reads 1 3 4 4.\n\tif !slices.Equal(orig, []int{1, 3, 4, 4}) {\n\t\tt.Fatalf(\"orig = %v, want [1 3 4 4]: in-place removal shifts the shared array\", orig)\n\t}\n}\n\nfunc TestRemoveCopyKeepsCallerArray(t *testing.T) {\n\torig := []int{1, 2, 3, 4}\n\tgot := RemoveCopy(orig, 1)\n\tif !slices.Equal(got, []int{1, 3, 4}) {\n\t\tt.Fatalf(\"got %v, want [1 3 4]\", got)\n\t}\n\tif !slices.Equal(orig, []int{1, 2, 3, 4}) {\n\t\tt.Fatalf(\"orig changed to %v\", orig)\n\t}\n\tgot[0] = 100\n\tif orig[0] != 1 {\n\t\tt.Fatal(\"result shares memory with the original\")\n\t}\n}\n\nfunc TestEdges(t *testing.T) {\n\tfor _, remove := range []func([]int, int) []int{RemoveInPlace, RemoveCopy} {\n\t\tif got := remove([]int{7}, 0); len(got) != 0 {\n\t\t\tt.Fatalf(\"removing the only element gave %v\", got)\n\t\t}\n\t\tif got := remove([]int{1, 2, 3}, 2); !slices.Equal(got, []int{1, 2}) {\n\t\t\tt.Fatalf(\"removing the last element gave %v\", got)\n\t\t}\n\t}\n}\n\n// slices.Delete (Go 1.21) works in place too; since Go 1.22 it also zeroes the\n// elements past the new length, so the stale duplicate is gone.\nfunc TestSlicesDeleteZeroesTail(t *testing.T) {\n\torig := []int{1, 2, 3, 4}\n\tgot := slices.Delete(orig, 1, 2)\n\tif !slices.Equal(got, []int{1, 3, 4}) || !slices.Equal(orig, []int{1, 3, 4, 0}) {\n\t\tt.Fatalf(\"got %v, orig %v; want [1 3 4] and [1 3 4 0]\", got, orig)\n\t}\n}"
+      },
+      "solution": {
+        "name": "removeslice.go",
+        "code": "// Package removeslice is the reference solution for practice task W2-1.\npackage removeslice\n\n// RemoveInPlace removes s[i] by shifting the tail left inside the same backing\n// array. It is cheap, but the caller's slice changes: its elements move and its\n// last element is left as a duplicate.\nfunc RemoveInPlace(s []int, i int) []int {\n\treturn append(s[:i], s[i+1:]...)\n}\n\n// RemoveCopy returns a new slice without s[i] and leaves s untouched.\nfunc RemoveCopy(s []int, i int) []int {\n\tout := make([]int, 0, len(s)-1)\n\tout = append(out, s[:i]...)\n\treturn append(out, s[i+1:]...)\n}"
+      }
+    }
+  },
+  {
+    "id": "p-generics",
+    "code": "W2-2, W2-3",
+    "week": 2,
+    "title": "Generics: Map, Filter, Reduce, Set и Max против интерфейса",
+    "titleEN": "Generic helpers versus an interface",
+    "goalRU": "Написать обобщённые Map, Filter, Reduce и Set[T comparable], а затем один и тот же «выбор лучшего» — через параметр типа и через интерфейс.",
+    "contractRU": [
+      "Map, Filter и Reduce работают для любых типов элементов; для пустого входа Map и Filter возвращают пустой результат, Reduce — начальное значение.",
+      "Set[T comparable]: NewSet, Add, Has, Len, Remove, Each; повторный Add не увеличивает Len.",
+      "Max[T cmp.Ordered] возвращает наибольший элемент и true, для пустого среза — нулевое значение и false; для type Celsius float64 возвращает Celsius.",
+      "Best([]Ranker) выбирает значение с наибольшим Score() среди разных типов в одном срезе; для пустого среза — nil и false."
+    ],
+    "contractEN": [
+      "Map, Filter and Reduce work for any element types; for empty input Map and Filter return an empty result and Reduce returns the initial value.",
+      "Set[T comparable]: NewSet, Add, Has, Len, Remove, Each; adding the same value twice does not increase Len.",
+      "Max[T cmp.Ordered] returns the largest element and true, and for an empty slice the zero value and false; for type Celsius float64 it returns a Celsius.",
+      "Best([]Ranker) picks the value with the highest Score() among different types in one slice; for an empty slice it returns nil and false."
+    ],
+    "planTasks": [
+      "w2-wed-1",
+      "w2-wed-2",
+      "w2-thu-3"
+    ],
+    "links": [
+      "c42",
+      "c40"
+    ],
+    "hints": [
+      "Set хранит map[T]struct{}: пустая структура не занимает места. Ключом map может быть только comparable-тип — отсюда ограничение.",
+      "Map[T, U any] — два параметра типа: вход и выход. Reduce[T, A any] — элемент и аккумулятор.",
+      "Max сравнивает через < или встроенный max (Go 1.21), поэтому нужен cmp.Ordered, а не any.",
+      "Best принимает []Ranker: в одном срезе лежат разные типы, и каждый сам решает, что такое Score."
+    ],
+    "talkEN": "Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.",
+    "pitfalls": [
+      "Max[T any] → не компилируется: для any нет операции <.",
+      "Set без NewSet и с nil map внутри → panic при первом Add.",
+      "Interface{} вместо параметра типа → приведения типов и потеря проверок компилятора.",
+      "Обобщать, когда есть один вызывающий с одним типом → лишняя сложность."
+    ],
+    "followUps": [
+      "Добавь Union и Intersect для Set — что вернуть: новый Set или изменить существующий?",
+      "Сделай Each через итератор Go 1.23: func (s *Set[T]) All() iter.Seq[T].",
+      "Почему Set[[]int] не компилируется, а Set[[2]int] — да?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/generics",
+    "files": {
+      "starter": {
+        "name": "generics.go",
+        "code": "// Package generics: practice tasks W2-2 and W2-3. Replace each TODO with your solution.\npackage generics\n\nimport \"cmp\"\n\nfunc Map[T, U any](xs []T, f func(T) U) []U { panic(\"TODO\") }\n\nfunc Filter[T any](xs []T, keep func(T) bool) []T { panic(\"TODO\") }\n\n// Reduce folds xs into an accumulator that starts at init.\nfunc Reduce[T, A any](xs []T, init A, f func(A, T) A) A { panic(\"TODO\") }\n\n// Set holds unique values. Why must T be comparable?\ntype Set[T comparable] struct {\n\tm map[T]struct{}\n}\n\nfunc NewSet[T comparable](items ...T) *Set[T] { panic(\"TODO\") }\n\nfunc (s *Set[T]) Add(v T)        { panic(\"TODO\") }\nfunc (s *Set[T]) Has(v T) bool   { panic(\"TODO\") }\nfunc (s *Set[T]) Len() int       { panic(\"TODO\") }\nfunc (s *Set[T]) Remove(v T)     { panic(\"TODO\") }\nfunc (s *Set[T]) Each(f func(T)) { panic(\"TODO\") }\n\n// W2-3: the same \"maximum\" two ways.\n\n// Max returns the largest element of any ordered type; ok is false for an empty slice.\nfunc Max[T cmp.Ordered](xs []T) (T, bool) { panic(\"TODO\") }\n\n// Ranker is the interface way: each type decides what its score is.\ntype Ranker interface {\n\tScore() int\n}\n\n// Best returns the element with the highest Score; ok is false for an empty slice.\nfunc Best(xs []Ranker) (Ranker, bool) { panic(\"TODO\") }"
+      },
+      "tests": {
+        "name": "generics_test.go",
+        "code": "package generics\n\nimport (\n\t\"slices\"\n\t\"strconv\"\n\t\"testing\"\n)\n\nfunc TestMapFilterReduce(t *testing.T) {\n\tnums := []int{1, 2, 3, 4, 5}\n\tstrs := Map(nums, strconv.Itoa)\n\tif !slices.Equal(strs, []string{\"1\", \"2\", \"3\", \"4\", \"5\"}) {\n\t\tt.Fatalf(\"Map = %v\", strs)\n\t}\n\teven := Filter(nums, func(n int) bool { return n%2 == 0 })\n\tif !slices.Equal(even, []int{2, 4}) {\n\t\tt.Fatalf(\"Filter = %v\", even)\n\t}\n\tsum := Reduce(nums, 0, func(acc, n int) int { return acc + n })\n\tif sum != 15 {\n\t\tt.Fatalf(\"Reduce = %d\", sum)\n\t}\n\tjoined := Reduce(strs, \"\", func(acc, s string) string { return acc + s })\n\tif joined != \"12345\" {\n\t\tt.Fatalf(\"Reduce to string = %q\", joined)\n\t}\n}\n\nfunc TestEmptyInputs(t *testing.T) {\n\tif got := Map([]int(nil), strconv.Itoa); len(got) != 0 {\n\t\tt.Fatalf(\"Map(nil) = %v\", got)\n\t}\n\tif got := Filter([]int(nil), func(int) bool { return true }); len(got) != 0 {\n\t\tt.Fatalf(\"Filter(nil) = %v\", got)\n\t}\n\tif got := Reduce([]int(nil), 7, func(a, n int) int { return a + n }); got != 7 {\n\t\tt.Fatalf(\"Reduce(nil) = %d, want the initial value\", got)\n\t}\n}\n\nfunc TestSet(t *testing.T) {\n\ts := NewSet(\"go\", \"kotlin\", \"go\")\n\tif s.Len() != 2 || !s.Has(\"go\") || s.Has(\"java\") {\n\t\tt.Fatalf(\"unexpected set state: len %d\", s.Len())\n\t}\n\ts.Remove(\"go\")\n\tif s.Has(\"go\") || s.Len() != 1 {\n\t\tt.Fatal(\"Remove did not remove\")\n\t}\n\ttype point struct{ X, Y int } // comparable struct: fine as a key\n\tps := NewSet(point{1, 2}, point{1, 2})\n\tif ps.Len() != 1 {\n\t\tt.Fatalf(\"equal structs counted twice: %d\", ps.Len())\n\t}\n}\n\ntype player struct {\n\tname  string\n\tscore int\n}\n\nfunc (p player) Score() int { return p.score }\n\ntype team []player\n\nfunc (t team) Score() int {\n\ttotal := 0\n\tfor _, p := range t {\n\t\ttotal += p.score\n\t}\n\treturn total\n}\n\nfunc TestMaxAndBest(t *testing.T) {\n\tif m, ok := Max([]float64{1.5, -2, 9.25}); !ok || m != 9.25 {\n\t\tt.Fatalf(\"Max = %v, %v\", m, ok)\n\t}\n\tif m, ok := Max([]string{\"b\", \"c\", \"a\"}); !ok || m != \"c\" {\n\t\tt.Fatalf(\"Max strings = %v, %v\", m, ok)\n\t}\n\tif _, ok := Max([]int{}); ok {\n\t\tt.Fatal(\"Max of empty slice reported ok\")\n\t}\n\t// Different concrete types in one slice: only the interface version can do this.\n\tb, ok := Best([]Ranker{player{\"ann\", 7}, team{{\"bob\", 3}, {\"cy\", 5}}, player{\"dan\", 2}})\n\tif !ok || b.Score() != 8 {\n\t\tt.Fatalf(\"Best = %v, %v\", b, ok)\n\t}\n}"
+      },
+      "solution": {
+        "name": "generics.go",
+        "code": "// Package generics is the reference solution for practice tasks W2-2 and W2-3.\npackage generics\n\nimport \"cmp\"\n\n// Map, Filter and Reduce work for any element types; the compiler checks them.\n\nfunc Map[T, U any](xs []T, f func(T) U) []U {\n\tout := make([]U, 0, len(xs))\n\tfor _, x := range xs {\n\t\tout = append(out, f(x))\n\t}\n\treturn out\n}\n\nfunc Filter[T any](xs []T, keep func(T) bool) []T {\n\tvar out []T\n\tfor _, x := range xs {\n\t\tif keep(x) {\n\t\t\tout = append(out, x)\n\t\t}\n\t}\n\treturn out\n}\n\nfunc Reduce[T, A any](xs []T, init A, f func(A, T) A) A {\n\tacc := init\n\tfor _, x := range xs {\n\t\tacc = f(acc, x)\n\t}\n\treturn acc\n}\n\n// Set needs comparable elements because they become map keys.\ntype Set[T comparable] struct {\n\tm map[T]struct{}\n}\n\nfunc NewSet[T comparable](items ...T) *Set[T] {\n\ts := &Set[T]{m: make(map[T]struct{}, len(items))}\n\tfor _, it := range items {\n\t\ts.Add(it)\n\t}\n\treturn s\n}\n\nfunc (s *Set[T]) Add(v T)      { s.m[v] = struct{}{} }\nfunc (s *Set[T]) Has(v T) bool { _, ok := s.m[v]; return ok }\nfunc (s *Set[T]) Len() int     { return len(s.m) }\nfunc (s *Set[T]) Remove(v T)   { delete(s.m, v) }\nfunc (s *Set[T]) Each(f func(T)) {\n\tfor v := range s.m {\n\t\tf(v)\n\t}\n}\n\n// W2-3: the same \"maximum\" two ways.\n\n// Max works on any ordered type: same algorithm, different types.\nfunc Max[T cmp.Ordered](xs []T) (T, bool) {\n\tvar zero T\n\tif len(xs) == 0 {\n\t\treturn zero, false\n\t}\n\tm := xs[0]\n\tfor _, x := range xs[1:] {\n\t\tm = max(m, x)\n\t}\n\treturn m, true\n}\n\n// Ranker is the interface way: each type decides what \"better\" means.\ntype Ranker interface {\n\tScore() int\n}\n\n// Best works with values of different types in one slice, chosen at run time.\nfunc Best(xs []Ranker) (Ranker, bool) {\n\tif len(xs) == 0 {\n\t\treturn nil, false\n\t}\n\tb := xs[0]\n\tfor _, x := range xs[1:] {\n\t\tif x.Score() > b.Score() {\n\t\t\tb = x\n\t\t}\n\t}\n\treturn b, true\n}"
+      }
+    }
+  },
+  {
+    "id": "p-txsum",
+    "code": "W2-4",
+    "week": 2,
+    "title": "CLI txsum: суммы из CSV",
+    "titleEN": "txsum: totals from CSV",
+    "goalRU": "Посчитать суммы по счёту и валюте из строк account,amount,currency, собрать все ошибочные строки с номерами и вернуть код выхода как у CLI.",
+    "contractRU": [
+      "ParseAmount: «12.50» → 1250, «12.5» → 1250, «12» → 1200, «-3.10» → -310; больше двух знаков после точки, пустая строка, «abc», «1.», «.5» — ошибка с причиной ErrAmount.",
+      "Sum суммирует корректные строки по ключу {Account, Currency}; пустые строки и заголовок account,amount,currency пропускаются.",
+      "Ошибочная строка пропускается, а в срез ошибок попадает *LineError с номером строки; errors.Is видит причину: ErrColumns, ErrAmount или ErrCurrency (известны EUR, USD, RSD).",
+      "Run пишет итоги в stdout, отсортированные по счёту и валюте («alice EUR 12.00»), ошибки — в stderr по одной на строку и возвращает 1, если были ошибки, иначе 0."
+    ],
+    "contractEN": [
+      "ParseAmount: \"12.50\" → 1250, \"12.5\" → 1250, \"12\" → 1200, \"-3.10\" → -310; more than two decimals, an empty string, \"abc\", \"1.\" or \".5\" is an error with cause ErrAmount.",
+      "Sum adds up valid lines per {Account, Currency} key; blank lines and the header account,amount,currency are skipped.",
+      "A bad line is skipped and a *LineError with its line number goes into the error slice; errors.Is sees the cause: ErrColumns, ErrAmount or ErrCurrency (EUR, USD and RSD are known).",
+      "Run writes totals to stdout sorted by account and currency (\"alice EUR 12.00\"), errors to stderr one per line, and returns 1 if there were errors, 0 otherwise."
+    ],
+    "planTasks": [
+      "w2-sat-2"
+    ],
+    "links": [
+      "c39",
+      "c44",
+      "c41"
+    ],
+    "hints": [
+      "strings.Cut(s, \".\") делит сумму на целую и дробную части. Дополни дробную нулями до двух знаков и разбери «целая+дробная» через strconv.ParseInt.",
+      "LineError нужен метод Unwrap() error, иначе errors.Is не увидит причину внутри.",
+      "Порядок обхода map не задан: собери ключи в срез и отсортируй slices.SortFunc перед печатью.",
+      "Run принимает io.Reader и io.Writer, а main — это os.Exit(Run(os.Stdin, os.Stdout, os.Stderr)): так CLI тестируется без процессов."
+    ],
+    "talkEN": "I parse amounts into integer minor units, never floats, and reject anything with more than two decimals. Each bad line becomes a LineError with the line number, and its Unwrap method lets errors.Is find the cause, so tests can check both. I don't stop at the first error: the user sees every bad line in one run, and the exit code is non-zero if any line failed. Run takes a reader and two writers, so the whole CLI is tested with strings and buffers, and output is sorted because map order is not specified.",
+    "pitfalls": [
+      "strconv.ParseFloat и умножение на 100 → 0.29 превращается в 28.",
+      "Остановка на первой ошибке → пользователь исправляет файл по одной строке.",
+      "LineError без Unwrap → errors.Is(err, ErrAmount) возвращает false.",
+      "Печать прямо из обхода map → порядок строк меняется от запуска к запуску, тест нестабилен.",
+      "os.Exit внутри логики → её нельзя протестировать и отложенные вызовы не выполнятся."
+    ],
+    "followUps": [
+      "Прими кавычки и запятые внутри полей: перейди на encoding/csv — что изменится в тестах?",
+      "Добавь флаг -currency EUR, который фильтрует вывод (пакет flag).",
+      "Обработай файл в 10 ГБ: что в решении уже потоковое, а что растёт с размером входа?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/txsum",
+    "files": {
+      "starter": {
+        "name": "txsum.go",
+        "code": "// Package txsum: practice task W2-4. Sum transactions from CSV lines\n// \"account,amount,currency\" per account and currency. Replace each TODO.\npackage txsum\n\nimport (\n\t\"errors\"\n\t\"io\"\n)\n\nvar (\n\tErrColumns  = errors.New(\"want 3 columns: account,amount,currency\")\n\tErrAmount   = errors.New(\"amount must be a number with at most 2 decimals\")\n\tErrCurrency = errors.New(\"unknown currency\") // known: EUR, USD, RSD\n)\n\n// LineError says which input line failed (lines count from 1, including the header).\ntype LineError struct {\n\tLine int\n\tErr  error\n}\n\n// Error formats \"line 5: <cause>\".\nfunc (e *LineError) Error() string { panic(\"TODO\") }\n\n// Unwrap returns the cause, so errors.Is and errors.As look inside.\nfunc (e *LineError) Unwrap() error { panic(\"TODO\") }\n\ntype Key struct{ Account, Currency string }\n\n// ParseAmount turns \"12.50\", \"12.5\", \"12\" or \"-3.10\" into minor units (1250, 1250, 1200, -310).\n// Anything else, including three decimals, is an error wrapping ErrAmount.\nfunc ParseAmount(s string) (int64, error) { panic(\"TODO\") }\n\n// Sum adds up every valid line and reports every bad line (skipping it).\n// Blank lines and the header \"account,amount,currency\" are ignored.\nfunc Sum(r io.Reader) (map[Key]int64, []error) { panic(\"TODO\") }\n\n// Run is the CLI: \"account CUR 12.50\" lines sorted by account then currency to\n// stdout, one error per line to stderr, exit code 1 if any line was bad, else 0.\nfunc Run(stdin io.Reader, stdout, stderr io.Writer) int { panic(\"TODO\") }"
+      },
+      "tests": {
+        "name": "txsum_test.go",
+        "code": "package txsum\n\nimport (\n\t\"bytes\"\n\t\"errors\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestParseAmount(t *testing.T) {\n\ttests := []struct {\n\t\tin      string\n\t\twant    int64\n\t\twantErr bool\n\t}{\n\t\t{\"12.50\", 1250, false},\n\t\t{\"12.5\", 1250, false},\n\t\t{\"12\", 1200, false},\n\t\t{\"0.05\", 5, false},\n\t\t{\"-3.10\", -310, false},\n\t\t{\"1.234\", 0, true},\n\t\t{\"abc\", 0, true},\n\t\t{\"\", 0, true},\n\t\t{\"1.\", 0, true},\n\t\t{\".5\", 0, true},\n\t\t{\"1.-5\", 0, true},\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.in, func(t *testing.T) {\n\t\t\tgot, err := ParseAmount(tt.in)\n\t\t\tif (err != nil) != tt.wantErr || got != tt.want {\n\t\t\t\tt.Fatalf(\"ParseAmount(%q) = %d, %v; want %d, error %v\", tt.in, got, err, tt.want, tt.wantErr)\n\t\t\t}\n\t\t\tif err != nil && !errors.Is(err, ErrAmount) {\n\t\t\t\tt.Fatalf(\"error %v does not wrap ErrAmount\", err)\n\t\t\t}\n\t\t})\n\t}\n}\n\nconst input = `account,amount,currency\nalice,10.00,EUR\nbob,5,USD\nalice,2.50,EUR\ncarol,7.00\ndave,ten,EUR\nerin,1.00,GBP\n\nalice,-0.50,EUR\n`\n\nfunc TestSumCollectsAllErrors(t *testing.T) {\n\ttotals, errs := Sum(strings.NewReader(input))\n\tif got := totals[Key{\"alice\", \"EUR\"}]; got != 1200 {\n\t\tt.Errorf(\"alice EUR = %d, want 1200\", got)\n\t}\n\tif got := totals[Key{\"bob\", \"USD\"}]; got != 500 {\n\t\tt.Errorf(\"bob USD = %d, want 500\", got)\n\t}\n\tif len(totals) != 2 {\n\t\tt.Errorf(\"got %d totals, want 2: bad lines must be skipped\", len(totals))\n\t}\n\twant := []struct {\n\t\tline  int\n\t\tcause error\n\t}{{5, ErrColumns}, {6, ErrAmount}, {7, ErrCurrency}}\n\tif len(errs) != len(want) {\n\t\tt.Fatalf(\"got %d errors %v, want %d\", len(errs), errs, len(want))\n\t}\n\tfor i, w := range want {\n\t\tvar le *LineError\n\t\tif !errors.As(errs[i], &le) || le.Line != w.line {\n\t\t\tt.Errorf(\"error %d = %v, want a *LineError for line %d\", i, errs[i], w.line)\n\t\t}\n\t\tif !errors.Is(errs[i], w.cause) {\n\t\t\tt.Errorf(\"error %d = %v, want cause %v\", i, errs[i], w.cause)\n\t\t}\n\t}\n}\n\nfunc TestRun(t *testing.T) {\n\tvar out, errOut bytes.Buffer\n\tif code := Run(strings.NewReader(input), &out, &errOut); code != 1 {\n\t\tt.Fatalf(\"exit code %d, want 1 with bad lines\", code)\n\t}\n\tif want := \"alice EUR 12.00\\nbob USD 5.00\\n\"; out.String() != want {\n\t\tt.Fatalf(\"stdout %q, want %q\", out.String(), want)\n\t}\n\tif lines := strings.Count(errOut.String(), \"\\n\"); lines != 3 {\n\t\tt.Fatalf(\"stderr has %d lines, want 3:\\n%s\", lines, errOut.String())\n\t}\n\n\tout.Reset()\n\terrOut.Reset()\n\tif code := Run(strings.NewReader(\"zed,-1.50,RSD\\n\"), &out, &errOut); code != 0 {\n\t\tt.Fatalf(\"exit code %d for valid input, want 0; stderr: %s\", code, errOut.String())\n\t}\n\tif out.String() != \"zed RSD -1.50\\n\" {\n\t\tt.Fatalf(\"stdout %q\", out.String())\n\t}\n}"
+      },
+      "solution": {
+        "name": "txsum.go",
+        "code": "// Package txsum is the reference solution for practice task W2-4:\n// sum transactions from CSV lines \"account,amount,currency\" per account and currency.\npackage txsum\n\nimport (\n\t\"bufio\"\n\t\"errors\"\n\t\"fmt\"\n\t\"io\"\n\t\"slices\"\n\t\"strconv\"\n\t\"strings\"\n)\n\nvar (\n\tErrColumns  = errors.New(\"want 3 columns: account,amount,currency\")\n\tErrAmount   = errors.New(\"amount must be a number with at most 2 decimals\")\n\tErrCurrency = errors.New(\"unknown currency\")\n)\n\nvar currencies = map[string]bool{\"EUR\": true, \"USD\": true, \"RSD\": true}\n\n// LineError says which input line failed; Unwrap lets errors.Is see the cause.\ntype LineError struct {\n\tLine int\n\tErr  error\n}\n\nfunc (e *LineError) Error() string { return fmt.Sprintf(\"line %d: %v\", e.Line, e.Err) }\nfunc (e *LineError) Unwrap() error { return e.Err }\n\ntype Key struct{ Account, Currency string }\n\n// ParseAmount turns \"12.50\", \"12.5\", \"12\" or \"-3.10\" into minor units.\nfunc ParseAmount(s string) (int64, error) {\n\twhole, frac, hasDot := strings.Cut(s, \".\")\n\tif whole == \"\" || whole == \"-\" || (hasDot && (frac == \"\" || len(frac) > 2)) {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\tfor len(frac) < 2 {\n\t\tfrac += \"0\"\n\t}\n\tif strings.HasPrefix(frac, \"-\") || strings.HasPrefix(frac, \"+\") {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\tminor, err := strconv.ParseInt(whole+frac, 10, 64)\n\tif err != nil {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\treturn minor, nil\n}\n\n// Sum adds up every valid line. Bad lines are skipped and reported, all of them,\n// so one run shows every problem in the file. Blank lines and a header are ignored.\nfunc Sum(r io.Reader) (map[Key]int64, []error) {\n\ttotals := make(map[Key]int64)\n\tvar errs []error\n\tsc := bufio.NewScanner(r)\n\tfor n := 1; sc.Scan(); n++ {\n\t\tline := strings.TrimSpace(sc.Text())\n\t\tif line == \"\" || (n == 1 && line == \"account,amount,currency\") {\n\t\t\tcontinue\n\t\t}\n\t\tcols := strings.Split(line, \",\")\n\t\tif len(cols) != 3 {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: ErrColumns})\n\t\t\tcontinue\n\t\t}\n\t\taccount, amount, currency := strings.TrimSpace(cols[0]), strings.TrimSpace(cols[1]), strings.TrimSpace(cols[2])\n\t\tif account == \"\" {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: ErrColumns})\n\t\t\tcontinue\n\t\t}\n\t\tminor, err := ParseAmount(amount)\n\t\tif err != nil {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: err})\n\t\t\tcontinue\n\t\t}\n\t\tif !currencies[currency] {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: fmt.Errorf(\"%q: %w\", currency, ErrCurrency)})\n\t\t\tcontinue\n\t\t}\n\t\ttotals[Key{account, currency}] += minor\n\t}\n\tif err := sc.Err(); err != nil {\n\t\terrs = append(errs, fmt.Errorf(\"read input: %w\", err))\n\t}\n\treturn totals, errs\n}\n\n// Run is the whole CLI: totals to stdout sorted by account and currency, errors to\n// stderr, exit code 1 if any line was bad. main is just os.Exit(Run(os.Stdin, os.Stdout, os.Stderr)).\nfunc Run(stdin io.Reader, stdout, stderr io.Writer) int {\n\ttotals, errs := Sum(stdin)\n\tkeys := make([]Key, 0, len(totals))\n\tfor k := range totals {\n\t\tkeys = append(keys, k)\n\t}\n\tslices.SortFunc(keys, func(a, b Key) int {\n\t\tif c := strings.Compare(a.Account, b.Account); c != 0 {\n\t\t\treturn c\n\t\t}\n\t\treturn strings.Compare(a.Currency, b.Currency)\n\t})\n\tfor _, k := range keys {\n\t\tv := totals[k]\n\t\tsign := \"\"\n\t\tif v < 0 {\n\t\t\tsign, v = \"-\", -v\n\t\t}\n\t\tfmt.Fprintf(stdout, \"%s %s %s%d.%02d\\n\", k.Account, k.Currency, sign, v/100, v%100)\n\t}\n\tfor _, err := range errs {\n\t\tfmt.Fprintln(stderr, err)\n\t}\n\tif len(errs) > 0 {\n\t\treturn 1\n\t}\n\treturn 0\n}"
+      }
+    }
+  },
+  {
     "id": "p-workerpool",
     "code": "W3-1",
     "week": 3,

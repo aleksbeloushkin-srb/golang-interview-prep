@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28d.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28e.
 
 ## Фазы
 
@@ -67,41 +67,35 @@
   - Готово, когда: Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной.
 - [ ] Go by Example от Values до Closures — набрать руками, не копировать — [Go by Example](https://gobyexample.com/)
   - Готово, когда: Примеры набраны и запускаются; по каждому — одна фраза, что он показывает.
-- [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — проговор: «W1-1. Money»
+- [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — [W1-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-money), проговор: «W1-1. Money»
   - Готово, когда: Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками.
 
 ### Ср · 90 мин
 
-- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors
-  - Готово, когда: Без подсказки: type switch по ошибке и Stringer на своём типе.
-- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33)
-  - Готово, когда: c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена.
-  - На сайте пока нет: Упражнение T/*T на компиляцию: какое присваивание интерфейсу скомпилируется (расширение c34, без новой карточки).
-- [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — проговор: «W1-2. Account и W1-3. ValidationError»
+- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors — [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39)
+  - Готово, когда: Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch.
+- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2), [Q28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28)
+  - Готово, когда: c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов.
+- [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — [W1-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account), [W1-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-validation), [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29), проговор: «W1-2. Account и W1-3. ValidationError»
   - Готово, когда: Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки.
-  - На сайте пока нет: Короткие вопросы по %w, errors.Is/As, sentinel vs typed и задача «замени %w на %v — что сломается» (новая тема).
 - [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
 
 ### Чт · 90 мин
 
-- [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [Q20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20), [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
-  - Готово, когда: Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; задача %w → %v объяснена.
-  - На сайте пока нет: Та же новая тема ошибок; errors.Join связать с q20 и указать версию 1.20.
-- [ ] defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
-  - Готово, когда: q2, q3, q5: ответ до вариантов совпал с разбором по причине; объяснение по-английски. Изменённое условие: q3 с безымянным результатом.
-  - На сайте пока нет: Варианты к q3/q5: безымянный результат, panic в другой горутине (расширение c35).
+- [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29), [Q30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q30), [Q20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20), [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
+  - Готово, когда: Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v) и q30 (errors.Join, Go 1.20) объяснены до вариантов.
+- [ ] defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5), [Q31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q31), [Q32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q32)
+  - Готово, когда: q3, q5, q31, q32: ответ до вариантов совпал с разбором по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5.
 - [ ] Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management *(по желанию)* — [100go.co](https://100go.co/)
-- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — проговор: «W1-5. SafeDiv»
+- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — [W1-4, W1-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-deferpanic), проговор: «W1-5. SafeDiv»
   - Готово, когда: Порядок трёх defer предсказан до запуска; SafeDiv возвращает ошибку при делении на ноль без паники наружу. Изменённое условие: panic во вложенной функции.
 
 ### Сб · 240 мин
 
-- [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), проговор: «W1-6. Method sets»
+- [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), [Q28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28), проговор: «W1-6. Method sets»
   - Готово, когда: Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.
-  - На сайте пока нет: Упражнение T/*T на компиляцию (то же, что для w1-wed-2).
-- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость
-  - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin.
-  - На сайте пока нет: Карточка zero values и nil по типам; вопросы «скомпилируется ли» про embedding и сравнимость ключа map (новые темы).
+- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q34)
+  - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 — ответ до раскрытия; q33 (ключ map) и q34 (встраивание) — до вариантов.
 - [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
 - [ ] Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами — [LC 1. Two Sum](https://leetcode.com/problems/two-sum/), проговор: «LC 1. Two Sum — полный диалог с интервьюером»
   - Готово, когда: Диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен.
@@ -130,13 +124,26 @@
 
 **Материал сайта:**
 
+- [Практикум W1-1 Money: сумма в минорных единицах](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-money)
+- [C39 How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39)
 - [C34 How do method sets differ from the shorthand used to call pointer methods?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34)
 - [C33 What does an interface value contain, and why can a typed nil make an interface non-nil?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33)
+- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
+- [Q28 Pointer-метод, интерфейс и элемент map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28)
+- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account)
+- [Практикум W1-3 ValidationError и errors.As](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-validation)
+- [Q29 %v вместо %w](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29)
+- [Q30 errors.Join и errors.Unwrap](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q30)
 - [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
 - [C35 When do deferred calls run, and where can recover stop a panic?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35)
-- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
 - [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
 - [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
+- [Q31 Defer и безымянный результат](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q31)
+- [Q32 Recover в своей горутине и nil map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q32)
+- [Практикум W1-4, W1-5 Порядок defer и SafeDiv](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-deferpanic)
+- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40)
+- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33)
+- [Q34 Встраивание и неоднозначный метод](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q34)
 
 **Чего пока нет на сайте:**
 
@@ -152,43 +159,37 @@
 ### Пн · 90 мин
 
 - [ ] Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c] — [C29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29), [Go Slices: usage and internals](https://go.dev/blog/slices-intro), [The mechanics of append](https://go.dev/blog/slices)
-  - Готово, когда: c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1].
-  - На сайте пока нет: Открытые задачи P1, P2, P10 как варианты к c29/q6.
+  - Готово, когда: c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки.
 - [ ] Ловушки aliasing и удержания памяти — сначала ответ без вариантов — [Q6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6), [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
-  - Готово, когда: q4 и q6: дефект найден до вариантов, исправление предложено (копия или ограничение cap).
+  - Готово, когда: q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает.
 - [ ] LeetCode 3. Longest Substring Without Repeating Characters + проговор — [LC 3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/), проговор: «LC 3. Longest Substring Without Repeating Characters»
 
 ### Вт · 90 мин
 
-- [ ] Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает — [C30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30), [C32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32), [Spec: Map types](https://go.dev/ref/spec#Map_types), [Go maps in action](https://go.dev/blog/maps)
-  - Готово, когда: Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 решена.
-  - На сайте пока нет: Открытая задача P3 (nil map) к c30/c32.
-- [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31), [SIM7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
-- [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
-  - Готово, когда: P8 решена до сверки; по-английски: что возвращают len(s), s[i] и range по строке.
-  - На сайте пока нет: Новая базовая карточка UTF-8: byte, rune, обход строки.
-- [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — проговор: «W2-1. Remove»
+- [ ] Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает — [C32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32), [C40](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33), [Spec: Map types](https://go.dev/ref/spec#Map_types), [Go maps in action](https://go.dev/blog/maps)
+  - Готово, когда: Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 (ниже на этой странице) решена; q33 — до вариантов.
+- [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30), [C31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31), [SIM7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
+- [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [C41](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c41), [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
+  - Готово, когда: P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке.
+- [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — [W2-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-removeslice), проговор: «W2-1. Remove»
   - Готово, когда: Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22.
 - [ ] Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия *(по желанию)* — [SIM9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
 
 ### Ср · 90 мин
 
-- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет) — [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
+- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса) — [C42](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics), [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
   - Готово, когда: Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым.
-- [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — проговор: «W2-3. Generics vs interfaces»
-  - Готово, когда: Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером.
-  - На сайте пока нет: Новая карточка generics vs interface с выбором подхода.
+- [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics), [C42](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42), проговор: «W2-3. Generics vs interfaces»
+  - Готово, когда: Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена.
 - [ ] LeetCode 15. 3Sum + проговор — [LC 15. 3Sum](https://leetcode.com/problems/3sum/), проговор: «LC 15. 3Sum»
 
 ### Чт · 90 мин
 
-- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/
-  - Готово, когда: Объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт.
-  - На сайте пока нет: Карточка модули, пакеты, internal/ (новая тема).
-- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы — [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
-  - Готово, когда: Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит.
-  - На сайте пока нет: Короткие вопросы по table-driven, t.Helper, t.Parallel (новая тема).
-- [ ] Покрыть тестами W1-2 и W2-2
+- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/ — [C43](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c43)
+  - Готово, когда: c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт.
+- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q35), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
+  - Готово, когда: Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup.
+- [ ] Покрыть тестами W1-2 и W2-2 — [W1-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics)
   - Готово, когда: Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь.
 - [ ] Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению — проговор: ««Что выведет код»: как объяснять»
   - Готово, когда: P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски.
@@ -198,7 +199,7 @@
 - [ ] «Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка — [Q1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
   - Готово, когда: 10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod.
 - [ ] Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией) *(по желанию)* — [39 вопросов (Нияз)](https://t.me/niyaz_golang/758), [ТОП-12 Ozon](https://t.me/niyaz_golang/672)
-- [ ] W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — проговор: «W2-4. txsum CLI»
+- [ ] W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — [W2-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-txsum), проговор: «W2-4. txsum CLI»
   - Готово, когда: Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках.
 - [ ] LeetCode 739. Daily Temperatures + проговор (записать) — [LC 739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/), проговор: «LC 739. Daily Temperatures»
 - [ ] Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache *(по желанию)* — [LC 146. LRU Cache](https://leetcode.com/problems/lru-cache/), проговор: «LC 146. LRU Cache»
@@ -229,12 +230,23 @@
 - [C29 What do a slice and a string refer to, and when does append allocate a new backing array?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29)
 - [Q6 Два append и один общий массив](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6)
 - [Q4 16 байт из большого буфера](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
-- [C30 How did classic Go maps use buckets and incremental growth before Swiss Tables?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30)
 - [C32 What do delete and clear release, and what can you rely on during map iteration?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32)
+- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40)
+- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33)
+- [C30 How did classic Go maps use buckets and incremental growth before Swiss Tables?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30)
 - [C31 How do Swiss Tables find a key and grow a Go map?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31) *(Deep Dive)*
 - [SIM7 Диаграмма 7: map — бакеты, поиск в Swiss Tables и память](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
+- [C41 What do len, indexing and range return for a Go string, and when do you need []rune?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c41)
+- [Практикум W2-1 Remove: на месте и с копией](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-removeslice)
 - [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
+- [C42 When do you choose generics, and when an interface?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42)
+- [Практикум W2-2, W2-3 Generics: Map, Filter, Reduce, Set и Max против интерфейса](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics)
+- [C43 What is the difference between a module and a package, and what does an internal directory enforce?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c43)
+- [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c44)
+- [Q35 Параллельные подтесты и defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q35)
+- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account)
 - [Q1 Три функции после завершения цикла](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
+- [Практикум W2-4 CLI txsum: суммы из CSV](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-txsum)
 - [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
 - [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
 - [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
@@ -1178,7 +1190,7 @@
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* var gives the zero value; := declares and infers; defer runs LIFO.
+*Remember:* var x T gives the zero value; := declares and infers; defer runs LIFO.
 
 var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs.
 
@@ -1200,7 +1212,7 @@ A closure refers to the variable itself, so a later change to that variable is v
 
 *Remember:* Money is integer minor units plus a currency, never float64.
 
-I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits units and cents: 1250 becomes "12.50 EUR" and 5 becomes "0.05 EUR". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100.
+I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits major and minor units: 1250 becomes "12.50 EUR" and 5 becomes "0.05 EUR". I format the absolute value and prepend the sign, so -5 is "-0.05 EUR". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100.
 
 </details>
 
@@ -1244,11 +1256,11 @@ I use a sentinel error when callers only branch on a fixed condition, and a type
 
 </details>
 
-**w1-thu-2** — defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов
+**w1-thu-2** — defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* Defer arguments are evaluated at once; deferred closures can change named results.
+*Remember:* Defer arguments are evaluated immediately; deferred closures can change named results.
 
 Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
 
@@ -1260,7 +1272,7 @@ Deferred calls run in last-in-first-out order when the function returns, but the
 
 *Remember:* recover works only in a deferred call of the panicking goroutine.
 
-recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
+recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
 
 </details>
 
@@ -1270,7 +1282,7 @@ recover stops a panic only when it is called directly by a deferred function in 
 
 *Remember:* Service lacks pointer-receiver methods in its method set; &Service{} has them.
 
-var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface holds a copy of the value that is not addressable, so a pointer method could not modify the caller's value.
+var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value.
 
 </details>
 
@@ -1278,7 +1290,7 @@ var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, 
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* Every type has a usable zero value; nil map writes panic; nil channels block.
+*Remember:* Every type has a zero value; nil slices are usable, nil map writes panic, nil channels block.
 
 Every type has a zero value: 0, "", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
 
@@ -1298,9 +1310,9 @@ A slice is a descriptor with a pointer, a length and a capacity over an underlyi
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* Shared backing array plus spare capacity is the bug.
+*Remember:* Aliasing: limit cap or copy. Retention: only a copy frees the array.
 
-In both tasks the defect is that two slices share one backing array and append still has spare capacity, so it overwrites data the caller can see. The fix is either an independent copy or a full slice expression that limits capacity, so append must allocate.
+q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected.
 
 </details>
 
@@ -1310,7 +1322,7 @@ In both tasks the defect is that two slices share one backing array and append s
 
 *Remember:* Map order is unspecified; reading nil is fine, writing nil panics.
 
-Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Concurrent writes need synchronization; the runtime may detect them and crash. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
+Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
 
 </details>
 
@@ -1320,7 +1332,7 @@ Map iteration order is not specified, so code must not depend on it. Reading a m
 
 *Remember:* len counts bytes; range decodes runes.
 
-A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count characters I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character.
+A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character.
 
 </details>
 
@@ -1334,7 +1346,7 @@ append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller
 
 </details>
 
-**w2-wed-1** — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет)
+**w2-wed-1** — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1380,7 +1392,7 @@ Table-driven tests list named cases and run each in t.Run, so a failure shows th
 
 *Remember:* Validate each line, report all errors, exit non-zero on failure.
 
-txsum reads CSV lines, validates every field and sums amounts per currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
+txsum reads CSV lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
 
 </details>
 
@@ -1390,7 +1402,7 @@ txsum reads CSV lines, validates every field and sums amounts per currency in mi
 
 *Remember:* Data race: unsynchronized access with a write. Race condition: timing-dependent logic.
 
-A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done under two separate locks.
+A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections.
 
 </details>
 
@@ -1410,7 +1422,7 @@ Sending to or receiving from a nil channel blocks forever. Sending on a closed c
 
 *Remember:* Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.
 
-N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancellation or a consumer that stops reading cannot leave goroutines blocked.
+N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel.
 
 </details>
 
@@ -1450,7 +1462,7 @@ Fan-in starts one goroutine per input that forwards values to a shared output. A
 
 *Remember:* Atomics protect one variable; invariants across fields need a mutex.
 
-Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as checking a balance and then updating it. For that I hold one Mutex around the check and the update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
+Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as moving money between two accounts so the total stays constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
 
 </details>
 
@@ -1648,7 +1660,7 @@ fmt.Println(len(s), s[1], len([]rune(s)))
 
 `6 195 5` — len counts bytes; the precomposed é (U+00E9) takes two bytes in UTF-8, s[1] is its first byte 0xC3 = 195; there are five runes.
 
-len считает байты; é (составной символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять.
+len считает байты; é (готовый, предкомпонованный символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять.
 
 </details>
 
@@ -1668,7 +1680,7 @@ for _, f := range fs {
 
 `012` — Since Go 1.22 each loop iteration has its own variable. With language version below 1.22 in go.mod (or -lang=go1.21) all closures share one variable and print 333.
 
-С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22, все замыкания разделяют одну переменную и печатают 333.
+С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22 (или сборка с -gcflags=-lang=go1.21), все замыкания разделяют одну переменную и печатают 333.
 
 *Версия:* Зависит от версии языка модуля, а не только от установленного toolchain.
 

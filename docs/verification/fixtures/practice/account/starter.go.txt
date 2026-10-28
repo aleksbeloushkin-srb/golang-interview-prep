@@ -1,0 +1,37 @@
+// Package account: practice task W1-2. Replace each TODO with your solution.
+package account
+
+import "errors"
+
+// ErrInsufficientFunds is a sentinel: callers check the condition with errors.Is.
+var ErrInsufficientFunds = errors.New("insufficient funds")
+
+// Account balance is in minor units.
+type Account struct {
+	ID      string
+	balance int64
+}
+
+// TODO: choose the receiver for each method: they change the account.
+
+func (a *Account) Balance() int64 { return a.balance }
+
+// Deposit adds amount; it must be positive.
+func (a *Account) Deposit(amount int64) error {
+	// TODO
+	panic("TODO")
+}
+
+// Withdraw takes amount if the balance allows it; otherwise it returns an error
+// that wraps ErrInsufficientFunds and says which amount and account.
+func (a *Account) Withdraw(amount int64) error {
+	// TODO
+	panic("TODO")
+}
+
+// Transfer moves amount between accounts. Its error starts with
+// "transfer A→B: " and still matches ErrInsufficientFunds with errors.Is.
+func Transfer(from, to *Account, amount int64) error {
+	// TODO
+	panic("TODO")
+}

@@ -718,7 +718,7 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
   },
   {
     id: "q20",
-    cardIds: ["c35"],
+    cardIds: ["c35", "c39"],
     title: "Задача 20: Результат записи отчёта",
     ru: "Write вернул nil, но последующий Close вернул ошибку. Что вернёт эта функция и как сохранить обе ошибки?",
     en: "Write returned nil, but the later Close returned an error. What does this function return, and how would you preserve both errors?",
@@ -1032,6 +1032,281 @@ func WriteReport(path string, payload []byte) (err error) {
     "cardIds": [
       "c18",
       "c19"
+    ]
+  },
+  // =========================================================================
+  // ЧАСТЬ 5: ИДИОМЫ НЕДЕЛЬ 1–2 — МЕТОДЫ, ОШИБКИ, DEFER, MAP, ВСТРАИВАНИЕ, ТЕСТЫ (Q28 - Q35)
+  // =========================================================================
+  {
+    "id": "q28",
+    "title": "Задача 28: Pointer-метод, интерфейс и элемент map",
+    "ru": "Программа компилируется и печатает «hi a» дважды. Какие из закомментированных строк (3) и (4) скомпилируются, если их раскомментировать?",
+    "en": "The program compiles and prints \"hi a\" twice. Which of the commented lines (3) and (4) would compile if uncommented?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Notifier interface{ Notify() string }\n\ntype Service struct{ name string }\n\nfunc (s *Service) Notify() string { return \"hi \" + s.name }\n\nfunc main() {\n\ts := Service{name: \"a\"}\n\tfmt.Println(s.Notify()) // (1)\n\tvar n Notifier = &s     // (2)\n\tfmt.Println(n.Notify())\n\t// var x Notifier = s          // (3)\n\tm := map[string]Service{\"a\": s}\n\t// fmt.Println(m[\"a\"].Notify()) // (4)\n\t_ = m\n}",
+    "options": [
+      "Обе: Go сам возьмёт адрес s и m[\"a\"], как в строке (1).",
+      "Только (3): при присваивании интерфейсу значение получает pointer-методы.",
+      "Только (4): элемент map адресуем, а интерфейсу нужен именно указатель.",
+      "Ни одна: Service не реализует Notifier, а элемент map неадресуем.",
+      "Обе скомпилируются, но (3) упадёт с panic: nil pointer dereference.",
+      "Ни одна, и строка (1) на самом деле тоже не должна компилироваться."
+    ],
+    "correct": 3,
+    "explanationRU": "Ни одна. Строка (1) работает, потому что s адресуема: s.Notify() — сокращение для (&s).Notify(). Но в наборе методов Service нет Notify с pointer-ресивером, поэтому (3) — ошибка «Service does not implement Notifier (method Notify has pointer receiver)». В (4) элемент map неадресуем, взять &m[\"a\"] нельзя: «cannot call pointer method Notify on Service». Исправления: в интерфейс класть &s; в map хранить *Service или сначала скопировать элемент в переменную.",
+    "speechEN": "Neither compiles. Line one works because s is addressable, so the call is shorthand for (&s).Notify. But the method set of Service does not include a pointer-receiver method, so a Service value does not implement Notifier. And a map element is not addressable, so you cannot call a pointer method on m[\"a\"]. Put &s in the interface, or store *Service in the map.",
+    "versionNote": "Правила наборов методов и адресуемости одинаковы во всех версиях Go. Сообщения компилятора — из Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: method sets",
+        "url": "https://go.dev/ref/spec#Method_sets"
+      },
+      {
+        "title": "Go specification: address operators",
+        "url": "https://go.dev/ref/spec#Address_operators"
+      },
+      {
+        "title": "Go specification: calls",
+        "url": "https://go.dev/ref/spec#Calls"
+      }
+    ],
+    "cardIds": [
+      "c34"
+    ]
+  },
+  {
+    "id": "q29",
+    "title": "Задача 29: %v вместо %w",
+    "ru": "Что напечатает программа? Почему текст ошибки одинаковый, а результат errors.Is — нет?",
+    "en": "What does the program print? Why is the error text the same while errors.Is differs?",
+    "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc find() error { return fmt.Errorf(\"find user 7: %v\", ErrNotFound) }\n\nfunc main() {\n\terr := find()\n\tfmt.Println(err)\n\tfmt.Println(errors.Is(err, ErrNotFound))\n\terr = fmt.Errorf(\"find user 7: %w\", ErrNotFound)\n\tfmt.Println(errors.Is(err, ErrNotFound), errors.Unwrap(err) == ErrNotFound)\n}",
+    "options": [
+      "find user 7: not found, true, true true — %v и %w одинаково сохраняют цепочку.",
+      "find user 7: not found, false, true true.",
+      "find user 7: not found, false, false false — %w работает только в errors.Join.",
+      "not found, true, true false.",
+      "find user 7: not found, false, true false — Unwrap возвращает обёртку целиком.",
+      "Ошибка компиляции: %w нельзя смешивать с текстом в Errorf."
+    ],
+    "correct": 1,
+    "explanationRU": "%v лишь подставляет текст ошибки: у новой ошибки нет Unwrap, и errors.Is не находит ErrNotFound — false. С %w fmt.Errorf создаёт ошибку, чей Unwrap возвращает ErrNotFound: errors.Is — true, errors.Unwrap(err) == ErrNotFound — true. Текст в обоих случаях одинаковый, поэтому ошибку видно только при проверке. Исправление — %w везде, где вызывающему нужно распознать причину.",
+    "speechEN": "It prints the message, then false, then true true. With %v the original error is only formatted into the text, so the chain is cut and errors.Is fails. With %w the new error wraps the original: Unwrap returns it and errors.Is finds it. The text looks identical either way, which is why this bug hides so well.",
+    "correctedCode": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc find() error { return fmt.Errorf(\"find user 7: %w\", ErrNotFound) }\n\nfunc main() {\n\terr := find()\n\tfmt.Println(err)\n\tfmt.Println(errors.Is(err, ErrNotFound))\n\terr = fmt.Errorf(\"find user 7: %w\", ErrNotFound)\n\tfmt.Println(errors.Is(err, ErrNotFound), errors.Unwrap(err) == ErrNotFound)\n}",
+    "versionNote": "%w и errors.Is — с Go 1.13. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "fmt.Errorf",
+        "url": "https://pkg.go.dev/fmt#Errorf"
+      },
+      {
+        "title": "Package errors",
+        "url": "https://pkg.go.dev/errors"
+      },
+      {
+        "title": "Working with Errors in Go 1.13",
+        "url": "https://go.dev/blog/go1.13-errors"
+      }
+    ],
+    "cardIds": [
+      "c39"
+    ]
+  },
+  {
+    "id": "q30",
+    "title": "Задача 30: errors.Join и errors.Unwrap",
+    "ru": "Что напечатает программа? Что вернёт errors.Unwrap для объединённой ошибки?",
+    "en": "What does the program print? What does errors.Unwrap return for a joined error?",
+    "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\nfunc main() {\n\terrA := errors.New(\"a\")\n\terrB := errors.New(\"b\")\n\terr := errors.Join(errA, nil, errB)\n\tfmt.Printf(\"%q\\n\", err.Error())\n\tfmt.Println(errors.Is(err, errB))\n\tfmt.Println(errors.Join(nil, nil) == nil)\n\tfmt.Println(errors.Unwrap(err) == nil)\n}",
+    "options": [
+      "\"a; b\", true, false, false.",
+      "\"a\\nb\", true, true, true.",
+      "\"a\\nb\", false, true, false — errors.Is смотрит только первую ошибку.",
+      "\"a\\n<nil>\\nb\", true, false, false.",
+      "\"a\\nb\", true, false, false — Join(nil, nil) возвращает пустую, но не nil ошибку.",
+      "panic: nil среди аргументов errors.Join."
+    ],
+    "correct": 1,
+    "explanationRU": "errors.Join пропускает nil и соединяет сообщения переводом строки (%q показывает его как \\n). errors.Is ищет во всех ветках — true. Join только из nil возвращает nil — true. А errors.Unwrap вызывает лишь метод Unwrap() error; у объединённой ошибки метод Unwrap() []error, поэтому errors.Unwrap возвращает nil — true. Обходить ветки нужно через errors.Is и errors.As или приведение к interface{ Unwrap() []error }.",
+    "speechEN": "It prints \"a\\nb\" and then true three times. Join drops nil errors and joins the messages with newlines, and errors.Is searches every branch. Joining only nils returns nil. But errors.Unwrap returns nil, because a joined error's Unwrap returns a slice, and errors.Unwrap only calls the single-error form.",
+    "versionNote": "errors.Join — Go 1.20. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "errors.Join",
+        "url": "https://pkg.go.dev/errors#Join"
+      },
+      {
+        "title": "Go 1.20 release notes: wrapping multiple errors",
+        "url": "https://go.dev/doc/go1.20#errors"
+      }
+    ],
+    "cardIds": [
+      "c39"
+    ]
+  },
+  {
+    "id": "q31",
+    "title": "Задача 31: Defer и безымянный результат",
+    "ru": "Что напечатает программа? Чем f отличается от g? (Вариант к задаче 3.)",
+    "en": "What does the program print? How does f differ from g? (A variant of task 3.)",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc f() int {\n\tx := 0\n\tdefer func() { x++ }()\n\treturn x\n}\n\nfunc g() (x int) {\n\tdefer func() { x++ }()\n\treturn x\n}\n\nfunc main() {\n\tfmt.Println(f(), g())\n}",
+    "options": [
+      "1 1: defer всегда меняет возвращаемое значение.",
+      "0 0: defer выполняется до return.",
+      "0 1.",
+      "1 0.",
+      "0 1, но только если в go.mod go 1.22 или новее.",
+      "Ошибка компиляции: x в f не используется после defer."
+    ],
+    "correct": 2,
+    "explanationRU": "В f оператор return x копирует текущее значение x (0) в безымянный результат, и только потом выполняется defer: он увеличивает локальную x, но результат уже записан — 0. В g результат именованный: return x присваивает его самому себе, затем отложенная функция увеличивает именно результат — 1. Изменить возвращаемое значение из defer можно только через именованный результат.",
+    "speechEN": "It prints 0 1. In f, return copies x into an unnamed result before the deferred function runs, so incrementing x afterwards changes nothing. In g the result is named, so the deferred closure increments the result itself. That is the only way a deferred call can change a return value.",
+    "versionNote": "Порядок return и defer не менялся. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: defer statements",
+        "url": "https://go.dev/ref/spec#Defer_statements"
+      },
+      {
+        "title": "Go specification: return statements",
+        "url": "https://go.dev/ref/spec#Return_statements"
+      }
+    ],
+    "cardIds": [
+      "c35"
+    ]
+  },
+  {
+    "id": "q32",
+    "title": "Задача 32: Recover в своей горутине и nil map",
+    "ru": "Что напечатает программа? Дойдёт ли main до последней строки? (Вариант к задаче 5.)",
+    "en": "What does the program print? Does main reach its last line? (A variant of task 5.)",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\twg.Add(1)\n\tgo func() {\n\t\tdefer wg.Done()\n\t\tdefer func() {\n\t\t\tif r := recover(); r != nil {\n\t\t\t\tfmt.Println(\"recovered:\", r)\n\t\t\t}\n\t\t}()\n\t\tvar m map[string]int\n\t\tfmt.Println(m[\"x\"], len(m))\n\t\tm[\"x\"] = 1\n\t\tfmt.Println(\"unreachable\")\n\t}()\n\twg.Wait()\n\tfmt.Println(\"main continues\")\n}",
+    "options": [
+      "0 0, затем программа падает: recover в горутине не работает.",
+      "0 0, recovered: assignment to entry in nil map, main continues.",
+      "panic сразу на m[\"x\"]: читать из nil map запрещено.",
+      "0 0, main continues — в горутинах panic молча игнорируется.",
+      "0 0, recovered: …, unreachable, main continues.",
+      "Deadlock: после panic wg.Done уже не вызовется."
+    ],
+    "correct": 1,
+    "explanationRU": "Чтение из nil map и len возвращают нули. Запись в nil map вызывает panic «assignment to entry in nil map». Panic разворачивает стек этой горутины и выполняет её отложенные вызовы в обратном порядке: сначала функция с recover останавливает панику, затем wg.Done. Строка unreachable не выполняется, а main печатает «main continues». В задаче 5 recover был в main и не мог поймать панику другой горутины: recover работает только в отложенном вызове той горутины, где паника произошла.",
+    "speechEN": "It prints 0 0, then recovered: assignment to entry in nil map, then main continues. Reading a nil map is fine, writing to it panics. The panic unwinds only this goroutine and runs its deferred calls in reverse order: the recover stops the panic, then wg.Done runs. recover works only in a deferred call of the panicking goroutine, which is why main could not catch it in task 5.",
+    "versionNote": "Семантика panic, recover и nil map не менялась. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: handling panics",
+        "url": "https://go.dev/ref/spec#Handling_panics"
+      },
+      {
+        "title": "Go specification: map types",
+        "url": "https://go.dev/ref/spec#Map_types"
+      }
+    ],
+    "cardIds": [
+      "c35",
+      "c40"
+    ]
+  },
+  {
+    "id": "q33",
+    "title": "Задача 33: Какой тип может быть ключом map",
+    "ru": "Строки (3) и (4) закомментированы. Что произойдёт при запуске программы как есть и что скажет компилятор, если раскомментировать (3) и (4)?",
+    "en": "Lines (3) and (4) are commented out. What happens when the program runs as is, and what does the compiler say if (3) and (4) are uncommented?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Point struct{ X, Y int }\n\ntype Tagged struct {\n\tName string\n\tTags []string\n}\n\nvar a map[Point]int   // (1)\nvar b map[[2]int]bool // (2)\n// var c map[[]int]bool // (3)\n// var d map[Tagged]int // (4)\nvar e = map[any]int{} // (5)\n\nfunc main() {\n\tfmt.Println(len(a), len(b))\n\te[Point{1, 2}] = 1\n\te[[]int{1}] = 2 // (6)\n\tfmt.Println(len(e))\n}",
+    "options": [
+      "Печатает 0 0, затем 2; (3) и (4) компилируются.",
+      "Печатает 0 0, затем panic: hash of unhashable type []int; (3) и (4) — ошибки «invalid map key type».",
+      "Ошибка компиляции уже в (5): map[any] не принимает срезы.",
+      "Печатает 0 0, затем 2; (3) не компилируется, а (4) компилируется: Tagged сравнивается по Name.",
+      "panic уже на len(a): a — nil map.",
+      "Печатает 0 0 и 1: срез как ключ any молча пропускается."
+    ],
+    "correct": 1,
+    "explanationRU": "Ключ map должен быть сравнимого типа. [2]int и Point (все поля сравнимы) подходят; []int — нет, и структура Tagged с полем []string тоже несравнима, поэтому компилятор отвергает (3) и (4): «invalid map key type». С ключом any проверка переносится на время выполнения: e[Point{1, 2}] работает, а e[[]int{1}] вызывает panic «hash of unhashable type []int». len у nil map равен 0.",
+    "speechEN": "It prints 0 0 and then panics with hash of unhashable type []int. Map keys must be comparable: arrays and structs of comparable fields are fine, slices are not, and a struct with a slice field is not comparable either, so lines three and four are compile errors. With interface keys the check moves to run time, which is why the []int key panics.",
+    "versionNote": "Правила сравнимости не менялись. Программа и сообщения компилятора — Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: map types",
+        "url": "https://go.dev/ref/spec#Map_types"
+      },
+      {
+        "title": "Go specification: comparison operators",
+        "url": "https://go.dev/ref/spec#Comparison_operators"
+      }
+    ],
+    "cardIds": [
+      "c40",
+      "c32"
+    ]
+  },
+  {
+    "id": "q34",
+    "title": "Задача 34: Встраивание и неоднозначный метод",
+    "ru": "Что напечатает программа? Что будет, если раскомментировать строку (*)?",
+    "en": "What does the program print? What happens if line (*) is uncommented?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Logger struct{}\n\nfunc (Logger) Log() string { return \"logger\" }\n\ntype Auditor struct{}\n\nfunc (Auditor) Log() string { return \"auditor\" }\n\ntype Service struct {\n\tLogger\n\tAuditor\n}\n\ntype Handler struct {\n\tLogger\n}\n\nfunc (Handler) Log() string { return \"handler\" }\n\nfunc main() {\n\th := Handler{}\n\tfmt.Println(h.Log(), h.Logger.Log())\n\ts := Service{}\n\tfmt.Println(s.Auditor.Log())\n\t// fmt.Println(s.Log()) // (*)\n}",
+    "options": [
+      "logger logger, auditor; (*) печатает logger — побеждает первое встроенное поле.",
+      "handler logger, auditor; (*) — ошибка компиляции: ambiguous selector s.Log.",
+      "handler handler, auditor; (*) печатает auditor.",
+      "Ошибка компиляции уже в объявлении Service: два встроенных метода Log.",
+      "handler logger, auditor; (*) — panic во время выполнения.",
+      "logger logger, auditor; (*) — ошибка компиляции."
+    ],
+    "correct": 1,
+    "explanationRU": "Метод внешнего типа затеняет продвинутый метод встроенного: h.Log() — «handler», а h.Logger.Log() явно вызывает встроенный. В Service два встроенных поля на одной глубине дают метод Log, поэтому селектор s.Log неоднозначен. Сам тип Service объявлен корректно — ошибка возникает только при обращении s.Log, и Service не реализует interface{ Log() string }. Встраивание продвигает поля и методы, но это не наследование: виртуального переопределения нет.",
+    "speechEN": "It prints handler logger, then auditor. An outer method shadows the promoted one, and you can still call the embedded method explicitly. With two embedded types at the same depth, s.Log is ambiguous, so uncommenting that line is a compile error, while declaring Service is fine. Embedding promotes fields and methods; it is not inheritance, and there is no virtual dispatch.",
+    "versionNote": "Правила продвижения и селекторов не менялись. Программа и сообщение компилятора — Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: struct types: promoted fields and methods",
+        "url": "https://go.dev/ref/spec#Struct_types"
+      },
+      {
+        "title": "Go specification: selectors",
+        "url": "https://go.dev/ref/spec#Selectors"
+      }
+    ],
+    "cardIds": [
+      "c34"
+    ]
+  },
+  {
+    "id": "q35",
+    "title": "Задача 35: Параллельные подтесты и defer",
+    "ru": "Это файл теста. Что покажет go test -v и почему?",
+    "en": "This is a test file. What does go test -v report, and why?",
+    "code": "package db\n\nimport (\n\t\"sync\"\n\t\"testing\"\n)\n\ntype fakeDB struct {\n\tmu     sync.Mutex\n\tclosed bool\n}\n\nfunc (d *fakeDB) Close() { d.mu.Lock(); d.closed = true; d.mu.Unlock() }\n\nfunc (d *fakeDB) Query() bool {\n\td.mu.Lock()\n\tdefer d.mu.Unlock()\n\treturn !d.closed\n}\n\nfunc TestQueries(t *testing.T) {\n\tdb := &fakeDB{}\n\tdefer db.Close()\n\tfor _, name := range []string{\"a\", \"b\"} {\n\t\tt.Run(name, func(t *testing.T) {\n\t\t\tt.Parallel()\n\t\t\tif !db.Query() {\n\t\t\t\tt.Error(\"database already closed\")\n\t\t\t}\n\t\t})\n\t}\n}",
+    "options": [
+      "PASS: подтесты выполняются до выхода из TestQueries, а defer — после.",
+      "FAIL в обоих подтестах: «database already closed» — defer родителя сработал раньше параллельных подтестов.",
+      "Гонка данных под -race: fakeDB никак не защищён.",
+      "FAIL только в одном подтесте — второй успевает до Close.",
+      "PASS, но только с флагом -parallel 1.",
+      "Deadlock: t.Parallel ждёт родителя, а родитель — подтесты."
+    ],
+    "correct": 1,
+    "explanationRU": "t.Parallel ставит подтест на паузу (в выводе -v — PAUSE) до возврата из функции родителя; затем подтесты продолжаются (CONT). Defer родителя срабатывает при этом возврате — раньше подтестов, поэтому оба видят закрытую базу. Исправление: t.Cleanup(db.Close) — cleanup выполняется после завершения теста и всех его подтестов. -race здесь ничего не покажет: доступ защищён mutex, ошибка логическая.",
+    "speechEN": "Both subtests fail with database already closed. A parallel subtest pauses until its parent's function returns, and the parent's defer runs at exactly that moment, before the subtests continue. Register the teardown with t.Cleanup instead: it runs after the test and all its subtests have finished.",
+    "correctedCode": "package db\n\nimport (\n\t\"sync\"\n\t\"testing\"\n)\n\ntype fakeDB struct {\n\tmu     sync.Mutex\n\tclosed bool\n}\n\nfunc (d *fakeDB) Close() { d.mu.Lock(); d.closed = true; d.mu.Unlock() }\n\nfunc (d *fakeDB) Query() bool {\n\td.mu.Lock()\n\tdefer d.mu.Unlock()\n\treturn !d.closed\n}\n\nfunc TestQueries(t *testing.T) {\n\tdb := &fakeDB{}\n\tt.Cleanup(db.Close) // runs after all subtests\n\tfor _, name := range []string{\"a\", \"b\"} {\n\t\tt.Run(name, func(t *testing.T) {\n\t\t\tt.Parallel()\n\t\t\tif !db.Query() {\n\t\t\t\tt.Error(\"database already closed\")\n\t\t\t}\n\t\t})\n\t}\n}",
+    "versionNote": "t.Cleanup — с Go 1.14; поведение t.Parallel одинаково в Go 1.17–1.27. Проверено go test -v на Go 1.24.7.",
+    "sources": [
+      {
+        "title": "testing.T.Parallel",
+        "url": "https://pkg.go.dev/testing#T.Parallel"
+      },
+      {
+        "title": "testing.T.Cleanup",
+        "url": "https://pkg.go.dev/testing#T.Cleanup"
+      },
+      {
+        "title": "Using Subtests and Sub-benchmarks",
+        "url": "https://go.dev/blog/subtests"
+      }
+    ],
+    "cardIds": [
+      "c44"
     ]
   }
 ];
