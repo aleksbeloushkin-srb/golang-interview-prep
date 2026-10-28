@@ -2,7 +2,7 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/)
 [![Flashcards](https://img.shields.io/badge/Flashcards-38_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)
-[![Simulators](https://img.shields.io/badge/Simulators-7_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)
+[![Simulators](https://img.shields.io/badge/Simulators-9_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)
 [![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-22_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
@@ -16,7 +16,7 @@
 
 * 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
 * 🗂 **[1. Тренажёр карточек (38 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)** — с фильтрацией по 5 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
-* 🔬 **[2. Интерактивные диаграммы рантайма (7 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
+* 🔬 **[2. Интерактивные диаграммы рантайма (9 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[3. Полная база знаний (Wiki — все 38 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
 * 🧠 **[5. Code Traps & Production Code Review Quiz (22 задачи)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском.
@@ -29,14 +29,16 @@
   1. `Base Interview Answer (EN)` — ёмкий 20-секундный ответ на английском.
   2. `Under the Hood Details (EN)` — низкоуровневая механика рантайма и вырезки из исходников Go (`proc.go`, `chan.go`, `select.go`, `asm_amd64.s`).
   3. `🛠️ Production Debugging (RU)` — как знание этого механизма помогает расследовать реальные проблемы в продакшене (CPU throttling в K8s, утечки горутин, `False Sharing` кэш-линий, `noscan mspan`, `GOMEMLIMIT`).
-* **7 интерактивных пошаговых симуляторов (`#/simulators`):**
+* **9 интерактивных пошаговых симуляторов (`#/simulators`):** у диаграмм 1, 2, 5, 7, 8 и 9 есть схемы с подвижными «фишками», список «Что изменилось» и режим «сначала предскажи».
   * **Sim 1:** Шесть шагов от вычисления аргументов до завершения горутины; роли `R14`, `RSP` и `RIP` на amd64 простыми словами, сохранённое состояние и переход через `gogo`/`mcall`.
-  * **Sim 2:** Восемь кадров: источники работы, запрос и безопасное вытеснение, перехват с головы очереди «до → после», различия syscall в Go 1.25/1.26 и ожидание сети. Порог 10 мс не является гарантией задержки.
+  * **Sim 2:** Одиннадцать кадров: источники работы, запрос и безопасное вытеснение, перехват с головы очереди «до → после», различия syscall в Go 1.25/1.26, ожидание сети, GOMAXPROCS в контейнере, вся картина с ответом за минуту и пять частых вопросов с разбором упрощений. Порог 10 мс не является гарантией задержки.
   * **Sim 3:** Пять шагов передачи значения: регистрация ожидания, парковка, копирование, готовность и продолжение. Постоянные обозначения отправителя/канала/получателя и вопросы для самопроверки.
   * **Sim 4:** Восемь шагов `select`: шесть форм компиляции, флаги selected/ok, общий `selectgo`, ожидание и CAS, обратное сопоставление веток, nil/closed и порядок вычисления выражений.
-  * **Sim 5:** CAS от смысла «замени, если совпало» до успеха/неуспеха и ролей регистров в конкретном листинге amd64. Различия архитектур и ограничения атомарности.
+  * **Sim 5:** CAS от смысла «замени, если совпало» до регистров amd64 (`LOCK CMPXCHG`), CAS-цикла, ABA, порядка памяти атомиков и выбора между CAS, atomic и mutex.
   * **Sim 6:** Аллокатор памяти (`mcache` / `mcentral` / `mheap`, спаны `scan` vs `noscan`) и учебный граф GC: достижимость, перенос ссылки с защитой `Hybrid Write Barrier`, очистка и мягкий лимит. Все четыре шага содержат EN-пояснение и самопроверку.
   * **Sim 7:** Эволюция `map` в Go: классическая `hmap`/`bmap` против новой **SwissTable (Go 1.24+)** — пять шагов: старые бакеты, состояния `ctrl`, разбор поиска ключа, рост таблиц и владение памятью. EN/RU, вопросы на воспроизведение, различия Go 1.25/1.26.
+  * **Sim 8:** `sync.Mutex` изнутри: слово `state` (locked/woken/starving и счётчик ждущих), быстрый путь `CAS(0 → 1)`, спин, очередь на семафоре, `Unlock`, режим голодания и ловушки.
+  * **Sim 9:** Битовые операции: `& | ^ &^ << >>`, маски и степени двойки, флаги в одном слове, H1/H2, поиск H2 в 8 байтах (SWAR), обход битсета, атомарные `And`/`Or` (Go 1.23+) и ловушки приоритетов и сдвигов.
 * **22 задачи на Code Review (`#/quiz`):**
   * Каждая задача содержит реальный сниппет кода, **6 сложных вариантов ответа** (с разбором популярных полу-мифов), объяснение корневой причины в рантайме на русском и готовую речь для интервью на английском (`Ready-to-Speak English Answer`).
 
@@ -97,7 +99,7 @@ golang-runtime-prep/
 │   └── style.css       # Стили, адаптивная сетка и тёмная тема
 ├── data/
 │   ├── cards.js        # База из 38 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
-│   ├── simulators.js   # Пошаговые состояния для 7 диаграмм и сводной таблицы
+│   ├── simulators.js   # Пошаговые состояния для 9 диаграмм и сводной таблицы
 │   ├── quiz.js         # 22 задачи на Production Code Review (по 6 вариантов ответа)
 │   └── plan.js         # План 13 недель: задачи, критерии готовности, LeetCode, опорные тексты
 └── js/

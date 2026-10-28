@@ -95,7 +95,7 @@ const CARD_TO_SIM = {
   c7: "sim2", c8: "sim2", c9: "sim2", c10: "sim2", c11: "sim1",
   c13: "sim3", c16: "sim3", c17: "sim3",
   c18: "sim4", c19: "sim4",
-  c20: "sim5", c21: "sim5",
+  c20: "sim5", c21: "sim8",
   c23: "sim6", c24: "sim6", c25: "sim6", c26: "sim6", c27: "sim6", c28: "sim6",
   c30: "sim7", c31: "sim7", c32: "sim7", c37: "sim1", c38: "sim2"
 };
@@ -445,18 +445,18 @@ function renderSimStep(simIdx, stepIdx) {
    Данные: board = [{ caption?, lanes: [{ kind, title, tag?, state?, slots: [{ label, items, queue? }], note? }],
    hl?: [id], list?: { title, items, ordered? } }]. Элемент: "G1" или { g: "G1", flag: "..." }.
    Изменения выделяются рамкой и словом «изменилось», не только цветом. */
-function boardChipHtml(item, hl, hlLabel) {
+function boardChipHtml(item, hl, hlLabel, hlQuiet) {
   const g = typeof item === "string" ? item : item.g;
   const flag = typeof item === "string" ? "" : item.flag;
-  const changed = hl.includes(g);
-  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed ? `<span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}</li>`;
+  const changed = hl.includes(g) || (typeof item === "object" && item.hl === true);
+  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed && !hlQuiet ? `<span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}${changed && hlQuiet ? `<span class="visually-hidden">выделено</span>` : ""}</li>`;
 }
 
-function boardLaneHtml(lane, hl, hlLabel) {
+function boardLaneHtml(lane, hl, hlLabel, hlQuiet) {
   const slots = (lane.slots || []).map(slot => {
     const items = slot.items || [];
     const list = items.length
-      ? `<${slot.queue ? "ol" : "ul"} class="board-items${slot.queue ? " is-queue" : ""}">${items.map(item => boardChipHtml(item, hl, hlLabel)).join("")}</${slot.queue ? "ol" : "ul"}>`
+      ? `<${slot.queue ? "ol" : "ul"} class="board-items${slot.queue ? " is-queue" : ""}">${items.map(item => boardChipHtml(item, hl, hlLabel, hlQuiet)).join("")}</${slot.queue ? "ol" : "ul"}>`
       : `<span class="board-empty">пусто</span>`;
     return `<div class="board-slot"><span class="board-slot-label">${escapeHtml(slot.label)}</span>${list}</div>`;
   }).join("");
@@ -481,7 +481,7 @@ function boardHtml(board, legend) {
         </div>` : "";
         return `<figure class="board-panel">
           ${panel.caption ? `<figcaption class="board-caption">${escapeHtml(panel.caption)}</figcaption>` : ""}
-          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl, panel.hlLabel)).join("")}</div>` : ""}
+          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl, panel.hlLabel, panel.hlQuiet === true)).join("")}</div>` : ""}
           ${list}
         </figure>`;
       }).join("")}

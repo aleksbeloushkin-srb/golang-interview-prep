@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28",
+  revision: "2026-10-28b",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -120,7 +120,8 @@ const PLAN = {
             { id: "w2-tue-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c30", "c32"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] },
             { id: "w2-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c31", "sim7"], optional: true },
             { id: "w2-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", talk: "w2-1" }
+            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", talk: "w2-1" },
+            { id: "w2-tue-5", text: "Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия", links: ["sim9"], optional: true }
           ]
         },
         {
@@ -202,7 +203,7 @@ const PLAN = {
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS", links: ["c15", "c20", "c21", "c22", "sim5"] },
+            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух", links: ["c15", "c20", "c21", "c22", "sim5", "sim8"] },
             { id: "w3-thu-2", text: "W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex", talk: "w3-4" },
             { id: "w3-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map", links: ["q7", "q8", "q13", "q14"] }
           ]
