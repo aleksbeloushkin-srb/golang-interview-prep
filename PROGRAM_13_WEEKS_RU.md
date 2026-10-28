@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28b.
 
 ## Фазы
 
@@ -169,6 +169,7 @@
   - На сайте пока нет: Новая базовая карточка UTF-8: byte, rune, обход строки.
 - [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — проговор: «W2-1. Remove»
   - Готово, когда: Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22.
+- [ ] Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия *(по желанию)* — [SIM9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
 
 ### Ср · 90 мин
 
@@ -232,6 +233,7 @@
 - [C32 What do delete and clear release, and what can you rely on during map iteration?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32)
 - [C31 How do Swiss Tables find a key and grow a Go map?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31) *(Deep Dive)*
 - [SIM7 Диаграмма 7: map — бакеты, поиск в Swiss Tables и память](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
+- [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
 - [Q1 Три функции после завершения цикла](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
 - [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
 - [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
@@ -281,7 +283,7 @@
 
 ### Чт · 90 мин
 
-- [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — [C15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [SIM5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
+- [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух — [C15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [SIM5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5), [SIM8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
   - Готово, когда: c15, c20, c21, c22: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант.
 - [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — проговор: «W3-4. Mutex vs atomic vs channel»
   - Готово, когда: Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее».
@@ -336,6 +338,7 @@
 - [C21 How does a mutex acquire, wait and hand off — and what does 1 ms really mean?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21)
 - [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
 - [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
+- [SIM8 Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
 - [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
 - [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
 - [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)
@@ -1440,7 +1443,7 @@ Fan-in starts one goroutine per input that forwards values to a shared output. A
 
 </details>
 
-**w3-thu-1** — sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS
+**w3-thu-1** — sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух
 
 <details><summary>Model answer (EN)</summary>
 

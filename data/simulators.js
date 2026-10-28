@@ -1240,7 +1240,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Своей работы нет → M2 в режиме spinning ищет работу (таких M не больше половины занятых P) → перехват у P1."
+                "note": "Своей работы нет → M2 в режиме spinning ищет работу (таких M примерно не больше половины занятых P — эвристика) → перехват у P1."
               }
             ],
             "list": {
@@ -1668,7 +1668,7 @@ const SIMULATORS = [
                 "G1 → GRQ: ждёт планирования",
                 "M1 останавливается",
                 "Поэтому число M не обязано совпадать с GOMAXPROCS: потоков может быть больше",
-                "Потоков больше P: блокирующие syscall, cgo, runtime.LockOSThread; предел — debug.SetMaxThreads, по умолчанию 10 000"
+                "Потоков больше P: блокирующие syscall, cgo, runtime.LockOSThread, поток sysmon; простаивающие M паркуются, а не уничтожаются. debug.SetMaxThreads (по умолчанию 10 000) — предохранитель: при превышении программа аварийно завершается (thread exhaustion)"
               ]
             }
           }
@@ -2118,7 +2118,7 @@ const SIMULATORS = [
                 "title": "Ядра CPU",
                 "tag": "управляет ОС",
                 "slots": [],
-                "note": "ОС раскладывает потоки M по ядрам; связь M ↔ ядро не фиксирована, а M в syscall ядро не занимает."
+                "note": "ОС раскладывает потоки M по ядрам; связь M ↔ ядро не фиксирована. M, заблокированный в syscall, ядро не занимает, но syscall, работающий в ядре, и cgo-код — занимают."
               }
             ],
             "list": {
@@ -2160,9 +2160,9 @@ const SIMULATORS = [
               "ordered": true,
               "items": [
                 "How does the Go scheduler work? — The runtime multiplexes goroutines (G) onto OS threads (M). A thread needs a P to run Go code, and the number of Ps (GOMAXPROCS) bounds parallelism. Each P has runnext and a local run queue of up to 256 goroutines; a global queue and work stealing balance the load.",
-                "What is GOMAXPROCS? — The number of Ps: how many threads may run Go code at the same time, not the number of goroutines, threads or cores. Since Go 1.25 the Linux default follows the container CPU limit, rounded up and at least 2.",
-                "Why are there more threads than GOMAXPROCS? — Threads blocked in system calls or cgo, and threads locked with runtime.LockOSThread, cannot serve other goroutines, so the runtime starts more Ms to keep Ps busy. debug.SetMaxThreads caps them at 10,000 by default.",
-                "What changed in Go 1.14? — Asynchronous preemption: sysmon, which existed before, can interrupt a goroutine that has run for about 10 ms by sending SIGURG on Unix. Tight loops without calls no longer stall the scheduler or a GC stop. Side effect: slow system calls return EINTR more often.",
+                "What is GOMAXPROCS? — The number of Ps: how many threads may run Go code at the same time, not the number of goroutines, threads or cores. Since Go 1.25 (go 1.25 or later in go.mod) the Linux default is min(available CPUs, max(ceil(limit), 2)).",
+                "Why are there more threads than GOMAXPROCS? — Threads blocked in system calls or cgo, and threads locked with runtime.LockOSThread, cannot serve other goroutines, so the runtime starts more Ms to keep Ps busy. If the program needs more threads than debug.SetMaxThreads (10,000 by default), it crashes with \"thread exhaustion\": a safety fuse, not a throttle. The sysmon thread also has no P, and idle threads are parked for reuse.",
+                "What changed in Go 1.14? — Asynchronous preemption: sysmon, which existed before, can interrupt a goroutine that has run for about 10 ms by sending SIGURG on Unix. On supported platforms, ordinary loops without calls can now be preempted, so they rarely stall the scheduler or a GC stop (not on wasm or plan9, or with GODEBUG=asyncpreemptoff=1). Side effect: slow system calls return EINTR more often.",
                 "How is fairness ensured? — A P mostly runs runnext and its local queue, but every 61 scheduler ticks it checks a non-empty global queue first. Idle Ps steal half of a busy P's queue. runnext shares the current time slice, and sysmon preemption bounds long runs."
               ]
             }
@@ -2175,11 +2175,11 @@ const SIMULATORS = [
                 "«P — это ядро» → P — право исполнять Go-код; потоки по ядрам раскладывает ОС, связь M ↔ ядро не фиксирована",
                 "«Раз в 61 горутину» → раз в 61 тик планировщика P сначала проверяет GRQ, если она не пуста",
                 "«В глобальной очереди неготовые горутины» → там готовые (runnable) G; ждущие — в каналах, таймерах, netpoller",
-                "«Сетевой вызов блокирует M, как syscall» → ожидание сети паркует G в netpoller, поток свободен",
-                "«После syscall P вернётся к прежнему M» → M пытается вернуть свой P, но P мог уйти; тогда G идёт в GRQ, а M засыпает",
+                "«Сетевой вызов блокирует M, как syscall» → для поллируемых сокетов ожидание паркует G в netpoller, поток свободен (cgo-резолвер DNS, например, держит поток)",
+                "«После syscall P вернётся к прежнему M» → M пытается вернуть свой P, затем взять любой свободный; если нет — G идёт в GRQ, а M засыпает (при LockOSThread — ждёт свою G)",
                 "«sysmon появился в Go 1.14» → sysmon был и раньше (отбирал P у долгих syscall, запрашивал кооперативное вытеснение); в 1.14 добавилось вытеснение сигналом",
                 "«Крадёт ровно половину» → n − ⌊n/2⌋, то есть половину с округлением вверх, с головы очереди",
-                "«Потоки никогда не останавливают» → свободный M недолго ищет работу (spinning, не больше половины занятых P), потом засыпает (stopm)",
+                "«Потоки никогда не останавливают» → свободный M недолго ищет работу (spinning, примерно не больше половины занятых P) или ждёт в netpoll, потом засыпает (stopm); поток не уничтожается, а ждёт повторного использования",
                 "«Стек горутины 2–8 КБ» → новая G стартует с 2 КиБ (Linux), переиспользуемая — с адаптивного размера; стек растёт копированием",
                 "«GOMAXPROCS = лимит CPU контейнера» → min(CPU по affinity, max(⌈лимит⌉, 2)); requests не учитываются"
               ]
@@ -2190,8 +2190,8 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Without looking: why can a Go process have more threads than GOMAXPROCS, and what limits them?",
           "promptRU": "Не глядя: почему у Go-процесса может быть больше потоков, чем GOMAXPROCS, и что их ограничивает?",
-          "answerEN": "Threads blocked in syscalls or cgo and threads locked by LockOSThread cannot run other goroutines, so the runtime adds Ms to keep Ps busy; debug.SetMaxThreads limits them, 10,000 by default.",
-          "answerRU": "Потоки в syscall или cgo и потоки, закреплённые через LockOSThread, не могут исполнять другие горутины, поэтому рантайм добавляет M, чтобы P не простаивали; предел — debug.SetMaxThreads, по умолчанию 10 000."
+          "answerEN": "Threads blocked in syscalls or cgo and threads locked by LockOSThread cannot run other goroutines, so the runtime adds Ms to keep Ps busy; exceeding debug.SetMaxThreads (10,000 by default) crashes the program.",
+          "answerRU": "Потоки в syscall или cgo и потоки, закреплённые через LockOSThread, не могут исполнять другие горутины, поэтому рантайм добавляет M, чтобы P не простаивали; при превышении debug.SetMaxThreads (по умолчанию 10 000) программа аварийно завершается."
         }
       }
     ],
@@ -2940,7 +2940,7 @@ const SIMULATORS = [
   {
     "id": "sim5",
     "title": "Диаграмма 5: CAS — сравнить и заменить одним действием",
-    "subtitle": "Сначала смысл на одном state, затем пример регистров amd64. Две горутины пробуют переход 0 → 1; никто не возвращает state в 0.",
+    "subtitle": "Восемь шагов: смысл CAS на одном state и регистры amd64 (1–4; в них state в 0 никто не возвращает), затем CAS-цикл, ABA, порядок памяти и выбор между CAS, atomic и mutex (5–8).",
     "cardId": "c20",
     "cardLabel": "Q20: CAS и его границы →",
     "learningHint": "CAS = Compare-And-Swap. Три входа: адрес, ожидаемое old, предлагаемое new. Результат true/false говорит, выполнена ли замена. Это условная запись, а не обмен двух переменных местами.",
@@ -2963,6 +2963,62 @@ const SIMULATORS = [
         "title": "1. Что хотим сделать",
         "desc": "state=0 означает «ещё никто не занял», 1 — «уже занято». G1 и G2 хотят CAS(0, 1): записать 1 только при текущем 0. Успех сообщает, кто получил право действовать. Обычный if с отдельной записью оставляет промежуток для конкурента.",
         "descEN": "Both goroutines want to claim state by replacing 0 with 1. CAS checks and conditionally writes atomically; a separate check followed by a store leaves a race in the decision.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "значение",
+                    "items": [
+                      {
+                        "g": "0",
+                        "flag": "свободно"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "CAS",
+                    "items": [
+                      "old 0",
+                      "new 1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "CAS",
+                    "items": [
+                      "old 0",
+                      "new 1"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Правило CAS",
+              "items": [
+                "CAS(адрес, old, new): если *адрес == old — записать new и вернуть true",
+                "иначе ничего не записывать и вернуть false",
+                "Сравнение и запись — одно неделимое действие"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Три входа CAS",
@@ -3016,6 +3072,64 @@ const SIMULATORS = [
         "title": "2. Первая попытка успешна",
         "desc": "В показанном порядке первой выполняется CAS горутины G1. Текущее значение равно old=0: операция записывает 1 и возвращает true. Сравнение и запись неделимы относительно других атомарных операций; это свойство операции, а не удачный тайминг.",
         "descEN": "In this ordering G1’s CAS sees the expected 0, stores 1 and returns true. The comparison and update are indivisible relative to other atomic operations.",
+        "board": [
+          {
+            "hl": [],
+            "hlLabel": "изменилось",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "значение",
+                    "items": [
+                      {
+                        "g": "1",
+                        "flag": "занято G1",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "CAS(0 → 1)",
+                    "items": [
+                      {
+                        "g": "true",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "CAS",
+                    "items": [
+                      "ещё не выполнен"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G1: 0 == 0 → записала 1 и получила true",
+                "G2 ещё не выполнила свой CAS"
+              ],
+              "title": "Результат"
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "G1",
@@ -3069,6 +3183,64 @@ const SIMULATORS = [
         "title": "3. Вторая попытка не проходит",
         "desc": "G2 всё ещё ожидает old=0, но в state уже 1. CAS возвращает false, не записывая предлагаемое значение. Сам CAS не ставит G2 в очередь, не засыпает до освобождения и не запускает повторную попытку. Это решает вызывающий алгоритм.",
         "descEN": "G2 expects 0 but finds 1, so CAS returns false without the proposed update. Waiting, retrying or giving up is the caller’s policy, not an automatic effect of CAS.",
+        "board": [
+          {
+            "hl": [],
+            "hlLabel": "результат",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "значение",
+                    "items": [
+                      {
+                        "g": "1",
+                        "flag": "занято G1"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "CAS(0 → 1)",
+                    "items": [
+                      "true"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "CAS(0 → 1)",
+                    "items": [
+                      {
+                        "g": "false",
+                        "flag": "нашла 1",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G2 ожидала 0, а нашла 1 → false, ничего не записала",
+                "Что делать после false — решает алгоритм: повторить, ждать или сдаться"
+              ],
+              "title": "Результат"
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "G2",
@@ -3122,6 +3294,65 @@ const SIMULATORS = [
         "title": "4. Как это связано с регистрами",
         "desc": "В показанной 32-битной реализации CAS на amd64 BX хранит адрес, AX — ожидаемое old, CX — новое значение. LOCK CMPXCHGL выполняет атомарное сравнение и условную запись; SETEQ формирует bool из признака равенства. Это конкретный листинг, а не универсальное распределение регистров у любого вызова Go.",
         "descEN": "In this amd64 implementation, BX holds the address, AX the expected value and CX the replacement. LOCK CMPXCHGL performs the atomic operation; SETEQ produces the Boolean result. Other architectures and compiled call sites can differ.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Регистры (amd64, Cas 32 бита)",
+                "slots": [
+                  {
+                    "label": "BX",
+                    "items": [
+                      "&state"
+                    ]
+                  },
+                  {
+                    "label": "AX",
+                    "items": [
+                      "old = 0"
+                    ]
+                  },
+                  {
+                    "label": "CX",
+                    "items": [
+                      "new = 1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Инструкции",
+                "slots": [
+                  {
+                    "label": "1",
+                    "items": [
+                      "LOCK CMPXCHGL CX, 0(BX)"
+                    ]
+                  },
+                  {
+                    "label": "2",
+                    "items": [
+                      "SETEQ → bool"
+                    ]
+                  }
+                ],
+                "note": "LOCK делает сравнение и запись неделимыми для всех ядер. При неудаче CMPXCHG загружает текущее значение памяти в AX."
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Что делает процессор",
+              "items": [
+                "Сравнить AX с памятью по адресу BX",
+                "Равно → записать CX, флаг ZF = 1; не равно → загрузить текущее значение в AX, ZF = 0",
+                "SETEQ превращает ZF в результат true/false"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Роли в листинге amd64",
@@ -3169,6 +3400,315 @@ const SIMULATORS = [
           "promptRU": "Доказывает ли успех CAS, что значение раньше не менялось?",
           "answerEN": "No. A → B → A can match A again. CAS compares the current value, not its history.",
           "answerRU": "Нет. После A → B → A сравнение с A снова может пройти. CAS проверяет текущее значение, а не историю."
+        }
+      },
+      {
+        "title": "5. CAS-цикл: прочитать → вычислить → CAS → повторить",
+        "desc": "Новый сценарий: counter = 5, G1 и G2 одновременно прибавляют 1 через CAS-цикл. Обе прочитали 5 и вычислили 6. CAS G2 прошёл первым: 5 → 6. CAS G1 с old = 5 вернул false — значение уже другое. G1 перечитывает 6, вычисляет 7 и повторяет: 6 → 7. Итог 7 — ни одно увеличение не потеряно. Для простого счётчика то же делает atomic.AddInt64 одной инструкцией (LOCK XADD на amd64).",
+        "descEN": "A new scenario: counter = 5, and G1 and G2 both add 1 with a CAS loop. Both read 5 and compute 6. G2's CAS wins first: 5 → 6. G1's CAS with old = 5 returns false because the value has changed. G1 rereads 6, computes 7 and retries: 6 → 7. The result is 7 and no increment is lost. For a plain counter, atomic.AddInt64 does the same in one instruction (LOCK XADD on amd64).",
+        "predict": {
+          "promptEN": "Both goroutines read 5 and want to write 6. What do their CAS calls return, and what is the final value if G1 retries?",
+          "promptRU": "Обе горутины прочитали 5 и хотят записать 6. Что вернут их CAS и каким будет итог, если G1 умеет повторять?"
+        },
+        "board": [
+          {
+            "hl": [],
+            "hlLabel": "успех",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "counter",
+                "slots": [
+                  {
+                    "label": "было",
+                    "items": [
+                      "5"
+                    ]
+                  },
+                  {
+                    "label": "стало",
+                    "items": [
+                      {
+                        "g": "7",
+                        "flag": "итог",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "попытка 1",
+                    "items": [
+                      {
+                        "g": "CAS 5→6",
+                        "flag": "true",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "попытка 1",
+                    "items": [
+                      {
+                        "g": "CAS 5→6",
+                        "flag": "false"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "попытка 2",
+                    "items": [
+                      {
+                        "g": "CAS 6→7",
+                        "flag": "true",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Порядок",
+              "items": [
+                "G1 и G2 читают 5, обе вычисляют 6",
+                "G2: CAS(5 → 6) = true",
+                "G1: CAS(5 → 6) = false → перечитать: 6",
+                "G1: CAS(6 → 7) = true; итог 7"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why can a CAS loop waste CPU under heavy contention?",
+          "promptRU": "Почему при сильной конкуренции CAS-цикл может тратить CPU впустую?",
+          "answerEN": "Every loser repeats the read, the computation and the CAS; with many writers most attempts fail. atomic.Add does the update in one instruction, and a mutex lets waiters sleep instead of retrying.",
+          "answerRU": "Каждый проигравший повторяет чтение, вычисление и CAS; при многих писателях большинство попыток проваливается. atomic.Add делает обновление одной инструкцией, а mutex позволяет ждущим уснуть вместо повторов."
+        }
+      },
+      {
+        "title": "6. ABA: значение то же, история другая",
+        "desc": "Стек без блокировок: top → A → B → C. G1 читает top = A и next = B, но не успевает сделать CAS. G2 снимает A, снимает B и кладёт A обратно: top снова A, но под ним уже C. CAS G1 (A → B) проходит, потому что сравнивает только текущее значение, и делает вершиной B, которого в стеке больше нет. В Go сборщик мусора не освободит узел, пока на него есть ссылка, поэтому use-after-free нет, но логическая ошибка ABA остаётся. Защита: версия в том же слове (например, индекс и счётчик в одном uint64), неизменяемые узлы или mutex.",
+        "descEN": "A lock-free stack: top → A → B → C. G1 reads top = A and next = B but has not done its CAS yet. G2 pops A, pops B and pushes A back: top is A again, but now C is below it. G1's CAS (A → B) succeeds because it compares only the current value, and it makes B the top although B is no longer in the stack. In Go the garbage collector does not free a node while it is referenced, so there is no use-after-free, but the logical ABA bug remains. Defences: a version in the same word (for example an index and a counter in one uint64), immutable nodes, or a mutex.",
+        "board": [
+          {
+            "caption": "G1 прочитала и задумалась",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Стек",
+                "slots": [
+                  {
+                    "label": "top →",
+                    "items": [
+                      "A",
+                      "B",
+                      "C"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "видела",
+                    "items": [
+                      "top = A",
+                      "next = B"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "caption": "G2: pop A, pop B, push A; затем CAS G1",
+            "hl": [
+              "B"
+            ],
+            "hlLabel": "ошибка",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Стек после G2",
+                "slots": [
+                  {
+                    "label": "top →",
+                    "items": [
+                      "A",
+                      "C"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Стек после CAS G1",
+                "slots": [
+                  {
+                    "label": "top →",
+                    "items": [
+                      {
+                        "g": "B",
+                        "flag": "уже снят"
+                      },
+                      "C"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G2: снять A, снять B, вернуть A → стек A → C",
+                "G1: CAS(top, A → B) = true — top снова был A",
+                "Вершина — B, которого в стеке уже нет: структура испорчена"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Does atomic.Pointer instead of uintptr prevent ABA?",
+          "promptRU": "Поможет ли atomic.Pointer вместо uintptr избежать ABA?",
+          "answerEN": "It prevents use-after-free, because the GC keeps a referenced node alive. It does not prevent logical ABA: CAS still compares only the current pointer.",
+          "answerRU": "От use-after-free — да: GC не освободит узел, пока на него есть ссылка. От логической ABA — нет: CAS по-прежнему сравнивает только текущий указатель."
+        }
+      },
+      {
+        "title": "7. Порядок памяти: атомарная публикация",
+        "desc": "G1 записывает data = 42 обычной записью, затем ready.Store(true). G2 видит ready.Load() == true и читает data. По модели памяти Go все атомарные операции ведут себя так, будто выполнены в одном последовательном порядке, и если атомарная операция B наблюдает результат A, то A «synchronizes before» B. Поэтому G2 гарантированно увидит 42. Если читать ready обычной переменной, это data race и гарантии нет.",
+        "descEN": "G1 writes data = 42 with a plain write, then ready.Store(true). G2 sees ready.Load() == true and reads data. In the Go memory model all atomic operations behave as if executed in one sequentially consistent order, and if atomic operation B observes the effect of A, then A synchronizes before B. So G2 is guaranteed to see 42. Reading ready as a plain variable is a data race with no guarantee.",
+        "board": [
+          {
+            "hl": [
+              "ready.Store(true)",
+              "ready.Load() == true"
+            ],
+            "hlLabel": "синхронизация",
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "по порядку",
+                    "items": [
+                      "data = 42",
+                      "ready.Store(true)"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "по порядку",
+                    "items": [
+                      "ready.Load() == true",
+                      "data → 42"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Память",
+                "slots": [
+                  {
+                    "label": "data",
+                    "items": [
+                      "42"
+                    ]
+                  },
+                  {
+                    "label": "ready",
+                    "items": [
+                      "true"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Внутри G1 запись data идёт до Store",
+                "Store(true) synchronizes before Load, который его увидел",
+                "Значит, G2 видит data = 42; без атомиков это гонка"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "If G2 reads ready = false, what can it conclude about data?",
+          "promptRU": "Если G2 прочитала ready = false, что она может сказать о data?",
+          "answerEN": "Nothing: no synchronization happened. It must wait for true (or use a channel or sync.WaitGroup) before reading data.",
+          "answerRU": "Ничего: синхронизации не было. Нужно дождаться true (или использовать канал, sync.WaitGroup) и только потом читать data."
+        }
+      },
+      {
+        "title": "8. CAS, atomic или mutex: что выбрать",
+        "desc": "Сводка шага: когда достаточно одной атомарной операции, когда нужен CAS-цикл, а когда — mutex. И короткий ответ на английском, который можно произнести на интервью за минуту.",
+        "descEN": "A summary: when one atomic operation is enough, when a CAS loop is needed, and when to use a mutex, plus a one-minute English answer for an interview.",
+        "board": [
+          {
+            "caption": "Что выбрать",
+            "list": {
+              "items": [
+                "Одно слово (счётчик, флаг, указатель на неизменяемый снимок) → atomic: Add, Load/Store, CompareAndSwap",
+                "Переход по условию в одном слове (0 → 1, «первый занял») → CAS",
+                "Инвариант из нескольких полей (баланс и история) → mutex: проверка и запись под одной блокировкой",
+                "Сильная конкуренция → CAS-цикл крутится и тратит CPU; mutex даёт ждущим уснуть",
+                "sync.Mutex сам начинается с CAS(0 → 1): быстрый путь без runtime (диаграмма 8)"
+              ]
+            }
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "ordered": true,
+              "title": "CAS",
+              "items": [
+                "CAS atomically compares a word with an expected value and, only if they match, stores a new one; it returns whether it succeeded.",
+                "On amd64 it is LOCK CMPXCHG; the LOCK prefix makes the compare and store indivisible across cores.",
+                "Lock-free code wraps CAS in a retry loop: read, compute, CAS, retry on failure.",
+                "CAS checks the current value, not its history, so ABA is possible; the GC prevents memory reuse but not logical ABA.",
+                "Go atomics are sequentially consistent: an atomic store observed by an atomic load synchronizes before it.",
+                "Use atomics for one word; use a mutex when an invariant spans several fields."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Name two reasons to choose a mutex instead of CAS.",
+          "promptRU": "Назови две причины выбрать mutex вместо CAS.",
+          "answerEN": "An invariant that spans several fields, and heavy contention: waiters sleep instead of spinning.",
+          "answerRU": "Инвариант из нескольких полей и сильная конкуренция: ждущие спят, а не крутятся."
         }
       }
     ]
@@ -4083,7 +4623,7 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "9-я запись → появляется таблица (директория из одной ссылки)",
+                "Присваивание при 8 записях (даже обновление ключа) → таблица на 16 слотов (директория из одной ссылки)",
                 "Таблица до 1024 слотов растёт удвоением"
               ]
             }
@@ -4241,7 +4781,7 @@ const SIMULATORS = [
             "lanes": [
               {
                 "kind": "group",
-                "title": "Группа map#1",
+                "title": "Группа таблицы map#1",
                 "slots": [
                   {
                     "label": "ctrl",
@@ -4264,7 +4804,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "В группе без свободного слота удалённый становится tombstone (FE); если empty есть — сразу empty (80). Таблица не сжимается."
+                "note": "В группе таблицы без свободного слота удалённый становится tombstone (FE); если empty есть — сразу empty (80). В малой map — всегда сразу 80. Таблица не сжимается."
               }
             ],
             "list": {
@@ -4413,6 +4953,2063 @@ const SIMULATORS = [
       {
         "title": "Experiments — Go 1.26.1",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/goexperiment/flags.go"
+      }
+    ]
+  },
+  {
+    "id": "sim8",
+    "title": "Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания",
+    "subtitle": "Семь шагов по Go 1.26.1 (internal/sync/mutex.go): слово state → быстрый путь → спин → очередь на семафоре → Unlock → режим голодания → ответ за минуту. Учебная модель: тайминги и порядок пробуждения не обещаны.",
+    "cardId": "c21",
+    "cardLabel": "Q21: мьютекс, ожидание и 1 мс →",
+    "boardLegend": "state — одно слово int32: бит 0 — locked (L), бит 1 — woken (W), бит 2 — starving (S), биты с 3 — число ждущих. Биты слева направо: старший → младший. Рамкой выделено то, что изменилось.",
+    "sources": [
+      {
+        "title": "go1.26.1: internal/sync/mutex.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/sync/mutex.go"
+      },
+      {
+        "title": "go1.26.1: sync/mutex.go (документация)",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/sync/mutex.go"
+      },
+      {
+        "title": "go1.26.1: runtime/proc.go (canSpin)",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.26.1: runtime/sema.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/sema.go"
+      },
+      {
+        "title": "sync.Mutex — pkg.go.dev",
+        "url": "https://pkg.go.dev/sync#Mutex"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Одно слово state: три флага и счётчик",
+        "desc": "sync.Mutex — это два поля: state int32 и sema uint32. В state бит 0 — locked (1), бит 1 — woken (2), бит 2 — starving (4), а биты с 3 и выше — число ждущих горутин. Пример: state = 17 = 0b10001 — мьютекс занят, ждут две горутины. sema — адрес, на котором ждущие спят в семафоре рантайма.",
+        "descEN": "A sync.Mutex has two fields: state int32 and sema uint32. In state, bit 0 is locked (1), bit 1 is woken (2), bit 2 is starving (4), and bits 3 and up count waiting goroutines. Example: state = 17 = 0b10001 — the mutex is locked and two goroutines wait. sema is the address on which waiters sleep in the runtime semaphore.",
+        "board": [
+          {
+            "hl": [],
+            "hlLabel": "установлен",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state = 17",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие",
+                        "hl": true
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Как читать",
+                "slots": [
+                  {
+                    "label": "locked",
+                    "items": [
+                      "state & 1 = 1"
+                    ]
+                  },
+                  {
+                    "label": "ждущие",
+                    "items": [
+                      "state >> 3 = 2"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "sema",
+                "slots": [],
+                "note": "Очередь ждущих — в семафоре рантайма по адресу &m.sema."
+              }
+            ],
+            "list": {
+              "items": [
+                "mutexLocked = 1, mutexWoken = 2, mutexStarving = 4",
+                "mutexWaiterShift = 3: ждущие = state >> 3",
+                "Добавить ждущего: state += 1 << 3"
+              ],
+              "title": "Константы и операции"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "What is state for a free mutex with no waiters?",
+          "promptRU": "Какое значение state у свободного мьютекса без ждущих?",
+          "answerEN": "0, which is why the fast path is CAS(0 → 1).",
+          "answerRU": "0: поэтому быстрый путь — CAS(0 → 1)."
+        }
+      },
+      {
+        "title": "2. Lock: быстрый путь — один CAS(0 → 1)",
+        "desc": "Если state = 0, Lock выполняет CompareAndSwapInt32(&state, 0, 1) и сразу возвращается: ни runtime, ни очереди. Эта часть маленькая и встраивается (inline) в вызывающий код. Не вышло — переход в lockSlow. Unlock тоже начинается с быстрого пути: AddInt32(&state, −1); результат 0 значит, будить некого.",
+        "descEN": "If state is 0, Lock does CompareAndSwapInt32(&state, 0, 1) and returns at once: no runtime, no queue. This part is small and inlined into the caller. If it fails, lockSlow runs. Unlock also starts with a fast path: AddInt32(&state, −1); a result of 0 means nobody needs waking.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "Lock()",
+                    "items": [
+                      {
+                        "g": "CAS(0 → 1)",
+                        "flag": "true",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "было",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "стало",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Быстрый путь Lock: одна атомарная операция",
+                "Быстрый путь Unlock: state − 1 == 0 → готово"
+              ],
+              "title": "Быстрые пути"
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why doesn't Lock call into the runtime when the mutex is free?",
+          "promptRU": "Почему Lock не вызывает runtime, если мьютекс свободен?",
+          "answerEN": "Acquiring is one successful CAS; the runtime is needed only for waiting.",
+          "answerRU": "Захват — это один успешный CAS; runtime нужен только для ожидания."
+        }
+      },
+      {
+        "title": "3. Занято: короткий активный спин",
+        "desc": "G2 видит locked = 1. Если мьютекс не в режиме голодания и runtime_canSpin разрешает, G2 немного крутится: до 4 итераций, каждая — procyield(30), то есть 30 инструкций PAUSE на amd64, в надежде, что G1 скоро отпустит. Условия спина: больше одного CPU; GOMAXPROCS больше, чем простаивающие и ищущие работу P плюс один; пустая локальная очередь своего P. Если уже есть спящие ждущие, крутящаяся G2 может поставить woken, чтобы Unlock не будил ещё одного.",
+        "descEN": "G2 sees locked = 1. If the mutex is not starving and runtime_canSpin allows it, G2 spins briefly: up to 4 iterations, each procyield(30), that is 30 PAUSE instructions on amd64, hoping G1 releases soon. Spinning requires more than one CPU, GOMAXPROCS greater than idle plus spinning Ps plus one, and an empty local run queue on its own P. If sleeping waiters exist, the spinning G2 may set woken so that Unlock does not wake another one.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "мьютекс"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "slots": [
+                  {
+                    "label": "спин",
+                    "items": [
+                      "итерации 1–4",
+                      "procyield(30)"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "было",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "стало",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "W",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Было: locked, один спящий ждущий. G2 поставила woken: «я рядом, не буди других»."
+              }
+            ],
+            "list": {
+              "items": [
+                "Спин только в нормальном режиме и при runtime_canSpin",
+                "До 4 итераций по procyield(30) — PAUSE на amd64",
+                "woken ставится, только если есть спящие ждущие"
+              ]
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Will a goroutine spin on a mutex when GOMAXPROCS = 1?",
+          "promptRU": "Будет ли горутина крутиться на мьютексе при GOMAXPROCS = 1?",
+          "answerEN": "No: canSpin requires other running Ps. With one P the holder cannot run and release the mutex while we spin.",
+          "answerRU": "Нет: canSpin требует других работающих P. На одном P держатель не может выполниться и отпустить мьютекс, пока мы крутимся."
+        }
+      },
+      {
+        "title": "4. Очередь: семафор и сон",
+        "desc": "Спин не помог. G2 через CAS увеличивает счётчик ждущих (state += 8) и вызывает runtime_SemacquireMutex(&sema): горутина паркуется в очереди семафора и не тратит CPU. Если горутина уже ждала раньше и снова проиграла, она встаёт в начало очереди (LIFO), а не в конец.",
+        "descEN": "Spinning did not help. G2 increments the waiter count with a CAS (state += 8) and calls runtime_SemacquireMutex(&sema): the goroutine parks in the semaphore queue and uses no CPU. A goroutine that has already waited and lost again goes to the front of the queue (LIFO), not the back.",
+        "board": [
+          {
+            "hl": [
+              "G2"
+            ],
+            "hlLabel": "новая",
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "мьютекс"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "sema",
+                "slots": [
+                  {
+                    "label": "очередь · голова →",
+                    "items": [
+                      "G3",
+                      "G2"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "G3 ждала раньше. Повторно проигравшая горутина встала бы в голову."
+              },
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "ждущих 2",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие",
+                        "hl": true
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "state: ждущих +1 (state += 1 << 3)",
+                "G2 спит в семафоре: CPU не тратит",
+                "Повторно проигравшая встаёт в голову очереди (queueLifo)"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Does a wait queue mean the mutex is handed out strictly in order?",
+          "promptRU": "Раз есть очередь, мьютекс отдаётся строго по порядку?",
+          "answerEN": "No. In normal mode a woken goroutine competes with newcomers and may lose.",
+          "answerRU": "Нет. В нормальном режиме разбуженная горутина конкурирует с новыми и может проиграть."
+        }
+      },
+      {
+        "title": "5. Unlock: разбудить одного, но не отдать",
+        "desc": "G1 вызывает Unlock: AddInt32(state, −1) снимает locked. Если осталось ненулевое значение, unlockSlow проверяет: есть ждущие, и никто ещё не разбужен и не захватил мьютекс — тогда CAS уменьшает счётчик ждущих, ставит woken и будит одну горутину из семафора. В нормальном режиме разбуженная G3 не получает мьютекс автоматически: она снова борется за него, и новая горутина G4, уже работающая на CPU, часто успевает первой. Проигравшая G3 возвращается в голову очереди.",
+        "descEN": "G1 calls Unlock: AddInt32(state, −1) clears locked. If the result is non-zero, unlockSlow checks that there are waiters and that nobody has been woken or has taken the mutex; then a CAS decrements the waiter count, sets woken and wakes one goroutine from the semaphore. In normal mode the woken G3 does not get the mutex automatically: it competes again, and a new goroutine G4 already running on a CPU often wins. The losing G3 goes back to the front of the queue.",
+        "predict": {
+          "promptEN": "G1 releases the mutex; G3 is woken, and at the same moment a new G4 arrives. Who gets the mutex?",
+          "promptRU": "G1 отпускает мьютекс; G3 разбужена, и одновременно приходит новая G4. Кто получит мьютекс?"
+        },
+        "board": [
+          {
+            "hl": [
+              "G3",
+              "G4"
+            ],
+            "hlLabel": "соревнуются",
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "Unlock()",
+                    "items": [
+                      "state − 1",
+                      "Semrelease: разбудить одного"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "sema",
+                "slots": [
+                  {
+                    "label": "очередь · голова →",
+                    "items": [
+                      "G2"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "Разбужена",
+                "slots": [
+                  {
+                    "label": "G",
+                    "items": [
+                      {
+                        "g": "G3",
+                        "flag": "woken"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "Только пришла",
+                "slots": [
+                  {
+                    "label": "G",
+                    "items": [
+                      {
+                        "g": "G4",
+                        "flag": "CAS(0 → 1)"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Unlock: state − 1; не ноль → unlockSlow",
+                "Будит одну горутину, ставит woken, ждущих − 1",
+                "G3 и новая G4 соревнуются; часто выигрывает G4 — она уже на CPU",
+                "Проигравшая G3 возвращается в голову очереди"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "May a goroutine other than the one that called Lock call Unlock?",
+          "promptRU": "Можно ли вызвать Unlock из другой горутины, не той, что делала Lock?",
+          "answerEN": "Yes: a locked Mutex is not associated with a goroutine. But unlocking an unlocked mutex is a fatal runtime error, not a recoverable panic.",
+          "answerRU": "Да: заблокированный Mutex не привязан к горутине. Но Unlock незаблокированного — фатальная ошибка рантайма, recover не поможет."
+        }
+      },
+      {
+        "title": "6. Режим голодания: прямая передача",
+        "desc": "Если ждущая горутина не может получить мьютекс дольше 1 мс, она переключает его в режим голодания (starving). Теперь Unlock передаёт владение прямо голове очереди и уступает ей процессор; новые горутины не крутятся и не пытаются захватить мьютекс, даже если он выглядит свободным, а встают в хвост. Режим выключается, когда получившая мьютекс горутина последняя в очереди или ждала меньше 1 мс. Нормальный режим быстрее, режим голодания защищает от долгих хвостовых задержек.",
+        "descEN": "If a waiter cannot get the mutex for more than 1 ms, it switches the mutex to starvation mode. Unlock then hands ownership directly to the head of the queue and yields the processor to it; new goroutines do not spin or try to grab the mutex even if it looks free, and queue at the tail. The mode ends when the goroutine that got the mutex is the last waiter or waited less than 1 ms. Normal mode is faster; starvation mode protects against long tail latency.",
+        "board": [
+          {
+            "hl": [
+              "G3",
+              "G4"
+            ],
+            "hlLabel": "изменилось",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "starving",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "S",
+                        "hl": true
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "Unlock()",
+                    "items": [
+                      "Semrelease(handoff = true)"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "sema",
+                "slots": [
+                  {
+                    "label": "очередь · голова →",
+                    "items": [
+                      {
+                        "g": "G3",
+                        "flag": "получает мьютекс"
+                      },
+                      "G2",
+                      {
+                        "g": "G4",
+                        "flag": "новая — в хвост"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Ждёт дольше 1 мс → starving = 1",
+                "Unlock передаёт мьютекс голове очереди напрямую",
+                "Новые горутины (G4) не крутятся и встают в хвост",
+                "Выход: последний ждущий или ожидание меньше 1 мс"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Does 1 ms mean Lock never waits longer than 1 ms?",
+          "promptRU": "Значит ли 1 мс, что Lock ждёт не дольше 1 мс?",
+          "answerEN": "No. It is the threshold for switching modes, not a timeout: Lock waits as long as needed.",
+          "answerRU": "Нет. Это порог переключения режима, а не таймаут: Lock ждёт сколько потребуется."
+        }
+      },
+      {
+        "title": "7. Ответ за минуту и ловушки",
+        "desc": "Сводка: короткий ответ на английском и формулировки, на которых часто ошибаются.",
+        "descEN": "A summary: a short English answer and common mistakes.",
+        "board": [
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "ordered": true,
+              "title": "sync.Mutex",
+              "items": [
+                "A sync.Mutex is two words: state, with locked, woken and starving bits plus a waiter count, and sema.",
+                "The Lock fast path is one CAS from 0 to locked; the Unlock fast path is an atomic subtract.",
+                "Under contention a goroutine may spin briefly on multicore machines, then sleeps on a runtime semaphore.",
+                "Normal mode is not FIFO: a woken waiter competes with newcomers, which gives better throughput.",
+                "If a waiter waits more than 1 ms, starvation mode hands the lock directly to the queue head and newcomers queue at the tail.",
+                "A Mutex is not reentrant and not tied to a goroutine; unlocking an unlocked mutex is fatal; do not copy it after first use."
+              ]
+            }
+          },
+          {
+            "caption": "Ловушки",
+            "list": {
+              "title": "Упрощение → точнее",
+              "items": [
+                "«Mutex — очередь FIFO» → строго по очереди только в режиме голодания; в нормальном новички часто обгоняют",
+                "«1 мс — таймаут» → порог переключения режима",
+                "«Unlock будит всех» → будит одну горутину, и только если никто ещё не разбужен",
+                "«Повторный Lock той же горутиной пройдёт» → deadlock: мьютекс не реентерабельный",
+                "«Unlock может вызвать только владелец» → в Go Mutex не привязан к горутине",
+                "«Unlock без Lock — panic» → фатальная ошибка рантайма, recover не поможет",
+                "«Копия мьютекса — та же блокировка» → копия независима; go vet (copylocks) ловит копирование",
+                "«TryLock решает гонки» → корректные случаи редки, часто это признак проблемы в дизайне (документация sync)"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why is starvation mode slower than normal mode?",
+          "promptRU": "Почему режим голодания медленнее нормального?",
+          "answerEN": "Every handoff goes through waking a sleeping goroutine; normal mode lets a running goroutine take the mutex several times in a row without switches.",
+          "answerRU": "Каждая передача идёт через пробуждение спящей горутины; нормальный режим позволяет работающей горутине захватывать мьютекс несколько раз подряд без переключений."
+        }
+      }
+    ]
+  },
+  {
+    "id": "sim9",
+    "title": "Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме",
+    "subtitle": "Восемь шагов: операции на одном байте → маски → флаги мьютекса → H1/H2 → поиск H2 сразу в 8 байтах → обход битсета → атомарные And/Or → ответ и ловушки. Числа посчитаны; реальные хеши другие.",
+    "cardId": "c31",
+    "cardLabel": "Карточка Q31 (SwissTables) →",
+    "boardLegend": "Биты в строке — старший слева (бит 7 → бит 0); байты map — слоты 0 → 7. Рамкой выделено то, что дало результат.",
+    "sources": [
+      {
+        "title": "Go spec: arithmetic and bitwise operators",
+        "url": "https://go.dev/ref/spec#Arithmetic_operators"
+      },
+      {
+        "title": "Go spec: operator precedence",
+        "url": "https://go.dev/ref/spec#Operator_precedence"
+      },
+      {
+        "title": "go1.26.1: internal/runtime/maps/group.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go"
+      },
+      {
+        "title": "go1.26.1: internal/sync/mutex.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/sync/mutex.go"
+      },
+      {
+        "title": "math/bits",
+        "url": "https://pkg.go.dev/math/bits"
+      },
+      {
+        "title": "sync/atomic (And/Or с Go 1.23)",
+        "url": "https://pkg.go.dev/sync/atomic"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Шесть операций на одном байте",
+        "desc": "a = 0b11001010 (202), b = 0b10100110 (166), тип uint8. & — оба бита 1; | — хотя бы один; ^ — биты разные; &^ (AND NOT, есть в Go) — бит из a, если в b он 0; << и >> сдвигают, а биты, вышедшие за 8, теряются. Унарный ^x в Go — побитовое НЕ.",
+        "descEN": "a = 0b11001010 (202), b = 0b10100110 (166), type uint8. & keeps bits set in both; | in either; ^ where they differ; &^ (AND NOT, a Go operator) keeps a's bits that are 0 in b; << and >> shift, and bits pushed past 8 are lost. Unary ^x in Go is bitwise NOT.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Операнды",
+                "slots": [
+                  {
+                    "label": "a = 202",
+                    "items": [
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "b = 166",
+                    "items": [
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a & b = 130",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a | b = 238",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a ^ b = 108",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a &^ b = 72",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a << 1 = 148",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "a >> 2 = 50",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "a << 1 = 148: старший бит a ушёл за пределы uint8",
+                "^a = 53 (0b00110101) — побитовое НЕ для uint8"
+              ],
+              "title": "Заметки"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "What is 0b1100 &^ 0b1010?",
+          "promptRU": "Чему равно 0b1100 &^ 0b1010?",
+          "answerEN": "0b0100: the bits of the first number that are not set in the second.",
+          "answerRU": "0b0100: остаются биты первого числа, которых нет во втором."
+        }
+      },
+      {
+        "title": "2. Маски и степень двойки",
+        "desc": "Если n — степень двойки, x % n == x & (n − 1) для неотрицательного x: маска оставляет младшие биты. Поэтому размеры таблиц в рантайме — степени двойки: смещение группы в map — h1 & lengthMask, без деления. x & (x − 1) сбрасывает младший единичный бит: при x > 0 результат 0 значит, что x — степень двойки. x & −x оставляет только младший единичный бит.",
+        "descEN": "If n is a power of two, x % n == x & (n − 1) for non-negative x: the mask keeps the low bits. That is why runtime tables have power-of-two sizes: a map group offset is h1 & lengthMask, with no division. x & (x − 1) clears the lowest set bit: for x > 0 a result of 0 means x is a power of two. x & −x keeps only the lowest set bit.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "x = 45",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "mask = n − 1 (n = 8) = 7",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "x & mask = 5",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "x & (x − 1) = 44",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "64 & 63 = 0",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "45 % 8 = 45 & 7 = 5",
+                "45 & 44 = 44 ≠ 0 → 45 не степень двойки; 64 & 63 = 0 → 64 — степень двойки",
+                "maps: смещение группы = h1 & lengthMask (table.go makeProbeSeq)"
+              ],
+              "title": "Проверка"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Are x % 8 and x & 7 equal for x = −3?",
+          "promptRU": "Равны ли x % 8 и x & 7 при x = −3?",
+          "answerEN": "No: −3 % 8 = −3 (Go keeps the sign of the dividend), while −3 & 7 = 5. The mask trick holds for non-negative x.",
+          "answerRU": "Нет: −3 % 8 = −3 (в Go знак берётся от делимого), а −3 & 7 = 5. Трюк с маской верен для неотрицательных x."
+        }
+      },
+      {
+        "title": "3. Флаги в одном слове: state мьютекса",
+        "desc": "Проверить флаг: state & mutexLocked != 0. Поставить: state | mutexWoken. Снять: state &^ mutexWoken. Счётчик в старших битах: state >> 3 — число ждущих, state + 1<<3 — добавить ждущего. В Go & связывает сильнее, чем ==, поэтому x&1 == 0 читается как (x&1) == 0 — в отличие от C.",
+        "descEN": "Test a flag: state & mutexLocked != 0. Set: state | mutexWoken. Clear: state &^ mutexWoken. A counter in the high bits: state >> 3 is the number of waiters, state + 1<<3 adds one. In Go & binds tighter than ==, so x&1 == 0 means (x&1) == 0, unlike C.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "state = 17",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "state | woken = 19",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "W",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "19 &^ woken = 17",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "17 + 1<<3 = 25",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие",
+                        "hl": true
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие",
+                        "hl": true
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "25 >> 3 = 3 ждущих"
+              }
+            ],
+            "list": {
+              "items": [
+                "Проверить: state&mutexLocked != 0",
+                "Поставить: state |= mutexWoken; снять: state &^= mutexWoken",
+                "Счётчик: state >> 3; добавить: state += 1 << 3"
+              ],
+              "title": "Операции с флагами"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "How do you write \"bit 2 is clear\" in Go without extra parentheses?",
+          "promptRU": "Как в Go записать «бит 2 снят» без лишних скобок?",
+          "answerEN": "state&4 == 0, because & has higher precedence than ==.",
+          "answerRU": "state&4 == 0: у & приоритет выше, чем у ==."
+        }
+      },
+      {
+        "title": "4. Хеш на части: H1 и H2",
+        "desc": "Swiss map делит 64-битный хеш: H2 = h & 0x7f — младшие 7 бит (отпечаток в байте ctrl), H1 = h >> 7 — остальные 57 (выбор группы). Таблицу в директории выбирают старшие биты: h >> globalShift. Пример на младшем байте хеша 0b10101010 (0xAA): H2 = 0x2A, а бит 7 уходит в H1. Это тот же отпечаток 2A, что на диаграмме 7.",
+        "descEN": "A Swiss map splits a 64-bit hash: H2 = h & 0x7f, the low 7 bits (the fingerprint in a ctrl byte), and H1 = h >> 7, the other 57 bits (group selection). The directory picks a table by the high bits: h >> globalShift. Example on the low byte of a hash, 0b10101010 (0xAA): H2 = 0x2A, and bit 7 goes to H1. It is the same 2A fingerprint as in diagram 7.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "младший байт хеша (0xAA) = 170",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "H2 = h & 0x7F (0x2A) = 42",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "H1 = h >> 7",
+                "slots": [
+                  {
+                    "label": "младший бит H1",
+                    "items": [
+                      {
+                        "g": "1",
+                        "flag": "бит 7 хеша",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ],
+                "note": "Остальные 56 бит H1 — из старших байтов хеша."
+              }
+            ],
+            "list": {
+              "items": [
+                "0xAA & 0x7F = 0x2A — отпечаток в ctrl",
+                "h >> 7 — H1 для пробирования групп",
+                "h >> globalShift — старшие биты для выбора таблицы"
+              ],
+              "title": "Что куда"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why is the top bit of an occupied ctrl byte always 0?",
+          "promptRU": "Почему у занятого байта ctrl старший бит всегда 0?",
+          "answerEN": "H2 uses 7 bits (0x00–0x7F), while empty (0x80) and deleted (0xFE) have the top bit set, so a single bit tells them apart from occupied slots.",
+          "answerRU": "H2 занимает 7 бит (0x00–0x7F), а у empty (0x80) и deleted (0xFE) старший бит 1 — по одному биту их отличают от занятых."
+        }
+      },
+      {
+        "title": "5. SWAR: найти H2 сразу в 8 байтах",
+        "desc": "Восемь байтов ctrl читаются как одно uint64 (SWAR — SIMD within a register). Шаг 1: v = ctrl ^ (0x0101…01 × H2) — совпавшие байты становятся 0x00. Шаг 2: (v − 0x0101…01) &^ v & 0x8080…80 — у нулевых байтов появляется старший бит. Итог — маска кандидатов. Пример: ctrl = [2A 19 2A 80 11 80 80 80], H2 = 2A → v = [00 33 00 AA 3B AA AA AA] → результат 0x0000000000800080: кандидаты — слоты 0 и 2. Переносы при вычитании дают редкие ложные срабатывания, но только при настоящем совпадении рядом; ключи всё равно сравниваются. На amd64 вместо этого — SIMD-инструкции.",
+        "descEN": "Eight ctrl bytes are read as one uint64 (SWAR — SIMD within a register). Step 1: v = ctrl ^ (0x0101…01 × H2), so matching bytes become 0x00. Step 2: (v − 0x0101…01) &^ v & 0x8080…80 sets the top bit of the zero bytes. The result is a mask of candidates. Example: ctrl = [2A 19 2A 80 11 80 80 80], H2 = 2A → v = [00 33 00 AA 3B AA AA AA] → result 0x0000000000800080: candidates are slots 0 and 2. Borrows in the subtraction cause rare false positives, but only next to a real match, and keys are compared anyway. On amd64 SIMD instructions are used instead.",
+        "predict": {
+          "promptEN": "ctrl = [2A 19 2A 80 11 80 80 80], H2 = 2A. Which bytes become zero after the XOR, and which slots are candidates?",
+          "promptRU": "ctrl = [2A 19 2A 80 11 80 80 80], ищем H2 = 2A. Какие байты станут нулевыми после XOR и какие слоты — кандидаты?"
+        },
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "ctrl (слоты 0 → 7)",
+                "slots": [
+                  {
+                    "label": "байты",
+                    "items": [
+                      {
+                        "g": "2A",
+                        "flag": "слот 0",
+                        "hl": true
+                      },
+                      {
+                        "g": "19",
+                        "flag": "слот 1"
+                      },
+                      {
+                        "g": "2A",
+                        "flag": "слот 2",
+                        "hl": true
+                      },
+                      {
+                        "g": "80",
+                        "flag": "слот 3"
+                      },
+                      {
+                        "g": "11",
+                        "flag": "слот 4"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "слот 5"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "слот 6"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "слот 7"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "v = ctrl ^ 2A2A…2A",
+                "slots": [
+                  {
+                    "label": "байты",
+                    "items": [
+                      {
+                        "g": "00",
+                        "flag": "слот 0",
+                        "hl": true
+                      },
+                      {
+                        "g": "33",
+                        "flag": "слот 1"
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 2",
+                        "hl": true
+                      },
+                      {
+                        "g": "AA",
+                        "flag": "слот 3"
+                      },
+                      {
+                        "g": "3B",
+                        "flag": "слот 4"
+                      },
+                      {
+                        "g": "AA",
+                        "flag": "слот 5"
+                      },
+                      {
+                        "g": "AA",
+                        "flag": "слот 6"
+                      },
+                      {
+                        "g": "AA",
+                        "flag": "слот 7"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "(v − 0101…01) &^ v & 8080…80",
+                "slots": [
+                  {
+                    "label": "байты",
+                    "items": [
+                      {
+                        "g": "80",
+                        "flag": "слот 0",
+                        "hl": true
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 1"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "слот 2",
+                        "hl": true
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 3"
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 4"
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 5"
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 6"
+                      },
+                      {
+                        "g": "00",
+                        "flag": "слот 7"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Две формулы",
+              "items": [
+                "XOR с повторённым H2 обнуляет совпавшие байты",
+                "Вычитание 0x01 в каждом байте даёт 0xFF только у нулевых; &^ v и & 0x80… оставляют их старший бит",
+                "Маска 0x800080 → кандидаты: слоты 0 и 2"
+              ]
+            },
+            "hlLabel": "кандидат"
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why does a false positive not break the lookup?",
+          "promptRU": "Почему ложное срабатывание не ломает поиск?",
+          "answerEN": "The mask yields candidates, not answers: the key in each candidate slot is still compared. False positives are rare and only appear next to a real match.",
+          "answerRU": "Маска даёт кандидатов, а не ответ: ключ в слоте всё равно сравнивается. Ложные кандидаты редки и бывают только рядом с настоящим совпадением."
+        }
+      },
+      {
+        "title": "6. Обход найденных битов",
+        "desc": "Маска 0x800080 содержит кандидатов. bits.TrailingZeros64(b) >> 3 даёт номер первого слота: 7 >> 3 = 0. Затем b &= b − 1 снимает младший единичный бит, и следующий TrailingZeros64 = 23 → слот 2. Цикл заканчивается при b == 0. Так рантайм перебирает только кандидатов, а не все восемь байтов.",
+        "descEN": "The mask 0x800080 holds the candidates. bits.TrailingZeros64(b) >> 3 gives the first slot: 7 >> 3 = 0. Then b &= b − 1 clears the lowest set bit, and the next TrailingZeros64 = 23 → slot 2. The loop ends when b == 0. The runtime visits only candidates, not all eight bytes.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Итерация 1",
+                "slots": [
+                  {
+                    "label": "b",
+                    "items": [
+                      "0x800080"
+                    ]
+                  },
+                  {
+                    "label": "TrailingZeros64",
+                    "items": [
+                      "7"
+                    ]
+                  },
+                  {
+                    "label": "слот",
+                    "items": [
+                      {
+                        "g": "0",
+                        "flag": "7 >> 3",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Итерация 2",
+                "slots": [
+                  {
+                    "label": "b &= b − 1",
+                    "items": [
+                      "0x800000"
+                    ]
+                  },
+                  {
+                    "label": "TrailingZeros64",
+                    "items": [
+                      "23"
+                    ]
+                  },
+                  {
+                    "label": "слот",
+                    "items": [
+                      {
+                        "g": "2",
+                        "flag": "23 >> 3",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Конец",
+                "slots": [
+                  {
+                    "label": "b &= b − 1",
+                    "items": [
+                      "0"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "first: TrailingZeros64(b) >> 3 (group.go bitsetFirst)",
+                "removeFirst: b & (b − 1)",
+                "На amd64 битсет упакован: по биту на слот, сдвиг не нужен"
+              ]
+            },
+            "hlLabel": "слот"
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "What does b & (b − 1) do?",
+          "promptRU": "Что делает b & (b − 1)?",
+          "answerEN": "It clears the lowest set bit; a loop `for b != 0 { …; b &= b − 1 }` visits every set bit.",
+          "answerRU": "Сбрасывает младший единичный бит; цикл «пока b != 0: …; b &= b − 1» обходит все установленные биты."
+        }
+      },
+      {
+        "title": "7. Атомарные битовые операции",
+        "desc": "С Go 1.23 в sync/atomic есть And и Or (функции AndInt32, OrInt32 и другие, методы Int32.And/Or): атомарно поставить флаг — Or(mask), снять — And(^mask); обе возвращают старое значение. До 1.23 для этого писали CAS-цикл: прочитать, вычислить old | mask, CompareAndSwap, повторить при неудаче. sync.Mutex использует CAS, потому что меняет флаги и счётчик ждущих одним действием.",
+        "descEN": "Since Go 1.23 sync/atomic has And and Or (AndInt32, OrInt32 and others, plus Int32.And/Or methods): set a flag atomically with Or(mask), clear it with And(^mask); both return the old value. Before 1.23 this needed a CAS loop: read, compute old | mask, CompareAndSwap, retry on failure. sync.Mutex uses CAS because it changes flags and the waiter count in one step.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "flags (было)",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "flags.Or(0b100) → вернул 1",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "hl": true
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "flags.And(^0b1) → вернул 5",
+                "slots": [
+                  {
+                    "label": "биты 7→0",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Or(mask): поставить биты, вернуть старое значение",
+                "And(^mask): снять биты",
+                "До Go 1.23: CAS-цикл с old | mask или old &^ mask"
+              ],
+              "title": "Операции"
+            },
+            "hlQuiet": true
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "How do you clear bit mask atomically?",
+          "promptRU": "Как атомарно снять биты mask?",
+          "answerEN": "flags.And(^mask) in Go 1.23+, or a CAS loop that writes old &^ mask.",
+          "answerRU": "flags.And(^mask) в Go 1.23+ или CAS-цикл, который записывает old &^ mask."
+        }
+      },
+      {
+        "title": "8. Ответ за минуту и ловушки",
+        "desc": "Сводка: короткие ответы на английском на частые вопросы о битах и формулировки, на которых часто ошибаются.",
+        "descEN": "A summary: short English answers to common bit questions and frequent mistakes.",
+        "board": [
+          {
+            "caption": "Короткие ответы (EN)",
+            "list": {
+              "ordered": true,
+              "title": "Q → A",
+              "items": [
+                "Why are runtime tables sized as powers of two? — So that x % n becomes x & (n − 1), a single AND instead of a division.",
+                "How do you check that x > 0 is a power of two? — x & (x − 1) == 0.",
+                "What does &^ do? — AND NOT: it clears in x the bits that are set in y.",
+                "How does a Swiss map compare H2 against 8 slots at once? — XOR the control word with H2 repeated, then (v − 0x01…) &^ v & 0x80… marks zero bytes; candidates are confirmed by comparing keys.",
+                "How do you iterate over set bits? — TrailingZeros finds the lowest one, b &= b − 1 clears it."
+              ]
+            }
+          },
+          {
+            "caption": "Ловушки",
+            "list": {
+              "items": [
+                "x&1 == 0 в Go — это (x&1) == 0: у & приоритет выше, чем у == (в C наоборот)",
+                "^x — побитовое НЕ; ~ в Go означает другое (только в ограничениях дженериков: ~int)",
+                "Сдвиг на ширину типа и больше даёт 0 (у отрицательного знакового при >> — −1); это не неопределённое поведение, как в C",
+                "Отрицательный счётчик сдвига во время выполнения — panic",
+                "Сдвиг знакового вправо арифметический: −8 >> 1 = −4",
+                "x % n == x & (n − 1) только для неотрицательных x",
+                "Переполнение переменных целых типов циклическое (uint8: 255 + 1 = 0); у констант — ошибка компиляции",
+                "math/bits: OnesCount, LeadingZeros, TrailingZeros, Len, RotateLeft — компилятор часто заменяет их одной инструкцией"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "var x uint8 = 1. What is x << 8?",
+          "promptRU": "var x uint8 = 1. Чему равно x << 8?",
+          "answerEN": "0: the shifted-out bit is lost; there is no panic and no undefined behaviour.",
+          "answerRU": "0: вышедший бит теряется; ни паники, ни неопределённого поведения."
+        }
       }
     ]
   }
