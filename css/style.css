@@ -832,3 +832,16 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .practice-hint p, .practice-talk p { margin: 6px 0 4px; overflow-wrap: anywhere; }
 .practice-pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
 .practice-pager .btn { min-width: 0; overflow-wrap: anywhere; }
+
+/* Quiz: режим «сначала свой ответ» */
+.quiz-mode { margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.quiz-mode-toggle { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.quiz-mode-toggle input { width: 18px; height: 18px; }
+.quiz-mode p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.quiz-own { display: none; margin: 16px 0 0; }
+.quiz-own label { display: block; font-weight: 600; margin-bottom: 6px; overflow-wrap: anywhere; }
+.quiz-own textarea { display: block; width: 100%; max-width: 100%; box-sizing: border-box; margin-bottom: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: inherit; font: inherit; resize: vertical; }
+.quiz-own textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.quiz-own-status { display: inline-block; margin-left: 8px; font-size: 0.9rem; overflow-wrap: anywhere; }
+.answer-first .quiz-own { display: block; }
+.answer-first .quiz-options:not(.revealed) { display: none; }
