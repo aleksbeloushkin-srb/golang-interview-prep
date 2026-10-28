@@ -445,18 +445,18 @@ function renderSimStep(simIdx, stepIdx) {
    Данные: board = [{ caption?, lanes: [{ kind, title, tag?, state?, slots: [{ label, items, queue? }], note? }],
    hl?: [id], list?: { title, items, ordered? } }]. Элемент: "G1" или { g: "G1", flag: "..." }.
    Изменения выделяются рамкой и словом «изменилось», не только цветом. */
-function boardChipHtml(item, hl) {
+function boardChipHtml(item, hl, hlLabel) {
   const g = typeof item === "string" ? item : item.g;
   const flag = typeof item === "string" ? "" : item.flag;
   const changed = hl.includes(g);
-  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed ? `<span class="g-changed">изменилось</span>` : ""}</li>`;
+  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed ? `<span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}</li>`;
 }
 
-function boardLaneHtml(lane, hl) {
+function boardLaneHtml(lane, hl, hlLabel) {
   const slots = (lane.slots || []).map(slot => {
     const items = slot.items || [];
     const list = items.length
-      ? `<${slot.queue ? "ol" : "ul"} class="board-items${slot.queue ? " is-queue" : ""}">${items.map(item => boardChipHtml(item, hl)).join("")}</${slot.queue ? "ol" : "ul"}>`
+      ? `<${slot.queue ? "ol" : "ul"} class="board-items${slot.queue ? " is-queue" : ""}">${items.map(item => boardChipHtml(item, hl, hlLabel)).join("")}</${slot.queue ? "ol" : "ul"}>`
       : `<span class="board-empty">пусто</span>`;
     return `<div class="board-slot"><span class="board-slot-label">${escapeHtml(slot.label)}</span>${list}</div>`;
   }).join("");
@@ -481,7 +481,7 @@ function boardHtml(board, legend) {
         </div>` : "";
         return `<figure class="board-panel">
           ${panel.caption ? `<figcaption class="board-caption">${escapeHtml(panel.caption)}</figcaption>` : ""}
-          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl)).join("")}</div>` : ""}
+          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl, panel.hlLabel)).join("")}</div>` : ""}
           ${list}
         </figure>`;
       }).join("")}

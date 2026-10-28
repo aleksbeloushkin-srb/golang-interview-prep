@@ -783,3 +783,7 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .board-reveal { margin-top: 12px; }
 .board-reveal > summary { color: var(--accent); cursor: pointer; font-weight: 600; }
 .board-reveal-body > .short-answer { margin-top: 12px; }
+.lane-dir { border-left-color: var(--accent); }
+.lane-table { border-left-color: var(--green); }
+.lane-group { border-left-color: #a855f7; }
+.lane-var { border-left-color: var(--amber); }

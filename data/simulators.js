@@ -3548,11 +3548,105 @@ const SIMULATORS = [
     "subtitle": "Пять шагов: старая схема → метаданные → поиск ключа → рост → удаление. Учебные состояния, не снимок реальных хешей и не обещание задержек.",
     "cardId": "c31",
     "cardLabel": "Карточка Q31 (SwissTables) →",
+    "boardLegend": "Схема — учебная: отпечатки и ключи подобраны для объяснения. Слоты слева направо 0→7. Рамкой выделено то, о чём шаг: путь поиска, кандидаты или изменения.",
     "steps": [
       {
         "title": "1. До Swiss Tables: бакет → overflow → эвакуация",
         "desc": "В классической map, показанной по Go 1.17, младшие биты хеша выбирают основной бакет. Tophash отбирает кандидатов, затем сравниваются ключи. Если места не хватает, используются overflow-бакеты. Два основания роста нужно запоминать отдельно.",
         "descEN": "In the classic Go 1.17 map, low hash bits select a primary bucket. Tophash filters candidates before key equality. Overflow buckets provide more slots. Excess load and excess overflow are different reasons to rebuild.",
+        "board": [
+          {
+            "hl": [
+              "b2",
+              "of1"
+            ],
+            "hlLabel": "путь поиска",
+            "lanes": [
+              {
+                "kind": "dir",
+                "title": "Массив бакетов",
+                "tag": "2^B = 4",
+                "slots": [
+                  {
+                    "label": "бакеты",
+                    "items": [
+                      "b0",
+                      "b1",
+                      {
+                        "g": "b2",
+                        "flag": "младшие B бит хеша"
+                      },
+                      "b3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "group",
+                "title": "Бакет b2",
+                "tag": "8 записей",
+                "slots": [
+                  {
+                    "label": "tophash",
+                    "items": [
+                      "t0",
+                      "t1",
+                      "…",
+                      "t7"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "ключи",
+                    "items": [
+                      "k0",
+                      "k1",
+                      "…",
+                      "k7"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "значения",
+                    "items": [
+                      "v0",
+                      "v1",
+                      "…",
+                      "v7"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "overflow →",
+                    "items": [
+                      {
+                        "g": "of1",
+                        "flag": "следующий бакет"
+                      }
+                    ]
+                  }
+                ],
+                "note": "В классической map ключи и значения бакета лежат отдельными массивами."
+              },
+              {
+                "kind": "other",
+                "title": "Рост",
+                "slots": [],
+                "note": "Средняя загрузка выше 6.5 → удвоение; много overflow при обычной загрузке → перестройка того же размера. Перенос постепенный (growWork)."
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Путь поиска (Go 1.17)",
+              "items": [
+                "Хеш → младшие B бит → бакет b2",
+                "tophash отбирает кандидатов, затем сравниваются ключи",
+                "Не нашли → следующий overflow-бакет цепочки"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Путь поиска / Lookup path",
@@ -3626,6 +3720,91 @@ const SIMULATORS = [
         "title": "2. Swiss group: отпечаток и три состояния слота",
         "desc": "У группы восемь управляющих байтов ctrl и восемь слотов ключ/значение. H2 — короткий отпечаток для отбора кандидатов, H1 задаёт пробирование. Байты метаданных можно проверять вместе, но ключи затем сравниваются отдельно.",
         "descEN": "A group contains eight control bytes and eight key/value slots. H2 is a short fingerprint used to filter candidates; H1 drives probing. Metadata can be matched together, but candidate keys must still be compared.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Хеш (64 бита)",
+                "slots": [
+                  {
+                    "label": "H1 · старшие 57",
+                    "items": [
+                      "таблица и группа"
+                    ]
+                  },
+                  {
+                    "label": "H2 · младшие 7",
+                    "items": [
+                      {
+                        "g": "2A",
+                        "flag": "отпечаток"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "group",
+                "title": "Группа",
+                "tag": "8 слотов",
+                "slots": [
+                  {
+                    "label": "ctrl · слоты 0→7",
+                    "items": [
+                      {
+                        "g": "2A",
+                        "flag": "full"
+                      },
+                      {
+                        "g": "19",
+                        "flag": "full"
+                      },
+                      {
+                        "g": "FE",
+                        "flag": "deleted"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "empty"
+                      },
+                      "80",
+                      "80",
+                      "80",
+                      "80"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "слоты",
+                    "items": [
+                      "k:v",
+                      "k:v",
+                      "—",
+                      "—",
+                      "—",
+                      "—",
+                      "—",
+                      "—"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "В Swiss-группе ключ и значение лежат вместе в одном слоте; 8 байтов ctrl идут перед слотами."
+              }
+            ],
+            "list": {
+              "title": "Три состояния байта ctrl",
+              "items": [
+                "Full: 0xxxxxxx — в байте лежит H2 занятого слота",
+                "Empty: 0x80 (1000 0000) — слот свободен",
+                "Deleted: 0xFE (1111 1110) — tombstone: запись удалена, путь поиска сохраняется",
+                "Совпадение H2 — только кандидат; равенство проверяется сравнением ключей"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Хеш / Hash",
@@ -3699,6 +3878,83 @@ const SIMULATORS = [
         "title": "3. Ищем «go»: кандидаты → ключ → результат",
         "desc": "Условный пример: ищем «go» с выбранным H2 = 0x2A. В группе такой отпечаток есть у «rust» и «go». Empty не отменяет проверку кандидатов в этой же группе. Названия языков и отпечатки здесь учебные, не реальные значения хеш-функции Go.",
         "descEN": "Teaching example: look up “go” with a chosen H2 of 0x2A. Both “rust” and “go” have that fingerprint in this group. An empty slot does not bypass candidate checks in the same group. These are illustrative fingerprints, not actual Go hash values.",
+        "predict": {
+          "promptEN": "We look up \"go\" with H2 = 0x2A. Which slots become candidates, and how does the lookup end?",
+          "promptRU": "Ищем «go», H2 = 0x2A. Какие слоты станут кандидатами и чем закончится поиск?"
+        },
+        "board": [
+          {
+            "hl": [
+              "2A"
+            ],
+            "hlLabel": "кандидат",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Ищем",
+                "slots": [
+                  {
+                    "label": "ключ",
+                    "items": [
+                      "go"
+                    ]
+                  },
+                  {
+                    "label": "H2",
+                    "items": [
+                      "0x2A"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "group",
+                "title": "Группа",
+                "tag": "8 слотов",
+                "slots": [
+                  {
+                    "label": "ctrl · слоты 0→7",
+                    "items": [
+                      {
+                        "g": "2A",
+                        "flag": "rust"
+                      },
+                      {
+                        "g": "19",
+                        "flag": "c"
+                      },
+                      {
+                        "g": "2A",
+                        "flag": "go"
+                      },
+                      {
+                        "g": "80",
+                        "flag": "empty"
+                      },
+                      {
+                        "g": "11",
+                        "flag": "js"
+                      },
+                      "80",
+                      "80",
+                      "80"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Три действия",
+              "items": [
+                "Сопоставить H2 = 2A со всеми 8 байтами ctrl → кандидаты: слоты 0 и 2",
+                "Сравнить ключи: rust ≠ go, go = go → вернуть значение",
+                "Если бы ключа не было: в группе есть empty → ключа нет; иначе — следующая группа по H1 (смещения 0, 1, 3, 6…)"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Группа из 8 слотов / Eight-slot group",
@@ -3787,6 +4043,122 @@ const SIMULATORS = [
         "title": "4. Рост: одна группа → таблица → split",
         "desc": "Малая map может использовать одну группу напрямую. Затем появляется таблица и директория. При нехватке места реализация может очистить ненужные tombstones; если этого мало, таблица растёт, а достигшая предела таблица делится. Директория тоже может потребовать увеличения.",
         "descEN": "A small map can use one group directly, then move to a table and directory. When insertion needs room, the runtime may prune unneeded tombstones. If necessary, a table grows or splits at its size limit; the directory may also grow.",
+        "board": [
+          {
+            "caption": "Малая map → таблица",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "group",
+                "title": "Малая map",
+                "tag": "одна группа, до 8 записей",
+                "slots": [
+                  {
+                    "label": "слоты",
+                    "items": [
+                      "k1",
+                      "k2",
+                      "…",
+                      "k8"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Без директории и таблицы; удалённых слотов в малой map не бывает."
+              },
+              {
+                "kind": "table",
+                "title": "Таблица",
+                "tag": "группы по 8 слотов",
+                "slots": [
+                  {
+                    "label": "ёмкость",
+                    "items": [
+                      "512 → 1024 слота"
+                    ]
+                  }
+                ],
+                "note": "Загрузка до 7/8; сначала можно убрать tombstones (pruneTombstones), иначе таблица удваивается."
+              }
+            ],
+            "list": {
+              "items": [
+                "9-я запись → появляется таблица (директория из одной ссылки)",
+                "Таблица до 1024 слотов растёт удвоением"
+              ]
+            }
+          },
+          {
+            "caption": "Предел 1024 слота: split и директория",
+            "hl": [
+              "T2",
+              "T3"
+            ],
+            "hlLabel": "после split",
+            "lanes": [
+              {
+                "kind": "dir",
+                "title": "Директория",
+                "tag": "globalDepth = 2",
+                "slots": [
+                  {
+                    "label": "00",
+                    "items": [
+                      "T1"
+                    ]
+                  },
+                  {
+                    "label": "01",
+                    "items": [
+                      "T1"
+                    ]
+                  },
+                  {
+                    "label": "10",
+                    "items": [
+                      "T2"
+                    ]
+                  },
+                  {
+                    "label": "11",
+                    "items": [
+                      "T3"
+                    ]
+                  }
+                ],
+                "note": "Индекс — старшие биты хеша; несколько записей могут указывать на одну таблицу."
+              },
+              {
+                "kind": "table",
+                "title": "T1",
+                "tag": "localDepth = 1",
+                "slots": []
+              },
+              {
+                "kind": "table",
+                "title": "T2 и T3",
+                "tag": "localDepth = 2",
+                "slots": [
+                  {
+                    "label": "таблицы",
+                    "items": [
+                      "T2",
+                      "T3"
+                    ]
+                  }
+                ],
+                "note": "Получились делением одной таблицы на пределе 1024 слота."
+              }
+            ],
+            "list": {
+              "items": [
+                "Таблица на пределе 1024 слота делится на две (T2 и T3)",
+                "Если localDepth делимой таблицы равен globalDepth, директория удваивается",
+                "Каждая таблица растёт отдельно: перестройка затрагивает часть map, а не всю"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Масштаб / Scale",
@@ -3860,6 +4232,88 @@ const SIMULATORS = [
         "title": "5. Память: запись ≠ таблица ≠ RSS",
         "desc": "delete убирает одну запись, clear — все записи в существующей map. Их данные могут стать недостижимыми, но хранилище таблицы не обязано уменьшиться. Замена переменной не очищает map, которую ещё удерживает alias. Это отдельный шаг, чтобы не смешивать поиск и владение памятью.",
         "descEN": "delete removes one entry; clear removes all entries from the existing map. Payloads may become unreachable while table storage stays allocated. Reassigning one variable does not clear a map still held by an alias. Keep lookup mechanics separate from ownership.",
+        "board": [
+          {
+            "caption": "delete(m, \"rust\")",
+            "hl": [
+              "FE"
+            ],
+            "lanes": [
+              {
+                "kind": "group",
+                "title": "Группа map#1",
+                "slots": [
+                  {
+                    "label": "ctrl",
+                    "items": [
+                      {
+                        "g": "FE",
+                        "flag": "было rust"
+                      },
+                      {
+                        "g": "2A",
+                        "flag": "go"
+                      },
+                      "19",
+                      "11",
+                      "2B",
+                      "3C",
+                      "4D",
+                      "5E"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "В группе без свободного слота удалённый становится tombstone (FE); если empty есть — сразу empty (80). Таблица не сжимается."
+              }
+            ],
+            "list": {
+              "items": [
+                "Запись удалена: значение недостижимо и может быть собрано GC",
+                "Память таблицы остаётся: len(m) уменьшился, ёмкость — нет"
+              ]
+            }
+          },
+          {
+            "caption": "alias := m; m = make(map…)",
+            "hl": [
+              "map#2"
+            ],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "Ссылки",
+                "slots": [
+                  {
+                    "label": "m",
+                    "items": [
+                      {
+                        "g": "map#2",
+                        "flag": "новая"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "alias",
+                    "items": [
+                      {
+                        "g": "map#1",
+                        "flag": "держит старую"
+                      }
+                    ]
+                  }
+                ],
+                "note": "Старая map освободится, только когда исчезнут все ссылки; RSS может не уменьшиться сразу."
+              }
+            ],
+            "list": {
+              "items": [
+                "m теперь указывает на новую map",
+                "alias удерживает map#1 со всеми записями"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "① Запись / Entry",

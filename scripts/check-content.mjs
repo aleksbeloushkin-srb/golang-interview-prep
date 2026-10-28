@@ -121,6 +121,7 @@ export function validateBoard(board, label) {
     if (!isObject(panel) || (panel.lanes === undefined ? !hasList : !Array.isArray(panel.lanes) || (!panel.lanes.length && !hasList))) { errors.push(`${at}: expected lanes`); return; }
     const lanes = panel.lanes || [];
     if (panel.hl !== undefined && !(Array.isArray(panel.hl) && panel.hl.every(text))) errors.push(`${at}: hl must be a list of IDs`);
+    if (panel.hlLabel !== undefined && !text(panel.hlLabel)) errors.push(`${at}: hlLabel must be text`);
     if (panel.list !== undefined && !(isObject(panel.list) && Array.isArray(panel.list.items) && panel.list.items.every(text))) errors.push(`${at}: list.items must be text`);
     lanes.forEach((lane, l) => {
       if (!isObject(lane) || !text(lane.title) || !Array.isArray(lane.slots)) { errors.push(`${at}.lanes[${l}]: expected title and slots`); return; }
