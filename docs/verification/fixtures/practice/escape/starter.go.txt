@@ -30,7 +30,8 @@ func SumFirst(xs []int) int {
 }
 
 // AppendID appends "id-<n>" to dst.
-// TODO: two allocations per call. Where do they come from? Remove both.
+// TODO: it allocates on every call (twice on Go 1.24, once on Go 1.27).
+// Where do the allocations come from? Make it allocation-free.
 func AppendID(dst []byte, n int) []byte {
 	return append(dst, fmt.Sprintf("id-%d", n)...)
 }
