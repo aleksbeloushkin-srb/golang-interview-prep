@@ -1,9 +1,9 @@
-# ⚡ Go Runtime & Concurrency — Interactive Interview Wiki & Code Review Quiz
+# ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
 
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-38_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)
-[![Simulators](https://img.shields.io/badge/Simulators-9_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-27_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
+[![Flashcards](https://img.shields.io/badge/Flashcards-44_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Simulators](https://img.shields.io/badge/Simulators-9_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-35_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
 Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
@@ -16,13 +16,13 @@
 
 ## 🔗 Быстрые ссылки (Live Demo)
 
-* 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
-* 🛠 **[Практикум (18 задач недель 1–4)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
-* 🗂 **[1. Тренажёр карточек (44 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)** — с фильтрацией по 6 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
-* 🔬 **[2. Интерактивные диаграммы рантайма (9 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
-* 📖 **[3. Полная база знаний (Wiki — все 44 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
-* 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[5. Code Traps & Production Code Review Quiz (35 задач)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+* 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
+* 🛠 **[Практикум (18 задач недель 1–4)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
+* 🗂 **[1. Тренажёр карточек (44 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 6 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
+* 🔬 **[2. Интерактивные диаграммы рантайма (9 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
+* 📖 **[3. Полная база знаний (Wiki — все 44 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
+* 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
+* 🧠 **[5. Code Traps & Production Code Review Quiz (35 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 
@@ -102,7 +102,7 @@
 Проект построен по модульной схеме без внешних зависимостей и сборщиков (Zero-Build SPA с Hash-роутером):
 
 ```text
-golang-runtime-prep/
+golang-interview-prep/
 ├── index.html          # Каркас приложения и навигация по вкладкам
 ├── README.md           # Документация репозитория
 ├── css/
@@ -133,8 +133,8 @@ golang-runtime-prep/
 Локальный запуск на macOS / Linux:
 
 ```bash
-git clone https://github.com/aleksbeloushkin-srb/golang-runtime-prep.git
-cd golang-runtime-prep
+git clone https://github.com/aleksbeloushkin-srb/golang-interview-prep.git
+cd golang-interview-prep
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 

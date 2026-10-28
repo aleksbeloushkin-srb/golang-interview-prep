@@ -647,7 +647,7 @@ function handlePlanRoute() {
   const switchingWeek = previousWeek && weekId && !previousWeek.textContent.startsWith(`Неделя ${PLAN.weeks.findIndex(w => w.id === weekId) + 1}.`);
   planState.startNote = ""; // сообщение о смене даты показывается один раз, до перехода
   renderPlan(weekId, dayKey);
-  document.title = "План 13 недель — Go Runtime Interview Wiki";
+  document.title = "План 13 недель — Go Interview Prep";
   if (switchingWeek && !dayKey) {
     const heading = document.getElementById("plan-week-title");
     if (heading) heading.focus({ preventScroll: false });

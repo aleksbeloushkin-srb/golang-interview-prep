@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28g.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28g.
 
 ## Фазы
 
@@ -67,34 +67,34 @@
   - Готово, когда: Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной.
 - [ ] Go by Example от Values до Closures — набрать руками, не копировать — [Go by Example](https://gobyexample.com/)
   - Готово, когда: Примеры набраны и запускаются; по каждому — одна фраза, что он показывает.
-- [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — [W1-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-money), проговор: «W1-1. Money»
+- [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), проговор: «W1-1. Money»
   - Готово, когда: Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками.
 
 ### Ср · 90 мин
 
-- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors — [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39)
+- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors — [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39)
   - Готово, когда: Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch.
-- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2), [Q28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28)
+- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28)
   - Готово, когда: c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов.
-- [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — [W1-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account), [W1-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-validation), [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29), проговор: «W1-2. Account и W1-3. ValidationError»
+- [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W1-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation), [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29), проговор: «W1-2. Account и W1-3. ValidationError»
   - Готово, когда: Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки.
 - [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
 
 ### Чт · 90 мин
 
-- [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [C39](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29), [Q30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q30), [Q20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20), [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
+- [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29), [Q30](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q30), [Q20](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20), [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
   - Готово, когда: Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v) и q30 (errors.Join, Go 1.20) объяснены до вариантов.
-- [ ] defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5), [Q31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q31), [Q32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q32)
+- [ ] defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q31](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q31), [Q32](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q32)
   - Готово, когда: q3, q5, q31, q32: ответ до вариантов совпал с разбором по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5.
 - [ ] Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management *(по желанию)* — [100go.co](https://100go.co/)
-- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — [W1-4, W1-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-deferpanic), проговор: «W1-5. SafeDiv»
+- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — [W1-4, W1-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic), проговор: «W1-5. SafeDiv»
   - Готово, когда: Порядок трёх defer предсказан до запуска; SafeDiv возвращает ошибку при делении на ноль без паники наружу. Изменённое условие: panic во вложенной функции.
 
 ### Сб · 240 мин
 
-- [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34), [Q28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28), проговор: «W1-6. Method sets»
+- [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28), проговор: «W1-6. Method sets»
   - Готово, когда: Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.
-- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q34)
+- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34)
   - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 — ответ до раскрытия; q33 (ключ map) и q34 (встраивание) — до вариантов.
 - [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
 - [ ] Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами — [LC 1. Two Sum](https://leetcode.com/problems/two-sum/), проговор: «LC 1. Two Sum — полный диалог с интервьюером»
@@ -124,26 +124,26 @@
 
 **Материал сайта:**
 
-- [Практикум W1-1 Money: сумма в минорных единицах](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-money)
-- [C39 How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c39)
-- [C34 How do method sets differ from the shorthand used to call pointer methods?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c34)
-- [C33 What does an interface value contain, and why can a typed nil make an interface non-nil?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c33)
-- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
-- [Q28 Pointer-метод, интерфейс и элемент map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q28)
-- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account)
-- [Практикум W1-3 ValidationError и errors.As](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-validation)
-- [Q29 %v вместо %w](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q29)
-- [Q30 errors.Join и errors.Unwrap](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q30)
-- [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
-- [C35 When do deferred calls run, and where can recover stop a panic?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c35)
-- [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
-- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
-- [Q31 Defer и безымянный результат](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q31)
-- [Q32 Recover в своей горутине и nil map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q32)
-- [Практикум W1-4, W1-5 Порядок defer и SafeDiv](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-deferpanic)
-- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40)
-- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33)
-- [Q34 Встраивание и неоднозначный метод](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q34)
+- [Практикум W1-1 Money: сумма в минорных единицах](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money)
+- [C39 How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39)
+- [C34 How do method sets differ from the shorthand used to call pointer methods?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34)
+- [C33 What does an interface value contain, and why can a typed nil make an interface non-nil?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33)
+- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2)
+- [Q28 Pointer-метод, интерфейс и элемент map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28)
+- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
+- [Практикум W1-3 ValidationError и errors.As](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation)
+- [Q29 %v вместо %w](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29)
+- [Q30 errors.Join и errors.Unwrap](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q30)
+- [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20)
+- [C35 When do deferred calls run, and where can recover stop a panic?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35)
+- [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3)
+- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5)
+- [Q31 Defer и безымянный результат](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q31)
+- [Q32 Recover в своей горутине и nil map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q32)
+- [Практикум W1-4, W1-5 Порядок defer и SafeDiv](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic)
+- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40)
+- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33)
+- [Q34 Встраивание и неоднозначный метод](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34)
 
 **Чего пока нет на сайте:**
 
@@ -158,53 +158,53 @@
 
 ### Пн · 90 мин
 
-- [ ] Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c] — [C29](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29), [Go Slices: usage and internals](https://go.dev/blog/slices-intro), [The mechanics of append](https://go.dev/blog/slices)
+- [ ] Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c] — [C29](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29), [Go Slices: usage and internals](https://go.dev/blog/slices-intro), [The mechanics of append](https://go.dev/blog/slices)
   - Готово, когда: c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки.
-- [ ] Ловушки aliasing и удержания памяти — сначала ответ без вариантов — [Q6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6), [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
+- [ ] Ловушки aliasing и удержания памяти — сначала ответ без вариантов — [Q6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q6), [Q4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4)
   - Готово, когда: q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает.
 - [ ] LeetCode 3. Longest Substring Without Repeating Characters + проговор — [LC 3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/), проговор: «LC 3. Longest Substring Without Repeating Characters»
 
 ### Вт · 90 мин
 
-- [ ] Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает — [C32](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32), [C40](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33), [Spec: Map types](https://go.dev/ref/spec#Map_types), [Go maps in action](https://go.dev/blog/maps)
+- [ ] Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает — [C32](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32), [C40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33), [Spec: Map types](https://go.dev/ref/spec#Map_types), [Go maps in action](https://go.dev/blog/maps)
   - Готово, когда: Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 (ниже на этой странице) решена; q33 — до вариантов.
-- [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C30](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30), [C31](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31), [SIM7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
-- [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [C41](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c41), [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
+- [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C30](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30), [C31](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31), [SIM7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim7)
+- [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [C41](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41), [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
   - Готово, когда: P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке.
-- [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — [W2-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-removeslice), проговор: «W2-1. Remove»
+- [ ] W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — [W2-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice), проговор: «W2-1. Remove»
   - Готово, когда: Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22.
-- [ ] Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия *(по желанию)* — [SIM9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
+- [ ] Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия *(по желанию)* — [SIM9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
 
 ### Ср · 90 мин
 
-- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса) — [C42](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics), [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
+- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса) — [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
   - Готово, когда: Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым.
-- [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics), [C42](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42), проговор: «W2-3. Generics vs interfaces»
+- [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), проговор: «W2-3. Generics vs interfaces»
   - Готово, когда: Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена.
 - [ ] LeetCode 15. 3Sum + проговор — [LC 15. 3Sum](https://leetcode.com/problems/3sum/), проговор: «LC 15. 3Sum»
 
 ### Чт · 90 мин
 
-- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/ — [C43](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c43)
+- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/ — [C43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43)
   - Готово, когда: c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт.
-- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q35), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
+- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
   - Готово, когда: Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup.
-- [ ] Покрыть тестами W1-2 и W2-2 — [W1-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics)
+- [ ] Покрыть тестами W1-2 и W2-2 — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W2-2, W2-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
   - Готово, когда: Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь.
 - [ ] Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению — проговор: ««Что выведет код»: как объяснять»
   - Готово, когда: P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски.
 
 ### Сб · 240 мин
 
-- [ ] «Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка — [Q1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
+- [ ] «Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка — [Q1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1)
   - Готово, когда: 10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod.
 - [ ] Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией) *(по желанию)* — [39 вопросов (Нияз)](https://t.me/niyaz_golang/758), [ТОП-12 Ozon](https://t.me/niyaz_golang/672)
-- [ ] W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — [W2-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-txsum), проговор: «W2-4. txsum CLI»
+- [ ] W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — [W2-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum), проговор: «W2-4. txsum CLI»
   - Готово, когда: Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках.
 - [ ] LeetCode 739. Daily Temperatures + проговор (записать) — [LC 739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/), проговор: «LC 739. Daily Temperatures»
 - [ ] Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache *(по желанию)* — [LC 146. LRU Cache](https://leetcode.com/problems/lru-cache/), проговор: «LC 146. LRU Cache»
 - [ ] Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией *(по желанию)* — [Habr: «Коллеги, вы меня огорчаете»](https://habr.com/ru/articles/521582)
-- [ ] Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов» — [Q1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1), [Q2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2), [Q3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3), [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4), [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5), [Q6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6)
+- [ ] Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов» — [Q1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q6)
   - Готово, когда: q1–q6: ответ до вариантов, причина названа верно не меньше чем в 5 из 6; ошибки — в повтор.
 
 **LeetCode недели:** [3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/) (Sliding window), [15. 3Sum](https://leetcode.com/problems/3sum/) (Two pointers), [739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/) (Monotonic stack), [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/) (Intervals), [146. LRU Cache](https://leetcode.com/problems/lru-cache/) (Design: map + list)
@@ -227,29 +227,29 @@
 
 **Материал сайта:**
 
-- [C29 What do a slice and a string refer to, and when does append allocate a new backing array?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c29)
-- [Q6 Два append и один общий массив](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q6)
-- [Q4 16 байт из большого буфера](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
-- [C32 What do delete and clear release, and what can you rely on during map iteration?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c32)
-- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c40)
-- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q33)
-- [C30 How did classic Go maps use buckets and incremental growth before Swiss Tables?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c30)
-- [C31 How do Swiss Tables find a key and grow a Go map?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c31) *(Deep Dive)*
-- [SIM7 Диаграмма 7: map — бакеты, поиск в Swiss Tables и память](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim7)
-- [C41 What do len, indexing and range return for a Go string, and when do you need []rune?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c41)
-- [Практикум W2-1 Remove: на месте и с копией](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-removeslice)
-- [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim9)
-- [C42 When do you choose generics, and when an interface?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c42)
-- [Практикум W2-2, W2-3 Generics: Map, Filter, Reduce, Set и Max против интерфейса](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-generics)
-- [C43 What is the difference between a module and a package, and what does an internal directory enforce?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c43)
-- [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c44)
-- [Q35 Параллельные подтесты и defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q35)
-- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-account)
-- [Q1 Три функции после завершения цикла](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q1)
-- [Практикум W2-4 CLI txsum: суммы из CSV](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-txsum)
-- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q2)
-- [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q3)
-- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
+- [C29 What do a slice and a string refer to, and when does append allocate a new backing array?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29)
+- [Q6 Два append и один общий массив](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q6)
+- [Q4 16 байт из большого буфера](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4)
+- [C32 What do delete and clear release, and what can you rely on during map iteration?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32)
+- [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40)
+- [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33)
+- [C30 How did classic Go maps use buckets and incremental growth before Swiss Tables?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30)
+- [C31 How do Swiss Tables find a key and grow a Go map?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) *(Deep Dive)*
+- [SIM7 Диаграмма 7: map — бакеты, поиск в Swiss Tables и память](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim7)
+- [C41 What do len, indexing and range return for a Go string, and when do you need []rune?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41)
+- [Практикум W2-1 Remove: на месте и с копией](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice)
+- [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
+- [C42 When do you choose generics, and when an interface?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42)
+- [Практикум W2-2, W2-3 Generics: Map, Filter, Reduce, Set и Max против интерфейса](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
+- [C43 What is the difference between a module and a package, and what does an internal directory enforce?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43)
+- [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44)
+- [Q35 Параллельные подтесты и defer](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35)
+- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
+- [Q1 Три функции после завершения цикла](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1)
+- [Практикум W2-4 CLI txsum: суммы из CSV](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum)
+- [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2)
+- [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3)
+- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5)
 
 **Чего пока нет на сайте:**
 
@@ -264,7 +264,7 @@
 
 ### Пн · 90 мин
 
-- [ ] Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition — [C1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c1), [C2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c2), [The Go Memory Model](https://go.dev/ref/mem), [Data Race Detector](https://go.dev/doc/articles/race_detector)
+- [ ] Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition — [C1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1), [C2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2), [The Go Memory Model](https://go.dev/ref/mem), [Data Race Detector](https://go.dev/doc/articles/race_detector)
   - Готово, когда: c1 и c2: ответ по-английски до раскрытия; практика c2 выполнена. Изменённое условие: свой пример логической гонки без data race.
 - [ ] Go blog: Pipelines and cancellation — [go.dev/blog/pipelines](https://go.dev/blog/pipelines)
   - Готово, когда: Пересказана схема отмены пайплайна: кто сигнализирует остановку и как каждая стадия завершается.
@@ -272,35 +272,35 @@
 
 ### Вт · 90 мин
 
-- [ ] Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения — [C13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13), [C14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14), [SIM3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
+- [ ] Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения — [C13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13), [C14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14), [SIM3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim3)
   - Готово, когда: Таблица nil/open/closed для отправки, приёма и close — по памяти; шаги sim3 предсказаны до переключения.
-- [ ] W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [W3-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool), [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), проговор: «W3-1. Worker pool»
+- [ ] W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [W3-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), проговор: «W3-1. Worker pool»
   - Готово, когда: Тесты: не больше N одновременных задач, все результаты получены, отмена в середине завершает всех воркеров, медленный потребитель не ведёт к неограниченной памяти; -race чистый.
-- [ ] W3-2 Pipeline generator → square → sink с остановкой через context — [W3-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline)
+- [ ] W3-2 Pipeline generator → square → sink с остановкой через context — [W3-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline)
   - Готово, когда: Тест: отмена или ранний выход потребителя останавливает все стадии; зависших горутин нет.
 
 ### Ср · 90 мин
 
-- [ ] select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов — [C18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18), [Q22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [ ] select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов — [C18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18), [Q22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
   - Готово, когда: c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены.
-- [ ] W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода — [W3-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin)
+- [ ] W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода — [W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
   - Готово, когда: Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов.
-- [ ] Code review без вариантов: на вкладке quiz включить «Сначала свой ответ», записать баг и исправление, потом открыть варианты и разбор — [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), [Q21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
+- [ ] Code review без вариантов: на вкладке quiz включить «Сначала свой ответ», записать баг и исправление, потом открыть варианты и разбор — [Q12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [Q21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
   - Готово, когда: q12, q15, q21 в режиме «Сначала свой ответ» (вкладка quiz): дефект и исправление записаны до вариантов и совпали с разбором по причине.
 - [ ] LeetCode 567. Permutation in String + проговор (записать) — [LC 567. Permutation in String](https://leetcode.com/problems/permutation-in-string/)
 
 ### Чт · 90 мин
 
-- [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух — [C15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [SIM5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5), [SIM8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
+- [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух — [C15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [SIM5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim5), [SIM8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim8)
   - Готово, когда: c15, c20, c21, c22: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант.
-- [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — [W3-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache), проговор: «W3-4. Mutex vs atomic vs channel»
+- [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — [W3-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache), проговор: «W3-4. Mutex vs atomic vs channel»
   - Готово, когда: Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее».
-- [ ] Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map — [Q7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8), [Q13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
+- [ ] Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map — [Q7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8), [Q13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14)
   - Готово, когда: q7, q8, q13, q14: дефект до вариантов; исправленный код объяснён.
 
 ### Сб · 240 мин
 
-- [ ] Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения — [W3-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool), [W3-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline), [W3-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin), [W3-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache)
+- [ ] Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения — [W3-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [W3-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline), [W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin), [W3-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
   - Готово, когда: Для каждой горутины W3-1…W3-5 записаны владелец и условие завершения; все тесты под -race проходят.
 - [ ] Дополнительно: 100 Go Mistakes — Concurrency Foundations *(по желанию)* — [100go.co](https://100go.co/)
 - [ ] LeetCode 150. Evaluate Reverse Polish Notation + проговор — [LC 150. Evaluate Reverse Polish Notation](https://leetcode.com/problems/evaluate-reverse-polish-notation/)
@@ -329,32 +329,32 @@
 
 **Материал сайта:**
 
-- [C1 What is a goroutine, and how does it differ from an OS thread?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c1)
-- [C2 Can a program have a race condition without a data race?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c2)
-- [C13 What does a channel buffer change, and what does it not change?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13)
-- [C14 How do nil, open, and closed channels behave?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14)
-- [SIM3 Диаграмма 3: Канал — ожидание, буфер и close](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
-- [Практикум W3-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool)
-- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
-- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15)
-- [Практикум W3-2 Pipeline с остановкой по context](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline)
-- [C18 How does select choose a case, and can cancellation take priority?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18)
-- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
-- [Практикум W3-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin)
-- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
-- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
-- [C15 Channels or a mutex — who owns the data, and what must happen together?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15)
-- [C20 What does compare-and-swap do, and why is a separate check and store different?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20)
-- [C21 How does a mutex acquire, wait and hand off — and what does 1 ms really mean?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21)
-- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
-- [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
-- [SIM8 Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
-- [Практикум W3-4 Счётчик тремя способами](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter)
-- [Практикум W3-5 SafeCache: инвариант под RWMutex](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache)
-- [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
-- [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
-- [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)
-- [Q14 Баланс из общей map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
+- [C1 What is a goroutine, and how does it differ from an OS thread?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1)
+- [C2 Can a program have a race condition without a data race?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2)
+- [C13 What does a channel buffer change, and what does it not change?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13)
+- [C14 How do nil, open, and closed channels behave?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14)
+- [SIM3 Диаграмма 3: Канал — ожидание, буфер и close](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim3)
+- [Практикум W3-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
+- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
+- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15)
+- [Практикум W3-2 Pipeline с остановкой по context](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline)
+- [C18 How does select choose a case, and can cancellation take priority?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18)
+- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
+- [Практикум W3-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
+- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12)
+- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
+- [C15 Channels or a mutex — who owns the data, and what must happen together?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15)
+- [C20 What does compare-and-swap do, and why is a separate check and store different?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20)
+- [C21 How does a mutex acquire, wait and hand off — and what does 1 ms really mean?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21)
+- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22)
+- [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim5)
+- [SIM8 Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim8)
+- [Практикум W3-4 Счётчик тремя способами](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter)
+- [Практикум W3-5 SafeCache: инвариант под RWMutex](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
+- [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7)
+- [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8)
+- [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13)
+- [Q14 Баланс из общей map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14)
 
 **Чего пока нет на сайте:**
 
@@ -369,47 +369,47 @@
 
 ### Пн · 90 мин
 
-- [ ] context: отмена, таймауты, WithoutCancel; передача ctx в I/O — [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [Q9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10), [package context](https://pkg.go.dev/context)
+- [ ] context: отмена, таймауты, WithoutCancel; передача ctx в I/O — [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [Q9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10), [package context](https://pkg.go.dev/context)
   - Готово, когда: c22, q9, q10: ответ до раскрытия; объяснено, что отмена контекста не останавливает код, который ctx не проверяет.
-- [ ] W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных — [W4-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-parallelfetch), [Q16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16), [errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup), проговор: «W4-1. ParallelFetch with errgroup»
+- [ ] W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных — [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch), [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup), проговор: «W4-1. ParallelFetch with errgroup»
   - Готово, когда: Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait.
 - [ ] LeetCode 200. Number of Islands + проговор — [LC 200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
 
 ### Вт · 90 мин
 
-- [ ] select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле — [Q16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17), [Q11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11)
+- [ ] select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле — [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17), [Q11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11)
   - Готово, когда: q16, q17, q11: ответ до вариантов; для q11 названо, что изменилось в Go 1.23 и почему важна версия в go.mod.
-- [ ] W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор — [W4-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-ratelimit), [x/time/rate](https://pkg.go.dev/golang.org/x/time/rate), проговор: «W4-2. Rate limiter»
+- [ ] W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор — [W4-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit), [x/time/rate](https://pkg.go.dev/golang.org/x/time/rate), проговор: «W4-2. Rate limiter»
   - Готово, когда: Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано.
 
 ### Ср · 90 мин
 
-- [ ] Утечки горутин: как найти и предотвратить — [W4-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-leak), [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
+- [ ] Утечки горутин: как найти и предотвратить — [W4-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
   - Готово, когда: c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя.
-- [ ] W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров — [W4-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-shutdown), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown), [signal.NotifyContext](https://pkg.go.dev/os/signal#NotifyContext), проговор: «W4-3. Graceful shutdown»
+- [ ] W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров — [W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown), [signal.NotifyContext](https://pkg.go.dev/os/signal#NotifyContext), проговор: «W4-3. Graceful shutdown»
   - Готово, когда: Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается.
-- [ ] W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof — [W4-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-leak)
+- [ ] W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof — [W4-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
   - Готово, когда: Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine.
 - [ ] LeetCode 102. Binary Tree Level Order Traversal + проговор — [LC 102. Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/)
 
 ### Чт · 90 мин
 
-- [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту» — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
+- [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту» — [C7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c10)
   - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия.
-- [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [W4-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-escape), [C23](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
+- [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [W4-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape), [C23](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
   - Готово, когда: c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM.
-- [ ] W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода — [W4-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-escape)
+- [ ] W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода — [W4-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
   - Готово, когда: Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно.
-- [ ] По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы *(по желанию)* — [C3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c3), [C4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c4), [C5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c5), [C6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c6), [C9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c9), [C11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c11), [C16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c16), [C17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c17), [C19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c19), [C25](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c25), [C28](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c28), [C36](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c36), [C37](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c37), [SIM1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim1), [SIM4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim4)
+- [ ] По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы *(по желанию)* — [C3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c3), [C4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c4), [C5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c5), [C6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6), [C9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c9), [C11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c11), [C16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16), [C17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17), [C19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19), [C25](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25), [C28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28), [C36](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c36), [C37](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c37), [SIM1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim1), [SIM4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim4)
 
 ### Сб · 240 мин
 
-- [ ] W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list — [W4-6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-profile), [Go Diagnostics](https://go.dev/doc/diagnostics)
+- [ ] W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list — [W4-6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile), [Go Diagnostics](https://go.dev/doc/diagnostics)
   - Готово, когда: Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости.
-- [ ] Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое — [C38](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38)
+- [ ] Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое — [C38](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
   - Готово, когда: c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями.
 - [ ] LeetCode 98. Validate Binary Search Tree + проговор — [LC 98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
-- [ ] Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов» — [Q5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5), [Q7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8), [Q9](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10), [Q11](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11), [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12), [Q13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), [Q16](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17), [Q21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21), [Q22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [ ] Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов» — [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8), [Q9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10), [Q11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11), [Q12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12), [Q13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17), [Q21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21), [Q22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
   - Готово, когда: Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор.
 - [ ] Виртуальный live coding (Claude как интервьюер): одна задача на конкурентность, проговор по-английски, разбор
   - Готово, когда: Задача решена вслух за 40 минут; получен разбор; три слабых места записаны.
@@ -434,53 +434,53 @@
 
 **Материал сайта:**
 
-- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
-- [Q9 Результат после отмены запроса](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q9)
-- [Q10 Время жизни запроса и фоновой работы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10)
-- [Практикум W4-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-parallelfetch)
-- [Q16 Контекст errgroup после успешного Wait](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q16)
-- [Q17 Заполненный канал и сигнал остановки](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q17)
-- [Q11 Ожидание следующего сообщения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q11)
-- [Практикум W4-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-ratelimit)
-- [Практикум W4-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-leak)
-- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
-- [Практикум W4-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-shutdown)
-- [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7)
-- [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2)
-- [C8 How does Go preempt a CPU-bound goroutine?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8)
-- [C10 How do network polling, blocking syscalls and cgo affect G, M and P?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
-- [Практикум W4-5 Escape analysis: прочитать -gcflags=-m и убрать аллокации](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-escape)
-- [C23 How do stack and heap allocation differ, and how do you compare their cost?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23)
-- [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24)
-- [C26 How does Go's GC decide what to keep, and what happens during a collection?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26)
-- [C27 How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27)
-- [SIM6 Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6)
-- [C3 What happens when Go starts a goroutine?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c3)
-- [C4 Where is a goroutine stack allocated, and what does StackInuse measure?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c4)
-- [C5 How does a goroutine stack grow, and why do pointers remain valid?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c5) *(Deep Dive)*
-- [C6 What must the runtime restore to resume a goroutine?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c6) *(Deep Dive)*
-- [C9 How does the scheduler find work and steal from another P?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c9)
-- [C11 What is P.runnext, and how does it interact with fairness?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c11) *(Deep Dive)*
-- [C16 Why does a channel wait queue contain sudog records instead of just goroutines?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c16)
-- [C17 How does a channel safely hand a value to a waiting receiver?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c17) *(Deep Dive)*
-- [C19 Does every select call selectgo, and how does the general path work?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c19) *(Deep Dive)*
-- [C25 How do mcache, mcentral, mheap and scan/noscan fit together?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c25)
-- [C28 What does Go's hybrid write barrier protect, and which pointer writes need it?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c28) *(Deep Dive)*
-- [C36 When should you use weak pointers, unique handles and runtime cleanups?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c36)
-- [C37 How do push iterators differ from iter.Pull, and when must you call stop?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c37) *(Deep Dive)*
-- [SIM1 Диаграмма 1: Кто выполняется, где стек, откуда продолжить](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim1)
-- [SIM4 Диаграмма 4: select — от компилятора до пробуждения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim4)
-- [Практикум W4-6 Бенчмарк и профиль: txsum под pprof](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-profile)
-- [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38)
-- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q5)
-- [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
-- [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
-- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
-- [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)
-- [Q14 Баланс из общей map](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
-- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15)
-- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
-- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22)
+- [Q9 Результат после отмены запроса](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9)
+- [Q10 Время жизни запроса и фоновой работы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10)
+- [Практикум W4-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
+- [Q16 Контекст errgroup после успешного Wait](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16)
+- [Q17 Заполненный канал и сигнал остановки](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17)
+- [Q11 Ожидание следующего сообщения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11)
+- [Практикум W4-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
+- [Практикум W4-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
+- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
+- [Практикум W4-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
+- [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7)
+- [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2)
+- [C8 How does Go preempt a CPU-bound goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c8)
+- [C10 How do network polling, blocking syscalls and cgo affect G, M and P?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c10)
+- [Практикум W4-5 Escape analysis: прочитать -gcflags=-m и убрать аллокации](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
+- [C23 How do stack and heap allocation differ, and how do you compare their cost?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23)
+- [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
+- [C26 How does Go's GC decide what to keep, and what happens during a collection?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26)
+- [C27 How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27)
+- [SIM6 Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim6)
+- [C3 What happens when Go starts a goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c3)
+- [C4 Where is a goroutine stack allocated, and what does StackInuse measure?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c4)
+- [C5 How does a goroutine stack grow, and why do pointers remain valid?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c5) *(Deep Dive)*
+- [C6 What must the runtime restore to resume a goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6) *(Deep Dive)*
+- [C9 How does the scheduler find work and steal from another P?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c9)
+- [C11 What is P.runnext, and how does it interact with fairness?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c11) *(Deep Dive)*
+- [C16 Why does a channel wait queue contain sudog records instead of just goroutines?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16)
+- [C17 How does a channel safely hand a value to a waiting receiver?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) *(Deep Dive)*
+- [C19 Does every select call selectgo, and how does the general path work?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) *(Deep Dive)*
+- [C25 How do mcache, mcentral, mheap and scan/noscan fit together?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25)
+- [C28 What does Go's hybrid write barrier protect, and which pointer writes need it?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) *(Deep Dive)*
+- [C36 When should you use weak pointers, unique handles and runtime cleanups?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c36)
+- [C37 How do push iterators differ from iter.Pull, and when must you call stop?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c37) *(Deep Dive)*
+- [SIM1 Диаграмма 1: Кто выполняется, где стек, откуда продолжить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim1)
+- [SIM4 Диаграмма 4: select — от компилятора до пробуждения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim4)
+- [Практикум W4-6 Бенчмарк и профиль: txsum под pprof](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile)
+- [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
+- [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5)
+- [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7)
+- [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8)
+- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12)
+- [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13)
+- [Q14 Баланс из общей map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14)
+- [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15)
+- [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
+- [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
 
 **Чего пока нет на сайте:**
 
@@ -514,7 +514,7 @@
 
 - [ ] PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate) — [pgx](https://pkg.go.dev/github.com/jackc/pgx/v5)
   - Готово, когда: Миграции применяются на чистой БД; у пула заданы лимиты и таймаут подключения.
-- [ ] Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений — [Q18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19)
+- [ ] Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений — [Q18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
   - Готово, когда: q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации.
   - На сайте пока нет: Карточка: пул и ресурсы SQL, граница транзакции.
 - [ ] LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор — [LC 236. Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/)
@@ -551,8 +551,8 @@
 
 **Материал сайта:**
 
-- [Q18 Ошибка запроса и отложенная очистка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18)
-- [Q19 Ранний break, defer и занятые соединения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19)
+- [Q18 Ошибка запроса и отложенная очистка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18)
+- [Q19 Ранний break, defer и занятые соединения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
 
 **Чего пока нет на сайте:**
 
@@ -578,7 +578,7 @@
 ### Ср · 90 мин
 
 - [ ] Transactional outbox: запись события в той же транзакции, что и перевод — проговор: «Transactional outbox»
-- [ ] Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи — [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
+- [ ] Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи — [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22)
 - [ ] LeetCode 621. Task Scheduler + проговор — [LC 621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
 
 ### Чт · 90 мин
@@ -610,8 +610,8 @@
 
 **Материал сайта:**
 
-- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
-- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
+- [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
+- [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22)
 
 **Чего пока нет на сайте:**
 
@@ -637,7 +637,7 @@
 ### Ср · 90 мин
 
 - [ ] Unit-тесты: table-driven, фейки на границах, без sleep для синхронизации
-- [ ] testing/synctest для кода со временем (Go 1.25) — [C38](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38), [testing/synctest](https://pkg.go.dev/testing/synctest)
+- [ ] testing/synctest для кода со временем (Go 1.25) — [C38](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38), [testing/synctest](https://pkg.go.dev/testing/synctest)
 - [ ] LeetCode 207. Course Schedule + проговор — [LC 207. Course Schedule](https://leetcode.com/problems/course-schedule/)
 
 ### Чт · 90 мин
@@ -647,7 +647,7 @@
 
 ### Сб · 240 мин
 
-- [ ] Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis — [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24)
+- [ ] Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis — [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 - [ ] Покрытие: где тестов нет намеренно и почему (записать в README)
 - [ ] LeetCode 994. Rotting Oranges + проговор — [LC 994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges/)
 
@@ -667,8 +667,8 @@
 
 **Материал сайта:**
 
-- [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c38)
-- [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24)
+- [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
+- [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 
 **Чего пока нет на сайте:**
 
@@ -708,7 +708,7 @@
 - [ ] Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском — проговор: «Craft Deep-Dive по проекту»
 - [ ] LeetCode 743. Network Delay Time (Dijkstra) + проговор — [LC 743. Network Delay Time](https://leetcode.com/problems/network-delay-time/)
 - [ ] Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки
-- [ ] Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [Kubernetes: Pod lifecycle и завершение](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/), [Kubernetes: liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), [Kubernetes: requests и limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+- [ ] Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds — [C7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2), [Kubernetes: Pod lifecycle и завершение](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/), [Kubernetes: liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), [Kubernetes: requests и limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
 
 **LeetCode недели:** [210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/) (Topological sort), [684. Redundant Connection](https://leetcode.com/problems/redundant-connection/) (Union-find), [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) (Dijkstra)
 
@@ -726,8 +726,8 @@
 
 **Материал сайта:**
 
-- [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7)
-- [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2)
+- [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7)
+- [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2)
 
 **Чего пока нет на сайте:**
 
@@ -755,7 +755,7 @@
 
 ### Чт · 90 мин
 
-- [ ] Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа — [Q4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4), [Q10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10), [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12), [Q18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19), [Q20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
+- [ ] Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа — [Q4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4), [Q10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10), [Q12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12), [Q18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19), [Q20](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20)
 - [ ] Собрать чек-лист ревьюера Go (≈45 мин): ошибки, контекст, горутины, ресурсы, тесты, API
 
 ### Сб · 240 мин
@@ -781,12 +781,12 @@
 
 **Материал сайта:**
 
-- [Q4 16 байт из большого буфера](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q4)
-- [Q10 Время жизни запроса и фоновой работы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q10)
-- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
-- [Q18 Ошибка запроса и отложенная очистка](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q18)
-- [Q19 Ранний break, defer и занятые соединения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q19)
-- [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q20)
+- [Q4 16 байт из большого буфера](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4)
+- [Q10 Время жизни запроса и фоновой работы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10)
+- [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12)
+- [Q18 Ошибка запроса и отложенная очистка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18)
+- [Q19 Ранний break, defer и занятые соединения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
+- [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20)
 
 **Чего пока нет на сайте:**
 

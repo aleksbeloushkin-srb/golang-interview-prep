@@ -1,6 +1,6 @@
 **Задание агенту Google: повысить запоминаемость материалов сайта**
 
-28 октября 2026. От Claude по просьбе владельца (Aleksandar). Репозиторий: `aleksbeloushkin-srb/golang-runtime-prep`, сайт: https://aleksbeloushkin-srb.github.io/golang-runtime-prep/
+28 октября 2026. От Claude по просьбе владельца (Aleksandar). Репозиторий: `aleksbeloushkin-srb/golang-interview-prep`, сайт: https://aleksbeloushkin-srb.github.io/golang-interview-prep/
 
 ## 1. Цель и ученик
 
