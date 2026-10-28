@@ -471,7 +471,7 @@ function boardLaneHtml(lane, hl) {
 function boardHtml(board, legend) {
   const panels = Array.isArray(board) ? board : [board];
   return `<div class="board-wrap">
-    ${legend ? `<p class="board-legend">${escapeHtml(legend)}</p>` : ""}
+    ${legend && panels.some(panel => (panel.lanes || []).length) ? `<p class="board-legend">${escapeHtml(legend)}</p>` : ""}
     <div class="board-panels${panels.length > 1 ? " is-compare" : ""}">
       ${panels.map(panel => {
         const hl = panel.hl || [];
@@ -481,7 +481,7 @@ function boardHtml(board, legend) {
         </div>` : "";
         return `<figure class="board-panel">
           ${panel.caption ? `<figcaption class="board-caption">${escapeHtml(panel.caption)}</figcaption>` : ""}
-          <div class="board-lanes">${(panel.lanes || []).map(lane => boardLaneHtml(lane, hl)).join("")}</div>
+          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl)).join("")}</div>` : ""}
           ${list}
         </figure>`;
       }).join("")}

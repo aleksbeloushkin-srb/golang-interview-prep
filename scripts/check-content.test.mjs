@@ -22,6 +22,7 @@ const failures = [
   ['partial practice', d => { delete d.cards.find(c => c.practice).practice.promptRU; }, /promptRU/],
   ['null simulator step', d => { d.simulators[0].steps[0] = null; }, /expected object/],
   ['board without lanes', d => { d.simulators.flatMap(s => s.steps).find(s => s.board).board = [{ lanes: [] }]; }, /expected lanes/],
+  ['board panel with neither lanes nor list', d => { d.simulators.flatMap(s => s.steps).find(s => s.board).board = [{ caption: 'x' }]; }, /expected lanes/],
   ['board slot item without id', d => { const b = d.simulators.flatMap(s => s.steps).find(s => s.board).board; (Array.isArray(b) ? b[0] : b).lanes[0].slots[0].items = [{ flag: 'x' }]; }, /expected label and items/],
   ['predict without board', d => { const st = d.simulators.flatMap(s => s.steps).find(s => !s.board); st.predict = { promptEN: 'x', promptRU: 'y' }; }, /predict requires a board/],
   ['predict without RU prompt', d => { const st = d.simulators.flatMap(s => s.steps).find(s => s.board); st.predict = { promptEN: 'x' }; }, /promptRU/],

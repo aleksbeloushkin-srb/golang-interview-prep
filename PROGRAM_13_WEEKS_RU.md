@@ -384,7 +384,7 @@
 ### Чт · 90 мин
 
 - [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту» — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
-  - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке.
+  - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия.
 - [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [C23](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
   - Готово, когда: c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM.
 - [ ] W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода
