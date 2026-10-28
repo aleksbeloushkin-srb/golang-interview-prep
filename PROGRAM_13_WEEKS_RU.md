@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28c.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28d.
 
 ## Фазы
 
@@ -262,20 +262,17 @@
 
 - [ ] Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения — [C13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13), [C14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14), [SIM3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
   - Готово, когда: Таблица nil/open/closed для отправки, приёма и close — по памяти; шаги sim3 предсказаны до переключения.
-- [ ] W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), проговор: «W3-1. Worker pool»
+- [ ] W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [W3-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool), [C12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), проговор: «W3-1. Worker pool»
   - Готово, когда: Тесты: не больше N одновременных задач, все результаты получены, отмена в середине завершает всех воркеров, медленный потребитель не ведёт к неограниченной памяти; -race чистый.
-  - На сайте пока нет: Coding-задание workerpool с контрактом и закрытым эталоном (практикум недели 3).
-- [ ] W3-2 Pipeline generator → square → sink с остановкой через context
+- [ ] W3-2 Pipeline generator → square → sink с остановкой через context — [W3-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline)
   - Готово, когда: Тест: отмена или ранний выход потребителя останавливает все стадии; зависших горутин нет.
-  - На сайте пока нет: Coding-задание pipeline (практикум недели 3).
 
 ### Ср · 90 мин
 
 - [ ] select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов — [C18](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18), [Q22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
   - Готово, когда: c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены.
-- [ ] W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода
+- [ ] W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода — [W3-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin)
   - Готово, когда: Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов.
-  - На сайте пока нет: Coding-задание fanin (практикум недели 3).
 - [ ] Code review без вариантов: найти баг и исправление, потом открыть разбор — [Q12](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12), [Q15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15), [Q21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
   - Готово, когда: q12, q15, q21: дефект и исправление названы до вариантов.
   - На сайте пока нет: Режим code review без вариантов ответа (следующий этап).
@@ -285,15 +282,14 @@
 
 - [ ] sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух — [C15](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22), [SIM5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5), [SIM8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
   - Готово, когда: c15, c20, c21, c22: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант.
-- [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — проговор: «W3-4. Mutex vs atomic vs channel»
+- [ ] W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex — [W3-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache), проговор: «W3-4. Mutex vs atomic vs channel»
   - Готово, когда: Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее».
-  - На сайте пока нет: Coding-задания counter и safecache (практикум недели 3).
 - [ ] Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map — [Q7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8), [Q13](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q14)
   - Готово, когда: q7, q8, q13, q14: дефект до вариантов; исправленный код объяснён.
 
 ### Сб · 240 мин
 
-- [ ] Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения
+- [ ] Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения — [W3-1](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool), [W3-2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline), [W3-3](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin), [W3-4](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter), [W3-5](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache)
   - Готово, когда: Для каждой горутины W3-1…W3-5 записаны владелец и условие завершения; все тесты под -race проходят.
 - [ ] Дополнительно: 100 Go Mistakes — Concurrency Foundations *(по желанию)* — [100go.co](https://100go.co/)
 - [ ] LeetCode 150. Evaluate Reverse Polish Notation + проговор — [LC 150. Evaluate Reverse Polish Notation](https://leetcode.com/problems/evaluate-reverse-polish-notation/)
@@ -326,11 +322,14 @@
 - [C2 Can a program have a race condition without a data race?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c2)
 - [C13 What does a channel buffer change, and what does it not change?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c13)
 - [C14 How do nil, open, and closed channels behave?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c14)
-- [SIM3 Диаграмма 3: Канал — от ожидания до продолжения](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
+- [SIM3 Диаграмма 3: Канал — ожидание, буфер и close](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim3)
+- [Практикум W3-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-workerpool)
 - [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c12)
 - [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q15)
+- [Практикум W3-2 Pipeline с остановкой по context](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-pipeline)
 - [C18 How does select choose a case, and can cancellation take priority?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c18)
 - [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q22)
+- [Практикум W3-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-fanin)
 - [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q12)
 - [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q21)
 - [C15 Channels or a mutex — who owns the data, and what must happen together?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c15)
@@ -339,6 +338,8 @@
 - [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c22)
 - [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim5)
 - [SIM8 Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim8)
+- [Практикум W3-4 Счётчик тремя способами](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-counter)
+- [Практикум W3-5 SafeCache: инвариант под RWMutex](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice/p-safecache)
 - [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q7)
 - [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q8)
 - [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/quiz/q13)

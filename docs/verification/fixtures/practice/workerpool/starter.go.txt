@@ -1,0 +1,18 @@
+// Package workerpool: practice task W3-1. Replace the TODO with your solution.
+package workerpool
+
+import "context"
+
+// Process runs fn for every job from jobs using at most workers goroutines
+// and sends each result to the returned channel.
+//
+// Contract:
+//   - workers < 1 is treated as 1;
+//   - Process closes the returned channel after all workers have stopped;
+//   - workers stop when jobs is closed and drained, or when ctx is done;
+//   - while nobody reads the results, workers block instead of piling up results;
+//   - the caller owns jobs and closes it; Process never closes jobs.
+func Process[J, R any](ctx context.Context, workers int, jobs <-chan J, fn func(context.Context, J) R) <-chan R {
+	// TODO: start the workers; close the results channel after all of them stop.
+	panic("TODO")
+}

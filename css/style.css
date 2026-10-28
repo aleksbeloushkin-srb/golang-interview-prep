@@ -804,3 +804,30 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .lane-black .g-chip, .lane-black .g-chip.is-changed { background: #000; color: #f8fafc; }
 .lane-black .g-chip { border-color: #64748b; }
 .lane-black .g-flag { color: #cbd5e1; }
+
+/* --- Практикум (#/practice) --- */
+.practice-index { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+.practice-index-item { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); min-width: 0; }
+.practice-index-item p { margin-top: 6px; color: #cbd5e1; overflow-wrap: anywhere; }
+.practice-index-link { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; color: var(--accent); text-underline-offset: 3px; padding: 6px 0; }
+.practice-week { margin-top: 18px; }
+.practice-task { min-width: 0; }
+.practice-meta { font-size: 0.88rem; color: var(--muted); }
+.practice-meta a { color: var(--accent); text-underline-offset: 3px; display: inline-block; padding: 10px 0; }
+.practice-title-en { color: var(--muted); margin-top: 2px; }
+.practice-goal { margin-top: 12px; overflow-wrap: anywhere; }
+.practice-section { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border); min-width: 0; }
+.practice-section h3 { font-size: 1.05rem; margin-bottom: 8px; overflow-wrap: anywhere; }
+.practice-section h4 { font-size: 0.95rem; margin: 16px 0 6px; }
+.practice-section ul { padding-left: 20px; }
+.practice-section li { margin: 4px 0; overflow-wrap: anywhere; }
+.practice-contract li { margin: 6px 0; }
+.practice-file-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.practice-copy-status { font-size: 0.85rem; color: var(--green); min-width: 0; overflow-wrap: anywhere; }
+pre.practice-code { white-space: pre; tab-size: 4; max-width: 100%; }
+pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.practice-hint, .practice-talk, .practice-reference, .practice-tests { margin-top: 8px; }
+.practice-hint > summary, .practice-talk > summary, .practice-reference > summary, .practice-tests > summary { cursor: pointer; color: var(--accent); padding: 8px 0; }
+.practice-hint p, .practice-talk p { margin: 6px 0 4px; overflow-wrap: anywhere; }
+.practice-pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.practice-pager .btn { min-width: 0; overflow-wrap: anywhere; }

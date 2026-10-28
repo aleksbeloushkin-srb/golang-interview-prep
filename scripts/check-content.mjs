@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const dataFiles = ['data/cards.js', 'data/quiz.js', 'data/simulators.js'];
 const planFile = 'data/plan.js';
+const practiceFile = 'data/practice.js';
 
 // Only evaluate trusted repository data. VM isolation is not a security boundary.
 export function loadContent(read) {
@@ -24,11 +25,20 @@ export function loadPlan(read) {
   return JSON.parse(runInContext('JSON.stringify(PLAN)', context, { timeout: 1000 }));
 }
 
+// data/practice.js is optional as well. Returns null when absent.
+export function loadPractice(read) {
+  let source;
+  try { source = read(practiceFile); } catch { return null; }
+  const context = createContext({});
+  runInContext(source, context, { filename: practiceFile, timeout: 1000 });
+  return JSON.parse(runInContext('JSON.stringify(PRACTICE)', context, { timeout: 1000 }));
+}
+
 export function planTaskIds(plan) {
   return (plan?.weeks || []).flatMap(week => (week?.days || []).flatMap(day => (day?.tasks || []).map(task => task?.id)));
 }
 
-export function validatePlan(plan, data) {
+export function validatePlan(plan, data, practice = null) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
   const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -37,8 +47,8 @@ export function validatePlan(plan, data) {
   if (errors.length) return errors;
   for (const key of ['leetcodeIndex', 'talks', 'acceptance']) require(plan[key] === undefined || isObject(plan[key]), `plan: ${key} must be an object`);
   if (errors.length) return errors;
-  const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)) };
-  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
+  const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)), p: new Set((practice || []).map(p => p?.id)) };
+  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('p-') ? site.p : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
   const weekIds = new Set(), taskIds = new Set();
   plan.weeks.forEach((week, w) => {
     const label = `plan.weeks[${w}]`;
@@ -132,6 +142,46 @@ export function validateBoard(board, label) {
         if (!ok) errors.push(`${at}.lanes[${l}].slots[${s}]: expected label and items`);
       });
     });
+  });
+  return errors;
+}
+
+// Practice tasks: text fields, links, and code that must match the verified Go fixtures
+// (readFixture returns a file's text, or null when the file does not exist).
+export function validatePractice(practice, data, plan, readFixture) {
+  const errors = [];
+  const require = (condition, message) => { if (!condition) errors.push(message); };
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const texts = value => Array.isArray(value) && value.length > 0 && value.every(text);
+  if (!Array.isArray(practice) || !practice.length) return ['practice: expected non-empty PRACTICE array'];
+  const site = new Set([...data.cards, ...data.quiz, ...data.simulators].map(item => item.id));
+  const taskIds = new Set(planTaskIds(plan));
+  const ids = new Set();
+  practice.forEach((task, i) => {
+    if (!task || typeof task !== 'object') { errors.push(`practice[${i}]: expected object`); return; }
+    const label = task.id || `practice[${i}]`;
+    require(typeof task.id === 'string' && /^p-[a-z0-9-]+$/.test(task.id) && !ids.has(task.id), `${label}: ID must be unique and start with p-`);
+    ids.add(task.id);
+    for (const key of ['code', 'title', 'titleEN', 'goalRU', 'talkEN']) require(text(task[key]), `${label}: missing/empty ${key}`);
+    require(Number.isInteger(task.week) && task.week > 0, `${label}: week must be a positive integer`);
+    for (const key of ['contractRU', 'contractEN', 'hints', 'pitfalls', 'followUps']) require(texts(task[key]), `${label}: ${key} must be a non-empty list of texts`);
+    require(task.contractRU?.length === task.contractEN?.length, `${label}: contractRU and contractEN differ in length`);
+    require(Array.isArray(task.planTasks) && task.planTasks.length > 0, `${label}: planTasks must list plan task IDs`);
+    for (const id of task.planTasks || []) require(!plan || taskIds.has(id), `${label}: unknown plan task ${id}`);
+    for (const id of task.links || []) require(site.has(id), `${label}: unknown site ID ${id}`);
+    for (const ref of task.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `${label}: reference needs title and https URL`);
+    for (const kind of ['starter', 'tests', 'solution']) {
+      const file = task.files?.[kind];
+      require(file && /^[a-z0-9_]+\.go$/.test(file.name || '') && text(file.code), `${label}: files.${kind} needs a .go name and code`);
+    }
+    if (task.fixture && readFixture && task.files) {
+      const expected = { solution: task.files.solution?.name, tests: task.files.tests?.name, starter: 'starter.go.txt' };
+      for (const [kind, name] of Object.entries(expected)) {
+        const source = readFixture(`${task.fixture}/${name}`);
+        if (source === null) errors.push(`${label}: fixture file ${task.fixture}/${name} is missing`);
+        else require(source.replace(/\n+$/, '') === task.files[kind]?.code, `${label}: files.${kind} differs from ${task.fixture}/${name}`);
+      }
+    }
   });
   return errors;
 }
@@ -234,12 +284,15 @@ function main() {
   const started = performance.now();
   const read = file => readFileSync(resolve(root, file), 'utf8');
   const hasPlan = existsSync(resolve(root, planFile));
-  const scripts = [...dataFiles, 'js/app.js', ...(hasPlan ? [planFile, 'js/plan-view.js'] : [])];
+  const hasPractice = existsSync(resolve(root, practiceFile));
+  const scripts = [...dataFiles, 'js/app.js', ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : [])];
   for (const file of scripts) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
   const data = loadContent(read);
   const errors = validateContent(data);
   const plan = hasPlan ? loadPlan(read) : null;
-  if (plan && !errors.length) errors.push(...validatePlan(plan, data));
+  const practice = hasPractice ? loadPractice(read) : null;
+  if (plan && !errors.length) errors.push(...validatePlan(plan, data, practice));
+  if (practice && !errors.length) errors.push(...validatePractice(practice, data, plan, file => existsSync(resolve(root, file)) ? read(file) : null));
   const markdown = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
   const hazards = liquidHazards(markdown.map(name => ({ name, text: read(name) })));
   if (hazards.length) errors.push(`markdown: Liquid syntax outside {% raw %} breaks GitHub Pages: ${hazards.join(', ')}`);
@@ -258,8 +311,14 @@ function main() {
       changes.planRemoved = planTaskIds(basePlan).filter(id => !current.has(id));
       if (changes.planRemoved.length) errors.push(`plan: stable task IDs removed: ${changes.planRemoved.join(', ')}`);
     }
+    const basePractice = loadPractice(file => git(['show', `${base}:${file}`]));
+    if (basePractice) {
+      const current = new Set((practice || []).map(task => task.id));
+      changes.practiceRemoved = basePractice.map(task => task.id).filter(id => !current.has(id));
+      if (changes.practiceRemoved.length) errors.push(`practice: stable IDs removed: ${changes.practiceRemoved.join(', ')}`);
+    }
   }
-  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), ...(plan ? { planWeeks: plan.weeks.length, planTasks: planTaskIds(plan).length, planAcceptance: Object.keys(plan.acceptance || {}).length } : {}) }, changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
+  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), ...(plan ? { planWeeks: plan.weeks.length, planTasks: planTaskIds(plan).length, planAcceptance: Object.keys(plan.acceptance || {}).length } : {}), ...(practice ? { practiceTasks: practice.length } : {}) }, changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
   if (errors.length) process.exitCode = 1;
 }
 
