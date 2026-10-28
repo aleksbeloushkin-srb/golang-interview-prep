@@ -3495,14 +3495,14 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Why can a CAS loop waste CPU under heavy contention?",
           "promptRU": "Почему при сильной конкуренции CAS-цикл может тратить CPU впустую?",
-          "answerEN": "Every loser repeats the read, the computation and the CAS; with many writers most attempts fail. atomic.Add does the update in one instruction, and a mutex lets waiters sleep instead of retrying.",
-          "answerRU": "Каждый проигравший повторяет чтение, вычисление и CAS; при многих писателях большинство попыток проваливается. atomic.Add делает обновление одной инструкцией, а mutex позволяет ждущим уснуть вместо повторов."
+          "answerEN": "Every loser repeats the read, the computation and the CAS; with many writers most attempts fail. atomic.Add does the update without a retry loop (on amd64 one LOCK XADD instruction), and a mutex lets waiters sleep after a short spin.",
+          "answerRU": "Каждый проигравший повторяет чтение, вычисление и CAS; при многих писателях большинство попыток проваливается. atomic.Add обновляет без цикла повторов (на amd64 — одной инструкцией LOCK XADD), а mutex после короткого спина даёт ждущим уснуть."
         }
       },
       {
         "title": "6. ABA: значение то же, история другая",
-        "desc": "Стек без блокировок: top → A → B → C. G1 читает top = A и next = B, но не успевает сделать CAS. G2 снимает A, снимает B и кладёт A обратно: top снова A, но под ним уже C. CAS G1 (A → B) проходит, потому что сравнивает только текущее значение, и делает вершиной B, которого в стеке больше нет. В Go сборщик мусора не освободит узел, пока на него есть ссылка, поэтому use-after-free нет, но логическая ошибка ABA остаётся. Защита: версия в том же слове (например, индекс и счётчик в одном uint64), неизменяемые узлы или mutex.",
-        "descEN": "A lock-free stack: top → A → B → C. G1 reads top = A and next = B but has not done its CAS yet. G2 pops A, pops B and pushes A back: top is A again, but now C is below it. G1's CAS (A → B) succeeds because it compares only the current value, and it makes B the top although B is no longer in the stack. In Go the garbage collector does not free a node while it is referenced, so there is no use-after-free, but the logical ABA bug remains. Defences: a version in the same word (for example an index and a counter in one uint64), immutable nodes, or a mutex.",
+        "desc": "Стек без блокировок: top → A → B → C. G1 читает top = A и next = B, но не успевает сделать CAS. G2 снимает A, снимает B и кладёт A обратно: top снова A, но под ним уже C. CAS G1 (A → B) проходит, потому что сравнивает только текущее значение, и делает вершиной B, которого в стеке больше нет. В Go сборщик мусора не освободит узел, пока на него есть ссылка, поэтому use-after-free нет, но логическая ошибка ABA остаётся. Если узлы переиспользуются через free-list или sync.Pool, возвращается и классическая ABA с повторным использованием памяти. Защита: версия в том же слове (например, индекс и счётчик в одном uint64), неизменяемые узлы или mutex.",
+        "descEN": "A lock-free stack: top → A → B → C. G1 reads top = A and next = B but has not done its CAS yet. G2 pops A, pops B and pushes A back: top is A again, but now C is below it. G1's CAS (A → B) succeeds because it compares only the current value, and it makes B the top although B is no longer in the stack. In Go the garbage collector does not free a node while it is referenced, so there is no use-after-free, but the logical ABA bug remains. If nodes are reused through a free list or sync.Pool, classic memory-reuse ABA comes back as well. Defences: a version in the same word (for example an index and a counter in one uint64), immutable nodes, or a mutex.",
         "board": [
           {
             "caption": "G1 прочитала и задумалась",
@@ -3682,7 +3682,7 @@ const SIMULATORS = [
                 "Одно слово (счётчик, флаг, указатель на неизменяемый снимок) → atomic: Add, Load/Store, CompareAndSwap",
                 "Переход по условию в одном слове (0 → 1, «первый занял») → CAS",
                 "Инвариант из нескольких полей (баланс и история) → mutex: проверка и запись под одной блокировкой",
-                "Сильная конкуренция → CAS-цикл крутится и тратит CPU; mutex даёт ждущим уснуть",
+                "Сильная конкуренция → CAS-цикл крутится и тратит CPU; mutex после короткого спина даёт ждущим уснуть",
                 "sync.Mutex сам начинается с CAS(0 → 1): быстрый путь без runtime (диаграмма 8)"
               ]
             }
@@ -3696,7 +3696,7 @@ const SIMULATORS = [
                 "CAS atomically compares a word with an expected value and, only if they match, stores a new one; it returns whether it succeeded.",
                 "On amd64 it is LOCK CMPXCHG; the LOCK prefix makes the compare and store indivisible across cores.",
                 "Lock-free code wraps CAS in a retry loop: read, compute, CAS, retry on failure.",
-                "CAS checks the current value, not its history, so ABA is possible; the GC prevents memory reuse but not logical ABA.",
+                "CAS checks the current value, not its history, so ABA is possible; the GC does not reuse memory that is still referenced, but a free list or sync.Pool brings classic ABA back, and logical ABA remains anyway.",
                 "Go atomics are sequentially consistent: an atomic store observed by an atomic load synchronizes before it.",
                 "Use atomics for one word; use a mutex when an invariant spans several fields."
               ]
@@ -3707,8 +3707,8 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Name two reasons to choose a mutex instead of CAS.",
           "promptRU": "Назови две причины выбрать mutex вместо CAS.",
-          "answerEN": "An invariant that spans several fields, and heavy contention: waiters sleep instead of spinning.",
-          "answerRU": "Инвариант из нескольких полей и сильная конкуренция: ждущие спят, а не крутятся."
+          "answerEN": "An invariant that spans several fields, and heavy contention: after a short spin, waiters sleep instead of retrying.",
+          "answerRU": "Инвариант из нескольких полей и сильная конкуренция: после короткого спина ждущие спят, а не повторяют попытки."
         }
       }
     ]
@@ -4988,8 +4988,8 @@ const SIMULATORS = [
     "steps": [
       {
         "title": "1. Одно слово state: три флага и счётчик",
-        "desc": "sync.Mutex — это два поля: state int32 и sema uint32. В state бит 0 — locked (1), бит 1 — woken (2), бит 2 — starving (4), а биты с 3 и выше — число ждущих горутин. Пример: state = 17 = 0b10001 — мьютекс занят, ждут две горутины. sema — адрес, на котором ждущие спят в семафоре рантайма.",
-        "descEN": "A sync.Mutex has two fields: state int32 and sema uint32. In state, bit 0 is locked (1), bit 1 is woken (2), bit 2 is starving (4), and bits 3 and up count waiting goroutines. Example: state = 17 = 0b10001 — the mutex is locked and two goroutines wait. sema is the address on which waiters sleep in the runtime semaphore.",
+        "desc": "sync.Mutex (с Go 1.24 — обёртка над internal/sync.Mutex) хранит два 32-битных поля, всего 8 байт: state int32 и sema uint32. В state бит 0 — locked (1), бит 1 — woken (2), бит 2 — starving (4), а биты с 3 и выше — число ждущих горутин. Пример: state = 17 = 0b10001 — мьютекс занят, ждут две горутины. sema — адрес, на котором ждущие спят в семафоре рантайма.",
+        "descEN": "A sync.Mutex (since Go 1.24 a wrapper around internal/sync.Mutex) holds two 32-bit fields, 8 bytes in total: state int32 and sema uint32. In state, bit 0 is locked (1), bit 1 is woken (2), bit 2 is starving (4), and bits 3 and up count waiting goroutines. Example: state = 17 = 0b10001 — the mutex is locked and two goroutines wait. sema is the address on which waiters sleep in the runtime semaphore.",
         "board": [
           {
             "hl": [],
@@ -5203,8 +5203,8 @@ const SIMULATORS = [
       },
       {
         "title": "3. Занято: короткий активный спин",
-        "desc": "G2 видит locked = 1. Если мьютекс не в режиме голодания и runtime_canSpin разрешает, G2 немного крутится: до 4 итераций, каждая — procyield(30), то есть 30 инструкций PAUSE на amd64, в надежде, что G1 скоро отпустит. Условия спина: больше одного CPU; GOMAXPROCS больше, чем простаивающие и ищущие работу P плюс один; пустая локальная очередь своего P. Если уже есть спящие ждущие, крутящаяся G2 может поставить woken, чтобы Unlock не будил ещё одного.",
-        "descEN": "G2 sees locked = 1. If the mutex is not starving and runtime_canSpin allows it, G2 spins briefly: up to 4 iterations, each procyield(30), that is 30 PAUSE instructions on amd64, hoping G1 releases soon. Spinning requires more than one CPU, GOMAXPROCS greater than idle plus spinning Ps plus one, and an empty local run queue on its own P. If sleeping waiters exist, the spinning G2 may set woken so that Unlock does not wake another one.",
+        "desc": "G2 видит locked = 1. Если мьютекс не в режиме голодания и runtime_canSpin разрешает, G2 немного крутится: до 4 итераций, каждая — procyield(30), то есть 30 инструкций PAUSE на amd64, в надежде, что G1 скоро отпустит. Условия спина: больше одного CPU; GOMAXPROCS больше, чем простаивающие P плюс ищущие работу потоки M плюс один; пустая локальная очередь своего P. Если уже есть спящие ждущие, крутящаяся G2 может поставить woken, чтобы Unlock не будил ещё одного.",
+        "descEN": "G2 sees locked = 1. If the mutex is not starving and runtime_canSpin allows it, G2 spins briefly: up to 4 iterations, each procyield(30), that is 30 PAUSE instructions on amd64, hoping G1 releases soon. Spinning requires more than one CPU, GOMAXPROCS greater than idle Ps plus spinning Ms plus one, and an empty local run queue on its own P. If sleeping waiters exist, the spinning G2 may set woken so that Unlock does not wake another one.",
         "board": [
           {
             "hl": [],
@@ -5333,14 +5333,14 @@ const SIMULATORS = [
       },
       {
         "title": "4. Очередь: семафор и сон",
-        "desc": "Спин не помог. G2 через CAS увеличивает счётчик ждущих (state += 8) и вызывает runtime_SemacquireMutex(&sema): горутина паркуется в очереди семафора и не тратит CPU. Если горутина уже ждала раньше и снова проиграла, она встаёт в начало очереди (LIFO), а не в конец.",
-        "descEN": "Spinning did not help. G2 increments the waiter count with a CAS (state += 8) and calls runtime_SemacquireMutex(&sema): the goroutine parks in the semaphore queue and uses no CPU. A goroutine that has already waited and lost again goes to the front of the queue (LIFO), not the back.",
+        "desc": "Спин не помог. G2 одним CAS увеличивает счётчик ждущих (+8) и снимает свой флаг woken (−2): 11 → 17. Затем вызывает runtime_SemacquireMutex(&sema): горутина паркуется в очереди семафора и не тратит CPU. Если горутина уже ждала раньше и снова проиграла, она встаёт в начало очереди (LIFO), а не в конец.",
+        "descEN": "Spinning did not help. With one CAS G2 adds itself to the waiter count (+8) and clears its own woken bit (−2): 11 → 17. Then it calls runtime_SemacquireMutex(&sema): the goroutine parks in the semaphore queue and uses no CPU. A goroutine that has already waited and lost again goes to the front of the queue (LIFO), not the back.",
         "board": [
           {
             "hl": [
               "G2"
             ],
-            "hlLabel": "новая",
+            "hlLabel": "изменилось",
             "lanes": [
               {
                 "kind": "g",
@@ -5374,7 +5374,7 @@ const SIMULATORS = [
                 "title": "state",
                 "slots": [
                   {
-                    "label": "ждущих 2",
+                    "label": "11 → 17 · ждущих 2",
                     "items": [
                       {
                         "g": "0"
@@ -5392,7 +5392,8 @@ const SIMULATORS = [
                       },
                       {
                         "g": "0",
-                        "flag": "ждущие"
+                        "flag": "ждущие",
+                        "hl": true
                       },
                       {
                         "g": "0",
@@ -5400,7 +5401,8 @@ const SIMULATORS = [
                       },
                       {
                         "g": "0",
-                        "flag": "W"
+                        "flag": "W",
+                        "hl": true
                       },
                       {
                         "g": "1",
@@ -5414,7 +5416,7 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "state: ждущих +1 (state += 1 << 3)",
+                "Один CAS: ждущих +1 (+8) и woken снят (−2): 11 → 17",
                 "G2 спит в семафоре: CPU не тратит",
                 "Повторно проигравшая встаёт в голову очереди (queueLifo)"
               ]
@@ -5537,7 +5539,7 @@ const SIMULATORS = [
                 "title": "state",
                 "slots": [
                   {
-                    "label": "starving",
+                    "label": "starving · ждущих 3",
                     "items": [
                       {
                         "g": "0"
@@ -5553,8 +5555,9 @@ const SIMULATORS = [
                         "flag": "ждущие"
                       },
                       {
-                        "g": "0",
-                        "flag": "ждущие"
+                        "g": "1",
+                        "flag": "ждущие",
+                        "hl": true
                       },
                       {
                         "g": "1",
@@ -5612,7 +5615,8 @@ const SIMULATORS = [
               "items": [
                 "Ждёт дольше 1 мс → starving = 1",
                 "Unlock передаёт мьютекс голове очереди напрямую",
-                "Новые горутины (G4) не крутятся и встают в хвост",
+                "Новые горутины (G4) не крутятся, встают в хвост и прибавляют себя к счётчику ждущих",
+                "state = 28: S и трое ждущих (G3, G2, G4); G3 после пробуждения сама ставит L и вычитает себя (+1 −8)",
                 "Выход: последний ждущий или ожидание меньше 1 мс"
               ]
             }
@@ -5637,10 +5641,10 @@ const SIMULATORS = [
               "ordered": true,
               "title": "sync.Mutex",
               "items": [
-                "A sync.Mutex is two words: state, with locked, woken and starving bits plus a waiter count, and sema.",
+                "A sync.Mutex is 8 bytes: an int32 state with locked, woken and starving bits plus a waiter count, and a uint32 sema.",
                 "The Lock fast path is one CAS from 0 to locked; the Unlock fast path is an atomic subtract.",
                 "Under contention a goroutine may spin briefly on multicore machines, then sleeps on a runtime semaphore.",
-                "Normal mode is not FIFO: a woken waiter competes with newcomers, which gives better throughput.",
+                "In normal mode waiters queue FIFO, but a woken waiter competes with newcomers, so acquisition is not FIFO; this gives better throughput.",
                 "If a waiter waits more than 1 ms, starvation mode hands the lock directly to the queue head and newcomers queue at the tail.",
                 "A Mutex is not reentrant and not tied to a goroutine; unlocking an unlocked mutex is fatal; do not copy it after first use."
               ]
@@ -5657,7 +5661,7 @@ const SIMULATORS = [
                 "«Повторный Lock той же горутиной пройдёт» → deadlock: мьютекс не реентерабельный",
                 "«Unlock может вызвать только владелец» → в Go Mutex не привязан к горутине",
                 "«Unlock без Lock — panic» → фатальная ошибка рантайма, recover не поможет",
-                "«Копия мьютекса — та же блокировка» → копия независима; go vet (copylocks) ловит копирование",
+                "«Копия мьютекса — та же блокировка» → копия независима, но берёт текущее состояние: копия занятого мьютекса тоже занята; go vet (copylocks) ловит типичные случаи, не все",
                 "«TryLock решает гонки» → корректные случаи редки, часто это признак проблемы в дизайне (документация sync)"
               ]
             }
@@ -5692,6 +5696,10 @@ const SIMULATORS = [
       {
         "title": "go1.26.1: internal/runtime/maps/group.go",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/runtime/maps/group.go"
+      },
+      {
+        "title": "go1.27.3: internal/runtime/maps/group.go (arm64 matchH2)",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/internal/runtime/maps/group.go#L161-L178"
       },
       {
         "title": "go1.26.1: internal/sync/mutex.go",
@@ -6721,9 +6729,9 @@ const SIMULATORS = [
               "title": "Две формулы",
               "items": [
                 "XOR с повторённым H2 обнуляет совпавшие байты",
-                "Вычитание 0x01 в каждом байте даёт 0xFF только у нулевых; &^ v и & 0x80… оставляют их старший бит",
+                "Вычитание 0x01 в каждом байте даёт 0xFF у нулевых (и из-за заёма — у 0x01 над нулевым: ложный кандидат); &^ v и & 0x80… оставляют их старший бит",
                 "Маска 0x800080 → кандидаты: слоты 0 и 2",
-                    "Go 1.27: на arm64 формула другая — (^v & 0x7F… + 0x01…) & (^v & 0x80…), без ложных срабатываний"
+                "Go 1.27: на arm64 формула другая — ((^v & 0x7F…) + 0x01…) & (^v & 0x80…), без ложных срабатываний (go1.27.3, group.go:162–166)"
               ]
             },
             "hlLabel": "кандидат"
@@ -6994,11 +7002,11 @@ const SIMULATORS = [
               "items": [
                 "x&1 == 0 в Go — это (x&1) == 0: у & приоритет выше, чем у == (в C наоборот)",
                 "^x — побитовое НЕ; ~ в Go означает другое (только в ограничениях дженериков: ~int)",
-                "Сдвиг на ширину типа и больше даёт 0 (у отрицательного знакового при >> — −1); это не неопределённое поведение, как в C",
+                "Сдвиг на ширину типа и больше даёт 0 (у отрицательного знакового при >> — −1); это не неопределённое поведение, как в C; go vet (shift) предупредит о заведомо слишком большом сдвиге",
                 "Отрицательный счётчик сдвига во время выполнения — panic",
                 "Сдвиг знакового вправо арифметический: −8 >> 1 = −4",
                 "x % n == x & (n − 1) только для неотрицательных x",
-                "Переполнение переменных целых типов циклическое (uint8: 255 + 1 = 0); у констант — ошибка компиляции",
+                "Переполнение переменных целых типов циклическое (uint8: 255 + 1 = 0); нетипизированные константы точны (const big = 1 << 100 компилируется), ошибка — у типизированной константы или при преобразовании в тип, где значение не помещается",
                 "math/bits: OnesCount, LeadingZeros, TrailingZeros, Len, RotateLeft — компилятор часто заменяет их одной инструкцией"
               ]
             }
@@ -7008,8 +7016,8 @@ const SIMULATORS = [
         "check": {
           "promptEN": "var x uint8 = 1. What is x << 8?",
           "promptRU": "var x uint8 = 1. Чему равно x << 8?",
-          "answerEN": "0: the shifted-out bit is lost; there is no panic and no undefined behaviour.",
-          "answerRU": "0: вышедший бит теряется; ни паники, ни неопределённого поведения."
+          "answerEN": "0: the shifted-out bit is lost; there is no panic and no undefined behaviour. go vet warns: x (8 bits) too small for shift of 8.",
+          "answerRU": "0: вышедший бит теряется; ни паники, ни неопределённого поведения. go vet предупредит: x (8 bits) too small for shift of 8."
         }
       }
     ]
