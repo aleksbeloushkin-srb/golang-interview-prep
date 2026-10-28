@@ -1,0 +1,37 @@
+// Package ratelimit: practice task W4-2. A token bucket rate limiter.
+// Replace each TODO with your solution.
+package ratelimit
+
+import (
+	"context"
+	"time"
+)
+
+// Limiter allows events at rate tokens per second with bursts of up to burst events.
+// It starts full. It is safe for concurrent use.
+type Limiter struct {
+	// TODO: fields; remember that several goroutines call Allow at once
+}
+
+// New returns a limiter that uses the real clock.
+func New(rate float64, burst int) *Limiter {
+	return NewWithClock(rate, burst, time.Now)
+}
+
+// NewWithClock lets tests control time. rate must be > 0 and burst >= 1.
+func NewWithClock(rate float64, burst int, now func() time.Time) *Limiter {
+	// TODO
+	panic("TODO")
+}
+
+// Allow reports whether one event may happen now, and takes a token if so.
+func (l *Limiter) Allow() bool {
+	// TODO
+	panic("TODO")
+}
+
+// Wait blocks until a token is available or ctx is done.
+func (l *Limiter) Wait(ctx context.Context) error {
+	// TODO
+	panic("TODO")
+}

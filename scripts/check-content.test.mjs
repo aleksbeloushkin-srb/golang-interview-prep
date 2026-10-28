@@ -83,6 +83,8 @@ const practiceFailures = [
   ['contract translations of different length', p => { p[0].contractEN.pop(); }, /differ in length/],
   ['solution that differs from the fixture', p => { p[0].files.solution.code += '\n// edited'; }, /files.solution differs/],
   ['missing fixture file', p => { p[0].fixture = 'docs/verification/fixtures/practice/nope'; }, /fixture file .* is missing/],
+  ['empty setup command', p => { p[0].setup = ['']; }, /setup must be a non-empty list/],
+  ['extra commands that are not a list', p => { p[0].extraRun = 'go build'; }, /extraRun must be a non-empty list/],
 ];
 for (const [name, mutate, expected] of practiceFailures) {
   test('practice: rejects ' + name, () => {

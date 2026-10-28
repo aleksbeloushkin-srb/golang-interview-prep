@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28f",
+  revision: "2026-10-28g",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -249,35 +249,35 @@ const PLAN = {
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
-            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["q16"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
+            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["p-parallelfetch", "q16"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
             { id: "w4-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
             { id: "w4-tue-1", text: "select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле", links: ["q16", "q17", "q11"] },
-            { id: "w4-tue-2", text: "W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор", talk: "w4-2", refs: [{ t: "x/time/rate", u: "https://pkg.go.dev/golang.org/x/time/rate" }] }
+            { id: "w4-tue-2", text: "W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор", links: ["p-ratelimit"], talk: "w4-2", refs: [{ t: "x/time/rate", u: "https://pkg.go.dev/golang.org/x/time/rate" }] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w4-wed-1", text: "Утечки горутин: как найти и предотвратить", links: ["c12"] },
-            { id: "w4-wed-2", text: "W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров", talk: "w4-3", links: ["c22"], refs: [{ t: "http.Server.Shutdown", u: "https://pkg.go.dev/net/http#Server.Shutdown" }, { t: "signal.NotifyContext", u: "https://pkg.go.dev/os/signal#NotifyContext" }] },
-            { id: "w4-wed-3", text: "W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof" },
+            { id: "w4-wed-1", text: "Утечки горутин: как найти и предотвратить", links: ["p-leak", "c12"] },
+            { id: "w4-wed-2", text: "W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров", talk: "w4-3", links: ["p-shutdown", "c22"], refs: [{ t: "http.Server.Shutdown", u: "https://pkg.go.dev/net/http#Server.Shutdown" }, { t: "signal.NotifyContext", u: "https://pkg.go.dev/os/signal#NotifyContext" }] },
+            { id: "w4-wed-3", text: "W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof", links: ["p-leak"] },
             { id: "w4-wed-4", text: "LeetCode 102. Binary Tree Level Order Traversal + проговор", lc: 102 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
             { id: "w4-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту»", links: ["c7", "sim2", "c8", "c10"] },
-            { id: "w4-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
-            { id: "w4-thu-3", text: "W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода" },
+            { id: "w4-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["p-escape", "c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
+            { id: "w4-thu-3", text: "W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода", links: ["p-escape"] },
             { id: "w4-thu-4", text: "По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы", links: ["c3", "c4", "c5", "c6", "c9", "c11", "c16", "c17", "c19", "c25", "c28", "c36", "c37", "sim1", "sim4"], optional: true }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w4-sat-1", text: "W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list", refs: [{ t: "Go Diagnostics", u: "https://go.dev/doc/diagnostics" }] },
+            { id: "w4-sat-1", text: "W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list", links: ["p-profile"], refs: [{ t: "Go Diagnostics", u: "https://go.dev/doc/diagnostics" }] },
             { id: "w4-sat-2", text: "Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое", links: ["c38"] },
             { id: "w4-sat-3", text: "LeetCode 98. Validate Binary Search Tree + проговор", lc: 98 },
             { id: "w4-sat-4", text: "Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов»", links: ["q5", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q21", "q22"] },
@@ -1103,16 +1103,16 @@ const PLAN = {
     "w3-sat-5": { accept: "Вопросы самопроверки — по-английски без подсказки." },
 
     "w4-mon-1": { accept: "c22, q9, q10: ответ до раскрытия; объяснено, что отмена контекста не останавливает код, который ctx не проверяет." },
-    "w4-mon-2": { accept: "Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait.", exercise: "Coding-задание parallelfetch (практикум недели 4)." },
+    "w4-mon-2": { accept: "Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait." },
     "w4-tue-1": { accept: "q16, q17, q11: ответ до вариантов; для q11 названо, что изменилось в Go 1.23 и почему важна версия в go.mod." },
-    "w4-tue-2": { accept: "Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано.", exercise: "Coding-задание ratelimit (практикум недели 4)." },
+    "w4-tue-2": { accept: "Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано." },
     "w4-wed-1": { accept: "c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя." },
-    "w4-wed-2": { accept: "Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается.", exercise: "Coding-задание shutdown (практикум недели 4)." },
-    "w4-wed-3": { accept: "Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine.", exercise: "Упражнение leak (практикум недели 4)." },
+    "w4-wed-2": { accept: "Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается." },
+    "w4-wed-3": { accept: "Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine." },
     "w4-thu-1": { accept: "c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия." },
     "w4-thu-2": { accept: "c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM." },
-    "w4-thu-3": { accept: "Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно.", exercise: "Упражнение escape (практикум недели 4)." },
-    "w4-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости.", exercise: "Упражнение profile (практикум недели 4)." },
+    "w4-thu-3": { accept: "Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно." },
+    "w4-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости." },
     "w4-sat-2": { accept: "c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями." },
     "w4-sat-4": { accept: "Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор." },
     "w4-sat-5": { accept: "Задача решена вслух за 40 минут; получен разбор; три слабых места записаны." },

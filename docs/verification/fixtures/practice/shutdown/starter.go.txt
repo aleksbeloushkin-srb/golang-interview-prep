@@ -1,0 +1,36 @@
+// Package shutdown: practice task W4-3. Replace the TODO with your solution.
+package shutdown
+
+import (
+	"context"
+	"net"
+	"net/http"
+	"time"
+)
+
+// App is an HTTP service with background workers and one dependency, such as
+// a database, that the handlers and workers use.
+type App struct {
+	Handler http.Handler
+	// Workers run until their context is done; each finishes its current job first.
+	Workers []func(ctx context.Context)
+	// Close releases the dependency. Run calls it once, last.
+	Close func() error
+	// Timeout is the budget for the whole shutdown.
+	Timeout time.Duration
+}
+
+// Run serves HTTP on ln until ctx is done, then shuts down in order:
+// HTTP (no new connections, in-flight requests finish) → workers → Close.
+//
+// In main:
+//
+//	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+//	defer stop()
+//	ln, err := net.Listen("tcp", ":8080")
+//	...
+//	err = app.Run(ctx, ln)
+func (a *App) Run(ctx context.Context, ln net.Listener) error {
+	// TODO
+	panic("TODO")
+}

@@ -1,0 +1,26 @@
+// Package leak: practice task W4-4. Replace each TODO with your solution.
+package leak
+
+import (
+	"context"
+	"errors"
+)
+
+// Backend answers one query. A well-behaved backend returns early when ctx is done.
+type Backend func(ctx context.Context) string
+
+var ErrNoBackends = errors.New("leak: no backends")
+
+// FirstLeaky asks every backend in its own goroutine and returns the first answer.
+// Write it the naive way, with an unbuffered channel: it leaks on purpose.
+func FirstLeaky(ctx context.Context, backends ...Backend) string {
+	// TODO
+	panic("TODO")
+}
+
+// First does the same without leaking, returns ErrNoBackends for no backends
+// and ctx.Err() if ctx is done before any answer.
+func First(ctx context.Context, backends ...Backend) (string, error) {
+	// TODO
+	panic("TODO")
+}
