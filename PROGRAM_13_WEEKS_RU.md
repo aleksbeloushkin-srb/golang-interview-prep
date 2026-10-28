@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28b.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28c.
 
 ## Фазы
 
@@ -173,7 +173,7 @@
 
 ### Ср · 90 мин
 
-- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered — [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
+- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет) — [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
   - Готово, когда: Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым.
 - [ ] W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить — проговор: «W2-3. Generics vs interfaces»
   - Готово, когда: Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером.
@@ -491,7 +491,7 @@
 
 ### Вт · 90 мин
 
-- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id} — [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements)
+- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2) — [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements)
   - Готово, когда: Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405.
   - На сайте пока нет: Прикладная карточка: жизненный цикл handler и дедлайны запроса (неделя 5).
 - [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)
@@ -1333,7 +1333,7 @@ append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller
 
 </details>
 
-**w2-wed-1** — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered
+**w2-wed-1** — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет)
 
 <details><summary>Model answer (EN)</summary>
 

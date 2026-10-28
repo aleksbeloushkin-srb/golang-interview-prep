@@ -111,3 +111,13 @@
 | Схемы | Подсветка отдельных фишек (`item.hl`), тихая подсветка рамкой без подписи (`hlQuiet`) для строк битов; класс `.visually-hidden` |
 | Источники | go1.26.1: internal/sync/mutex.go (константы 26–29, порог 55, Lock 61–71, lockSlow 95–182, Unlock/unlockSlow 187–234), sync/mutex.go (документация: копирование, не привязан к горутине, TryLock), runtime/proc.go internal_sync_runtime_canSpin (active_spin = 4, active_spin_cnt = 30), runtime/asm_amd64.s procyield (PAUSE), internal/runtime/atomic/atomic_amd64.s (LOCK CMPXCHGL/Q, LOCK XADDL/Q), sync/atomic doc (sequentially consistent, synchronizes before), pkg.go.dev sync/atomic@go1.23.0 (And/Or added in go1.23.0), internal/runtime/maps/group.go (ctrlGroupMatchH2, bitsetLSB/MSB, bitsetFirst, removeFirst). Пример SWAR посчитан скриптом |
 | Проверка (мои запуски) | check-content ok; node --test 35/35; Playwright: схемы 259/259 (все 62 шага девяти диаграмм, переполнение 320–1440 и ×2), «сначала предскажи» 8/8, исправления ревью 32/32, календарь 33/33, критерии 29/29, план 29/12/19; browser-smoke ok (39) |
+
+## 28 октября 2026 — сверка с Go 1.27
+
+| Поле | Запись |
+|---|---|
+| Повод | Go 1.27 вышел в августе 2026 (последний тег go1.27.3); материалы сайта сверялись с 1.26.1 |
+| Проверка | Сравнил go1.26.1 и go1.27.3 по файлам, на которые опираются схемы и карточки. Без изменений: runtime/preempt.go, cgroup_linux.go, select.go, netpoll.go, internal/sync/mutex.go. В proc.go изменения касаются инициализации и secret mode; места из схем совпадают (61 тик, n − n/2, forcePreemptNS 10 мс, maxmcount 10000, goschedImpl, canSpin, spinning). Изменились maps (малая map, arm64 matchH2, mapsplitgroup), chan.go (удалён asynctimerchan), stack.go (arm64 injected call), runtime2.go (поля) |
+| Стало | q11 versionNote: в 1.27 asynctimerchan удалён, старое значение в окружении — фатально при старте (internal/godebugs/table.go: Removed: 27). c12 versionNote: goroutineleak в 1.27 без эксперимента. sim7: шаг 4 — в 1.27 обновление существующего ключа малую map не растит; versionNote — arm64 matchH2 без ложных срабатываний, mapsplitgroup (по умолчанию выключен, internal/buildcfg/exp.go baseline). sim9 шаг 5 — формула arm64. План: w2-wed-1 — generic-методы Go 1.27; w5-tue-1 — encoding/json поверх json/v2. README — строка о версиях |
+| Источник | go.dev/doc/go1.27 (release notes); git diff go1.26.1..go1.27.3 по перечисленным файлам |
+| Ограничения | Toolchain 1.27 не запускался; проверено чтением исходников. Бейдж «GO 1.25+» не менялся: материалы верны для 1.25+ с отмеченными отличиями |
