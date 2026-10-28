@@ -178,3 +178,12 @@
 | Стало | sim4: шаг 8 — в таблице приём из in, а не ch; порядок вычисления ch → build() → in. Шаг 7 — закрытый канал с данными в буфере отдаёт их с true. Шаг 6 — сброс selectDone и param, выделены все изменения, chB.recvq. Шаг 5 — выделен param, значение копируется, только если case его присваивает. Шаг 3 — пример pollorder отличается от lockorder, причина порядка по адресам — в заметке. Шаг 2 — ответ показывает и v. q25 — точное условие совпадения % и & (степень двойки, x ≥ 0 или кратно n), ASCII-минус в выражениях. q27 — путь selectnbsend и сообщение deadlock без default. q23 — versionNote |
 | Источники | go1.26.1: runtime/select.go 174–177, 280–291, 354–418; chan.go 177–180, 339–350, 886–917; cmd/compile/internal/walk/select.go 100–119, 182–209; walk/order.go 997–1088 |
 | Проверка (мои запуски) | check-content ok; Playwright: схемы 343/343, «сначала предскажи» 8/8, quiz 24/24; скриншоты sim4 просмотрены |
+
+## 28 октября 2026 — рецепт AWS и GitHub Actions; задание агенту Google
+
+| Поле | Запись |
+|---|---|
+| Стало | `AWS_RECIPE_RU.md`: аккаунт AWS (план Paid, MFA root, бюджет без учёта кредитов, IAM Identity Center, CLI через SSO), OAuth-клиент Google и секрет в Secrets Manager, ресурсы CDK, раннер кода, OIDC GitHub → AWS с ролью только на роли CDK, `deploy.yml` с actions по SHA, проверки сайта в CI, цена, этапы. `DEPLOYMENT_PROPOSAL_RU.md`: исправлена ошибка — `-race` требует cgo, поэтому раннеру нужны gcc и `CGO_ENABLED=1`; лимит раннера 25 с из-за предела HTTP API 30 с; выбор плана Paid; бесплатный уровень Cognito. `GOOGLE_AGENT_BRIEF_RU.md`: задание агенту Google по запоминаемости (журнал попыток и резервная копия, очередь «Сегодня», «Скажи вслух», quiz без вариантов, пилот малых единиц) с ограничениями и проверками |
+| Источники | AWS Free Tier FAQ; builder.aws.com «The $0 AWS account in 2026»; AWS What's New (MFA root, 06.2025); IAM Identity Center instances; Cognito pricing; API Gateway JWT authorizer и квоты HTTP API; GitHub docs OIDC in AWS (неизменяемые ID в `sub` для репозиториев после 15.07.2026); теги actions через `git ls-remote`; npm: aws-cdk 2.1146.1, aws-cdk-lib 2.275.0; ID владельца и репозитория — `gh api` |
+| Проверка (мои запуски) | Go 1.24.7: `CGO_ENABLED=0 go test -race` → «go: -race requires cgo», с `CGO_ENABLED=1` гонка находится. check-content ok; документы отрендерены python-liquid без ошибок (YAML с выражениями GitHub внутри блока raw) |
+| Ограничения | Ничего не развёрнуто; интерфейс регистрации AWS мог измениться — шаги описаны по документации и статьям, не пройдены вживую |
