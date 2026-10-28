@@ -846,5 +846,188 @@ func WriteReport(path string, payload []byte) (err error) {
       "c18",
       "c19"
     ]
+  },
+  // =========================================================================
+  // ЧАСТЬ 4: MUTEX, БИТЫ, КАНАЛЫ И SELECT (Q23 - Q27)
+  // =========================================================================
+  {
+    "id": "q23",
+    "title": "Задача 23: Мьютекс в методе со значением",
+    "ru": "Что напечатает программа? Что сообщит go vet?",
+    "en": "What does the program print? What does go vet report?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Counter struct {\n\tmu sync.Mutex\n\tn  int\n}\n\nfunc (c Counter) Inc() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.n++\n}\n\nfunc main() {\n\tvar c Counter\n\tc.Inc()\n\tc.Inc()\n\tfmt.Println(c.n)\n}",
+    "options": [
+      "2: Lock и Unlock защищают поле n, поэтому оба увеличения сохраняются.",
+      "0: метод получает копию Counter вместе с мьютексом; увеличивается поле копии.",
+      "Deadlock: второй вызов Inc ждёт мьютекс, оставшийся захваченным в копии.",
+      "Panic: копировать sync.Mutex запрещено во время выполнения.",
+      "Ошибка компиляции: тип с sync.Mutex нельзя передавать по значению.",
+      "1: первый вызов меняет оригинал, второй — копию."
+    ],
+    "correct": 1,
+    "explanationRU": "Вывод — 0. У Inc получатель по значению: при каждом вызове копируется весь Counter, вместе с mu и n. Блокируется и увеличивается копия, оригинал не меняется. Компилятор это разрешает, runtime не проверяет; go vet (copylocks) сообщает: «Inc passes lock by value». Deadlock нет: копия берёт текущее состояние мьютекса, здесь свободное; копия занятого мьютекса была бы занятой. Исправление — получатель-указатель func (c *Counter) Inc(), тогда вывод 2. Тип с мьютексом передают и хранят по указателю.",
+    "speechEN": "It prints 0. Inc has a value receiver, so every call copies the whole Counter, including the mutex and n; the copy is locked and incremented, and the original stays at zero. Neither the compiler nor the runtime stops this, but go vet's copylocks check reports that Inc passes a lock by value. With a pointer receiver it prints 2.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Counter struct {\n\tmu sync.Mutex\n\tn  int\n}\n\nfunc (c *Counter) Inc() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.n++\n}\n\nfunc main() {\n\tvar c Counter\n\tc.Inc()\n\tc.Inc()\n\tfmt.Println(c.n)\n}",
+    "versionNote": "Поведение одинаково в Go 1.17–1.27. Программа, исправление и go vet выполнены Go 1.24.7: вывод 0, после исправления 2.",
+    "sources": [
+      {
+        "title": "sync.Mutex: must not be copied after first use",
+        "url": "https://pkg.go.dev/sync#Mutex"
+      },
+      {
+        "title": "go vet: copylocks",
+        "url": "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/copylock"
+      },
+      {
+        "title": "Go specification: method declarations",
+        "url": "https://go.dev/ref/spec#Method_declarations"
+      }
+    ],
+    "cardIds": [
+      "c21"
+    ]
+  },
+  {
+    "id": "q24",
+    "title": "Задача 24: Unlock без Lock и recover",
+    "ru": "Что напечатает программа? Поможет ли recover в отложенной функции?",
+    "en": "What does the program print? Does recover in the deferred function help?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tdefer func() {\n\t\tfmt.Println(\"recovered:\", recover())\n\t}()\n\tvar mu sync.Mutex\n\tmu.Unlock()\n\tfmt.Println(\"after unlock\")\n}",
+    "options": [
+      "after unlock: Unlock свободного мьютекса ничего не делает.",
+      "recovered: sync: unlock of unlocked mutex — отложенная функция перехватила panic.",
+      "after unlock, затем recovered: <nil>.",
+      "fatal error: sync: unlock of unlocked mutex и код завершения 2; отложенная функция не выполняется.",
+      "Программа зависнет: Unlock ждёт, пока кто-нибудь вызовет Lock.",
+      "Ошибка компиляции: go build проверяет парность Lock и Unlock."
+    ],
+    "correct": 3,
+    "explanationRU": "Вывод — «fatal error: sync: unlock of unlocked mutex» и трассировка, код завершения 2. Быстрый путь Unlock вычитает бит locked, получает ненулевой результат, и unlockSlow видит, что locked не был установлен. Вызывается fatal, а не panic: такую ошибку recover не перехватывает, отложенные функции не выполняются, процесс завершается сразу. Так runtime не продолжает работу с испорченным состоянием мьютекса. Правило: Unlock — только после своего Lock, обычно defer mu.Unlock() сразу за Lock. Разблокировать из другой горутины можно, но Lock перед этим обязателен.",
+    "speechEN": "It prints fatal error: sync: unlock of unlocked mutex, and the process exits with status 2. Unlocking an unlocked mutex is a fatal runtime error, not a panic, so recover cannot catch it and deferred functions do not run. Pair every Unlock with a Lock, usually with defer right after Lock.",
+    "versionNote": "В Go 1.17 здесь вызывался throw, в Go 1.26.1 — fatal (internal/sync/mutex.go:203–205); оба не перехватываются recover. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "internal/sync/mutex.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/sync/mutex.go"
+      },
+      {
+        "title": "sync.Mutex.Unlock: run-time error if not locked",
+        "url": "https://pkg.go.dev/sync#Mutex.Unlock"
+      },
+      {
+        "title": "Go specification: handling panics",
+        "url": "https://go.dev/ref/spec#Handling_panics"
+      }
+    ],
+    "cardIds": [
+      "c21"
+    ]
+  },
+  {
+    "id": "q25",
+    "title": "Задача 25: Приоритет & и переполнение uint8",
+    "ru": "Что напечатает программа? Почему −7 % 4 и −7 & 3 различаются?",
+    "en": "What does the program print? Why do -7 % 4 and -7 & 3 differ?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := 6\n\tif x&1 == 0 {\n\t\tfmt.Println(\"even\")\n\t} else {\n\t\tfmt.Println(\"odd\")\n\t}\n\tvar b uint8 = 200\n\tb += 100\n\tfmt.Println(b, -7%4, -7&3)\n}",
+    "options": [
+      "odd, затем 44 -3 1: как в C, == связывает сильнее, чем &.",
+      "even, затем 44 -3 1.",
+      "even, затем 300 -3 -3.",
+      "Ошибка компиляции: x&1 нельзя сравнивать с 0 без скобок.",
+      "even, затем panic: переполнение при b += 100.",
+      "even, затем 44 1 1: для степени двойки % и & совпадают всегда."
+    ],
+    "correct": 1,
+    "explanationRU": "Вывод: even, затем 44 -3 1. В Go у & тот же приоритет, что у * (5), у == — 3, поэтому x&1 == 0 — это (x&1) == 0; в C наоборот. uint8 переполняется циклически: 200 + 100 = 300, 300 − 256 = 44, паники нет. Остаток берёт знак делимого: −7 % 4 = −3. А −7 & 3 работает с битами дополнительного кода: …11111001 & 011 = 001, то есть 1. Поэтому x % 4 == x & 3 только для неотрицательных x.",
+    "speechEN": "It prints even, then 44 -3 1. In Go, & binds tighter than ==, so x&1 == 0 means (x&1) == 0, the opposite of C. uint8 arithmetic wraps, so 300 becomes 44. The remainder takes the sign of the dividend, so -7 % 4 is -3, while -7 & 3 works on two's-complement bits and gives 1. So x % n equals x & (n-1) only for non-negative x.",
+    "versionNote": "Правила спецификации не менялись с Go 1.0. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: operator precedence",
+        "url": "https://go.dev/ref/spec#Operator_precedence"
+      },
+      {
+        "title": "Go specification: arithmetic operators",
+        "url": "https://go.dev/ref/spec#Arithmetic_operators"
+      },
+      {
+        "title": "Go specification: integer overflow",
+        "url": "https://go.dev/ref/spec#Integer_overflow"
+      }
+    ]
+  },
+  {
+    "id": "q26",
+    "title": "Задача 26: Закрытый буферизованный канал и range",
+    "ru": "Что напечатает программа? Что происходит с буфером при close?",
+    "en": "What does the program print? What happens to the buffer on close?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int, 3)\n\tch <- 1\n\tch <- 2\n\tclose(ch)\n\tfor v := range ch {\n\t\tfmt.Print(v, \" \")\n\t}\n\tv, ok := <-ch\n\tfmt.Println(v, ok)\n}",
+    "options": [
+      "0 false: после close значения из буфера теряются, range сразу завершается.",
+      "1 2 0 false: range отдаёт остаток буфера и заканчивается; следующее чтение — нулевое значение и ok=false.",
+      "1 2, затем panic: чтение из закрытого канала.",
+      "1 2 0 true: значение 0 считается полученным.",
+      "Программа зависнет: range ждёт новых значений.",
+      "Panic при close: в буфере остались непрочитанные значения."
+    ],
+    "correct": 1,
+    "explanationRU": "Вывод: 1 2 0 false. close не стирает буфер: чтения сначала забирают оставшиеся значения с ok=true. range по каналу заканчивается, когда канал закрыт и буфер пуст. Следующее чтение не блокируется и сразу возвращает нулевое значение и ok=false. Закрывать канал с непустым буфером можно; panic дают только отправка в закрытый канал, повторный close и close(nil). В runtime chanrecv при closed = 1 сначала смотрит qcount: пока он больше нуля, значение берётся из buf[recvx].",
+    "speechEN": "It prints 1 2 0 false. Closing a channel does not discard buffered values: receives drain them first with ok true, and range stops once the channel is closed and empty. After that, a receive returns the zero value with ok false immediately. Only sending on a closed channel, closing it twice, or closing nil panics.",
+    "versionNote": "Семантика спецификации; путь runtime сверен с chan.go Go 1.26.1 (chanrecv). Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: close",
+        "url": "https://go.dev/ref/spec#Close"
+      },
+      {
+        "title": "Go specification: receive operator",
+        "url": "https://go.dev/ref/spec#Receive_operator"
+      },
+      {
+        "title": "Go specification: for statements with range clause",
+        "url": "https://go.dev/ref/spec#For_range"
+      },
+      {
+        "title": "chan.go — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
+      }
+    ],
+    "cardIds": [
+      "c13",
+      "c14"
+    ]
+  },
+  {
+    "id": "q27",
+    "title": "Задача 27: Выражение в ветке отправки select",
+    "ru": "Что напечатает программа? Вызовется ли build(), если выиграет default?",
+    "en": "What does the program print? Is build() called if default wins?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc build() int {\n\tfmt.Println(\"build\")\n\treturn 1\n}\n\nfunc main() {\n\tvar ch chan int\n\tselect {\n\tcase ch <- build():\n\t\tfmt.Println(\"sent\")\n\tdefault:\n\t\tfmt.Println(\"default\")\n\t}\n}",
+    "options": [
+      "default: при nil-канале ветка пропускается целиком, build() не вызывается.",
+      "build, затем default: отправляемое значение вычисляется до выбора ветки.",
+      "build, затем sent: отправка в nil-канал внутри select проходит сразу.",
+      "Panic: отправка в nil-канал.",
+      "Программа зависнет: отправка в nil-канал блокирует навсегда, default не поможет.",
+      "Ошибка компиляции: в select нельзя использовать nil-канал."
+    ],
+    "correct": 1,
+    "explanationRU": "Вывод: build, затем default. При входе в select канал и отправляемое значение каждой ветки вычисляются ровно один раз, в порядке исходника, и только потом выбирается операция. Поэтому build() отработает, даже если победит default. Ветка с nil-каналом никогда не готова и исключается из опроса; других готовых нет — выполняется default. Без default такой select ждал бы вечно. Дорогую подготовку с побочными эффектами выноси из case и делай отменяемой через context.",
+    "speechEN": "It prints build, then default. On entering select, the channel and the value to send in every case are evaluated exactly once, in source order, before any case is chosen. So build runs even though default wins. A send on a nil channel is never ready, so with nothing else ready the default branch runs.",
+    "versionNote": "Порядок вычисления — правило спецификации select. Программа выполнена Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: select",
+        "url": "https://go.dev/ref/spec#Select_statements"
+      },
+      {
+        "title": "Compiler select lowering — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/select.go"
+      }
+    ],
+    "cardIds": [
+      "c18",
+      "c19"
+    ]
   }
 ];
