@@ -5,11 +5,11 @@ const SIMULATORS = [
   {
     "id": "sim1",
     "title": "Диаграмма 1: Кто выполняется, где стек, откуда продолжить",
-    "subtitle": "Шесть шагов: аргументы → G и стек → сохранённый контекст → очередь → исполнение → завершение. Модель Go 1.26.1/amd64; адреса символические, скорость не измеряется.",
+    "subtitle": "Семь шагов: аргументы → G и стек → сохранённый контекст → очередь → исполнение → завершение → ответ за минуту. Модель Go 1.26.1/amd64; адреса символические, скорость не измеряется.",
     "cardId": "c6",
     "cardLabel": "Q6: регистры простыми словами →",
     "learningHint": "Кто — текущая G (R14); где стек — адрес RSP; откуда продолжить — PC, загружаемый в поток инструкций. R14 на g0 и M.curg — не одно и то же: системный стек обслуживает пользовательскую G. На arm64 имена и соглашения другие.",
-    "boardLegend": "M1 — поток ОС с процессором P1; R14 — какая G сейчас текущая, RSP — чей стек, RIP — какой код. Рамка и слово «изменилось» отмечают то, что поменялось на этом шаге.",
+    "boardLegend": "M1 — поток ОС; P1 — право исполнять Go-код, его держит M1. R14 — какая G сейчас текущая, RSP — чей стек, RIP — какой код. Рамка и слово «изменилось» отмечают то, что поменялось на этом шаге.",
     "sources": [
       {
         "title": "Go 1.26.1: ABIInternal",
@@ -93,14 +93,16 @@ const SIMULATORS = [
                     ],
                     "queue": true
                   }
-                ]
+                ],
+                "note": "runnext — один слот для следующей G: новая G из go встаёт туда, а прежняя уходит в хвост runq."
               }
             ],
             "list": {
               "items": [
                 "G1 вычисляет doWork и аргумент n: в вызов уйдёт копия 1",
                 "Само тело doWork пока не выполняется"
-              ]
+              ],
+              "title": "Что происходит в G1"
             }
           }
         ],
@@ -238,7 +240,8 @@ const SIMULATORS = [
               "items": [
                 "Переход на системный стек: R14 = g0, а M.curg по-прежнему G1",
                 "G2: свободная структура из пула (gfget) или новая (malg)"
-              ]
+              ],
+              "title": "Что изменилось"
             }
           }
         ],
@@ -378,7 +381,8 @@ const SIMULATORS = [
                 "В G2.sched записаны sp, pc обёртки, которую компилятор создал для go doWork(n), и ctxt — замыкание с копией n",
                 "Обёртка вызовет doWork; после её возврата управление уйдёт в goexit",
                 "Это данные будущего запуска: регистры CPU всё ещё работают на g0"
-              ]
+              ],
+              "title": "Что записано в G2.sched"
             }
           }
         ],
@@ -495,7 +499,8 @@ const SIMULATORS = [
                 "G2 → runnext P1 (runqput с next = true)",
                 "G5 — прежний кандидат: runnext → хвост runq",
                 "G2 готова, но ещё не исполняется"
-              ]
+              ],
+              "title": "Что изменилось"
             }
           }
         ],
@@ -607,7 +612,8 @@ const SIMULATORS = [
               "items": [
                 "execute: G2 runnable → running",
                 "gogo: R14 = G2, RSP → стек G2, переход (JMP) на сохранённый pc — обёртку, которая вызывает doWork"
-              ]
+              ],
+              "title": "Как G2 получает поток"
             }
           }
         ],
@@ -658,6 +664,10 @@ const SIMULATORS = [
           "promptRU": "Почему недостаточно изменить только RIP?",
           "answerEN": "The resumed code also needs its own stack and current-G context.",
           "answerRU": "Продолжаемому коду нужны также его стек и контекст текущей G."
+        },
+        "predict": {
+          "promptEN": "The scheduler picked G2. What will R14, RSP and RIP hold after gogo, and why is changing RIP alone not enough?",
+          "promptRU": "Планировщик выбрал G2. Что окажется в R14, RSP и RIP после gogo и почему одного RIP мало?"
         }
       },
       {
@@ -740,7 +750,8 @@ const SIMULATORS = [
                 "doWork вернулась в обёртку → goexit → goexit1 → mcall(goexit0): переход на g0",
                 "G2 получает _Gdead; структура идёт в пул, стек — по политике рантайма",
                 "M1 на g0 ищет следующую G (schedule)"
-              ]
+              ],
+              "title": "Как завершается G2"
             }
           }
         ],
@@ -791,6 +802,179 @@ const SIMULATORS = [
           "promptRU": "Гарантирует ли возврат из doWork немедленное удаление страниц её стека из RSS?",
           "answerEN": "No. G reuse, stack retention, span reuse and returning pages to the OS are separate decisions.",
           "answerRU": "Нет. Переиспользование G, сохранение стека, повторное использование спана и возврат страниц ОС — разные решения."
+        }
+      },
+      {
+        "title": "7. Вся картина и ответ за минуту",
+        "desc": "Сводный кадр: три регистра amd64 по всем фазам. Текущая G меняется так: G1 → g0 → G2 → g0. Вся служебная работа — создание, постановка в очередь, завершение — идёт на системном стеке g0. Каркас ответа ниже — по-английски.",
+        "descEN": "A summary frame: three amd64 registers across every phase. The current G goes G1 → g0 → G2 → g0. All runtime work, from creating the G to queueing it and cleaning up, runs on the system stack g0. The outline below is in English, as in an interview.",
+        "board": [
+          {
+            "caption": "R14, RSP и RIP по фазам",
+            "hl": [
+              "G2",
+              "стек G2"
+            ],
+            "hlLabel": "пользовательский код G2",
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "R14",
+                "tag": "кто",
+                "slots": [
+                  {
+                    "label": "1. go (в G1)",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "2–4. newproc (на g0)",
+                    "items": [
+                      "g0"
+                    ]
+                  },
+                  {
+                    "label": "5. gogo",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "6. goexit0",
+                    "items": [
+                      "g0"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "m",
+                "title": "RSP",
+                "tag": "чей стек",
+                "slots": [
+                  {
+                    "label": "1. go (в G1)",
+                    "items": [
+                      "стек G1"
+                    ]
+                  },
+                  {
+                    "label": "2–4. newproc (на g0)",
+                    "items": [
+                      "стек g0"
+                    ]
+                  },
+                  {
+                    "label": "5. gogo",
+                    "items": [
+                      "стек G2"
+                    ]
+                  },
+                  {
+                    "label": "6. goexit0",
+                    "items": [
+                      "стек g0"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "m",
+                "title": "RIP",
+                "tag": "какой код",
+                "slots": [
+                  {
+                    "label": "1. go (в G1)",
+                    "items": [
+                      "код G1: go doWork(n)"
+                    ]
+                  },
+                  {
+                    "label": "2–4. newproc (на g0)",
+                    "items": [
+                      "newproc1, runqput"
+                    ]
+                  },
+                  {
+                    "label": "5. gogo",
+                    "items": [
+                      "обёртка → doWork"
+                    ]
+                  },
+                  {
+                    "label": "6. goexit0",
+                    "items": [
+                      "goexit0 → schedule"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "tag": "статус",
+                "slots": [
+                  {
+                    "label": "1. go (в G1)",
+                    "items": [
+                      "ещё нет"
+                    ]
+                  },
+                  {
+                    "label": "2–4. newproc (на g0)",
+                    "items": [
+                      "подготовка → runnable"
+                    ]
+                  },
+                  {
+                    "label": "5. gogo",
+                    "items": [
+                      "running"
+                    ]
+                  },
+                  {
+                    "label": "6. goexit0",
+                    "items": [
+                      "_Gdead → пул"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что запомнить",
+              "items": [
+                "Аргументы вычисляет G1; новая G получает копии",
+                "Создание, постановка в очередь и завершение G2 идут на g0 — системном стеке потока",
+                "g.sched — сохранённые sp, pc и ctxt; в регистры они попадают только в gogo",
+                "runnable ≠ running: runnext лишь ставит G2 первой в очередь P1",
+                "После возврата doWork: goexit → g0 → G2 в пул, стек — по политике рантайма"
+              ]
+            }
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "title": "go statement",
+              "ordered": true,
+              "items": [
+                "go f(x) evaluates f and its arguments in the calling goroutine; the new goroutine gets copies.",
+                "The runtime switches to the system stack g0 and takes a dead G from a free list or allocates a new one with a small stack: 2 KiB on Linux/amd64 for a new one.",
+                "It saves the start context in g.sched: the stack pointer, the PC of a compiler-generated wrapper and the closure, with goexit as the return path.",
+                "The G becomes runnable and goes to runnext of the current P; the previous runnext moves to the tail of the local queue. That is readiness, not execution.",
+                "When the scheduler picks it, gogo loads the G into R14 on amd64, switches RSP to its stack and jumps to the saved PC.",
+                "When the function returns, goexit switches to g0, marks the G dead, puts it on the free list and calls schedule."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Follow-up: how big is a goroutine stack, and what happens when it runs out?",
+          "promptRU": "Уточняющий вопрос: какого размера стек горутины и что будет, когда места не хватит?",
+          "answerEN": "A new G starts with 2 KiB on Linux/amd64; a reused G may get a larger starting size based on the average stack use the GC observed. Each function prologue compares SP with stackguard0; when space runs out, morestack allocates a stack twice as large and copies the frames, adjusting pointers into the stack. The GC can shrink an underused stack. The limit is 1 GB on 64-bit; beyond it the runtime prints “goroutine stack exceeds 1000000000-byte limit” and stops with “fatal error: stack overflow”.",
+          "answerRU": "Новая G начинает с 2 КиБ на Linux/amd64; переиспользованная может получить больший стартовый размер — по среднему использованию стека, которое видел GC. Пролог каждой функции сравнивает SP со stackguard0; если места мало, morestack выделяет стек вдвое больше и копирует кадры, исправляя указатели внутрь стека. GC может уменьшить недогруженный стек. Предел — 1 ГБ на 64-битных системах; дальше рантайм печатает «goroutine stack exceeds 1000000000-byte limit» и останавливает программу: «fatal error: stack overflow»."
         }
       }
     ]
@@ -1013,7 +1197,8 @@ const SIMULATORS = [
                 "sysmon → G1: запрос вытеснения (флаг preempt и stackguard0 = stackPreempt)",
                 "sysmon → M1: сигнал SIGURG на поддерживаемом Unix-пути",
                 "G1 всё ещё исполняется: запрос ещё не переключение"
-              ]
+              ],
+              "title": "Запрос, а не переключение"
             }
           }
         ],
@@ -1462,7 +1647,8 @@ const SIMULATORS = [
               "items": [
                 "M1 ↔ P1: связь снята при входе; M1 помнит P1 в m.oldp и при выходе попробует вернуть его",
                 "P1 помечен _Psyscall"
-              ]
+              ],
+              "title": "Go 1.25: при входе в syscall"
             }
           },
           {
@@ -1502,7 +1688,8 @@ const SIMULATORS = [
                 "При входе связь M1–P1 сохраняется; разорвать её может sysmon (retake) или остановка мира",
                 "Изъятие P: setBlockOnExitSyscall → takeP → resume → handoffp",
                 "_Psyscall_unused — бывшее состояние, сейчас не используется"
-              ]
+              ],
+              "title": "Go 1.26.1: при входе в syscall"
             }
           }
         ],
@@ -2060,7 +2247,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Очередь пуста → перехват у P1."
+                "note": "Своя очередь пуста. Когда G5 уйдёт: GRQ (G6) → netpoller → только потом перехват у P1."
               },
               {
                 "kind": "grq",
@@ -2729,6 +2916,10 @@ const SIMULATORS = [
           "promptRU": "Значение скопировано. Выполнила ли G1 следующую строку?",
           "answerEN": "No. In this snapshot it is still waiting; copying data and running the receiving code are separate events.",
           "answerRU": "Нет. В этом снимке она ещё ждёт: запись данных и выполнение кода получателя — разные события."
+        },
+        "predict": {
+          "promptEN": "G1 sleeps in recvq of an unbuffered channel. G2 sends 42. Where does 42 go, and does G1 run the line after <-ch right away?",
+          "promptRU": "G1 спит в recvq небуферизованного канала. G2 отправляет 42. Куда попадёт 42 и выполнит ли G1 сразу строку после <-ch?"
         }
       },
       {
@@ -2890,6 +3081,10 @@ const SIMULATORS = [
           "promptRU": "Какое дополнительное событие подтвердит завершение обработки после чтения?",
           "answerEN": "An explicit acknowledgement after processing, such as closing a separate done channel. Completion of the send alone is not that acknowledgement.",
           "answerRU": "Явное подтверждение после обработки, например закрытие отдельного done-канала. Само завершение отправки таким подтверждением не является."
+        },
+        "predict": {
+          "promptEN": "42 is already in x. What does G2 do next so that G1 can continue, and which queue does G1 go to?",
+          "promptRU": "42 уже лежит в x. Что G2 делает дальше, чтобы G1 продолжила, и в какую очередь попадёт G1?"
         }
       },
       {
@@ -3474,7 +3669,8 @@ const SIMULATORS = [
               "items": [
                 "Сначала остаток буфера, потом нулевое значение и ok = false",
                 "for v := range ch завершится после 8"
-              ]
+              ],
+              "title": "Чтения после close"
             }
           }
         ],
@@ -3823,7 +4019,8 @@ const SIMULATORS = [
                 "selected решает, какая ветка: case или default",
                 "received становится ok в v, ok := <-ch",
                 "Закрытый пустой канал всегда готов: в цикле for + select такая ветка будет выбираться снова и снова — после закрытия присвой каналу nil"
-              ]
+              ],
+              "title": "Как читать результат"
             }
           }
         ],
@@ -4197,12 +4394,16 @@ const SIMULATORS = [
           "promptEN": "Were the locks acquired again between polling and registration?",
           "answerRU": "Нет. Опрос и регистрация проходят под одним захватом набора каналов.",
           "answerEN": "No. Polling and registration share one acquisition of the channel set."
+        },
+        "predict": {
+          "promptEN": "No case is ready and there is no default. How many sudogs does selectgo create for the three receives, where do they go, and when are the channel locks released?",
+          "promptRU": "Готовых нет, default нет. Сколько sudog создаст selectgo для трёх чтений, куда они попадут и когда отпустятся блокировки каналов?"
         }
       },
       {
         "title": "5. Два отправителя: кто заберёт ожидание?",
-        "desc": "W1 пишет в C, W2 — в A. В этом допустимом исходе W1 первым меняет selectDone с 0 на 1 через CAS и передаёт значение G1. W2 извлекает свою запись, проигрывает CAS и ищет другого получателя. CAS не даёт обеим операциям использовать одно ожидание.",
-        "descEN": "Two sends compete for the same select waiter. Here W1 wins CAS(0, 1), transfers its value and makes G1 runnable. W2 loses and skips that waiter. Runnable does not mean already running.",
+        "desc": "Две другие горутины отправляют почти одновременно: G2 — в chC, G3 — в chA. В этом допустимом исходе G2 первой меняет selectDone с 0 на 1 через CAS и передаёт значение G1. G3 извлекает свою запись, проигрывает CAS и ищет другого получателя. CAS не даёт обеим операциям использовать одно ожидание.",
+        "descEN": "Two sends compete for the same select waiter. Here G2 wins CAS(0, 1), transfers its value and makes G1 runnable. G3 loses and skips that waiter. Runnable does not mean already running.",
         "board": [
           {
             "hl": [
@@ -4215,7 +4416,7 @@ const SIMULATORS = [
             "lanes": [
               {
                 "kind": "g",
-                "title": "W1 → chC",
+                "title": "G2 → chC",
                 "slots": [
                   {
                     "label": "CAS selectDone 0 → 1",
@@ -4242,7 +4443,7 @@ const SIMULATORS = [
               },
               {
                 "kind": "g",
-                "title": "W2 → chA",
+                "title": "G3 → chA",
                 "slots": [
                   {
                     "label": "CAS selectDone 0 → 1",
@@ -4327,8 +4528,8 @@ const SIMULATORS = [
               "ordered": true,
               "title": "Гонка двух отправителей",
               "items": [
-                "W1 извлекает sudog C, CAS(selectDone, 0, 1) = true → копирует значение в G1 (если case его присваивает) и будит G1",
-                "W2 извлекает sudog A, CAS = false → запись пропущена, W2 ищет другого получателя или ждёт",
+                "G2 извлекает sudog C, CAS(selectDone, 0, 1) = true → копирует значение в G1 (если case его присваивает) и будит G1",
+                "G3 извлекает sudog A, CAS = false → запись пропущена, G3 ищет другого получателя или ждёт",
                 "Одно ожидание select может забрать только одна операция"
               ]
             }
@@ -4336,7 +4537,7 @@ const SIMULATORS = [
         ],
         "boxes": [
           {
-            "title": "W1 → chC",
+            "title": "G2 → chC",
             "rows": [
               {
                 "k": "CAS(0, 1)",
@@ -4351,7 +4552,7 @@ const SIMULATORS = [
             ]
           },
           {
-            "title": "W2 → chA",
+            "title": "G3 → chA",
             "rows": [
               {
                 "k": "CAS(0, 1)",
@@ -4386,6 +4587,10 @@ const SIMULATORS = [
           "promptEN": "Why does runnable not mean G1 is already executing the case body?",
           "answerRU": "Планировщик ещё должен запустить G1; затем selectgo завершит очистку и вернёт управление.",
           "answerEN": "The scheduler must run G1, then selectgo must finish cleanup and return."
+        },
+        "predict": {
+          "promptEN": "G1 waits in three queues. G2 sends on chC and G3 on chA at almost the same time. How many values does G1 receive, and what does the losing sender do?",
+          "promptRU": "G1 ждёт в трёх очередях. G2 отправляет в chC, G3 — в chA почти одновременно. Сколько значений получит G1 и что сделает проигравший отправитель?"
         }
       },
       {
@@ -4523,7 +4728,7 @@ const SIMULATORS = [
               "title": "Проход 3",
               "items": [
                 "selectDone = 0, param = nil; снова lock в lockorder — второй и последний захват набора",
-                "Победитель C уже извлечён W1, A — проигравшей W2; из очереди убирается только B",
+                "Победитель C уже извлечён G2, A — проигравшей G3; из очереди убирается только B",
                 "releaseSudog для всех трёх, unlock",
                 "chosen = 0 — индекс в scases; компилятор переводит его в case <-chC"
               ]
@@ -4813,7 +5018,8 @@ const SIMULATORS = [
               "items": [
                 "build() отработал, даже если победил default или канал nil",
                 "Дорогую подготовку выноси из case и делай её отменяемой через context"
-              ]
+              ],
+              "title": "Вывод"
             }
           }
         ],
@@ -4855,6 +5061,159 @@ const SIMULATORS = [
           "answerRU": "Передай context в саму подготовку и обрабатывай его там. Предварительная проверка помогает при уже видимой отмене, но не даёт строгого приоритета и не отменяет синхронный вызов автоматически.",
           "answerEN": "Pass context into preparation and observe it there. A pre-check handles cancellation already visible then, but gives neither strict priority nor automatic interruption."
         }
+      },
+      {
+        "title": "9. Вся картина и ответ за минуту",
+        "desc": "Сводный кадр: весь select по опоре «форма → готовность → ожидание → очистка». На интервью отвечай в этом порядке: сначала путь компиляции, потом selectgo с его тремя проходами. Каркас ответа ниже — по-английски.",
+        "descEN": "A summary frame: the whole select along “shape → readiness → waiting → cleanup”. In an interview, answer in that order: the compiled path first, then selectgo with its three passes. The outline below is in English, as in an interview.",
+        "board": [
+          {
+            "caption": "Опора: форма → готовность → ожидание → очистка",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "1. Форма",
+                "tag": "компилятор",
+                "slots": [
+                  {
+                    "label": "нет case",
+                    "items": [
+                      "block(): ждать вечно"
+                    ]
+                  },
+                  {
+                    "label": "1 операция",
+                    "items": [
+                      "обычный send / recv"
+                    ]
+                  },
+                  {
+                    "label": "1 операция + default",
+                    "items": [
+                      "selectnbsend / selectnbrecv"
+                    ]
+                  },
+                  {
+                    "label": "2 и больше",
+                    "items": [
+                      "selectgo"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "2. Готовность",
+                "tag": "проход 1",
+                "slots": [
+                  {
+                    "label": "блокировки",
+                    "items": [
+                      "все каналы, по адресам"
+                    ]
+                  },
+                  {
+                    "label": "опрос",
+                    "items": [
+                      "случайный pollorder"
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      "готовая → выполнить",
+                      "default → chosen = −1",
+                      "иначе → ждать"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "3. Ожидание",
+                "tag": "проход 2",
+                "slots": [
+                  {
+                    "label": "регистрация",
+                    "items": [
+                      "sudog в очереди каждого канала"
+                    ]
+                  },
+                  {
+                    "label": "сон",
+                    "items": [
+                      "gopark(selparkcommit)"
+                    ]
+                  },
+                  {
+                    "label": "пробуждение",
+                    "items": [
+                      "CAS selectDone 0 → 1: побеждает одна операция"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "4. Очистка",
+                "tag": "проход 3",
+                "slots": [
+                  {
+                    "label": "блокировки",
+                    "items": [
+                      "снова по адресам"
+                    ]
+                  },
+                  {
+                    "label": "убрать",
+                    "items": [
+                      "оставшиеся sudog"
+                    ]
+                  },
+                  {
+                    "label": "вернуть",
+                    "items": [
+                      "chosen → case исходника"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что запомнить",
+              "items": [
+                "Форма select выбирает путь компиляции; selectgo нужен только для двух и более операций",
+                "Среди готовых выбор случайный (pollorder); default — только если готовых нет",
+                "Каналы блокируются в порядке адресов, поэтому два select с общими каналами не взаимоблокируются",
+                "Ожидание — sudog в каждой очереди; забрать его может только одна операция (CAS selectDone)",
+                "Каналы и отправляемые значения вычисляются до выбора — даже если победит default"
+              ]
+            }
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "title": "select",
+              "ordered": true,
+              "items": [
+                "The compiler lowers select by its shape: no cases blocks forever, one case is a plain channel operation, one case plus default is a non-blocking helper, and two or more cases call runtime.selectgo.",
+                "selectgo locks all channels in address order, so selects sharing channels cannot deadlock on the locks, and polls the cases in a random order.",
+                "If a case is ready, it runs; if none is ready and there is a default, select returns at once.",
+                "Otherwise the goroutine enqueues a sudog on every channel and parks; the first operation that wins a CAS on selectDone wakes it, and the others skip that waiter.",
+                "After waking up it locks the channels again, removes the remaining sudogs and returns the index of the chosen case.",
+                "Channel operands and send values are evaluated once, before the choice; a nil channel is never ready, and a selected send on a closed channel panics."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Follow-up: is select fair? Can a frequently ready channel starve another?",
+          "promptRU": "Уточняющий вопрос: честен ли select? Может ли часто готовый канал заслонить другой?",
+          "answerEN": "Among the cases that are ready at the moment of polling, the choice is uniformly pseudo-random, so the order of cases gives no priority and a ready case is not starved. There is no FIFO or priority across time, though: a case wins only if it is ready when select polls. If one channel must win, check it first in a separate non-blocking select.",
+          "answerRU": "Среди готовых в момент опроса выбор равновероятный (псевдослучайный): порядок case приоритета не даёт, и готовую ветку не заслонить. Но очереди и приоритета во времени нет: ветка выигрывает, только если готова при опросе. Если один канал должен побеждать — проверь его первым в отдельном select с default."
+        }
       }
     ],
     "learningHint": "Опора: «форма → готовность → ожидание». Сначала посчитай операции с каналами и найди default. Перед раскрытием ответа предскажи следующий шаг, затем объясни причину по-английски.",
@@ -4887,6 +5246,7 @@ const SIMULATORS = [
     "subtitle": "Восемь шагов: смысл CAS на одном state и регистры amd64 (1–4; в них state в 0 никто не возвращает), затем CAS-цикл, ABA, порядок памяти и выбор между CAS, atomic и mutex (5–8).",
     "cardId": "c20",
     "cardLabel": "Q20: CAS и его границы →",
+    "boardLegend": "state, counter, top — общие слова в памяти; G1, G2 — горутины, которые к ним обращаются. Порядок действий — один допустимый, не трасса. Рамкой выделено то, что изменилось на шаге.",
     "learningHint": "CAS = Compare-And-Swap. Три входа: адрес, ожидаемое old, предлагаемое new. Результат true/false говорит, выполнена ли замена. Это условная запись, а не обмен двух переменных местами.",
     "sources": [
       {
@@ -5526,7 +5886,8 @@ const SIMULATORS = [
                 "G2: снять A, снять B, вернуть A → стек A → C",
                 "G1: CAS(top, A → B) = true — top снова был A",
                 "Вершина — B, которого в стеке уже нет: структура испорчена"
-              ]
+              ],
+              "title": "Как ломается стек"
             }
           }
         ],
@@ -5536,6 +5897,10 @@ const SIMULATORS = [
           "promptRU": "Поможет ли atomic.Pointer вместо uintptr избежать ABA?",
           "answerEN": "It prevents use-after-free, because the GC keeps a referenced node alive. It does not prevent logical ABA: CAS still compares only the current pointer.",
           "answerRU": "От use-after-free — да: GC не освободит узел, пока на него есть ссылка. От логической ABA — нет: CAS по-прежнему сравнивает только текущий указатель."
+        },
+        "predict": {
+          "promptEN": "Stack top → A → B → C. G1 read top = A and next = B, then paused. G2 popped A, popped B and pushed A back. Does G1’s CAS(top, A → B) succeed, and what happens to the stack?",
+          "promptRU": "Стек top → A → B → C. G1 прочитала top = A и next = B и задумалась. G2 сняла A, сняла B и вернула A. Пройдёт ли CAS(top, A → B) у G1 и что станет со стеком?"
         }
       },
       {
@@ -5602,7 +5967,8 @@ const SIMULATORS = [
                 "Внутри G1 запись data идёт до Store",
                 "Store(true) synchronizes before Load, который его увидел",
                 "Значит, G2 видит data = 42; без атомиков это гонка"
-              ]
+              ],
+              "title": "Почему G2 видит 42"
             }
           }
         ],
@@ -5628,7 +5994,8 @@ const SIMULATORS = [
                 "Инвариант из нескольких полей (баланс и история) → mutex: проверка и запись под одной блокировкой",
                 "Сильная конкуренция → CAS-цикл крутится и тратит CPU; mutex после короткого спина даёт ждущим уснуть",
                 "sync.Mutex сам начинается с CAS(0 → 1): быстрый путь без runtime (диаграмма 8)"
-              ]
+              ],
+              "title": "Правило выбора"
             }
           },
           {
@@ -5664,10 +6031,11 @@ const SIMULATORS = [
   {
     "id": "sim6",
     "title": "Диаграмма 6: Аллокатор памяти (mcache / mspan) и Трёхцветный сборщик мусора (Tri-Color GC)",
-    "subtitle": "От выделения ячейки к достижимости: корни → обход → защита меняющихся ссылок → освобождение. Цвета и граф — учебная модель; отдельные вопросы помогают восстановить её по памяти.",
+    "subtitle": "Восемь шагов: стек или куча → уровни аллокатора → scan и noscan → старт GC → барьер записи → завершение и sweep → pacer → ответ за минуту. Цвета и граф — учебная модель; вопросы помогают восстановить её по памяти.",
     "cardId": "c27",
     "cardLabel": "Карточка Q27 (GC, GOGC и мягкий лимит) →",
-    "boardLegend": "Схема — учебная модель, не трасса runtime. Дорожки цветов — множества объектов: белые ещё не отмечены, серые найдены и ждут просмотра, чёрные просмотрены. Рамкой выделено то, что изменилось на шаге.",
+    "learningHint": "Опора: «белый ≠ мусор, пока есть серые». Выделение: стек → mcache → mcentral → mheap → ОС. Цикл GC: STW #1 → разметка с барьером → STW #2 → sweep. Перед раскрытием ответа предскажи следующий шаг.",
+    "boardLegend": "Шаги 1–3 — путь выделения памяти, шаги 4–7 — цикл GC. Дорожки цветов — множества объектов: белые — ещё не отмечены, серые — найдены и ждут просмотра, чёрные — просмотрены. Схема — учебная модель, не трасса runtime. Рамкой выделено то, что изменилось на шаге.",
     "versionNote": "Учебная модель runtime Go 1.26.1, не трасса исполнения. Green Tea: эксперимент в 1.25, по умолчанию в 1.26; организация scanning меняется, достижимость и необходимость барьера остаются. Цель кучи, trigger и мягкий лимит различаются; фиксированной длительности пауз нет.",
     "sources": [
       {
@@ -5705,16 +6073,15 @@ const SIMULATORS = [
     ],
     "steps": [
       {
-        "title": "1. Размещение → свободная ячейка → пополнение кеша",
-        "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью. Объекты без указателей GC не просматривает, но их достижимость и освобождение всё равно учитывает.",
-        "descEN": "First the compiler determines lifetimes: storage may be on the stack, in registers or eliminated. For a required heap object, the fast path uses a free slot in the current P’s cached span. When its slots run out, mcentral finds a suitable span, sweeping one if needed, or pages are requested from mheap. These paths have different costs. Pointer-free payloads skip pointer traversal but still need reachability tracking and reclamation.",
+        "title": "1. Стек или куча → быстрый путь в mcache",
+        "desc": "Сначала компилятор решает, где жить значению. Если escape analysis доказал, что оно не переживает функцию, значение остаётся в стеке или регистрах и уходит вместе с кадром. Иначе нужен объект кучи: mallocgc округляет размер до класса и берёт следующую свободную ячейку из span в кеше текущего P — без блокировок, потому что этим кешем пользуется только один P.",
+        "descEN": "First the compiler decides where a value lives. If escape analysis proves that it does not outlive the function, it stays on the stack or in registers and goes away with the frame. Otherwise it needs a heap object: mallocgc rounds the size up to a size class and takes the next free slot from a span in the current P’s cache, without locks, because only that P uses the cache.",
         "board": [
           {
-            "caption": "Путь выделения малого объекта",
+            "caption": "Быстрый путь малого объекта",
             "hl": [
               "свободна"
             ],
-            "hlLabel": "сюда",
             "lanes": [
               {
                 "kind": "g",
@@ -5761,18 +6128,45 @@ const SIMULATORS = [
                       }
                     ],
                     "queue": true
-                  },
-                  {
-                    "label": "tiny: < 16 B без указателей",
-                    "items": [
-                      {
-                        "g": "общий блок 16 B"
-                      }
-                    ]
                   }
                 ],
                 "note": "У каждого P свой кеш: по span на класс размера, отдельно для объектов с указателями и без."
-              },
+              }
+            ],
+            "list": {
+              "title": "Быстрый путь",
+              "items": [
+                "Не убегает из функции → стек или регистры: память уходит вместе с кадром, GC её не освобождает",
+                "Убегает → mallocgc: размер округляется до класса (здесь 48 B)",
+                "mcache текущего P → следующая свободная ячейка span: без блокировок",
+                "Решение компилятора видно в go build -gcflags=-m"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Why can two identical make([]byte, 64) calls end up in different places, one on the stack and one on the heap?",
+          "promptRU": "Почему два одинаковых make([]byte, 64) могут оказаться в разных местах — один в стеке, другой в куче?",
+          "answerEN": "Escape analysis decides for each call site. A slice that does not outlive the function and is small enough can stay on the stack; one that is returned, stored in a global or passed where the compiler cannot prove its lifetime goes to the heap.",
+          "answerRU": "Escape analysis решает для каждого места вызова. Срез, который не переживает функцию и достаточно мал, может остаться в стеке; если его возвращают, сохраняют в глобальной переменной или передают туда, где компилятор не может доказать время жизни, — он уходит в кучу."
+        }
+      },
+      {
+        "title": "2. Кеш пуст: mcentral → mheap → ОС",
+        "desc": "Когда в span из mcache свободных ячеек нет, P идёт в mcentral своего класса. Это общая структура: нужна синхронизация, а span может потребовать досрочного sweep. Нет подходящего span — mheap выделяет страницы по 8 KiB; нет страниц — mheap просит память у ОС. Объект больше ~32 KiB минует кеши малых объектов и сразу получает свой span из mheap. Чем ниже уровень, тем дороже путь.",
+        "descEN": "When the span in the mcache has no free slots, the P goes to the mcentral of its size class. It is shared, so it needs synchronization, and a span may need to be swept first. If no span fits, mheap allocates 8 KiB pages; if there are no free pages, mheap asks the OS for memory. An object larger than about 32 KiB skips the small-object caches and gets its own span from mheap. The lower the level, the more expensive the path.",
+        "predict": {
+          "promptEN": "You allocate one 100 KiB object. Which levels does the allocation go through: mcache, mcentral, mheap?",
+          "promptRU": "Нужно выделить один объект 100 KiB. Через какие уровни пойдёт выделение: mcache, mcentral, mheap?"
+        },
+        "board": [
+          {
+            "caption": "Медленный путь: пополнение кеша",
+            "hl": [
+              "свой span"
+            ],
+            "lanes": [
               {
                 "kind": "other",
                 "title": "mcentral класса 48 B",
@@ -5835,24 +6229,8 @@ const SIMULATORS = [
                 "Больше ~32 KiB → отдельный span сразу из mheap"
               ]
             }
-          },
-          {
-            "caption": "scan и noscan",
-            "list": {
-              "items": [
-                "noscan: байты за []byte и string — GC их не просматривает",
-                "scan: структура с указателями (Holder{[]byte, string}) — GC читает её поля",
-                "Класс span = размер + признак noscan: объекты с указателями и без лежат в разных span"
-              ]
-            }
           }
         ],
-        "check": {
-          "promptEN": "The cached span is full. Can the next small allocation still be described as always lock-free? Is a string descriptor pointer-free?",
-          "promptRU": "В кешированном span закончились ячейки. Можно ли всё ещё обещать следующей небольшой аллокации отсутствие блокировок? А дескриптор строки не содержит указателей?",
-          "answerEN": "No to both. Refill can reach shared structures and sweeping. A string descriptor points to bytes; the byte payload is pointer-free, but the descriptor is not.",
-          "answerRU": "Нет в обоих случаях. Пополнение может обращаться к общим структурам и sweep. Дескриптор строки указывает на байты: сами байты не содержат ссылок, но дескриптор содержит."
-        },
         "boxes": [
           {
             "title": "Откуда берётся место для объекта",
@@ -5878,7 +6256,68 @@ const SIMULATORS = [
                 "hl": true
               }
             ]
-          },
+          }
+        ],
+        "check": {
+          "promptEN": "The cached span ran out of slots. Can you still promise the next small allocation will take no locks?",
+          "promptRU": "В кешированном span закончились ячейки. Можно ли всё ещё обещать следующей небольшой аллокации отсутствие блокировок?",
+          "answerEN": "No. Refilling the cache goes to mcentral, which is shared and synchronized, and may have to sweep the span first.",
+          "answerRU": "Нет. Пополнение кеша обращается к mcentral — общей структуре с синхронизацией — и может сначала доделать sweep span."
+        }
+      },
+      {
+        "title": "3. scan и noscan: где GC искать указатели",
+        "desc": "Каждый класс размера существует в двух вариантах: для объектов с указателями (scan) и без них (noscan). GC просматривает только scan-объекты; байты за []byte и string для него — просто память, которую нужно освободить, когда на неё не останется ссылок. Совсем мелкие объекты без указателей — меньше 16 байт — tiny-аллокатор складывает в общий блок 16 B.",
+        "descEN": "Every size class comes in two variants: for objects with pointers (scan) and without them (noscan). The GC scans only scan objects; the bytes behind a []byte or string are just memory to free once nothing refers to them. Very small pointer-free objects, under 16 bytes, are packed by the tiny allocator into a shared 16-byte block.",
+        "board": [
+          {
+            "caption": "Два span на класс и tiny-блок",
+            "hl": [
+              "Holder{b []byte; s string}"
+            ],
+            "hlLabel": "есть указатели",
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "mcache текущего P",
+                "tag": "scan и noscan отдельно",
+                "slots": [
+                  {
+                    "label": "span 48 B · scan",
+                    "items": [
+                      "Holder{b []byte; s string}"
+                    ]
+                  },
+                  {
+                    "label": "span 48 B · noscan",
+                    "items": [
+                      "[48]byte"
+                    ]
+                  },
+                  {
+                    "label": "tiny-блок 16 B · noscan",
+                    "items": [
+                      "int32",
+                      "[3]byte",
+                      "bool"
+                    ]
+                  }
+                ],
+                "note": "Holder — 40 байт, класс 48 B. Указатели есть в дескрипторах []byte и string, поэтому он в scan-span."
+              }
+            ],
+            "list": {
+              "title": "scan и noscan",
+              "items": [
+                "noscan: байты за []byte и string — GC их не просматривает",
+                "scan: структура с указателями (Holder{[]byte, string}) — GC читает её поля",
+                "Класс span = размер + признак noscan: объекты с указателями и без лежат в разных span",
+                "Tiny-блок освобождается, только когда недостижимы все объекты в нём"
+              ]
+            }
+          }
+        ],
+        "boxes": [
           {
             "title": "Где искать указатели",
             "rows": [
@@ -5898,41 +6337,49 @@ const SIMULATORS = [
                 "hl": true
               }
             ]
-          },
-          {
-            "title": "Дальше — начало разметки GC",
-            "rows": [
-              {
-                "k": "Триггер запуска:",
-                "v": "Pacer выбирает trigger раньше heap goal; учитывает GOGC и мягкий лимит",
-                "hl": false
-              },
-              {
-                "k": "Переход STW #1:",
-                "v": "Завершение предыдущего sweep и включение write barrier",
-                "hl": true
-              },
-              {
-                "k": "Условный граф следующего шага:",
-                "v": "A, B, C, D, E пока не размечены; цвета — модель, не трасса",
-                "hl": false
-              }
-            ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Does a string descriptor contain pointers? Do the bytes it points to?",
+          "promptRU": "Содержит ли дескриптор строки указатели? А байты, на которые он указывает?",
+          "answerEN": "The descriptor does: it points to the bytes, so a struct with a string field lives in a scan span. The bytes themselves contain no pointers and live in noscan memory.",
+          "answerRU": "Дескриптор — да: он указывает на байты, поэтому структура с полем string лежит в scan-span. Сами байты указателей не содержат и лежат в noscan-памяти."
+        }
       },
       {
-        "title": "2. Достижимость: корни → A, B → C, D",
-        "desc": "После подготовки мир запущен. Корни ведут к A и B; A ведёт к D, B — к C. У E нет пути от корней. В этом учебном снимке A и B найдены, но ещё не просмотрены. Обработка корней и кучи в runtime может чередоваться; при сканировании стека временно останавливается соответствующая горутина.",
-        "descEN": "After setup, the program runs alongside GC. Roots point to A and B; A points to D, B to C. E has no path from a root. In this teaching snapshot, A and B are discovered but not yet scanned. Root jobs and heap scanning may interleave; scanning a stack temporarily stops that goroutine.",
+        "title": "4. Старт GC: STW #1 и корни → серые",
+        "desc": "Pacer запускает цикл чуть раньше цели кучи. Короткая пауза STW #1 доделывает sweep прошлого цикла и включает барьер записи; дальше программа работает вместе с разметкой. Корни — стеки горутин и глобальные переменные — ведут к A и B; A ведёт к D, B — к C; у E пути от корней нет. В этом снимке A и B найдены (серые), но ещё не просмотрены. При сканировании стека останавливается только его горутина.",
+        "descEN": "The pacer starts a cycle a little before the heap goal. A short STW #1 pause finishes the previous sweep and turns on the write barrier; then the program runs alongside marking. The roots, goroutine stacks and globals, point to A and B; A points to D and B to C; E has no path from a root. In this snapshot A and B are found (grey) but not yet scanned. Scanning a stack stops only that goroutine.",
+        "predict": {
+          "promptEN": "Roots → A, B; A → D; B → C; E points only to itself. Marking has just started. Which of C, D and E can you already call garbage?",
+          "promptRU": "Корни → A, B; A → D; B → C; у E ссылка только на себя. Разметка только началась. Какие из C, D, E уже можно назвать мусором?"
+        },
         "board": [
           {
             "hl": [
               "A",
               "B"
             ],
-            "hlLabel": "найдено",
             "lanes": [
+              {
+                "kind": "other",
+                "title": "Фаза",
+                "slots": [
+                  {
+                    "label": "STW #1",
+                    "items": [
+                      "доделать sweep",
+                      "включить барьер"
+                    ]
+                  },
+                  {
+                    "label": "дальше",
+                    "items": [
+                      "программа и разметка вместе"
+                    ]
+                  }
+                ]
+              },
               {
                 "kind": "var",
                 "title": "Корни",
@@ -6015,18 +6462,32 @@ const SIMULATORS = [
               "items": [
                 "Корни → A, B; A → D; B → C",
                 "E ссылается сам на себя, но пути от корней нет",
-                "Белый во время разметки — «ещё не отмечен», а не «мусор»"
+                "Белый ≠ мусор, пока есть серые: белый — «ещё не отмечен»"
               ]
             }
           }
         ],
-        "check": {
-          "promptEN": "C is still white but reachable through B. Can it already be treated as garbage?",
-          "promptRU": "C ещё белый, но достижим через B. Можно ли уже считать его мусором?",
-          "answerEN": "No. White during marking means not yet marked. B is pending work, so its outgoing pointer can still reveal C.",
-          "answerRU": "Нет. Белый во время разметки означает «ещё не отмечен». B ещё предстоит просмотреть, и его указатель позволит найти C."
-        },
         "boxes": [
+          {
+            "title": "Начало разметки GC",
+            "rows": [
+              {
+                "k": "Триггер запуска:",
+                "v": "Pacer выбирает trigger раньше heap goal; учитывает GOGC и мягкий лимит",
+                "hl": false
+              },
+              {
+                "k": "Переход STW #1:",
+                "v": "Завершение предыдущего sweep и включение write barrier",
+                "hl": true
+              },
+              {
+                "k": "Условный граф:",
+                "v": "A, B, C, D, E и их цвета — модель, не трасса",
+                "hl": false
+              }
+            ]
+          },
           {
             "title": "Связи графа — не порядок исполнения",
             "rows": [
@@ -6087,10 +6548,16 @@ const SIMULATORS = [
               }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "E points to itself. Why does that reference not keep E alive?",
+          "promptRU": "E ссылается сам на себя. Почему эта ссылка не сохраняет E?",
+          "answerEN": "The GC traces reachability from the roots; it does not count references. A self-reference or a cycle of objects is not a path from a root, so E stays white and is freed. Pure reference counting would never free such a cycle.",
+          "answerRU": "GC ищет достижимость от корней, а не считает ссылки. Ссылка на себя или цикл объектов — не путь от корня, поэтому E останется белым и будет освобождён. Чистый подсчёт ссылок такой цикл не освободил бы никогда."
+        }
       },
       {
-        "title": "3. Перенос связи: почему C нельзя потерять",
+        "title": "5. Перенос связи: почему C нельзя потерять",
         "desc": "GC просмотрел A: A стал чёрным, D — серым; B ещё серый, C белый. Горутина выполняет A.Next = B.Next, затем B.Next = nil. Без барьера обход мог бы пропустить C: A уже прошли, а в B ссылка исчезла. Барьер учитывает вставленную/удалённую ссылку и защищает C. Это возможное чередование в модели, а не воспроизводимая трасса Go.",
         "descEN": "GC has scanned A, making A black and D grey; B is still grey and C white. The program executes A.Next = B.Next, then B.Next = nil. A plain traversal could miss C: it has passed A, and B no longer points to C. Recording the inserted/deleted pointer protects C. This is a possible interleaving in a model, not an observable Go trace.",
         "predict": {
@@ -6318,8 +6785,9 @@ const SIMULATORS = [
         ]
       },
       {
-        "title": "4. Mark Termination (STW #2) и фоновая очистка (Concurrent Sweep)",
-        "descEN": "After root jobs, scanning and buffered work are complete, runtime enters STW mark termination and disables the barrier when preparing sweep. In this model A, B, C and D are marked; E is not. Sweep reclaims E for reuse. D may have become unreachable in step 3, but its mark keeps it for this cycle: concurrent GC can retain floating garbage.",
+        "title": "6. Mark termination (STW #2) и фоновый sweep",
+        "desc": "После завершения заданий корней, обхода и обработки буферизованной работы runtime переходит в STW mark termination. При подготовке sweep барьер выключается. В нашей модели отмечены A, B, C, D; E не отмечен. Sweep освобождает его ячейку для повторного использования. D мог потерять достижимость на шаге 5, но уже отмечен и переживёт этот цикл: GC не обязан немедленно удалять всё ставшее ненужным.",
+        "descEN": "After root jobs, scanning and buffered work are complete, runtime enters STW mark termination and disables the barrier when preparing sweep. In this model A, B, C and D are marked; E is not. Sweep reclaims E for reuse. D may have become unreachable in step 5, but its mark keeps it for this cycle: concurrent GC can retain floating garbage.",
         "board": [
           {
             "caption": "Итог разметки и sweep",
@@ -6403,11 +6871,71 @@ const SIMULATORS = [
               "items": [
                 "D отмечен и переживёт цикл, даже если ссылок на него уже нет: проверит следующий цикл",
                 "Компактирования нет: объекты кучи не двигаются (стеки горутин — двигаются)"
-              ]
+              ],
+              "title": "Что изменилось"
             }
+          }
+        ],
+        "boxes": [
+          {
+            "title": "Завершение разметки → очистка",
+            "rows": [
+              {
+                "k": "Фаза 3 (STW #2):",
+                "v": "Завершение разметки и служебная работа, затем подготовка sweep",
+                "hl": true
+              },
+              {
+                "k": "Фаза 4 (Sweep):",
+                "v": "Возврат неотмеченных ячеек фоново и при аллокациях",
+                "hl": true
+              },
+              {
+                "k": "Без compaction:",
+                "v": "Живые объекты кучи не уплотняются; фрагментация всё же возможна",
+                "hl": false
+              }
+            ]
           },
           {
-            "caption": "Pacer: цель следующего цикла",
+            "title": "Итог этого цикла",
+            "rows": [
+              {
+                "k": "E не отмечен:",
+                "v": "Его ячейку можно переиспользовать после sweep",
+                "hl": true
+              },
+              {
+                "k": "A, B, C, D отмечены:",
+                "v": "Переживают цикл; D уже мог стать недостижимым",
+                "hl": false
+              },
+              {
+                "k": "Следующий цикл:",
+                "v": "Достижимость проверяется заново; отмечен ≠ нужен приложению навсегда",
+                "hl": true
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "After step 5 the program no longer needs D, but D is marked. When does its memory come back?",
+          "promptRU": "После шага 5 программе D уже не нужен, но он отмечен. Когда вернётся его память?",
+          "answerEN": "Not in this cycle: the mark keeps D alive until this sweep is over. If nothing refers to D by the next cycle, it stays white there and that sweep frees it. This is floating garbage, the price of marking concurrently.",
+          "answerRU": "Не в этом цикле: отметка сохраняет D до конца текущего sweep. Если к следующему циклу ссылок на D не будет, он останется белым, и его освободит следующий sweep. Это floating garbage — плата за конкурентную разметку."
+        }
+      },
+      {
+        "title": "7. Pacer: когда начнётся следующий цикл",
+        "desc": "Pacer считает цель кучи следующего цикла: живая куча плюс (живая куча + корни) × GOGC / 100. Разметку он начинает раньше цели (trigger), чтобы закончить примерно к ней. GOMEMLIMIT — мягкий лимит: он может снизить цель, чтобы удержать общую память Go, но от OOM не защищает.",
+        "descEN": "The pacer sets the heap goal for the next cycle: live heap plus (live heap + roots) × GOGC / 100. It starts marking before the goal (the trigger) so that the cycle ends close to it. GOMEMLIMIT is a soft limit: it can lower the goal to keep the Go runtime’s total memory down, but it does not prevent OOM.",
+        "predict": {
+          "promptEN": "After marking, the live heap is 100 MiB, roots (stacks and globals) are 20 MiB, GOGC=100. What is the heap goal, and does the next GC start exactly at it?",
+          "promptRU": "После разметки живой кучи 100 MiB, корней (стеки и globals) 20 MiB, GOGC=100. Какой будет цель кучи и начнётся ли следующий GC ровно на ней?"
+        },
+        "board": [
+          {
+            "caption": "Цель следующего цикла",
             "hl": [
               "220 MiB"
             ],
@@ -6458,58 +6986,12 @@ const SIMULATORS = [
                 "Цель = live + (live + корни) × GOGC / 100 = 100 + 120 = 220 MiB",
                 "Разметка начинается раньше цели (trigger), чтобы успеть",
                 "GOMEMLIMIT — мягкий лимит: может снизить цель, от OOM не защищает"
-              ]
+              ],
+              "title": "Как считается цель"
             }
           }
         ],
-        "check": {
-          "promptEN": "With 100 MiB live heap, 20 MiB roots and GOGC=100, must GC start at 200 MiB?",
-          "promptRU": "При 100 MiB живой кучи, 20 MiB корней и GOGC=100 обязан ли GC начаться на 200 MiB?",
-          "answerEN": "No. The simplified goal is 220 MiB; the pacer starts marking earlier. A memory limit may lower the goal, but cannot guarantee that the process avoids OOM.",
-          "answerRU": "Нет. Упрощённая цель — 220 MiB; pacer начинает разметку раньше. Лимит памяти может снизить цель, но не гарантирует отсутствие OOM процесса."
-        },
-        "desc": "После завершения заданий корней, обхода и обработки буферизованной работы runtime переходит в STW mark termination. При подготовке sweep барьер выключается. В нашей модели отмечены A, B, C, D; E не отмечен. Sweep освобождает его ячейку для повторного использования. D мог потерять достижимость на шаге 3, но уже отмечен и переживёт этот цикл: GC не обязан немедленно удалять всё ставшее ненужным.",
         "boxes": [
-          {
-            "title": "Завершение разметки → очистка",
-            "rows": [
-              {
-                "k": "Фаза 3 (STW #2):",
-                "v": "Завершение разметки и служебная работа, затем подготовка sweep",
-                "hl": true
-              },
-              {
-                "k": "Фаза 4 (Sweep):",
-                "v": "Возврат неотмеченных ячеек фоново и при аллокациях",
-                "hl": true
-              },
-              {
-                "k": "Без compaction:",
-                "v": "Живые объекты кучи не уплотняются; фрагментация всё же возможна",
-                "hl": false
-              }
-            ]
-          },
-          {
-            "title": "Итог этого цикла",
-            "rows": [
-              {
-                "k": "E не отмечен:",
-                "v": "Его ячейку можно переиспользовать после sweep",
-                "hl": true
-              },
-              {
-                "k": "A, B, C, D отмечены:",
-                "v": "Переживают цикл; D уже мог стать недостижимым",
-                "hl": false
-              },
-              {
-                "k": "Следующий цикл:",
-                "v": "Достижимость проверяется заново; отмечен ≠ нужен приложению навсегда",
-                "hl": true
-              }
-            ]
-          },
           {
             "title": "Расчёт следующей цели (GC Pacer)",
             "rows": [
@@ -6535,7 +7017,145 @@ const SIMULATORS = [
               }
             ]
           }
-        ]
+        ],
+        "check": {
+          "promptEN": "Same live heap, but GOMEMLIMIT=150MiB. What changes, and is OOM now impossible?",
+          "promptRU": "Та же живая куча, но GOMEMLIMIT=150MiB. Что изменится и исключён ли теперь OOM?",
+          "answerEN": "The goal drops so that total Go memory stays near 150 MiB, and GC runs more often. If the live heap itself approaches the limit, the GC CPU limiter caps GC at about 50% of CPU and the process can exceed the limit: GOMEMLIMIT does not prevent OOM.",
+          "answerRU": "Цель снизится, чтобы общая память Go держалась около 150 MiB, — GC будет запускаться чаще. Если к лимиту подходит сама живая куча, ограничитель CPU для GC держит его примерно на 50% CPU, и процесс может превысить лимит: GOMEMLIMIT от OOM не защищает."
+        }
+      },
+      {
+        "title": "8. Вся картина и ответ за минуту",
+        "desc": "Сводный кадр: путь выделения и цикл GC на одной схеме. На интервью отвечай в таком порядке: где живёт объект → как он выделяется → как GC находит живые объекты → зачем барьер → когда следующий цикл. Каркас ответа ниже — по-английски.",
+        "descEN": "A summary frame: the allocation path and the GC cycle on one board. In an interview, answer in this order: where an object lives → how it is allocated → how the GC finds live objects → why the barrier → when the next cycle starts. The outline below is in English, as in an interview.",
+        "board": [
+          {
+            "caption": "Выделение и цикл GC",
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "Выделение",
+                "tag": "от дешёвого к дорогому",
+                "slots": [
+                  {
+                    "label": "1",
+                    "items": [
+                      "стек: escape analysis"
+                    ]
+                  },
+                  {
+                    "label": "2",
+                    "items": [
+                      "mcache P: без блокировок"
+                    ]
+                  },
+                  {
+                    "label": "3",
+                    "items": [
+                      "mcentral класса"
+                    ]
+                  },
+                  {
+                    "label": "4",
+                    "items": [
+                      "mheap: страницы"
+                    ]
+                  },
+                  {
+                    "label": "5",
+                    "items": [
+                      "ОС"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Цикл GC",
+                "tag": "конкурентный, без перемещения",
+                "slots": [
+                  {
+                    "label": "STW #1",
+                    "items": [
+                      "включить барьер"
+                    ]
+                  },
+                  {
+                    "label": "разметка",
+                    "items": [
+                      "корни → серые → чёрные",
+                      "барьер записи"
+                    ]
+                  },
+                  {
+                    "label": "STW #2",
+                    "items": [
+                      "mark termination"
+                    ]
+                  },
+                  {
+                    "label": "sweep",
+                    "items": [
+                      "белые ячейки → свободны"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Pacer",
+                "slots": [
+                  {
+                    "label": "цель",
+                    "items": [
+                      "live + (live + корни) × GOGC / 100"
+                    ]
+                  },
+                  {
+                    "label": "лимит",
+                    "items": [
+                      "GOMEMLIMIT — мягкий"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что запомнить",
+              "items": [
+                "Самая дешёвая аллокация — та, что осталась в стеке",
+                "Малый объект: ячейка из mcache без блокировок; общие уровни — только при пополнении",
+                "Белый ≠ мусор, пока есть серые; мусор — то, что осталось белым к STW #2",
+                "Барьер записи не даёт потерять объект, связь на который переносят во время разметки",
+                "GOGC задаёт рост кучи между циклами, GOMEMLIMIT — мягкий потолок; пауз фиксированной длины нет"
+              ]
+            }
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "title": "Allocator and GC",
+              "ordered": true,
+              "items": [
+                "Escape analysis decides what can live on the stack; everything else is allocated on the heap by mallocgc.",
+                "Small objects are rounded up to a size class; each P caches a span per class in its mcache, so most allocations take a free slot without locks. mcentral and mheap are used only to refill, and objects larger than about 32 KiB get their own span.",
+                "The GC is a concurrent, non-moving, tri-color mark-and-sweep collector with two short stop-the-world pauses; marking and sweeping run alongside the program.",
+                "Marking starts from the roots, stacks and globals: grey objects wait to be scanned, black ones are done, and whatever is still white at the end is freed by the sweep.",
+                "A write barrier, on only during marking, records pointer writes so that a concurrent update cannot hide a reachable object.",
+                "The pacer starts the next cycle early enough to finish near the heap goal set by GOGC; GOMEMLIMIT is a soft limit that can lower that goal."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Follow-up: how would you reduce GC pressure in a hot service?",
+          "promptRU": "Уточняющий вопрос: как снизить нагрузку на GC в нагруженном сервисе?",
+          "answerEN": "Measure first: pprof alloc_space and alloc_objects, GODEBUG=gctrace=1. Then allocate less: keep values on the stack (check with -gcflags=-m), preallocate slices and maps, reuse buffers or use sync.Pool for short-lived objects, prefer pointer-free data so there is less to scan. Tune GOGC or set GOMEMLIMIT only after that, with measurements.",
+          "answerRU": "Сначала измерить: pprof alloc_space и alloc_objects, GODEBUG=gctrace=1. Потом выделять меньше: оставлять значения в стеке (проверка — -gcflags=-m), заранее задавать ёмкость срезов и map, переиспользовать буферы или брать sync.Pool для короткоживущих объектов, хранить данные без указателей — GC меньше просматривать. GOGC и GOMEMLIMIT настраивать уже после этого и по замерам."
+        }
       }
     ]
   },
@@ -6546,9 +7166,10 @@ const SIMULATORS = [
   {
     "id": "sim7",
     "title": "Диаграмма 7: map — бакеты, поиск в Swiss Tables и память",
-    "subtitle": "Пять шагов: старая схема → метаданные → поиск ключа → рост → удаление. Учебные состояния, не снимок реальных хешей и не обещание задержек.",
+    "subtitle": "Шесть шагов: старая схема → метаданные → поиск ключа → рост → удаление → ответ за минуту. Учебные состояния, не снимок реальных хешей и не обещание задержек.",
     "cardId": "c31",
     "cardLabel": "Карточка Q31 (SwissTables) →",
+    "learningHint": "Опора: «H1 — куда идти, H2 — кого проверить». Отпечаток только отбирает кандидатов, решает сравнение ключей. Перед раскрытием ответа предскажи, чем закончится поиск.",
     "boardLegend": "Схема — учебная: отпечатки и ключи подобраны для объяснения. Слоты слева направо 0→7. Рамкой выделено то, о чём шаг: путь поиска, кандидаты или изменения.",
     "steps": [
       {
@@ -7086,7 +7707,8 @@ const SIMULATORS = [
               "items": [
                 "Go 1.26.1: присваивание при 8 записях (даже обновление ключа) → таблица на 16 слотов (директория из одной ссылки); в Go 1.27 обновление существующего ключа рост не вызывает",
                 "Таблица до 1024 слотов растёт удвоением"
-              ]
+              ],
+              "title": "Когда малая map становится таблицей"
             }
           },
           {
@@ -7156,7 +7778,8 @@ const SIMULATORS = [
                 "Таблица на пределе 1024 слота делится на две (T2 и T3)",
                 "Если localDepth делимой таблицы равен globalDepth, директория удваивается",
                 "Каждая таблица растёт отдельно: перестройка затрагивает часть map, а не всю"
-              ]
+              ],
+              "title": "Split вместо роста всей map"
             }
           }
         ],
@@ -7242,7 +7865,7 @@ const SIMULATORS = [
             "lanes": [
               {
                 "kind": "group",
-                "title": "Группа таблицы map#1",
+                "title": "Другая группа map#1: все 8 слотов заняты",
                 "slots": [
                   {
                     "label": "ctrl",
@@ -7272,7 +7895,8 @@ const SIMULATORS = [
               "items": [
                 "Запись удалена: значение недостижимо и может быть собрано GC",
                 "Память таблицы остаётся: len(m) уменьшился, ёмкость — нет"
-              ]
+              ],
+              "title": "Что изменилось"
             }
           },
           {
@@ -7311,7 +7935,8 @@ const SIMULATORS = [
               "items": [
                 "m теперь указывает на новую map",
                 "alias удерживает map#1 со всеми записями"
-              ]
+              ],
+              "title": "Что изменилось"
             }
           }
         ],
@@ -7383,6 +8008,117 @@ const SIMULATORS = [
           "answerEN": "No. A still-live alias retains it. Deleting payload references, releasing the table, and reducing RSS are different events.",
           "answerRU": "Нет. Живая alias удерживает её. Удаление ссылок на данные, освобождение таблицы и снижение RSS — разные события."
         }
+      },
+      {
+        "title": "6. Вся картина и ответ за минуту",
+        "desc": "Сводный кадр: классическая map и Swiss Tables по одним и тем же вопросам — где искать, как отсеять, куда идти при нехватке места и как расти. На интервью начни с Swiss Tables (Go 1.24+), а классическую схему назови как то, что было раньше. Каркас ответа ниже — по-английски.",
+        "descEN": "A summary frame: the classic map and Swiss Tables side by side on the same questions: where to look, how to filter, where to go when a group is full, and how to grow. In an interview, start with Swiss Tables (Go 1.24+) and mention the classic layout as what came before. The outline below is in English, as in an interview.",
+        "board": [
+          {
+            "caption": "Классическая map и Swiss Tables",
+            "hl": [
+              "H2 в 8 байтах ctrl",
+              "одна таблица ×2 или split"
+            ],
+            "hlLabel": "главное отличие",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Классическая",
+                "tag": "до Go 1.24",
+                "slots": [
+                  {
+                    "label": "где искать",
+                    "items": [
+                      "младшие B бит → бакет"
+                    ]
+                  },
+                  {
+                    "label": "как отсеять",
+                    "items": [
+                      "tophash по одному байту"
+                    ]
+                  },
+                  {
+                    "label": "нет места",
+                    "items": [
+                      "overflow-бакет в цепочке"
+                    ]
+                  },
+                  {
+                    "label": "рост",
+                    "items": [
+                      "вся map ×2, перенос постепенно"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "group",
+                "title": "Swiss Tables",
+                "tag": "Go 1.24+",
+                "slots": [
+                  {
+                    "label": "где искать",
+                    "items": [
+                      "старшие биты → таблица, H1 → группа"
+                    ]
+                  },
+                  {
+                    "label": "как отсеять",
+                    "items": [
+                      "H2 в 8 байтах ctrl"
+                    ]
+                  },
+                  {
+                    "label": "нет места",
+                    "items": [
+                      "следующая группа: пробирование"
+                    ]
+                  },
+                  {
+                    "label": "рост",
+                    "items": [
+                      "одна таблица ×2 или split"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что запомнить",
+              "items": [
+                "Поиск: отпечаток отбирает кандидатов → сравнение ключей → нашли, или empty → ключа нет, или следующая группа",
+                "Empty завершает неуспешный поиск, deleted (tombstone) — нет: он сохраняет путь пробирования",
+                "Рост касается одной таблицы: удвоение до 1024 слотов, дальше split",
+                "delete и clear не уменьшают таблицу: len ≠ занятая память",
+                "Порядок обхода не задан, &m[k] запрещён, конкурентная запись требует синхронизации"
+              ]
+            }
+          },
+          {
+            "caption": "Ответ за минуту (EN)",
+            "list": {
+              "title": "map",
+              "ordered": true,
+              "items": [
+                "A Go map is a hash table; since Go 1.24 it uses Swiss Tables: groups of eight slots, each group with eight control bytes.",
+                "The hash is split: the low 7 bits, H2, are a fingerprint kept in a control byte; the rest, H1, picks the group and the probe sequence; in a large map the top bits also pick a table in the directory.",
+                "A lookup compares H2 with all eight control bytes at once, then compares only the candidate keys; an empty slot in the group ends an unsuccessful search.",
+                "A deleted slot can become a tombstone, so that keys placed further along the probe sequence stay reachable.",
+                "Growth is per table: a table doubles up to 1024 slots and then splits in two, so one insert never rehashes the whole map.",
+                "Iteration order is unspecified, you cannot take &m[k], and concurrent writes need synchronization: the runtime may crash with a fatal error that recover cannot catch."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Follow-up: why can't you take &m[k], and why does iteration order change between runs?",
+          "promptRU": "Уточняющий вопрос: почему нельзя взять &m[k] и почему порядок обхода меняется от запуска к запуску?",
+          "answerEN": "An element can move when its table grows or splits, so a pointer to it would dangle; the language therefore forbids taking its address. Iteration order is not specified, and the runtime starts each range loop at a random position so that code cannot rely on any order.",
+          "answerRU": "Элемент может переехать при росте или делении таблицы — указатель на него стал бы висячим, поэтому язык запрещает брать его адрес. Порядок обхода спецификация не задаёт, а рантайм начинает каждый range со случайной позиции, чтобы код не полагался ни на какой порядок."
+        }
       }
     ],
     "versionNote": "Классическая схема: Go 1.17. Swiss Tables: Go 1.25.0 и 1.26.1. H2 и ключи в примере подобраны для объяснения; SIMD/SWAR не означает одну инструкцию на весь поиск. noswissmap доступен в 1.25, но переключатель удалён в 1.26. Go 1.27.3: малая map не растёт при обновлении существующего ключа; на arm64 поиск H2 считается формулой без ложных срабатываний; GOEXPERIMENT=mapsplitgroup хранит ключи и значения группы отдельными массивами (по умолчанию выключен).",
@@ -7423,6 +8159,7 @@ const SIMULATORS = [
     "subtitle": "Семь шагов по Go 1.26.1 (internal/sync/mutex.go): слово state → быстрый путь → спин → очередь на семафоре → Unlock → режим голодания → ответ за минуту. Учебная модель: тайминги и порядок пробуждения не обещаны.",
     "cardId": "c21",
     "cardLabel": "Q21: мьютекс, ожидание и 1 мс →",
+    "learningHint": "Опора: «17 = занят + двое ждут»: state = 1·L + 2·W + 4·S + 8·число ждущих. Перед раскрытием ответа посчитай новое state сам, затем сверь биты.",
     "boardLegend": "state — одно слово int32: бит 0 — locked (L), бит 1 — woken (W), бит 2 — starving (S), биты с 3 — число ждущих. Биты слева направо: старший → младший. Рамкой выделено то, что изменилось.",
     "sources": [
       {
@@ -7779,7 +8516,8 @@ const SIMULATORS = [
                 "Спин только в нормальном режиме и при runtime_canSpin",
                 "До 4 итераций по procyield(30) — PAUSE на amd64",
                 "woken ставится, только если есть спящие ждущие"
-              ]
+              ],
+              "title": "Условия спина"
             },
             "hlQuiet": true
           }
@@ -7890,6 +8628,10 @@ const SIMULATORS = [
           "promptRU": "Раз есть очередь, мьютекс отдаётся строго по порядку?",
           "answerEN": "No. In normal mode a woken goroutine competes with newcomers and may lose.",
           "answerRU": "Нет. В нормальном режиме разбуженная горутина конкурирует с новыми и может проиграть."
+        },
+        "predict": {
+          "promptEN": "Spinning did not help. state = 11: locked, woken (set by G2) and one waiter. G2 goes to sleep. What is state after its CAS?",
+          "promptRU": "Спин не помог. state = 11: занят, woken (его поставила G2) и один ждущий. G2 уходит спать. Каким станет state после её CAS?"
         }
       },
       {
@@ -7958,18 +8700,130 @@ const SIMULATORS = [
                     "items": [
                       {
                         "g": "G4",
-                        "flag": "CAS(0 → 1)"
+                        "flag": "lockSlow: CAS(10 → 11)"
                       }
                     ]
                   }
                 ]
+              },
+              {
+                "kind": "var",
+                "title": "state",
+                "slots": [
+                  {
+                    "label": "Unlock: 17 − 1 = 16",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "unlockSlow: ждущих −1, W = 1 → 10",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "если успела G4: 10 → 11",
+                    "items": [
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "ждущие"
+                      },
+                      {
+                        "g": "0",
+                        "flag": "S"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "W"
+                      },
+                      {
+                        "g": "1",
+                        "flag": "L"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "state = 10 ≠ 0, поэтому быстрый путь G4 — CAS(0 → 1) — не проходит; G4 берёт мьютекс в lockSlow."
               }
             ],
             "list": {
               "items": [
                 "Unlock: state − 1; не ноль → unlockSlow",
                 "Будит одну горутину, ставит woken, ждущих − 1",
-                "G3 и новая G4 соревнуются; часто выигрывает G4 — она уже на CPU",
+                "G3 и новая G4 соревнуются; часто выигрывает G4 — она уже на CPU и ставит L одним CAS(10 → 11)",
                 "Проигравшая G3 возвращается в голову очереди"
               ]
             }
@@ -8079,7 +8933,8 @@ const SIMULATORS = [
                 "Новые горутины (G4) не крутятся, встают в хвост и прибавляют себя к счётчику ждущих",
                 "state = 28: S и трое ждущих (G3, G2, G4); G3 после пробуждения сама ставит L и вычитает себя (+1 −8)",
                 "Выход: последний ждущий или ожидание меньше 1 мс"
-              ]
+              ],
+              "title": "Режим голодания"
             }
           }
         ],
@@ -8089,6 +8944,10 @@ const SIMULATORS = [
           "promptRU": "Значит ли 1 мс, что Lock ждёт не дольше 1 мс?",
           "answerEN": "No. It is the threshold for switching modes, not a timeout: Lock waits as long as needed.",
           "answerRU": "Нет. Это порог переключения режима, а не таймаут: Lock ждёт сколько потребуется."
+        },
+        "predict": {
+          "promptEN": "G3 lost to a newcomer again and has now waited more than 1 ms. What changes at the next Unlock, and where does a new G4 go?",
+          "promptRU": "G3 снова проиграла новичку и ждёт уже больше 1 мс. Что изменится при следующем Unlock и куда встанет новая G4?"
         }
       },
       {
@@ -8144,6 +9003,7 @@ const SIMULATORS = [
     "subtitle": "Восемь шагов: операции на одном байте → маски → флаги мьютекса → H1/H2 → поиск H2 сразу в 8 байтах → обход битсета → атомарные And/Or → ответ и ловушки. Числа посчитаны; реальные хеши другие.",
     "cardId": "c31",
     "cardLabel": "Карточка Q31 (SwissTables) →",
+    "learningHint": "Опора: «n − 1 маскирует, &^ снимает, b &= b − 1 — к следующему». Перед раскрытием ответа посчитай биты сам, затем сверь со схемой.",
     "boardLegend": "Биты в строке — старший слева (бит 7 → бит 0); байты map — слоты 0 → 7. Рамкой выделено то, что дало результат.",
     "sources": [
       {
@@ -8503,6 +9363,10 @@ const SIMULATORS = [
           "promptRU": "Чему равно 0b1100 &^ 0b1010?",
           "answerEN": "0b0100: the bits of the first number that are not set in the second.",
           "answerRU": "0b0100: остаются биты первого числа, которых нет во втором."
+        },
+        "predict": {
+          "promptEN": "a = 202 (0b11001010), b = 166 (0b10100110), uint8. Work out a & b, a | b, a ^ b and a &^ b before opening the board.",
+          "promptRU": "a = 202 (0b11001010), b = 166 (0b10100110), тип uint8. Посчитай a & b, a | b, a ^ b и a &^ b, прежде чем открыть схему."
         }
       },
       {
@@ -9182,7 +10046,8 @@ const SIMULATORS = [
                     ],
                     "queue": true
                   }
-                ]
+                ],
+                "note": "Слот 0 — младший байт слова: в числе 0x0000000000800080 он справа, поэтому слоты в маске читаются справа налево."
               }
             ],
             "list": {
@@ -9288,7 +10153,8 @@ const SIMULATORS = [
                 "first: TrailingZeros64(b) >> 3 (group.go bitsetFirst)",
                 "removeFirst: b & (b − 1)",
                 "На amd64 битсет упакован: по биту на слот, сдвиг не нужен"
-              ]
+              ],
+              "title": "Обход битсета"
             },
             "hlLabel": "слот"
           }
@@ -9299,6 +10165,10 @@ const SIMULATORS = [
           "promptRU": "Что делает b & (b − 1)?",
           "answerEN": "It clears the lowest set bit; a loop `for b != 0 { …; b &= b − 1 }` visits every set bit.",
           "answerRU": "Сбрасывает младший единичный бит; цикл «пока b != 0: …; b &= b − 1» обходит все установленные биты."
+        },
+        "predict": {
+          "promptEN": "The candidate mask is b = 0x800080. Which slot does the first TrailingZeros64(b) >> 3 give, what is b after b &= b − 1, and which slot comes next?",
+          "promptRU": "Маска кандидатов b = 0x800080. Какой слот даст первый TrailingZeros64(b) >> 3, чему станет равно b после b &= b − 1 и какой слот будет следующим?"
         }
       },
       {
@@ -9469,7 +10339,8 @@ const SIMULATORS = [
                 "x % n == x & (n − 1) только для неотрицательных x",
                 "Переполнение переменных целых типов циклическое (uint8: 255 + 1 = 0); нетипизированные константы точны (const big = 1 << 100 компилируется), ошибка — у типизированной константы или при преобразовании в тип, где значение не помещается",
                 "math/bits: OnesCount, LeadingZeros, TrailingZeros, Len, RotateLeft — компилятор часто заменяет их одной инструкцией"
-              ]
+              ],
+              "title": "Частые ошибки"
             }
           }
         ],
