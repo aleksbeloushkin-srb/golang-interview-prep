@@ -2576,13 +2576,14 @@ const SIMULATORS = [
       },
       {
         "title": "3. Передать значение",
-        "desc": "G2 захватывает lock и извлекает sudog G1 из recvq. Для выбранного пути sendDirect копирует 42 в место x, минуя буфер. G1 ещё ждёт. Для int нет переносимых указателей; барьерный помощник учитывает тип, а его наличие не означает работу GC над указателями у каждого значения.",
+        "desc": "G2 захватывает lock и извлекает sudog G1 из recvq. Для выбранного пути sendDirect копирует 42 в место x, минуя буфер. G1 ещё ждёт. В int нет указателей; барьерный помощник учитывает тип, а его наличие не означает работу GC над указателями у каждого значения.",
         "descEN": "The sender locks the channel, removes the receiver’s waiter and copies 42 to the receive destination. The receiver is still waiting. The type-aware transfer supports pointers, but this int contains none.",
         "board": [
           {
             "hl": [
               "42",
-              "G2"
+              "G2",
+              "sudog G1"
             ],
             "lanes": [
               {
@@ -2846,7 +2847,7 @@ const SIMULATORS = [
               "title": "Что произошло",
               "items": [
                 "G2: unlock(&c.lock), затем goready(G1)",
-                "goready → runqput(next = true): G1 в runnext P отправителя; wakep может разбудить простаивающий P",
+                "goready → runqput(next = true): обычно G1 попадает в runnext P отправителя; wakep может разбудить простаивающий P",
                 "RUNNABLE ≠ RUNNING: момент запуска решает планировщик; G1 может забрать другой P"
               ]
             }
@@ -2893,14 +2894,16 @@ const SIMULATORS = [
       },
       {
         "title": "5. Продолжить и освободить запись",
-        "desc": "Планировщик возобновляет G1. Путь чтения очищает состояние ожидания, сбрасывает activeStackChans и возвращает sudog через releaseSudog. Затем пользовательский код получает x=42 и может продолжить обработку. Именно это отдельное событие отсутствовало в прежней схеме.",
+        "desc": "Планировщик возобновляет G1. Путь чтения очищает состояние ожидания, сбрасывает activeStackChans и возвращает sudog через releaseSudog. Затем пользовательский код получает x=42 и может продолжить обработку.",
         "descEN": "When scheduled, the receiver resumes, clears its waiting state and releases its sudog. The receive then completes with x=42, and user code can continue.",
         "board": [
           {
             "hl": [
               "RUNNING",
               "activeStackChans",
-              "releaseSudog"
+              "releaseSudog",
+              "G1",
+              "ушла с P"
             ],
             "lanes": [
               {
@@ -2911,7 +2914,8 @@ const SIMULATORS = [
                     "label": "статус",
                     "items": [
                       {
-                        "g": "другая работа"
+                        "g": "ушла с P",
+                        "flag": "заблокировалась или завершилась"
                       }
                     ]
                   },
@@ -3011,7 +3015,7 @@ const SIMULATORS = [
               "ordered": true,
               "title": "Что произошло",
               "items": [
-                "Планировщик запускает G1; из runnext она наследует остаток кванта",
+                "G2 ушла с P → планировщик берёт G1 из runnext, и она наследует остаток кванта; если G1 забрал другой P — не наследует",
                 "После gopark: waiting = nil, activeStackChans = false, releaseSudog",
                 "Цепочка: копия → готовность → запуск"
               ]
@@ -3053,8 +3057,8 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Capacity is now 1 and no receiver is waiting. Where can the first sent value go?",
           "promptRU": "Теперь ёмкость 1, а ожидающего получателя нет. Куда может попасть первое значение?",
-          "answerEN": "Into the free buffer slot. If a receiver is already waiting, the checked runtime can still transfer directly. Capacity alone does not determine the path.",
-          "answerRU": "В свободную ячейку буфера. Если получатель уже ждёт, проверенный runtime всё ещё может передать значение напрямую. Одна ёмкость не определяет путь."
+          "answerEN": "Into the free buffer slot. If a receiver is waiting, the value always goes directly to it; by the hchan invariant the buffer is then empty. Capacity alone does not determine the path.",
+          "answerRU": "В свободную ячейку буфера. Если получатель ждёт, значение всегда передаётся ему напрямую: по инварианту hchan буфер тогда пуст. Одна ёмкость не определяет путь."
         }
       },
       {
@@ -3210,7 +3214,7 @@ const SIMULATORS = [
                     "items": [
                       {
                         "g": "sudog G3",
-                        "flag": "elem: 4"
+                        "flag": "elem → 4 (стек G3)"
                       }
                     ],
                     "queue": true
@@ -3238,7 +3242,8 @@ const SIMULATORS = [
             "hl": [
               "4",
               "1",
-              "RUNNABLE"
+              "RUNNABLE",
+              "2"
             ],
             "lanes": [
               {
@@ -3335,8 +3340,8 @@ const SIMULATORS = [
       },
       {
         "title": "8. close: кто проснётся и что получит",
-        "desc": "closechan под lock ставит closed = 1 и собирает всех ждущих: каждому получателю из recvq записывается нулевое значение и ok = false; каждый отправитель из sendq после пробуждения упадёт с panic «send on closed channel». Будит всех goready уже после unlock. Данные в буфере не теряются: чтения после close сначала вернут 7 и 8 с ok = true и только потом 0, false; for range по каналу заканчивается, когда канал закрыт и буфер пуст. Закрывает канал сторона, которая отправляет; повторный close и close(nil) — panic.",
-        "descEN": "closechan sets closed = 1 under the lock and collects every waiter: each receiver from recvq gets the zero value and ok = false; each sender from sendq panics with \"send on closed channel\" once it wakes. All of them are readied after the unlock. Buffered data is not lost: receives after close return 7 and 8 with ok = true first, and only then 0, false; a for range loop over the channel ends when it is closed and the buffer is empty. The sending side closes the channel; closing twice or closing nil panics.",
+        "desc": "closechan под lock ставит closed = 1 и собирает всех ждущих: каждому получателю из recvq записывается нулевое значение и ok = false; каждый отправитель из sendq после пробуждения упадёт с panic «send on closed channel». Будит всех goready уже после unlock. Данные в буфере не теряются: чтения после close сначала вернут 7 и 8 с ok = true и только потом 0, false; for range по каналу заканчивается, когда канал закрыт и буфер пуст. По соглашению канал закрывает единственный владелец-отправитель после последней отправки; повторный close и close(nil) — panic.",
+        "descEN": "closechan sets closed = 1 under the lock and collects every waiter: each receiver from recvq gets the zero value and ok = false; each sender from sendq panics with \"send on closed channel\" once it wakes. All of them are readied after the unlock. Buffered data is not lost: receives after close return 7 and 8 with ok = true first, and only then 0, false; a for range loop over the channel ends when it is closed and the buffer is empty. By convention the single sending owner closes the channel after its last send; closing twice or closing nil panics.",
         "predict": {
           "promptEN": "G1 and G4 wait in recvq of an empty channel, and close(ch) is called. What do they get? And if 7 and 8 were still buffered, what would three receives after close return?",
           "promptRU": "В recvq пустого канала ждут G1 и G4, вызываем close(ch). Что они получат? А если в буфере ещё 7 и 8 — что вернут три чтения после close?"
@@ -3477,20 +3482,21 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Who should close a channel, and why not the receiver?",
           "promptRU": "Кто должен закрывать канал и почему не получатель?",
-          "answerEN": "The sending side, ideally its single owner: only it knows that no more values will come. If a receiver closes the channel, a sender that is still running panics.",
-          "answerRU": "Отправляющая сторона, лучше её единственный владелец: только она знает, что значений больше не будет. Если закроет получатель, ещё работающий отправитель упадёт с panic."
+          "answerEN": "The sending side, ideally its single owner: only it knows that no more values will come. If a receiver closes it, a sender that sends afterwards, or is blocked in sendq, panics.",
+          "answerRU": "Отправляющая сторона, лучше её единственный владелец: только она знает, что значений больше не будет. Если закроет получатель, отправитель, который отправит после этого или уже ждёт в sendq, упадёт с panic."
         }
       },
       {
         "title": "9. Сводная таблица и ответ за минуту",
-        "desc": "Таблица, которую спрашивают на собеседовании: что делают отправка, приём и close с nil, открытым и закрытым каналом. «Блок навсегда» значит: горутина спит, и nil-канал её не разбудит. Если так заблокированы все горутины и ждать больше нечего (нет таймеров и сети), runtime завершит программу: fatal error: all goroutines are asleep - deadlock!",
-        "descEN": "The table interviewers ask for: what send, receive and close do with a nil, an open and a closed channel. \"Blocks forever\" means the goroutine sleeps and nothing on a nil channel will wake it. If every goroutine is blocked like this and nothing else can wake them (no timers or network), the runtime stops the program with fatal error: all goroutines are asleep - deadlock!",
+        "desc": "Таблица, которую спрашивают на собеседовании: что делают отправка, приём и close с nil, открытым и закрытым каналом. «Блок навсегда» значит: горутина спит, и nil-канал её не разбудит. Если так заблокированы все горутины и ждать больше нечего (нет таймеров, сети и системных вызовов), runtime завершит программу: fatal error: all goroutines are asleep - deadlock!",
+        "descEN": "The table interviewers ask for: what send, receive and close do with a nil, an open and a closed channel. \"Blocks forever\" means the goroutine sleeps and nothing on a nil channel will wake it. If every goroutine is blocked like this and nothing else can wake them (no timers, network or system calls), the runtime stops the program with fatal error: all goroutines are asleep - deadlock!",
         "board": [
           {
             "caption": "Операция × состояние канала",
             "hlQuiet": true,
             "hl": [
-              "panic"
+              "panic",
+              "отправка выбрана — panic"
             ],
             "lanes": [
               {
@@ -3563,7 +3569,7 @@ const SIMULATORS = [
                     "label": "закрыт",
                     "items": [
                       {
-                        "g": "остаток буфера, затем 0, false"
+                        "g": "остаток буфера, затем нулевое значение, false"
                       }
                     ]
                   }
@@ -3612,6 +3618,17 @@ const SIMULATORS = [
                     ]
                   },
                   {
+                    "label": "case с закрытым каналом",
+                    "items": [
+                      {
+                        "g": "приём всегда готов: нулевое значение, false"
+                      },
+                      {
+                        "g": "отправка выбрана — panic"
+                      }
+                    ]
+                  },
+                  {
                     "label": "default",
                     "items": [
                       {
@@ -3640,9 +3657,9 @@ const SIMULATORS = [
                 "A channel is an hchan: a lock, an optional ring buffer with sendx and recvx, and two queues of waiting sudogs, recvq and sendq.",
                 "Send: if a receiver waits, copy the value straight to it and make it runnable; else put it in the buffer if there is room; else park in sendq.",
                 "Receive mirrors it; with a full buffer and a waiting sender it takes the head and puts the sender's value at the tail, keeping FIFO.",
-                "A woken goroutine is only runnable: goready puts it into runnext of the waker's P, and the scheduler decides when it runs.",
+                "A woken goroutine is only runnable: goready normally puts it into runnext of the waker's P, and the scheduler decides when it runs.",
                 "close wakes every waiter: receivers get the zero value and ok = false, senders panic; buffered values are still delivered.",
-                "A nil channel blocks forever, which disables a select case; closing nil or closing twice panics."
+                "A nil channel blocks forever, which disables a select case; a receive case on a closed channel is always ready, so set the variable to nil to disable it; closing nil or closing twice panics."
               ]
             }
           }
@@ -5660,8 +5677,8 @@ const SIMULATORS = [
     "steps": [
       {
         "title": "1. Размещение → свободная ячейка → пополнение кеша",
-        "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью.",
-        "descEN": "First the compiler determines lifetimes: storage may be on the stack, in registers or eliminated. For a required heap object, the fast path uses a free slot in the current P’s cached span. Refill may sweep a span or obtain pages from mheap. Pointer-free payloads skip pointer traversal but still need reachability tracking and reclamation.",
+        "desc": "Сначала компилятор определяет время жизни: объект может остаться в стеке, в регистрах или исчезнуть после оптимизации. Если нужен объект кучи, быстрый путь берёт свободную ячейку из span текущего P. Когда ячейки закончились, mcentral ищет подходящий span, при необходимости выполняется sweep или запрашиваются страницы у mheap. Это разные пути с разной стоимостью. Объекты без указателей GC не просматривает, но их достижимость и освобождение всё равно учитывает.",
+        "descEN": "First the compiler determines lifetimes: storage may be on the stack, in registers or eliminated. For a required heap object, the fast path uses a free slot in the current P’s cached span. When its slots run out, mcentral finds a suitable span, sweeping one if needed, or pages are requested from mheap. These paths have different costs. Pointer-free payloads skip pointer traversal but still need reachability tracking and reclamation.",
         "board": [
           {
             "caption": "Путь выделения малого объекта",
@@ -5768,7 +5785,7 @@ const SIMULATORS = [
                     ]
                   },
                   {
-                    "label": "объект > 32 KiB",
+                    "label": "объект > ~32 KiB",
                     "items": [
                       {
                         "g": "свой span"
@@ -6035,7 +6052,7 @@ const SIMULATORS = [
                 "hl": false
               },
               {
-                "k": "Новые объекты marking:",
+                "k": "Новые объекты во время marking:",
                 "v": "Считаются чёрными, а не добавляются как обычные белые",
                 "hl": false
               }
@@ -6115,9 +6132,10 @@ const SIMULATORS = [
           {
             "caption": "После записи с барьером",
             "hl": [
+              "A",
+              "B",
               "C"
             ],
-            "hlLabel": "барьер",
             "lanes": [
               {
                 "kind": "black",
@@ -6187,10 +6205,10 @@ const SIMULATORS = [
           }
         ],
         "check": {
-          "promptEN": "Why does B.Next = nil matter even though the new value is not a pointer to an object? Does a GC barrier make Move safe for concurrent callers?",
-          "promptRU": "Почему важна запись B.Next = nil, хотя новое значение не указывает на объект? Делает ли GC-барьер Move безопасным для конкурентных вызовов?",
-          "answerEN": "The deletion part protects the old target C. The barrier serves GC correctness; callers still need exclusive access or application synchronization.",
-          "answerRU": "Deletion-часть защищает старую цель C. Барьер нужен для корректности GC; вызывающему коду всё ещё требуется исключительный доступ или своя синхронизация."
+          "promptEN": "Here the insertion half already records C. When does the deletion half (the old target of B.Next = nil) actually save an object? Does the barrier make A.Next = B.Next; B.Next = nil safe for concurrent goroutines?",
+          "promptRU": "Здесь C уже учтён insertion-частью. Когда deletion-часть (старая цель при B.Next = nil) действительно спасает объект? Делает ли барьер код A.Next = B.Next; B.Next = nil безопасным для конкурентных горутин?",
+          "answerEN": "When the only pointer moves onto an already scanned stack: x := B.Next; B.Next = nil. Stack writes have no barrier and that stack is not rescanned, so recording the old target C is what keeps it alive. The barrier serves GC correctness only; concurrent goroutines still need their own synchronization.",
+          "answerRU": "Когда единственный указатель переезжает на уже просканированный стек: x := B.Next; B.Next = nil. У записей в стек нет барьера, и этот стек повторно не сканируется, поэтому C сохраняет именно учёт старой цели. Барьер нужен только для корректности GC; конкурентным горутинам всё равно нужна своя синхронизация."
         },
         "boxes": [
           {
@@ -6355,7 +6373,7 @@ const SIMULATORS = [
             "list": {
               "items": [
                 "D отмечен и переживёт цикл, даже если ссылок на него уже нет: проверит следующий цикл",
-                "Компактирования нет: живые объекты не двигаются"
+                "Компактирования нет: объекты кучи не двигаются (стеки горутин — двигаются)"
               ]
             }
           },
