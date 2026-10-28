@@ -152,3 +152,11 @@
 | Стало | sim4: схемы на шагах 2–8 (шаг 1 оставлен списком путей компиляции). Шаг 2 — три исхода selectnbrecv, ловушка «закрытый пустой канал всегда готов», «сначала предскажи». Шаг 3 — scases, pollorder, lockorder и каналы. Шаг 4 — G1.waiting и три recvq. Шаг 5 — гонка W1/W2 за selectDone. Шаг 6 — проход 3 и chosen → case <-chC. Шаг 7 — граничные случаи и правила. Шаг 8 — порядок вычисления выражений, «сначала предскажи». Теперь схемы есть у всех девяти диаграмм |
 | Источники | go1.26.1 runtime/select.go: sellock 34–60, selparkcommit 63–, pollorder и lockorder 186–247, проход 1 264–307, проход 3 360–400; chan.go: dequeue и CAS selectDone 911 |
 | Проверка (мои запуски) | check-content ok; Playwright: схемы 343/343, «сначала предскажи» 8/8 (ожидание: sim4 — 2); скриншоты 1280 и 390 px просмотрены |
+
+## 28 октября 2026 — quiz q23–q27 (мьютекс, биты, каналы, select)
+
+| Поле | Запись |
+|---|---|
+| Стало | q23 — мьютекс в методе со значением (вывод 0, go vet copylocks; c21). q24 — Unlock без Lock: fatal error, recover не помогает, код 2 (c21). q25 — приоритет & выше ==, переполнение uint8, −7 % 4 и −7 & 3 (без карточки). q26 — закрытый буферизованный канал и range: 1 2 0 false (c13, c14). q27 — отправляемое значение в select вычисляется до выбора: build, default (c18, c19). README: 27 задач, sim3, все девять схем; к строке о редакции Астры добавлено, что новые материалы её ещё не проходили |
+| Источники | Спецификация Go (precedence, arithmetic, overflow, close, receive, range, select, method declarations, panics); go1.26.1 internal/sync/mutex.go 203–205, runtime/chan.go, cmd/compile/internal/walk/select.go; go1.17 sync/mutex.go:196 (throw) |
+| Проверка (мои запуски) | Все пять программ, исправление q23 и go vet выполнены Go 1.24.7 (toolchain 1.26 недоступен): выводы совпадают с ответами. check-content ok; Playwright: q23–q27 на 390 и 1280 px — 24/24 (рендер, переполнение, консоль); `scripts/browser-smoke.mjs` через CDP — ok, 39 проверок |
