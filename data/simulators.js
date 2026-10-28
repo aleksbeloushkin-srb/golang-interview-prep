@@ -39,9 +39,7 @@ const SIMULATORS = [
         "descEN": "G1 evaluates the function and arguments of go doWork(n). G2 will execute the call later. Passing an int value is different from closing over mutable n.",
         "board": [
           {
-            "hl": [
-              "G1"
-            ],
+            "hl": [],
             "lanes": [
               {
                 "kind": "m",
@@ -211,7 +209,7 @@ const SIMULATORS = [
                   {
                     "label": "Стек",
                     "items": [
-                      "минимум 2 КиБ или адаптивный размер"
+                      "новая — 2 КиБ (Linux/amd64); из пула — адаптивный размер, не меньше 2 КиБ"
                     ]
                   }
                 ]
@@ -295,12 +293,13 @@ const SIMULATORS = [
       },
       {
         "title": "3. Сохранить стартовый контекст",
-        "desc": "В G2.sched подготавливаются SP и PC для запуска doWork. На amd64 создаётся путь возврата через goexit после завершения функции. Это сохранённые данные будущего запуска; активные регистры пока обслуживают runtime на g0.",
-        "descEN": "G2 receives saved start state, including its stack position and entry PC. The amd64 return path leads to goexit. Saved state in memory is different from registers currently running the runtime.",
+        "desc": "В G2.sched подготавливаются SP, PC обёртки, которую компилятор создал для go doWork(n), и контекст с копией n; обёртка вызовет doWork. На amd64 создаётся путь возврата через goexit после завершения функции. Это сохранённые данные будущего запуска; активные регистры пока обслуживают runtime на g0.",
+        "descEN": "G2 receives saved start state: its stack position, the entry PC of the compiler-generated wrapper for go doWork(n), and a context holding the copy of n; the wrapper calls doWork. The amd64 return path leads to goexit. Saved state in memory is different from registers currently running the runtime.",
         "board": [
           {
             "hl": [
-              "doWork",
+              "обёртка go-вызова",
+              "замыкание с копией n",
               "goexit"
             ],
             "lanes": [
@@ -337,7 +336,13 @@ const SIMULATORS = [
                   {
                     "label": "sched.pc",
                     "items": [
-                      "doWork"
+                      "обёртка go-вызова"
+                    ]
+                  },
+                  {
+                    "label": "sched.ctxt",
+                    "items": [
+                      "замыкание с копией n"
                     ]
                   },
                   {
@@ -370,7 +375,8 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "В G2.sched записаны sp и pc = doWork; после doWork возврат пойдёт в goexit",
+                "В G2.sched записаны sp, pc обёртки, которую компилятор создал для go doWork(n), и ctxt — замыкание с копией n",
+                "Обёртка вызовет doWork; после её возврата управление уйдёт в goexit",
                 "Это данные будущего запуска: регистры CPU всё ещё работают на g0"
               ]
             }
@@ -407,7 +413,7 @@ const SIMULATORS = [
               },
               {
                 "k": "pc",
-                "v": "Точка входа doWork",
+                "v": "Точка входа обёртки, которая вызовет doWork",
                 "hl": true
               },
               {
@@ -481,7 +487,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Без sysmon runnext не используется; в сборках с -race рантайм в половине случаев ставит G в обычную очередь."
+                "note": "Без sysmon (wasm) runnext не используется; в сборках с -race рантайм случайно, с вероятностью 1/2, ставит G в обычную очередь."
               }
             ],
             "list": {
@@ -572,7 +578,7 @@ const SIMULATORS = [
                   {
                     "label": "RIP · код",
                     "items": [
-                      "doWork"
+                      "обёртка → doWork"
                     ]
                   }
                 ],
@@ -600,7 +606,7 @@ const SIMULATORS = [
             "list": {
               "items": [
                 "execute: G2 runnable → running",
-                "gogo: R14 = G2, RSP → стек G2, переход (JMP) на сохранённый pc — doWork"
+                "gogo: R14 = G2, RSP → стек G2, переход (JMP) на сохранённый pc — обёртку, которая вызывает doWork"
               ]
             }
           }
@@ -621,7 +627,7 @@ const SIMULATORS = [
               },
               {
                 "k": "RIP · какой код",
-                "v": "doWork после перехода",
+                "v": "Обёртка go-вызова, затем doWork",
                 "hl": true
               }
             ]
@@ -731,7 +737,7 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "doWork вернулась → goexit → mcall(goexit0): переход на g0",
+                "doWork вернулась в обёртку → goexit → goexit1 → mcall(goexit0): переход на g0",
                 "G2 получает _Gdead; структура идёт в пул, стек — по политике рантайма",
                 "M1 на g0 ищет следующую G (schedule)"
               ]
@@ -859,7 +865,7 @@ const SIMULATORS = [
                     ]
                   }
                 ],
-                "note": "Сработавший таймер делает свою G готовой."
+                "note": "Сработавший таймер вызывает свою функцию: для time.Sleep она делает спящую G готовой (в runnext P, запустившего таймер); канальный таймер отправляет значение, AfterFunc запускает новую G."
               },
               {
                 "kind": "netpoll",
@@ -900,7 +906,7 @@ const SIMULATORS = [
               "title": "Где P1 ищет следующую G (findRunnable, Go 1.26.1, упрощённо)",
               "ordered": true,
               "items": [
-                "Таймеры P1: сработавшие делают свои G готовыми",
+                "Таймеры P1: запустить сработавшие (например, разбудить G после time.Sleep)",
                 "Служебная работа рантайма, например воркер GC",
                 "Раз в 61 тик планировщика — GRQ, если она не пуста (справедливость)",
                 "runnext, затем runq P1",
@@ -999,7 +1005,7 @@ const SIMULATORS = [
                 "title": "sysmon",
                 "tag": "поток без P",
                 "slots": [],
-                "note": "Видит, что schedtick P1 не менялся ≥ 10 мс, и вызывает preemptone для G1."
+                "note": "Видит, что schedtick P1 не менялся ≥ 10 мс, и вызывает preemptone для P1: запрос вытеснения его текущей G (G1)."
               }
             ],
             "list": {
@@ -1113,7 +1119,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Go 1.26.1: при вытеснении ради остановки мира для GC G1 остаётся в runnext P1; в Go 1.25 — всегда GRQ."
+                "note": "Go 1.26.1: если вытеснение совпало с остановкой мира (STW — для GC или по другой причине), gopreempt_m кладёт G1 в runnext P1; в Go 1.25 этот путь всегда ведёт в GRQ."
               }
             ],
             "list": {
@@ -1180,11 +1186,7 @@ const SIMULATORS = [
         "descEN": "This is a new stable-queue example. P2 considers P1’s ordinary queue [A,B,C,D,E], head on the left, with empty runnext. runqgrab computes n - n/2 = 3 and claims the head prefix with CAS. Concurrent changes can require retrying.",
         "board": [
           {
-            "hl": [
-              "A",
-              "B",
-              "C"
-            ],
+            "hl": [],
             "lanes": [
               {
                 "kind": "p",
@@ -1204,9 +1206,18 @@ const SIMULATORS = [
                   {
                     "label": "runq · голова →",
                     "items": [
-                      "A",
-                      "B",
-                      "C",
+                      {
+                        "g": "A",
+                        "flag": "в пачке"
+                      },
+                      {
+                        "g": "B",
+                        "flag": "в пачке"
+                      },
+                      {
+                        "g": "C",
+                        "flag": "в пачке"
+                      },
                       "D",
                       "E"
                     ],
@@ -1449,7 +1460,7 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "M1 ↔ P1: связь снята при входе",
+                "M1 ↔ P1: связь снята при входе; M1 помнит P1 в m.oldp и при выходе попробует вернуть его",
                 "P1 помечен _Psyscall"
               ]
             }
@@ -1488,7 +1499,7 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "Связь M1–P1 может сохраниться",
+                "При входе связь M1–P1 сохраняется; разорвать её может sysmon (retake) или остановка мира",
                 "Изъятие P: setBlockOnExitSyscall → takeP → resume → handoffp",
                 "_Psyscall_unused — бывшее состояние, сейчас не используется"
               ]
@@ -1566,7 +1577,7 @@ const SIMULATORS = [
       },
       {
         "title": "7. Syscall вернулся: для Go-кода снова нужен P",
-        "desc": "В обеих версиях возврат к обычному Go-коду требует P. Если P можно сохранить или получить, исполнение продолжается. Если P недоступен, G1 может попасть в очередь, а M1 остановиться. Поэтому число M не равно GOMAXPROCS; один syscall также не означает обязательное создание нового M. При cgo внешний код может вычислять, а не только ждать в ядре.",
+        "desc": "В обеих версиях возврат к обычному Go-коду требует P. Если P можно сохранить или получить, исполнение продолжается. Если P недоступен, G1 может попасть в очередь, а M1 остановиться. Поэтому число M не обязано совпадать с GOMAXPROCS; один syscall также не означает обязательное создание нового M. При cgo внешний код может вычислять, а не только ждать в ядре.",
         "descEN": "In both versions, resuming normal user Go code requires a P. The thread may keep or acquire one. Otherwise G1 can be queued while M1 stops. Thread count need not equal GOMAXPROCS, and a syscall need not create a new thread. Foreign cgo code may compute rather than wait in the kernel.",
         "predict": {
           "promptEN": "G1's system call has returned. What happens if P1 was handed to another thread and no P is free?",
@@ -1609,7 +1620,8 @@ const SIMULATORS = [
           {
             "caption": "Свободного P нет",
             "hl": [
-              "G1"
+              "G1",
+              "G2"
             ],
             "lanes": [
               {
@@ -1652,9 +1664,10 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
+                "G2: runq P1 → исполнение — P1 отдан потоку M3 (handoffp)",
                 "G1 → GRQ: ждёт планирования",
                 "M1 останавливается",
-                "Поэтому число M не равно GOMAXPROCS"
+                "Поэтому число M не обязано совпадать с GOMAXPROCS: потоков может быть больше"
               ]
             }
           }
@@ -1791,7 +1804,19 @@ const SIMULATORS = [
                   {
                     "label": "runq · голова →",
                     "items": [
-                      "G3",
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "grq",
+                "title": "Глобальная очередь (GRQ)",
+                "slots": [
+                  {
+                    "label": "голова →",
+                    "items": [
                       {
                         "g": "G1",
                         "flag": "runnable"
@@ -1799,7 +1824,8 @@ const SIMULATORS = [
                     ],
                     "queue": true
                   }
-                ]
+                ],
+                "note": "Пример: событие забрал sysmon — у него нет P, поэтому injectglist кладёт G1 в GRQ и будит свободный P."
               },
               {
                 "kind": "netpoll",
@@ -1814,7 +1840,8 @@ const SIMULATORS = [
             ],
             "list": {
               "items": [
-                "G1: netpoller → очередь готовых (локальная или глобальная — решает рантайм)",
+                "G1: netpoller → GRQ (в примере опрос сделал sysmon)",
+                "Если опрашивает поток с P в findRunnable, первую готовую G он исполняет сам, остальные кладёт в свою runq или GRQ; к P, на котором G1 уснула, она не привязана",
                 "Когда G1 запустится, она повторит Read; данных может быть меньше, чем запрошено"
               ]
             }
