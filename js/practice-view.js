@@ -152,7 +152,7 @@ function renderPracticeTask(view, task) {
     accept.length ? practiceSection("Готово, когда", accept.map(text => practiceEl("p", { text }))) : null,
     practiceSection("Как запустить", [
       practiceCode(run, "Команды для запуска"),
-      practiceEl("p", { className: "muted-text", text: "Нужен Go 1.22 или новее; -race работает там, где включён cgo (обычно так и есть). Код и тесты проверены Go 1.24.7 с -race." })
+      practiceEl("p", { className: "muted-text", text: "Нужен Go 1.22 или новее; -race работает там, где включён cgo (обычно так и есть). Код и тесты проверены с -race на Go 1.24.7 и 1.27.3." })
     ]),
     practiceSection(`Заготовка: ${task.files.starter.name}`, [
       practiceFileActions(task.files.starter, "заготовку"),

@@ -1104,8 +1104,9 @@ const PRACTICE = [
     ],
     "hints": [
       "Вывод заготовки на Go 1.24.7: «moved to heap: p» — переменная живёт дольше вызова; «xs does not escape» — срез только читается; «make([]int, min(len(xs), 64)) escapes to heap» — размер не константа; «n escapes to heap» — n упаковывается в интерфейс для Sprintf; «leaking param: dst to result» — dst уходит в результат, где он будет жить, решает вызывающий.",
+      "На Go 1.25+ строка про make читается иначе: «does not escape». Компилятор держит на стеке буфер на 32 байта, а 50 чисел (400 байт) в него не помещаются, и память всё равно берётся из кучи во время выполнения. Поэтому мерило — AllocsPerRun, а не текст -m.",
       "Размер make, известный только во время выполнения, обычно ведёт в кучу. Массив var buf [64]int имеет постоянный размер и остаётся на стеке.",
-      "Две аллокации AppendID: упаковка n в interface для fmt.Sprintf и новая строка, которую Sprintf возвращает. strconv.AppendInt пишет цифры прямо в dst.",
+      "Откуда аллокации AppendID: новая строка, которую возвращает Sprintf, и на Go 1.24 ещё упаковка n в interface (на Go 1.27 остаётся одна). strconv.AppendInt пишет цифры прямо в dst.",
       "«can inline» — тоже строка вывода: после встраивания escape analysis смотрит на код уже в месте вызова, и результат может отличаться."
     ],
     "talkEN": "Escape analysis decides at compile time whether a value can live on the goroutine's stack or must go to the heap. A value escapes when it may outlive the function, for example when I return its address, store it in something long-lived, or put it in an interface that escapes; a slice whose size is only known at run time usually goes to the heap too. go build -gcflags=-m prints each decision. Here a constant-size array kept the scratch buffer on the stack, and strconv.AppendInt into the caller's buffer removed both allocations of fmt.Sprintf. I confirm with testing.AllocsPerRun or -benchmem, not by guessing.",
@@ -1120,12 +1121,12 @@ const PRACTICE = [
       "Сделай SumFirst для любого числа значений без аллокаций — нужна ли тогда копия вообще?",
       "Почему sync.Pool помогает, когда избежать кучи нельзя, и чем он опасен?"
     ],
-    "note": "Строки вывода -m проверены на Go 1.24.7; в других версиях текст и решения могут отличаться — главное, чтобы проходил TestAllocations.",
+    "note": "Вывод -m сверен на Go 1.24.7 и 1.27.3: текст отличается (например, строка про make), а TestAllocations проходит на обеих версиях. Ориентируйся на тест.",
     "fixture": "docs/verification/fixtures/practice/escape",
     "files": {
       "starter": {
         "name": "escape.go",
-        "code": "// Package escape: practice task W4-5. Run go build -gcflags=-m . and\n// go test -run Allocations -v, explain every line of the -m output, then change\n// SumFirst and AppendID so that they stop allocating. Keep their results.\npackage escape\n\nimport \"fmt\"\n\ntype Point struct{ X, Y int }\n\n// NewPoint and MakePoint are here to read, not to change: compare their -m lines.\nfunc NewPoint(x, y int) *Point {\n\tp := Point{X: x, Y: y}\n\treturn &p\n}\n\nfunc MakePoint(x, y int) Point {\n\treturn Point{X: x, Y: y}\n}\n\n// SumFirst adds up to the first 64 values.\n// TODO: the scratch buffer goes to the heap. Why? Keep it on the stack.\nfunc SumFirst(xs []int) int {\n\tbuf := make([]int, min(len(xs), 64))\n\tn := copy(buf, xs)\n\ttotal := 0\n\tfor _, v := range buf[:n] {\n\t\ttotal += v\n\t}\n\treturn total\n}\n\n// AppendID appends \"id-<n>\" to dst.\n// TODO: two allocations per call. Where do they come from? Remove both.\nfunc AppendID(dst []byte, n int) []byte {\n\treturn append(dst, fmt.Sprintf(\"id-%d\", n)...)\n}"
+        "code": "// Package escape: practice task W4-5. Run go build -gcflags=-m . and\n// go test -run Allocations -v, explain every line of the -m output, then change\n// SumFirst and AppendID so that they stop allocating. Keep their results.\npackage escape\n\nimport \"fmt\"\n\ntype Point struct{ X, Y int }\n\n// NewPoint and MakePoint are here to read, not to change: compare their -m lines.\nfunc NewPoint(x, y int) *Point {\n\tp := Point{X: x, Y: y}\n\treturn &p\n}\n\nfunc MakePoint(x, y int) Point {\n\treturn Point{X: x, Y: y}\n}\n\n// SumFirst adds up to the first 64 values.\n// TODO: the scratch buffer goes to the heap. Why? Keep it on the stack.\nfunc SumFirst(xs []int) int {\n\tbuf := make([]int, min(len(xs), 64))\n\tn := copy(buf, xs)\n\ttotal := 0\n\tfor _, v := range buf[:n] {\n\t\ttotal += v\n\t}\n\treturn total\n}\n\n// AppendID appends \"id-<n>\" to dst.\n// TODO: it allocates on every call (twice on Go 1.24, once on Go 1.27).\n// Where do the allocations come from? Make it allocation-free.\nfunc AppendID(dst []byte, n int) []byte {\n\treturn append(dst, fmt.Sprintf(\"id-%d\", n)...)\n}"
       },
       "tests": {
         "name": "escape_test.go",
