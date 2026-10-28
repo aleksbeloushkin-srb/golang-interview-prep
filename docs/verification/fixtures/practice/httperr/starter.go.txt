@@ -1,0 +1,40 @@
+// Package httperr: practice task W5-2. Replace each TODO with your solution.
+package httperr
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+)
+
+var (
+	ErrNotFound          = errors.New("account not found")
+	ErrInsufficientFunds = errors.New("insufficient funds")
+)
+
+type ValidationError struct{ Field, Reason string }
+
+func (e *ValidationError) Error() string { return "invalid " + e.Field + ": " + e.Reason }
+
+type Ledger interface {
+	Transfer(ctx context.Context, from, to string, amount int64) error
+}
+
+// Status maps an error (possibly wrapped) to an HTTP status code.
+func Status(err error) int {
+	// TODO
+	panic("TODO")
+}
+
+// Write sends err as JSON {"error": ..., "field": ...}; a 500 hides the cause and logs it once.
+func Write(w http.ResponseWriter, log *slog.Logger, err error) {
+	// TODO
+	panic("TODO")
+}
+
+// TransferHandler handles POST /transfers {"from","to","amount"}.
+func TransferHandler(l Ledger, log *slog.Logger) http.HandlerFunc {
+	// TODO
+	panic("TODO")
+}

@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28g.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28h.
 
 ## Фазы
 
@@ -503,27 +503,23 @@
 
 ### Вт · 90 мин
 
-- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2) — [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements)
-  - Готово, когда: Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405.
-  - На сайте пока нет: Прикладная карточка: жизненный цикл handler и дедлайны запроса (неделя 5).
-- [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)
-  - Готово, когда: Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай.
-  - На сайте пока нет: Карточка: ошибки домена → HTTP-коды через errors.As.
+- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2) — [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi), [C45](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c45), [SIM10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim10), [Q36](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q36), [Q37](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q37), [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements)
+  - Готово, когда: Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405. c45 и диаграмма 10 — ответ до раскрытия; q36 и q37 — до вариантов.
+- [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3) — [W5-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr), [C46](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c46), [Q39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q39)
+  - Готово, когда: Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай. c46 — ответ до раскрытия; q39 — до вариантов.
 
 ### Ср · 90 мин
 
 - [ ] PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate) — [pgx](https://pkg.go.dev/github.com/jackc/pgx/v5)
   - Готово, когда: Миграции применяются на чистой БД; у пула заданы лимиты и таймаут подключения.
-- [ ] Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений — [Q18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
-  - Готово, когда: q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации.
-  - На сайте пока нет: Карточка: пул и ресурсы SQL, граница транзакции.
+- [ ] Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений — [C47](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47), [Q18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18), [Q19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
+  - Готово, когда: q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации. c47 — ответ до раскрытия.
 - [ ] LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор — [LC 236. Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/)
 
 ### Чт · 90 мин
 
-- [ ] log/slog в JSON, request id в контексте; конфиг из переменных окружения — [log/slog](https://pkg.go.dev/log/slog)
-  - Готово, когда: JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения.
-  - На сайте пока нет: Короткая карточка про slog.
+- [ ] log/slog в JSON, request id в контексте; конфиг из переменных окружения — [C48](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c48), [Q38](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q38), [log/slog](https://pkg.go.dev/log/slog)
+  - Готово, когда: JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения. c48 — ответ до раскрытия; q38 — до вариантов.
 - [ ] Docker Compose: postgres + сервис; healthcheck
   - Готово, когда: docker compose up поднимает сервис после healthcheck БД.
 
@@ -551,8 +547,19 @@
 
 **Материал сайта:**
 
+- [Практикум W5-1 HTTP API счетов на стандартном ServeMux](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi)
+- [C45 What happens to a request inside net/http, and which deadlines should a Go HTTP server set?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c45)
+- [SIM10 Диаграмма 10: HTTP-запрос в net/http — горутина, контекст, shutdown](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim10)
+- [Q36 http.Error без return](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q36)
+- [Q37 Маршруты Go 1.22 и 405](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q37)
+- [Практикум W5-2 Ошибки домена → HTTP-коды](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr)
+- [C46 How do you turn domain errors into HTTP status codes without leaking internals?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c46)
+- [Q39 errors.As с целью-значением](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q39)
+- [C47 What is *sql.DB, and how do you keep connections and transactions from leaking?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47)
 - [Q18 Ошибка запроса и отложенная очистка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q18)
 - [Q19 Ранний break, defer и занятые соединения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q19)
+- [C48 How do you log with log/slog in a service, and how do you keep secrets out of logs?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c48)
+- [Q38 Пароль в структурном логе](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q38)
 
 **Чего пока нет на сайте:**
 
@@ -1184,6 +1191,46 @@
 ## Образцы ответов на английском (недели 1–3)
 
 Открывать после своей попытки вслух. *Remember* — одна строка для запоминания; ниже — короткий ответ для интервью. Сверять смысл, а не заучивать дословно.
+
+**w5-tue-1** — HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* One goroutine per connection; r.Context() ends when the client leaves or the handler returns; four timeouts, zero means none.
+
+net/http serves each connection in its own goroutine and runs the handler there; Go 1.22 patterns match method and path, give 405 with Allow, and r.PathValue reads the id. I pass r.Context() to every downstream call, because it is cancelled when the client disconnects and after the handler returns. On http.Server I set ReadHeaderTimeout and IdleTimeout, usually ReadTimeout and WriteTimeout, since zero means no limit. Tests go through httptest against the real handler.
+
+</details>
+
+**w5-tue-2** — Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Domain errors in, status codes out — in one function; 500 hides the cause and logs it once.
+
+The domain returns sentinel and typed errors and doesn't import net/http. One function at the HTTP boundary maps them with errors.Is and errors.As, so wrapped errors still match: validation to 400 with the field, not found to 404, insufficient funds to 409. Anything else is a 500 with a generic body, and the real error is logged once with the request id. errors.As needs a pointer to the type that implements error.
+
+</details>
+
+**w5-wed-2** — Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* *sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.
+
+*sql.DB is a connection pool, opened once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so I defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db.
+
+</details>
+
+**w5-thu-1** — log/slog в JSON, request id в контексте; конфиг из переменных окружения
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* One JSON logger, request_id via With in middleware, LogValue for secrets, log errors once.
+
+I create one slog logger with a JSON handler at startup, and a middleware adds request_id with With and puts that logger into the request context. I log key-value attributes, not formatted strings. Types with secrets get a LogValue method, so passwords and tokens never reach the log, and each error is logged once, where it is handled.
+
+</details>
 
 **w1-mon-1** — Tour of Go: Basics — packages, variables, functions, flow control, defer
 

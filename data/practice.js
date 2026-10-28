@@ -1214,5 +1214,147 @@ const PRACTICE = [
         "code": "// Package txprof is the reference solution for practice task W4-6: the W2-4\n// txsum code after profiling. The profile showed strings.Split allocating a\n// []string for every line; three strings.Cut calls find the same fields\n// without allocating. Everything else is unchanged, and the W2-4 tests pass.\npackage txprof\n\nimport (\n\t\"bufio\"\n\t\"errors\"\n\t\"fmt\"\n\t\"io\"\n\t\"slices\"\n\t\"strconv\"\n\t\"strings\"\n)\n\nvar (\n\tErrColumns  = errors.New(\"want 3 columns: account,amount,currency\")\n\tErrAmount   = errors.New(\"amount must be a number with at most 2 decimals\")\n\tErrCurrency = errors.New(\"unknown currency\")\n)\n\nvar currencies = map[string]bool{\"EUR\": true, \"USD\": true, \"RSD\": true}\n\n// LineError says which input line failed; Unwrap lets errors.Is see the cause.\ntype LineError struct {\n\tLine int\n\tErr  error\n}\n\nfunc (e *LineError) Error() string { return fmt.Sprintf(\"line %d: %v\", e.Line, e.Err) }\nfunc (e *LineError) Unwrap() error { return e.Err }\n\ntype Key struct{ Account, Currency string }\n\n// ParseAmount turns \"12.50\", \"12.5\", \"12\" or \"-3.10\" into minor units.\nfunc ParseAmount(s string) (int64, error) {\n\twhole, frac, hasDot := strings.Cut(s, \".\")\n\tif whole == \"\" || whole == \"-\" || (hasDot && (frac == \"\" || len(frac) > 2)) {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\tfor len(frac) < 2 {\n\t\tfrac += \"0\"\n\t}\n\tif strings.HasPrefix(frac, \"-\") || strings.HasPrefix(frac, \"+\") {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\tminor, err := strconv.ParseInt(whole+frac, 10, 64)\n\tif err != nil {\n\t\treturn 0, fmt.Errorf(\"%q: %w\", s, ErrAmount)\n\t}\n\treturn minor, nil\n}\n\n// Sum adds up every valid line. Bad lines are skipped and reported, all of them,\n// so one run shows every problem in the file. Blank lines and a header are ignored.\nfunc Sum(r io.Reader) (map[Key]int64, []error) {\n\ttotals := make(map[Key]int64)\n\tvar errs []error\n\tsc := bufio.NewScanner(r)\n\tfor n := 1; sc.Scan(); n++ {\n\t\tline := strings.TrimSpace(sc.Text())\n\t\tif line == \"\" || (n == 1 && line == \"account,amount,currency\") {\n\t\t\tcontinue\n\t\t}\n\t\t// strings.Cut returns substrings of line: no []string per line, unlike strings.Split.\n\t\taccount, rest, ok1 := strings.Cut(line, \",\")\n\t\tamount, currency, ok2 := strings.Cut(rest, \",\")\n\t\tif !ok1 || !ok2 || strings.Contains(currency, \",\") {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: ErrColumns})\n\t\t\tcontinue\n\t\t}\n\t\taccount, amount, currency = strings.TrimSpace(account), strings.TrimSpace(amount), strings.TrimSpace(currency)\n\t\tif account == \"\" {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: ErrColumns})\n\t\t\tcontinue\n\t\t}\n\t\tminor, err := ParseAmount(amount)\n\t\tif err != nil {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: err})\n\t\t\tcontinue\n\t\t}\n\t\tif !currencies[currency] {\n\t\t\terrs = append(errs, &LineError{Line: n, Err: fmt.Errorf(\"%q: %w\", currency, ErrCurrency)})\n\t\t\tcontinue\n\t\t}\n\t\ttotals[Key{account, currency}] += minor\n\t}\n\tif err := sc.Err(); err != nil {\n\t\terrs = append(errs, fmt.Errorf(\"read input: %w\", err))\n\t}\n\treturn totals, errs\n}\n\n// Run is the whole CLI: totals to stdout sorted by account and currency, errors to\n// stderr, exit code 1 if any line was bad. main is just os.Exit(Run(os.Stdin, os.Stdout, os.Stderr)).\nfunc Run(stdin io.Reader, stdout, stderr io.Writer) int {\n\ttotals, errs := Sum(stdin)\n\tkeys := make([]Key, 0, len(totals))\n\tfor k := range totals {\n\t\tkeys = append(keys, k)\n\t}\n\tslices.SortFunc(keys, func(a, b Key) int {\n\t\tif c := strings.Compare(a.Account, b.Account); c != 0 {\n\t\t\treturn c\n\t\t}\n\t\treturn strings.Compare(a.Currency, b.Currency)\n\t})\n\tfor _, k := range keys {\n\t\tv := totals[k]\n\t\tsign := \"\"\n\t\tif v < 0 {\n\t\t\tsign, v = \"-\", -v\n\t\t}\n\t\tfmt.Fprintf(stdout, \"%s %s %s%d.%02d\\n\", k.Account, k.Currency, sign, v/100, v%100)\n\t}\n\tfor _, err := range errs {\n\t\tfmt.Fprintln(stderr, err)\n\t}\n\tif len(errs) > 0 {\n\t\treturn 1\n\t}\n\treturn 0\n}"
       }
     }
+  },
+  {
+    "id": "p-accountsapi",
+    "code": "W5-1",
+    "week": 5,
+    "title": "HTTP API счетов на стандартном ServeMux",
+    "titleEN": "Accounts HTTP API on ServeMux",
+    "goalRU": "Сделать маршруты POST /accounts и GET /accounts/{id} на net/http с шаблонами Go 1.22 и проверить их через httptest: 201, 404, 405, 400.",
+    "contractRU": [
+      "POST /accounts с {\"owner\": \"...\"} → 201, заголовок Location: /accounts/{id}, тело — счёт в JSON с нулевым балансом.",
+      "GET /accounts/{id} → 200 со счётом или 404 с {\"error\": \"...\"}.",
+      "Другие методы на этих путях → 405 с заголовком Allow (это делает ServeMux, если в шаблоне указан метод).",
+      "Неверный JSON, пустой owner, лишнее поле или пустое тело → 400 с {\"error\": \"...\"}; для пустого owner — ещё \"field\": \"owner\".",
+      "Тело запроса ограничено 1 МБ; все ответы — Content-Type: application/json, заголовки выставлены до WriteHeader."
+    ],
+    "contractEN": [
+      "POST /accounts with {\"owner\": \"...\"} → 201, a Location: /accounts/{id} header, and the account as JSON with a zero balance.",
+      "GET /accounts/{id} → 200 with the account, or 404 with {\"error\": \"...\"}.",
+      "Other methods on these paths → 405 with an Allow header (ServeMux does this when the pattern has a method).",
+      "Invalid JSON, an empty owner, an unknown field or an empty body → 400 with {\"error\": \"...\"}; for an empty owner also \"field\": \"owner\".",
+      "The request body is limited to 1 MB; every response is Content-Type: application/json, with headers set before WriteHeader."
+    ],
+    "planTasks": [
+      "w5-tue-1"
+    ],
+    "links": [
+      "c45",
+      "q36",
+      "q37"
+    ],
+    "refs": [
+      {
+        "t": "net/http: ServeMux patterns",
+        "u": "https://pkg.go.dev/net/http#hdr-Patterns-ServeMux"
+      },
+      {
+        "t": "net/http/httptest",
+        "u": "https://pkg.go.dev/net/http/httptest"
+      }
+    ],
+    "hints": [
+      "mux.HandleFunc(\"GET /accounts/{id}\", …) и r.PathValue(\"id\"): метод в шаблоне — и 405 с Allow ServeMux отдаёт сам.",
+      "json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)) и dec.DisallowUnknownFields(): лишнее поле вроде \"balance\" — это ошибка клиента, а не тихо проигнорированное значение.",
+      "Порядок записи ответа: сначала Header().Set, потом WriteHeader, потом тело. Заголовок после WriteHeader не отправится — тест смотрит rec.Result().Header, то есть то, что ушло клиенту.",
+      "После записи ошибки — return. Иначе handler допишет второй ответ в то же тело (q36)."
+    ],
+    "talkEN": "I use the standard ServeMux with Go 1.22 patterns: the method in the pattern gives me 405 with an Allow header for free, and PathValue reads the id. Handlers decode JSON through MaxBytesReader with unknown fields disallowed, validate, and return right after writing an error. One small writeJSON helper sets Content-Type before WriteHeader. The store is an interface, so the tests run the real handler through httptest with an in-memory fake and check status codes, headers and JSON bodies.",
+    "pitfalls": [
+      "Нет return после ошибки → два ответа в одном теле.",
+      "Content-Type после WriteHeader → клиент получает text/plain.",
+      "Шаблон без метода (\"/accounts/{id}\") → DELETE доходит до handler, а не получает 405.",
+      "Нет ограничения тела → клиент может заставить сервер читать гигабайты.",
+      "Проверять rec.Header() вместо rec.Result().Header → тест не видит, что заголовок опоздал."
+    ],
+    "followUps": [
+      "Добавь GET /accounts?owner=… с фильтром и пустым списком [] вместо null.",
+      "Оберни mux в middleware, которое ставит X-Request-ID и логирует метод, путь, код и время.",
+      "Сделай POST /accounts идемпотентным по заголовку Idempotency-Key (это тема недели 6)."
+    ],
+    "fixture": "docs/verification/fixtures/practice/accountsapi",
+    "files": {
+      "starter": {
+        "name": "accountsapi.go",
+        "code": "// Package accountsapi: practice task W5-1. Replace the TODO with your solution.\npackage accountsapi\n\nimport \"net/http\"\n\ntype Account struct {\n\tID      string `json:\"id\"`\n\tOwner   string `json:\"owner\"`\n\tBalance int64  `json:\"balance\"` // minor units\n}\n\n// Store is what the handlers need; the ledger package or a test fake implements it.\ntype Store interface {\n\tCreate(owner string) Account\n\tGet(id string) (Account, bool)\n}\n\n// NewHandler returns the routes:\n//\n//\tPOST /accounts        {\"owner\": \"...\"} → 201 + Location, the account as JSON\n//\tGET  /accounts/{id}   → 200 with the account, 404 if unknown\n//\n// Other methods on these paths must get 405. Errors are JSON: {\"error\": \"...\"}.\nfunc NewHandler(s Store) http.Handler {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "accountsapi_test.go",
+        "code": "package accountsapi\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"strings\"\n\t\"sync\"\n\t\"testing\"\n)\n\n// memStore is a small fake: enough for the handlers, no database.\ntype memStore struct {\n\tmu   sync.Mutex\n\tnext int\n\tbyID map[string]Account\n}\n\nfunc (m *memStore) Create(owner string) Account {\n\tm.mu.Lock()\n\tdefer m.mu.Unlock()\n\tif m.byID == nil {\n\t\tm.byID = map[string]Account{}\n\t}\n\tm.next++\n\ta := Account{ID: fmt.Sprint(m.next), Owner: owner}\n\tm.byID[a.ID] = a\n\treturn a\n}\n\nfunc (m *memStore) Get(id string) (Account, bool) {\n\tm.mu.Lock()\n\tdefer m.mu.Unlock()\n\ta, ok := m.byID[id]\n\treturn a, ok\n}\n\nfunc do(t *testing.T, h http.Handler, method, path, body string) *httptest.ResponseRecorder {\n\tt.Helper()\n\trec := httptest.NewRecorder()\n\th.ServeHTTP(rec, httptest.NewRequest(method, path, strings.NewReader(body)))\n\treturn rec\n}\n\nfunc decode(t *testing.T, rec *httptest.ResponseRecorder) map[string]any {\n\tt.Helper()\n\t// Result().Header is what was sent: headers set after WriteHeader are not in it.\n\tif ct := rec.Result().Header.Get(\"Content-Type\"); ct != \"application/json\" {\n\t\tt.Fatalf(\"Content-Type = %q, want application/json\", ct)\n\t}\n\tvar v map[string]any\n\tif err := json.Unmarshal(rec.Body.Bytes(), &v); err != nil {\n\t\tt.Fatalf(\"body is not JSON: %q\", rec.Body.String())\n\t}\n\treturn v\n}\n\nfunc TestCreateAndGet(t *testing.T) {\n\th := NewHandler(&memStore{})\n\trec := do(t, h, \"POST\", \"/accounts\", `{\"owner\":\"alice\"}`)\n\tif rec.Code != http.StatusCreated {\n\t\tt.Fatalf(\"POST /accounts = %d, want 201\", rec.Code)\n\t}\n\tcreated := decode(t, rec)\n\tif created[\"owner\"] != \"alice\" || created[\"id\"] == \"\" || created[\"balance\"] != 0.0 {\n\t\tt.Fatalf(\"created = %v\", created)\n\t}\n\tif loc := rec.Result().Header.Get(\"Location\"); loc != \"/accounts/\"+created[\"id\"].(string) {\n\t\tt.Fatalf(\"Location = %q\", loc)\n\t}\n\trec = do(t, h, \"GET\", \"/accounts/\"+created[\"id\"].(string), \"\")\n\tif rec.Code != http.StatusOK || decode(t, rec)[\"owner\"] != \"alice\" {\n\t\tt.Fatalf(\"GET = %d %s\", rec.Code, rec.Body)\n\t}\n}\n\nfunc TestNotFound(t *testing.T) {\n\trec := do(t, NewHandler(&memStore{}), \"GET\", \"/accounts/999\", \"\")\n\tif rec.Code != http.StatusNotFound || decode(t, rec)[\"error\"] == nil {\n\t\tt.Fatalf(\"got %d %s, want 404 with a JSON error\", rec.Code, rec.Body)\n\t}\n}\n\nfunc TestWrongMethodIs405(t *testing.T) {\n\th := NewHandler(&memStore{})\n\trec := do(t, h, \"DELETE\", \"/accounts/1\", \"\")\n\tif rec.Code != http.StatusMethodNotAllowed || !strings.Contains(rec.Result().Header.Get(\"Allow\"), \"GET\") {\n\t\tt.Fatalf(\"DELETE /accounts/1 = %d Allow=%q, want 405 with Allow: GET\", rec.Code, rec.Header().Get(\"Allow\"))\n\t}\n\tif rec := do(t, h, \"GET\", \"/accounts\", \"\"); rec.Code != http.StatusMethodNotAllowed {\n\t\tt.Fatalf(\"GET /accounts = %d, want 405\", rec.Code)\n\t}\n}\n\nfunc TestBadInput(t *testing.T) {\n\th := NewHandler(&memStore{})\n\tfor name, body := range map[string]string{\n\t\t\"not JSON\":      `owner=alice`,\n\t\t\"empty owner\":   `{\"owner\":\"  \"}`,\n\t\t\"unknown field\": `{\"owner\":\"alice\",\"balance\":1000000}`,\n\t\t\"empty body\":    ``,\n\t} {\n\t\trec := do(t, h, \"POST\", \"/accounts\", body)\n\t\tif rec.Code != http.StatusBadRequest || decode(t, rec)[\"error\"] == nil {\n\t\t\tt.Errorf(\"%s: got %d %s, want 400 with a JSON error\", name, rec.Code, rec.Body)\n\t\t}\n\t}\n\tif rec := do(t, h, \"POST\", \"/accounts\", `{\"owner\":\"\"}`); decode(t, rec)[\"field\"] != \"owner\" {\n\t\tt.Fatalf(\"an empty owner should name the field: %s\", rec.Body)\n\t}\n}\n\nfunc TestBodyIsLimited(t *testing.T) {\n\tbig := `{\"owner\":\"` + strings.Repeat(\"a\", 2<<20) + `\"}`\n\tif rec := do(t, NewHandler(&memStore{}), \"POST\", \"/accounts\", big); rec.Code != http.StatusBadRequest {\n\t\tt.Fatalf(\"a 2 MB body got %d, want 400\", rec.Code)\n\t}\n}"
+      },
+      "solution": {
+        "name": "accountsapi.go",
+        "code": "// Package accountsapi is the reference solution for practice task W5-1:\n// HTTP routes for accounts on the standard ServeMux (Go 1.22+ patterns).\npackage accountsapi\n\nimport (\n\t\"encoding/json\"\n\t\"net/http\"\n\t\"strings\"\n)\n\ntype Account struct {\n\tID      string `json:\"id\"`\n\tOwner   string `json:\"owner\"`\n\tBalance int64  `json:\"balance\"` // minor units\n}\n\n// Store is what the handlers need; the ledger package or a test fake implements it.\ntype Store interface {\n\tCreate(owner string) Account\n\tGet(id string) (Account, bool)\n}\n\n// maxBody limits request bodies; a client cannot make the server read gigabytes.\nconst maxBody = 1 << 20\n\n// NewHandler returns the routes:\n//\n//\tPOST /accounts        {\"owner\": \"...\"} → 201 + Location, the account as JSON\n//\tGET  /accounts/{id}   → 200 with the account, 404 if unknown\n//\n// Other methods on these paths get 405 from ServeMux.\nfunc NewHandler(s Store) http.Handler {\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"POST /accounts\", func(w http.ResponseWriter, r *http.Request) {\n\t\tvar in struct {\n\t\t\tOwner string `json:\"owner\"`\n\t\t}\n\t\tdec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBody))\n\t\tdec.DisallowUnknownFields()\n\t\tif err := dec.Decode(&in); err != nil {\n\t\t\twriteJSON(w, http.StatusBadRequest, map[string]string{\"error\": \"body must be JSON like {\\\"owner\\\": \\\"...\\\"}\"})\n\t\t\treturn\n\t\t}\n\t\tif strings.TrimSpace(in.Owner) == \"\" {\n\t\t\twriteJSON(w, http.StatusBadRequest, map[string]string{\"error\": \"owner must not be empty\", \"field\": \"owner\"})\n\t\t\treturn\n\t\t}\n\t\tacc := s.Create(in.Owner)\n\t\tw.Header().Set(\"Location\", \"/accounts/\"+acc.ID)\n\t\twriteJSON(w, http.StatusCreated, acc)\n\t})\n\tmux.HandleFunc(\"GET /accounts/{id}\", func(w http.ResponseWriter, r *http.Request) {\n\t\tacc, ok := s.Get(r.PathValue(\"id\"))\n\t\tif !ok {\n\t\t\twriteJSON(w, http.StatusNotFound, map[string]string{\"error\": \"account not found\"})\n\t\t\treturn\n\t\t}\n\t\twriteJSON(w, http.StatusOK, acc)\n\t})\n\treturn mux\n}\n\n// writeJSON sets the headers before the status: after WriteHeader they are ignored.\nfunc writeJSON(w http.ResponseWriter, status int, v any) {\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(status)\n\tjson.NewEncoder(w).Encode(v)\n}"
+      }
+    }
+  },
+  {
+    "id": "p-httperr",
+    "code": "W5-2",
+    "week": 5,
+    "title": "Ошибки домена → HTTP-коды",
+    "titleEN": "Domain errors to HTTP status codes",
+    "goalRU": "Перевести ошибки домена в коды ответа в одном месте: валидация — 400 с полем, «не найдено» — 404, нехватка средств — 409, остальное — 500 без деталей и с одной записью в логе.",
+    "contractRU": [
+      "Status распознаёт обёрнутые ошибки (в том числе через errors.Join): *ValidationError → 400, ErrNotFound → 404, ErrInsufficientFunds → 409, остальное → 500.",
+      "Write отвечает JSON: для 400 — {\"error\": причина, \"field\": поле}, для 404 и 409 — понятный текст.",
+      "Для 500 тело не раскрывает причину (ни текста драйвера, ни адресов), а ошибка пишется в лог ровно одной записью; ошибки клиента не логируются.",
+      "TransferHandler: неверный JSON → 400 с field \"body\", amount ≤ 0 → 400 с field \"amount\" и Ledger не вызывается; Ledger получает контекст запроса; успех → 200 {\"status\": \"ok\"}."
+    ],
+    "contractEN": [
+      "Status recognises wrapped errors (errors.Join too): *ValidationError → 400, ErrNotFound → 404, ErrInsufficientFunds → 409, anything else → 500.",
+      "Write answers with JSON: for 400, {\"error\": reason, \"field\": field}; for 404 and 409, a clear message.",
+      "For a 500 the body reveals nothing about the cause (no driver text, no addresses), and the error is logged as exactly one record; client errors are not logged.",
+      "TransferHandler: invalid JSON → 400 with field \"body\", amount ≤ 0 → 400 with field \"amount\" without calling the Ledger; the Ledger gets the request's context; success → 200 {\"status\": \"ok\"}."
+    ],
+    "planTasks": [
+      "w5-tue-2"
+    ],
+    "links": [
+      "c46",
+      "c39",
+      "q39",
+      "c48"
+    ],
+    "refs": [
+      {
+        "t": "RFC 9457: Problem Details",
+        "u": "https://www.rfc-editor.org/rfc/rfc9457"
+      }
+    ],
+    "hints": [
+      "errors.Is для sentinel-ошибок, errors.As для *ValidationError — оба проходят по всей цепочке, включая errors.Join.",
+      "Цель errors.As — указатель на тот тип, у которого метод Error: var ve *ValidationError. С var ve ValidationError будет panic (q39).",
+      "Тело 500 строй из http.StatusText(500), а не из err.Error(): в тексте ошибки драйвера бывают адреса и SQL.",
+      "Логируй в одном месте — в ветке 500 внутри Write. Ошибки клиента не требуют внимания дежурного и только засоряют лог."
+    ],
+    "talkEN": "The domain returns sentinel and typed errors and knows nothing about HTTP. One function at the boundary maps them with errors.Is and errors.As, so wrapped errors still match: validation becomes 400 with the field, not found 404, insufficient funds 409, because the request conflicts with the current balance. Anything else is a 500 with a generic body; the real error is logged once, there, with the request context, and never shown to the client. Validation that the handler can do itself, like a positive amount, happens before calling the ledger.",
+    "pitfalls": [
+      "err == ErrNotFound → после первой обёртки %w перестаёт совпадать.",
+      "err.Error() в теле 500 → наружу уходят SQL, адреса, имена таблиц.",
+      "Логировать каждую ошибку, включая 4xx → лог зашумлён, настоящие сбои теряются.",
+      "context.Background() вместо r.Context() → запрос к базе не отменится, когда клиент ушёл."
+    ],
+    "followUps": [
+      "Перейди на RFC 9457: Content-Type application/problem+json и поля type, title, status, detail.",
+      "Добавь ErrAccountClosed — сколько мест в коде пришлось изменить? Должно быть одно.",
+      "Что вернуть, если r.Context() отменён посреди перевода: 499, 503 или ничего — и почему?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/httperr",
+    "files": {
+      "starter": {
+        "name": "httperr.go",
+        "code": "// Package httperr: practice task W5-2. Replace each TODO with your solution.\npackage httperr\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"log/slog\"\n\t\"net/http\"\n)\n\nvar (\n\tErrNotFound          = errors.New(\"account not found\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\ntype ValidationError struct{ Field, Reason string }\n\nfunc (e *ValidationError) Error() string { return \"invalid \" + e.Field + \": \" + e.Reason }\n\ntype Ledger interface {\n\tTransfer(ctx context.Context, from, to string, amount int64) error\n}\n\n// Status maps an error (possibly wrapped) to an HTTP status code.\nfunc Status(err error) int {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Write sends err as JSON {\"error\": ..., \"field\": ...}; a 500 hides the cause and logs it once.\nfunc Write(w http.ResponseWriter, log *slog.Logger, err error) {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// TransferHandler handles POST /transfers {\"from\",\"to\",\"amount\"}.\nfunc TransferHandler(l Ledger, log *slog.Logger) http.HandlerFunc {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "httperr_test.go",
+        "code": "package httperr\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"encoding/json\"\n\t\"errors\"\n\t\"fmt\"\n\t\"log/slog\"\n\t\"net/http/httptest\"\n\t\"strings\"\n\t\"testing\"\n)\n\n// fakeLedger returns a prepared error and records the call.\ntype fakeLedger struct {\n\terr   error\n\tcalls int\n}\n\nfunc (f *fakeLedger) Transfer(ctx context.Context, from, to string, amount int64) error {\n\tf.calls++\n\treturn f.err\n}\n\nfunc newLog() (*slog.Logger, *bytes.Buffer) {\n\tvar buf bytes.Buffer\n\treturn slog.New(slog.NewJSONHandler(&buf, nil)), &buf\n}\n\nfunc post(t *testing.T, l Ledger, log *slog.Logger, body string) (int, map[string]string) {\n\tt.Helper()\n\trec := httptest.NewRecorder()\n\tTransferHandler(l, log).ServeHTTP(rec, httptest.NewRequest(\"POST\", \"/transfers\", strings.NewReader(body)))\n\t// Result().Header is what was sent: headers set after WriteHeader are not in it.\n\tif ct := rec.Result().Header.Get(\"Content-Type\"); ct != \"application/json\" {\n\t\tt.Fatalf(\"Content-Type = %q\", ct)\n\t}\n\tvar out map[string]string\n\tif err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil {\n\t\tt.Fatalf(\"body is not JSON: %q\", rec.Body.String())\n\t}\n\treturn rec.Code, out\n}\n\nfunc TestStatusMapsWrappedErrors(t *testing.T) {\n\tfor _, tt := range []struct {\n\t\terr  error\n\t\twant int\n\t}{\n\t\t{fmt.Errorf(\"transfer: %w\", &ValidationError{\"amount\", \"must be positive\"}), 400},\n\t\t{fmt.Errorf(\"transfer A→B: %w\", ErrNotFound), 404},\n\t\t{fmt.Errorf(\"transfer A→B: %w\", ErrInsufficientFunds), 409},\n\t\t{errors.Join(errors.New(\"audit\"), fmt.Errorf(\"debit: %w\", ErrInsufficientFunds)), 409},\n\t\t{errors.New(\"pq: connection refused\"), 500},\n\t} {\n\t\tif got := Status(tt.err); got != tt.want {\n\t\t\tt.Errorf(\"Status(%v) = %d, want %d\", tt.err, got, tt.want)\n\t\t}\n\t}\n}\n\nfunc TestTransferOK(t *testing.T) {\n\tlog, buf := newLog()\n\tcode, body := post(t, &fakeLedger{}, log, `{\"from\":\"a\",\"to\":\"b\",\"amount\":500}`)\n\tif code != 200 || body[\"status\"] != \"ok\" || buf.Len() != 0 {\n\t\tt.Fatalf(\"got %d %v, log %q\", code, body, buf)\n\t}\n}\n\nfunc TestClientErrorsAreExplainedAndNotLogged(t *testing.T) {\n\tfor name, tt := range map[string]struct {\n\t\tledgerErr error\n\t\tbody      string\n\t\tcode      int\n\t\tfield     string\n\t}{\n\t\t\"bad JSON\":           {nil, `{`, 400, \"body\"},\n\t\t\"zero amount\":        {nil, `{\"from\":\"a\",\"to\":\"b\",\"amount\":0}`, 400, \"amount\"},\n\t\t\"unknown account\":    {fmt.Errorf(\"transfer: %w\", ErrNotFound), `{\"from\":\"a\",\"to\":\"x\",\"amount\":5}`, 404, \"\"},\n\t\t\"insufficient funds\": {fmt.Errorf(\"transfer: %w\", ErrInsufficientFunds), `{\"from\":\"a\",\"to\":\"b\",\"amount\":5}`, 409, \"\"},\n\t} {\n\t\tlog, buf := newLog()\n\t\tcode, body := post(t, &fakeLedger{err: tt.ledgerErr}, log, tt.body)\n\t\tif code != tt.code || body[\"error\"] == \"\" || body[\"field\"] != tt.field {\n\t\t\tt.Errorf(\"%s: got %d %v, want %d with field %q\", name, code, body, tt.code, tt.field)\n\t\t}\n\t\tif buf.Len() != 0 {\n\t\t\tt.Errorf(\"%s: a client error was logged: %s\", name, buf)\n\t\t}\n\t}\n}\n\nfunc TestInvalidAmountDoesNotReachTheLedger(t *testing.T) {\n\tlog, _ := newLog()\n\tl := &fakeLedger{}\n\tpost(t, l, log, `{\"from\":\"a\",\"to\":\"b\",\"amount\":-5}`)\n\tif l.calls != 0 {\n\t\tt.Fatal(\"the ledger was called with an invalid amount\")\n\t}\n}\n\nfunc TestInternalErrorIsHiddenAndLoggedOnce(t *testing.T) {\n\tlog, buf := newLog()\n\tcode, body := post(t, &fakeLedger{err: errors.New(\"pq: connection refused to 10.0.3.7\")}, log, `{\"from\":\"a\",\"to\":\"b\",\"amount\":5}`)\n\tif code != 500 {\n\t\tt.Fatalf(\"code = %d, want 500\", code)\n\t}\n\tif strings.Contains(body[\"error\"], \"pq\") || strings.Contains(body[\"error\"], \"10.0.3.7\") {\n\t\tt.Fatalf(\"the 500 body leaks the cause: %v\", body)\n\t}\n\tif n := strings.Count(buf.String(), \"\\n\"); n != 1 || !strings.Contains(buf.String(), \"10.0.3.7\") {\n\t\tt.Fatalf(\"want exactly one log record with the cause, got %d:\\n%s\", n, buf)\n\t}\n}\n\nfunc TestTransferUsesTheRequestContext(t *testing.T) {\n\tlog, _ := newLog()\n\tvar seen context.Context\n\tl := ledgerFunc(func(ctx context.Context) error { seen = ctx; return nil })\n\tctx, cancel := context.WithCancel(context.Background())\n\tcancel()\n\trec := httptest.NewRecorder()\n\treq := httptest.NewRequest(\"POST\", \"/transfers\", strings.NewReader(`{\"from\":\"a\",\"to\":\"b\",\"amount\":5}`)).WithContext(ctx)\n\tTransferHandler(l, log).ServeHTTP(rec, req)\n\tif seen == nil || seen.Err() == nil {\n\t\tt.Fatal(\"the ledger did not get the request's context\")\n\t}\n}\n\ntype ledgerFunc func(ctx context.Context) error\n\nfunc (f ledgerFunc) Transfer(ctx context.Context, from, to string, amount int64) error { return f(ctx) }"
+      },
+      "solution": {
+        "name": "httperr.go",
+        "code": "// Package httperr is the reference solution for practice task W5-2: domain\n// errors become HTTP responses in one place, without leaking internals.\npackage httperr\n\nimport (\n\t\"context\"\n\t\"encoding/json\"\n\t\"errors\"\n\t\"log/slog\"\n\t\"net/http\"\n)\n\n// Domain errors. In the project they live in the ledger package, which does\n// not import net/http; the mapping below is the only place that knows both.\nvar (\n\tErrNotFound          = errors.New(\"account not found\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\ntype ValidationError struct{ Field, Reason string }\n\nfunc (e *ValidationError) Error() string { return \"invalid \" + e.Field + \": \" + e.Reason }\n\n// Ledger is the domain operation the handler calls.\ntype Ledger interface {\n\tTransfer(ctx context.Context, from, to string, amount int64) error\n}\n\n// Status maps an error to an HTTP status code. Insufficient funds is 409\n// Conflict: the request is valid but conflicts with the current balance.\nfunc Status(err error) int {\n\tvar ve *ValidationError\n\tswitch {\n\tcase errors.As(err, &ve):\n\t\treturn http.StatusBadRequest\n\tcase errors.Is(err, ErrNotFound):\n\t\treturn http.StatusNotFound\n\tcase errors.Is(err, ErrInsufficientFunds):\n\t\treturn http.StatusConflict\n\tdefault:\n\t\treturn http.StatusInternalServerError\n\t}\n}\n\n// Write sends err as JSON. Client errors say what was wrong; a 500 says\n// nothing about the cause, and only a 500 is logged, once, with the details.\nfunc Write(w http.ResponseWriter, log *slog.Logger, err error) {\n\tstatus := Status(err)\n\tbody := map[string]string{\"error\": http.StatusText(status)}\n\tvar ve *ValidationError\n\tswitch {\n\tcase errors.As(err, &ve):\n\t\tbody = map[string]string{\"error\": ve.Reason, \"field\": ve.Field}\n\tcase status == http.StatusNotFound:\n\t\tbody[\"error\"] = ErrNotFound.Error()\n\tcase status == http.StatusConflict:\n\t\tbody[\"error\"] = ErrInsufficientFunds.Error()\n\tdefault:\n\t\tlog.Error(\"request failed\", \"err\", err)\n\t}\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(status)\n\tjson.NewEncoder(w).Encode(body)\n}\n\n// TransferHandler handles POST /transfers {\"from\",\"to\",\"amount\"}.\nfunc TransferHandler(l Ledger, log *slog.Logger) http.HandlerFunc {\n\treturn func(w http.ResponseWriter, r *http.Request) {\n\t\tvar in struct {\n\t\t\tFrom   string `json:\"from\"`\n\t\t\tTo     string `json:\"to\"`\n\t\t\tAmount int64  `json:\"amount\"`\n\t\t}\n\t\tif err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&in); err != nil {\n\t\t\tWrite(w, log, &ValidationError{Field: \"body\", Reason: \"must be JSON like {\\\"from\\\", \\\"to\\\", \\\"amount\\\"}\"})\n\t\t\treturn\n\t\t}\n\t\tif in.Amount <= 0 {\n\t\t\tWrite(w, log, &ValidationError{Field: \"amount\", Reason: \"must be positive\"})\n\t\t\treturn\n\t\t}\n\t\tif err := l.Transfer(r.Context(), in.From, in.To, in.Amount); err != nil {\n\t\t\tWrite(w, log, err)\n\t\t\treturn\n\t\t}\n\t\tw.Header().Set(\"Content-Type\", \"application/json\")\n\t\tjson.NewEncoder(w).Encode(map[string]string{\"status\": \"ok\"})\n\t}\n}"
+      }
+    }
   }
 ];
