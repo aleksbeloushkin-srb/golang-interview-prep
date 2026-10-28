@@ -242,8 +242,20 @@ function planTaskItem(task, week) {
     ]),
     links.length ? planEl("nav", { className: "related-links plan-links", "aria-label": "Материалы к задаче" }, links) : null,
     planAcceptBlock(task),
+    planModelBlock(task),
     lcNode,
     task.talk ? planTalkBlock(task.talk) : null
+  ]);
+}
+
+// Образец ответа на английском: свернут, открывать после своей попытки вслух.
+function planModelBlock(task) {
+  const model = PLAN.modelAnswers && PLAN.modelAnswers[task.id];
+  if (!model) return null;
+  return planEl("details", { className: "translated-answer plan-model" }, [
+    planEl("summary", { text: "Model answer (EN) — открыть после своей попытки" }),
+    planEl("p", { lang: "en", className: "plan-model-hook" }, [planEl("strong", { text: "Remember: " }), model.hook]),
+    planEl("p", { lang: "en", text: model.en })
   ]);
 }
 
@@ -375,6 +387,76 @@ function planTodayBanner(today) {
   ]);
 }
 
+// Понедельник текущей недели и сдвиг даты старта на целые недели.
+function planThisMonday() {
+  return planMondayOf(planToIsoDate(new Date()));
+}
+
+function planAddWeeks(iso, weeks) {
+  const date = planParseDate(iso);
+  date.setDate(date.getDate() + weeks * 7);
+  return planToIsoDate(date);
+}
+
+function planFullDate(iso) {
+  return `${planFormatDate(planParseDate(iso))}.${iso.slice(0, 4)}`;
+}
+
+// Новый старт сохраняется, отметки задач не трогаются; в сообщении — прежняя дата, чтобы её можно было вернуть.
+function planSetStart(iso, reason) {
+  const previous = planState.saved.start;
+  if (iso === previous) {
+    planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;
+  } else {
+    planState.saved.start = iso;
+    planSave();
+    planState.startNote = `${reason} Неделя 1 теперь с ${planFullDate(iso)} (было ${planFullDate(previous)}). Отметки задач не изменились.`;
+  }
+  planRerender();
+  const note = document.getElementById("plan-start-note");
+  if (note) note.focus({ preventScroll: true });
+}
+
+// Календарь: «я начал», сдвиг на неделю, «сейчас я на неделе N», сброс. Неделя всегда с понедельника.
+function planCalendar(today) {
+  const start = planState.saved.start;
+  const weekNow = today.weekNumber || null;
+  const status = today.before ? `до старта ${today.daysLeft} дн.` : today.after ? "13 недель позади" : `сейчас неделя ${weekNow}`;
+
+  const button = (text, onClick, title) => {
+    const node = planEl("button", { type: "button", className: "btn btn-sm", text, title });
+    node.addEventListener("click", onClick);
+    return node;
+  };
+
+  const select = planEl("select", { id: "plan-current-week" }, [
+    planEl("option", { value: "", text: weekNow ? `неделя ${weekNow}` : "—" }),
+    ...PLAN.weeks.map((w, i) => planEl("option", { value: String(i + 1), text: `${i + 1}. ${w.title}` }))
+  ]);
+  select.addEventListener("change", () => {
+    const n = Number(select.value);
+    if (!n) return;
+    planSetStart(planAddWeeks(planThisMonday(), -(n - 1)), `Эта неделя — неделя ${n}.`);
+  });
+
+  return planEl("section", { className: "plan-calendar", "aria-label": "Календарь плана" }, [
+    planEl("p", { className: "plan-calendar-status" }, [
+      planEl("strong", { text: "Календарь: " }),
+      `неделя 1 с понедельника ${planFullDate(start)} · ${status}`
+    ]),
+    planEl("div", { className: "plan-settings-row" }, [
+      button("Я начал на этой неделе", () => planSetStart(planThisMonday(), "Старт — эта неделя."), "Неделя 1 = текущая неделя"),
+      button("← План на неделю раньше", () => planSetStart(planAddWeeks(start, -1), "План сдвинут на неделю раньше."), "Текущий номер недели увеличится на 1"),
+      button("План на неделю позже →", () => planSetStart(planAddWeeks(start, 1), "План сдвинут на неделю позже."), "Пауза: текущий номер недели уменьшится на 1"),
+      button("Сбросить дату", () => planSetStart(PLAN.defaultStart, "Дата старта сброшена."), `Вернуть ${planFullDate(PLAN.defaultStart)}`)
+    ]),
+    planEl("div", { className: "plan-settings-row" }, [
+      planEl("label", { for: "plan-current-week", text: "Сейчас я на неделе" }), select
+    ]),
+    planState.startNote ? planEl("p", { id: "plan-start-note", className: "plan-start-note", role: "status", tabindex: "-1", text: planState.startNote }) : null
+  ]);
+}
+
 function planControls() {
   const startInput = planEl("input", { type: "date", id: "plan-start", value: planState.saved.start });
   startInput.addEventListener("change", () => {
@@ -384,11 +466,7 @@ function planControls() {
       return;
     }
     const monday = planMondayOf(startInput.value);
-    planState.startNote = monday === startInput.value ? "" :
-      `Неделя плана начинается в понедельник: старт перенесён на ${planFormatDate(planParseDate(monday))}.${monday.slice(0, 4)}.`;
-    planState.saved.start = monday;
-    planSave();
-    planRerender();
+    planSetStart(monday, monday === startInput.value ? "Дата старта выбрана." : "Неделя плана начинается в понедельник: дата перенесена на понедельник.");
   });
 
   const exportButton = planEl("button", { type: "button", className: "btn btn-sm", text: "Скачать отметки плана" });
@@ -448,7 +526,6 @@ function planControls() {
     planEl("div", { className: "plan-settings-row" }, [
       planEl("label", { for: "plan-start", text: "Дата старта (понедельник недели 1)" }), startInput
     ]),
-    planState.startNote ? planEl("p", { className: "plan-start-note", role: "status", text: planState.startNote }) : null,
     planEl("p", { className: "muted-text", text: "Файл содержит только отметки плана; отметки карточек в него не входят." }),
     planEl("div", { className: "plan-settings-row" }, [
       exportButton,
@@ -508,6 +585,7 @@ function renderPlan(weekId, dayKey) {
         planEl("div", { className: "progress-bar-wrap" }, planEl("div", { id: "plan-overall-fill", className: "progress-bar-fill" }))
       ]),
       planTodayBanner(today),
+      planCalendar(today),
       planEl("p", { className: "muted-text", text: "Галочка значит «сделано по плану», а не «вспомнил без подсказки». Проверка памяти — в карточках и quiz." }),
       chips,
       planControls()
@@ -563,6 +641,7 @@ function handlePlanRoute() {
   const { weekId, dayKey } = route;
   const previousWeek = document.getElementById("plan-week-title");
   const switchingWeek = previousWeek && weekId && !previousWeek.textContent.startsWith(`Неделя ${PLAN.weeks.findIndex(w => w.id === weekId) + 1}.`);
+  planState.startNote = ""; // сообщение о смене даты показывается один раз, до перехода
   renderPlan(weekId, dayKey);
   document.title = "План 13 недель — Go Runtime Interview Wiki";
   if (switchingWeek && !dayKey) {

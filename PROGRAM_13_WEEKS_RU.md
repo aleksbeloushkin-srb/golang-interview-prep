@@ -6,9 +6,11 @@
 
 Пометки: *(по желанию)* — не входит в обязательный объём недели; *(на редакции)* — у материала сайта нет списка источников (сейчас таких нет). Опорные английские тексты — редакционные наброски, по рубрике не проверены.
 
+Дату старта можно менять на сайте: «Я начал на этой неделе», сдвиг на неделю, «Сейчас я на неделе N», сброс; неделя всегда начинается в понедельник. Даты ниже — для старта по умолчанию.
+
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-27.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-27b.
 
 ## Фазы
 
@@ -1151,6 +1153,340 @@
 ### Why Go
 
 - **Approach:** I've built payment systems on the JVM for years. I'm moving to Go because I value its simplicity and explicitness — errors as values, a small language, fast builds — and its concurrency model fits I/O-heavy backend services. Many fintech and platform teams in Europe build in Go, and I've been practicing on a ledger service with the same problems I solve at work.
+
+## Образцы ответов на английском (недели 1–3)
+
+Открывать после своей попытки вслух. *Remember* — одна строка для запоминания; ниже — короткий ответ для интервью. Сверять смысл, а не заучивать дословно.
+
+**w1-mon-1** — Tour of Go: Basics — packages, variables, functions, flow control, defer
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* var gives the zero value; := declares and infers; defer runs LIFO.
+
+var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs.
+
+</details>
+
+**w1-tue-1** — Tour: pointers, structs, arrays, slices, maps, function values, closures
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* A closure captures the variable, not a copy of its value.
+
+A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, each loop iteration has its own loop variable, so closures created in a loop no longer share one variable.
+
+</details>
+
+**w1-tue-3** — W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Money is integer minor units plus a currency, never float64.
+
+I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits units and cents: 1250 becomes "12.50 EUR" and 5 becomes "0.05 EUR". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100.
+
+</details>
+
+**w1-wed-1** — Tour: methods, interfaces, type assertions, type switches, Stringer, errors
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* A type switch branches on the dynamic type inside an interface.
+
+A type switch inspects the dynamic type stored in an interface value and runs the matching case, with the variable already converted to that type. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form.
+
+</details>
+
+**w1-wed-2** — Сайт: интерфейсы и receivers — только короткий ответ и «как работает»
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Interface = type + value; nil only if both are nil. T has value methods, *T has both.
+
+An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. The method set of T contains methods with value receivers; the method set of *T contains both value and pointer receivers. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable variable is only shorthand for (&v).Notify().
+
+</details>
+
+**w1-wed-3** — W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Wrap with %w; Is compares, As extracts.
+
+I wrap errors with fmt.Errorf("withdraw: %w", err) to add context while keeping the cause. errors.Is walks the chain and compares with a sentinel such as ErrInsufficientFunds; errors.As finds the first error of the target type, such as *ValidationError, and lets me read its fields. A test should check both after one and after two levels of wrapping.
+
+</details>
+
+**w1-thu-1** — Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Sentinel for a condition, typed error for data; %v breaks the chain.
+
+I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With %w the cause stays in the chain; with %v it becomes plain text, so errors.Is and errors.As stop matching. errors.Join, since Go 1.20, combines several errors, and Is and As check each of them.
+
+</details>
+
+**w1-thu-2** — defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Defer arguments are evaluated at once; deferred closures can change named results.
+
+Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
+
+</details>
+
+**w1-thu-4** — W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* recover works only in a deferred call of the panicking goroutine.
+
+recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
+
+</details>
+
+**w1-sat-1** — W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Service lacks pointer-receiver methods in its method set; &Service{} has them.
+
+var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface holds a copy of the value that is not addressable, so a pointer method could not modify the caller's value.
+
+</details>
+
+**w1-sat-2** — Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Every type has a usable zero value; nil map writes panic; nil channels block.
+
+Every type has a zero value: 0, "", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
+
+</details>
+
+**w2-mon-1** — Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* A slice is pointer, len, cap over a shared array.
+
+A slice is a descriptor with a pointer, a length and a capacity over an underlying array. Re-slicing shares that array, so a write through one slice is visible through the other. append writes in place while capacity allows and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a, so a later append cannot overwrite the original; copy or slices.Clone gives an independent slice.
+
+</details>
+
+**w2-mon-2** — Ловушки aliasing и удержания памяти — сначала ответ без вариантов
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Shared backing array plus spare capacity is the bug.
+
+In both tasks the defect is that two slices share one backing array and append still has spare capacity, so it overwrites data the caller can see. The fix is either an independent copy or a full slice expression that limits capacity, so append must allocate.
+
+</details>
+
+**w2-tue-1** — Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Map order is unspecified; reading nil is fine, writing nil panics.
+
+Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Concurrent writes need synchronization; the runtime may detect them and crash. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
+
+</details>
+
+**w2-tue-3** — Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* len counts bytes; range decodes runes.
+
+A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count characters I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character.
+
+</details>
+
+**w2-tue-4** — W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Removing in place changes the caller's array; copy first for independence.
+
+append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller's slice sees the change. slices.Delete also modifies the array and, since Go 1.22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices.Clone or build a new slice.
+
+</details>
+
+**w2-wed-1** — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Set[T comparable] because map keys must be comparable.
+
+A generic Set[T comparable] is a map[T]struct{} with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys.
+
+</details>
+
+**w2-wed-2** — W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Generics for same algorithm over types; interfaces for different behaviour.
+
+I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice.
+
+</details>
+
+**w2-thu-1** — Модули, пакеты, internal/, раскладка cmd/ + internal/
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Module = versioned set of packages; internal/ limits importers.
+
+A module is a versioned collection of packages defined by go.mod; a package is one directory compiled together. Code under internal/ can be imported only by packages rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule.
+
+</details>
+
+**w2-thu-2** — Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.
+
+Table-driven tests list named cases and run each in t.Run, so a failure shows the case name and one case can be run with -run. t.Helper marks a helper so failures point to the caller's line. t.Parallel runs a test alongside others, so I use it only when cases don't share mutable data. CI runs go test -race.
+
+</details>
+
+**w2-sat-2** — W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Validate each line, report all errors, exit non-zero on failure.
+
+txsum reads CSV lines, validates every field and sums amounts per currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
+
+</details>
+
+**w3-mon-1** — Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Data race: unsynchronized access with a write. Race condition: timing-dependent logic.
+
+A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done under two separate locks.
+
+</details>
+
+**w3-tue-1** — Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* nil blocks; closed: send panics, receive drains then returns zero, false.
+
+Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
+
+</details>
+
+**w3-tue-2** — W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.
+
+N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancellation or a consumer that stops reading cannot leave goroutines blocked.
+
+</details>
+
+**w3-tue-3** — W3-2 Pipeline generator → square → sink с остановкой через context
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Each stage owns and closes its output; every send selects on ctx.Done.
+
+Each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
+
+</details>
+
+**w3-wed-1** — select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Random among ready cases; checking ctx first is not priority.
+
+select waits for one of several channel operations; if several are ready, it picks one pseudo-randomly. default makes it non-blocking. Checking ctx.Err() before the select doesn't give cancellation priority, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen.
+
+</details>
+
+**w3-wed-2** — W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* One forwarder per input; close output after all forwarders finish.
+
+Fan-in starts one goroutine per input that forwards values to a shared output. A WaitGroup tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and an empty list of inputs closes the output immediately.
+
+</details>
+
+**w3-thu-1** — sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Atomics protect one variable; invariants across fields need a mutex.
+
+Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as checking a balance and then updating it. For that I hold one Mutex around the check and the update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
+
+</details>
+
+**w3-mon-2** — Go blog: Pipelines and cancellation
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Close outputs when done; a done channel or ctx stops every stage.
+
+A pipeline is a series of stages connected by channels; each stage receives from upstream, processes and sends downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them.
+
+</details>
+
+**w3-thu-3** — Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.
+
+Calling Done on a copy of a WaitGroup leaves the original counter unchanged, so Wait blocks; pass *WaitGroup, or use wg.Go in Go 1.25+. Locking a Mutex again from the code that already holds it deadlocks, because Go mutexes are not reentrant. A check under RLock is stale after RUnlock, so check-then-insert must recheck under Lock; that is a logic race even without a data race. Returning a pointer from a protected map lets callers read or change the value after unlock, so I copy the value while holding the lock.
+
+</details>
+
+**w3-sat-1** — Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* For every goroutine: who starts it, who stops it, how it ends.
+
+For each goroutine I can name its owner and its exit path: it returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a WaitGroup or errgroup. If I can't name the exit path, the goroutine can leak. go test -race finds data races in the paths the tests run, not deadlocks or logic errors.
+
+</details>
+
+**w3-sat-4** — Проговор worker pool и «channel vs mutex» по-английски, записать
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Channels transfer ownership; mutexes protect shared state.
+
+I use channels when work or data moves between goroutines, so ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. The choice is about clarity of ownership; I measure before claiming either is faster.
+
+</details>
+
+**w3-thu-2** — W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Same result three ways; choose by clarity and measured contention; never leak internal state.
+
+A counter with a Mutex, with atomic.Int64 and with a single owner goroutine gives the same result under -race; I choose by clarity and measured contention, not by a general rule. A cache guarded by RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead.
+
+</details>
 
 ## «Что выведет код» (неделя 2)
 

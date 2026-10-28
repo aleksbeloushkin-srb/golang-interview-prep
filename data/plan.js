@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-27",
+  revision: "2026-10-27b",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -1119,6 +1119,146 @@ const PLAN = {
     "w5-thu-2": { accept: "docker compose up поднимает сервис после healthcheck БД." },
     "w5-sat-1": { accept: "Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится." },
     "w5-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." }
+  },
+
+  // ─────────────── ОБРАЗЦЫ ОТВЕТОВ НА АНГЛИЙСКОМ (НЕДЕЛИ 1–3) ───────────────
+  // hook — одна строка для запоминания; en — короткий ответ для интервью.
+  // Открывать после своей попытки вслух; сверять смысл, а не заучивать дословно.
+  modelAnswers: {
+    "w1-mon-1": {
+      hook: "var gives the zero value; := declares and infers; defer runs LIFO.",
+      en: "var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs."
+    },
+    "w1-tue-1": {
+      hook: "A closure captures the variable, not a copy of its value.",
+      en: "A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, each loop iteration has its own loop variable, so closures created in a loop no longer share one variable."
+    },
+    "w1-tue-3": {
+      hook: "Money is integer minor units plus a currency, never float64.",
+      en: "I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits units and cents: 1250 becomes \"12.50 EUR\" and 5 becomes \"0.05 EUR\". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100."
+    },
+    "w1-wed-1": {
+      hook: "A type switch branches on the dynamic type inside an interface.",
+      en: "A type switch inspects the dynamic type stored in an interface value and runs the matching case, with the variable already converted to that type. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
+    },
+    "w1-wed-2": {
+      hook: "Interface = type + value; nil only if both are nil. T has value methods, *T has both.",
+      en: "An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. The method set of T contains methods with value receivers; the method set of *T contains both value and pointer receivers. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable variable is only shorthand for (&v).Notify()."
+    },
+    "w1-wed-3": {
+      hook: "Wrap with %w; Is compares, As extracts.",
+      en: "I wrap errors with fmt.Errorf(\"withdraw: %w\", err) to add context while keeping the cause. errors.Is walks the chain and compares with a sentinel such as ErrInsufficientFunds; errors.As finds the first error of the target type, such as *ValidationError, and lets me read its fields. A test should check both after one and after two levels of wrapping."
+    },
+    "w1-thu-1": {
+      hook: "Sentinel for a condition, typed error for data; %v breaks the chain.",
+      en: "I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With %w the cause stays in the chain; with %v it becomes plain text, so errors.Is and errors.As stop matching. errors.Join, since Go 1.20, combines several errors, and Is and As check each of them."
+    },
+    "w1-thu-2": {
+      hook: "Defer arguments are evaluated at once; deferred closures can change named results.",
+      en: "Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
+    },
+    "w1-thu-4": {
+      hook: "recover works only in a deferred call of the panicking goroutine.",
+      en: "recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
+    },
+    "w1-sat-1": {
+      hook: "Service lacks pointer-receiver methods in its method set; &Service{} has them.",
+      en: "var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface holds a copy of the value that is not addressable, so a pointer method could not modify the caller's value."
+    },
+    "w1-sat-2": {
+      hook: "Every type has a usable zero value; nil map writes panic; nil channels block.",
+      en: "Every type has a zero value: 0, \"\", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
+    },
+
+    "w2-mon-1": {
+      hook: "A slice is pointer, len, cap over a shared array.",
+      en: "A slice is a descriptor with a pointer, a length and a capacity over an underlying array. Re-slicing shares that array, so a write through one slice is visible through the other. append writes in place while capacity allows and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a, so a later append cannot overwrite the original; copy or slices.Clone gives an independent slice."
+    },
+    "w2-mon-2": {
+      hook: "Shared backing array plus spare capacity is the bug.",
+      en: "In both tasks the defect is that two slices share one backing array and append still has spare capacity, so it overwrites data the caller can see. The fix is either an independent copy or a full slice expression that limits capacity, so append must allocate."
+    },
+    "w2-tue-1": {
+      hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
+      en: "Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Concurrent writes need synchronization; the runtime may detect them and crash. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
+    },
+    "w2-tue-3": {
+      hook: "len counts bytes; range decodes runes.",
+      en: "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count characters I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character."
+    },
+    "w2-tue-4": {
+      hook: "Removing in place changes the caller's array; copy first for independence.",
+      en: "append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller's slice sees the change. slices.Delete also modifies the array and, since Go 1.22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices.Clone or build a new slice."
+    },
+    "w2-wed-1": {
+      hook: "Set[T comparable] because map keys must be comparable.",
+      en: "A generic Set[T comparable] is a map[T]struct{} with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys."
+    },
+    "w2-wed-2": {
+      hook: "Generics for same algorithm over types; interfaces for different behaviour.",
+      en: "I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice."
+    },
+    "w2-thu-1": {
+      hook: "Module = versioned set of packages; internal/ limits importers.",
+      en: "A module is a versioned collection of packages defined by go.mod; a package is one directory compiled together. Code under internal/ can be imported only by packages rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
+    },
+    "w2-thu-2": {
+      hook: "Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.",
+      en: "Table-driven tests list named cases and run each in t.Run, so a failure shows the case name and one case can be run with -run. t.Helper marks a helper so failures point to the caller's line. t.Parallel runs a test alongside others, so I use it only when cases don't share mutable data. CI runs go test -race."
+    },
+    "w2-sat-2": {
+      hook: "Validate each line, report all errors, exit non-zero on failure.",
+      en: "txsum reads CSV lines, validates every field and sums amounts per currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
+    },
+
+    "w3-mon-1": {
+      hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
+      en: "A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done under two separate locks."
+    },
+    "w3-tue-1": {
+      hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
+      en: "Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
+    },
+    "w3-tue-2": {
+      hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
+      en: "N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancellation or a consumer that stops reading cannot leave goroutines blocked."
+    },
+    "w3-tue-3": {
+      hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
+      en: "Each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
+    },
+    "w3-wed-1": {
+      hook: "Random among ready cases; checking ctx first is not priority.",
+      en: "select waits for one of several channel operations; if several are ready, it picks one pseudo-randomly. default makes it non-blocking. Checking ctx.Err() before the select doesn't give cancellation priority, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen."
+    },
+    "w3-wed-2": {
+      hook: "One forwarder per input; close output after all forwarders finish.",
+      en: "Fan-in starts one goroutine per input that forwards values to a shared output. A WaitGroup tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and an empty list of inputs closes the output immediately."
+    },
+    "w3-thu-1": {
+      hook: "Atomics protect one variable; invariants across fields need a mutex.",
+      en: "Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as checking a balance and then updating it. For that I hold one Mutex around the check and the update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
+    },
+    "w3-mon-2": {
+      hook: "Close outputs when done; a done channel or ctx stops every stage.",
+      en: "A pipeline is a series of stages connected by channels; each stage receives from upstream, processes and sends downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
+    },
+    "w3-thu-3": {
+      hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",
+      en: "Calling Done on a copy of a WaitGroup leaves the original counter unchanged, so Wait blocks; pass *WaitGroup, or use wg.Go in Go 1.25+. Locking a Mutex again from the code that already holds it deadlocks, because Go mutexes are not reentrant. A check under RLock is stale after RUnlock, so check-then-insert must recheck under Lock; that is a logic race even without a data race. Returning a pointer from a protected map lets callers read or change the value after unlock, so I copy the value while holding the lock."
+    },
+    "w3-sat-1": {
+      hook: "For every goroutine: who starts it, who stops it, how it ends.",
+      en: "For each goroutine I can name its owner and its exit path: it returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a WaitGroup or errgroup. If I can't name the exit path, the goroutine can leak. go test -race finds data races in the paths the tests run, not deadlocks or logic errors."
+    },
+    "w3-sat-4": {
+      hook: "Channels transfer ownership; mutexes protect shared state.",
+      en: "I use channels when work or data moves between goroutines, so ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. The choice is about clarity of ownership; I measure before claiming either is faster."
+    },
+    "w3-thu-2": {
+      hook: "Same result three ways; choose by clarity and measured contention; never leak internal state.",
+      en: "A counter with a Mutex, with atomic.Int64 and with a single owner goroutine gives the same result under -race; I choose by clarity and measured contention, not by a general rule. A cache guarded by RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
+    }
   },
 
   // ─────────────────────── «ЧТО ВЫВЕДЕТ КОД» ───────────────────────

@@ -73,6 +73,8 @@ const planFailures = [
   ['acceptance for unknown task', p => { p.acceptance['w99-mon-1'] = { accept: 'x' }; }, /unknown task ID w99-mon-1/],
   ['empty acceptance text', p => { p.acceptance[firstTask(p).id] = { accept: ' ' }; }, /missing accept/],
   ['missing weeks', p => { delete p.weeks; }, /PLAN.weeks/],
+  ['model answer for unknown task', p => { p.modelAnswers['w99-mon-1'] = { hook: 'x', en: 'y' }; }, /modelAnswers: unknown task ID w99-mon-1/],
+  ['model answer without English text', p => { p.modelAnswers[Object.keys(p.modelAnswers)[0]].en = ''; }, /missing\/empty en/],
 ];
 for (const [name, mutate, expected] of planFailures) {
   test('plan: rejects ' + name, () => {
