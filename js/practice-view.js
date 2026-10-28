@@ -91,23 +91,140 @@ function practiceList(items, attrs) {
   return practiceEl("ul", attrs, items.map(item => practiceEl("li", { text: item })));
 }
 
+// Решённые на сервере задачи: { "p-money": { passedAt } } в localStorage (уходит в синхронизацию).
+const PRACTICE_SOLVED_KEY = "go_prep_practice_v1";
+const PRACTICE_DRAFT_PREFIX = "go_prep_practice_draft_"; // sessionStorage: переживает переход на вход
+
+function practiceSolved() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PRACTICE_SOLVED_KEY) || "{}");
+    return v && typeof v === "object" ? v : {};
+  } catch {
+    return {};
+  }
+}
+
+function practiceMarkSolved(taskId) {
+  try {
+    const all = practiceSolved();
+    all[taskId] = { passedAt: new Date().toISOString() };
+    localStorage.setItem(PRACTICE_SOLVED_KEY, JSON.stringify(all));
+  } catch {
+    // Без хранилища отметка не сохранится; результат проверки всё равно показан.
+  }
+}
+
+function practiceDraft(taskId, value) {
+  try {
+    if (value === undefined) return sessionStorage.getItem(PRACTICE_DRAFT_PREFIX + taskId) || "";
+    sessionStorage.setItem(PRACTICE_DRAFT_PREFIX + taskId, value);
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+// Результат POST /runs: сводка, ошибки сборки, гонка, упавшие тесты с выводом.
+function practiceRenderResult(box, res) {
+  const tests = res.tests || [];
+  const failed = tests.filter(t => !t.passed);
+  const summary = res.passed
+    ? `✅ Все тесты прошли (${tests.length}) за ${res.millis} мс.`
+    : res.timedOut
+      ? "⏱ Не уложилось в лимит времени: проверь, нет ли бесконечного цикла или горутины, которую никто не останавливает."
+      : res.build
+        ? "❌ Не собралось — ошибки компилятора ниже."
+        : `❌ Не прошли ${failed.length} из ${tests.length}.`;
+  const children = [practiceEl("p", { className: res.passed ? "practice-check-ok" : "practice-check-fail", text: summary })];
+  if (res.race) children.push(practiceEl("p", { className: "practice-check-fail", text: "⚠️ Race detector нашёл гонку данных (WARNING: DATA RACE в выводе)." }));
+  if (res.build) children.push(practiceCode(res.build, "Ошибки сборки"));
+  if (tests.length) {
+    children.push(practiceEl("ul", { className: "practice-check-tests" }, tests.map(t => practiceEl("li", {}, [
+      `${t.passed ? "✅" : "❌"} ${t.name}`,
+      !t.passed && t.output ? practiceEl("details", {}, [practiceEl("summary", { text: "вывод" }), practiceCode(t.output, `Вывод ${t.name}`)]) : null
+    ]))));
+  }
+  if (!res.passed && !tests.length && !res.build && res.output) children.push(practiceCode(res.output.slice(-4000), "Вывод go test"));
+  box.replaceChildren(...children);
+}
+
+// Обновляет подпись кнопки проверки на открытой странице задачи после входа или выхода.
+let practiceCheckRefresh = null;
+document.addEventListener("auth-changed", () => practiceCheckRefresh && practiceCheckRefresh());
+
+// «Проверить на сервере»: код уходит в раннер (go test -race в AWS), ответ — по тестам.
+function practiceServerCheck(task) {
+  const id = `practice-solution-${task.id}`;
+  const area = practiceEl("textarea", { id, className: "practice-solution-input", rows: "12", spellcheck: "false" });
+  area.value = practiceDraft(task.id);
+  area.addEventListener("input", () => practiceDraft(task.id, area.value));
+  const status = practiceEl("p", { className: "practice-copy-status", role: "status" });
+  const result = practiceEl("div", { className: "practice-check-result", "aria-live": "polite" });
+  const button = practiceEl("button", { type: "button", className: "btn" });
+  const label = () => (typeof authIsSignedIn === "function" && authIsSignedIn() ? "Проверить на сервере" : "Войти и проверить");
+  button.textContent = label();
+  practiceCheckRefresh = () => (button.textContent = label());
+  button.addEventListener("click", async () => {
+    if (typeof apiFetch !== "function") return;
+    practiceDraft(task.id, area.value);
+    if (!authIsSignedIn()) {
+      authSignIn(`#/practice/${task.id}`);
+      return;
+    }
+    if (!area.value.trim()) {
+      status.textContent = `Вставь сюда весь файл ${task.files.solution.name}.`;
+      area.focus();
+      return;
+    }
+    button.disabled = true;
+    status.textContent = "Проверяю: go test -race на сервере, обычно 3–10 секунд…";
+    try {
+      const resp = await apiFetch("/runs", { method: "POST", body: JSON.stringify({ taskId: task.id, code: area.value }) });
+      if (resp.status === 429) throw new Error("слишком часто, подожди несколько секунд");
+      if (resp.status >= 500) throw new Error(`сервер ответил ${resp.status}; если это первая проверка за долгое время, повтори — раннер просыпается`);
+      const body = await resp.json();
+      if (!resp.ok) throw new Error(body.error || `ошибка ${resp.status}`);
+      practiceRenderResult(result, body);
+      status.textContent = "";
+      if (body.passed) {
+        practiceMarkSolved(task.id);
+        status.textContent = "Задача отмечена как решённая.";
+      }
+    } catch (e) {
+      status.textContent = e instanceof AuthRequiredError ? "Сессия истекла — нажми «Войти и проверить»." : `Не получилось проверить: ${e.message}.`;
+      button.textContent = label();
+    } finally {
+      button.disabled = false;
+    }
+  });
+  return practiceSection("Проверить на сервере", [
+    practiceEl("label", { for: id, text: `Твоё решение — весь файл ${task.files.solution.name}` }),
+    area,
+    practiceEl("p", { className: "practice-file-actions" }, [button]),
+    status,
+    result,
+    practiceEl("p", { className: "muted-text", text: "Код проверяют те же тесты, что выше, с -race, на Go 1.27.3, без доступа в сеть. Нужен вход через Google: проверка привязана к твоему аккаунту." })
+  ]);
+}
+
 function practiceSection(title, children) {
   return practiceEl("section", { className: "practice-section" }, [practiceEl("h3", { text: title }), ...children]);
 }
 
 function renderPracticeIndex(view) {
+  const solved = practiceSolved();
   const byWeek = {};
   PRACTICE.forEach(task => (byWeek[task.week] = byWeek[task.week] || []).push(task));
   view.replaceChildren(
     practiceEl("div", { className: "section-top" }, [
       practiceEl("h2", { id: "practice-title", tabindex: "-1", text: "Практикум: пишешь код — тесты проверяют" }),
-      practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе. Скачай заготовку и тесты, запусти go test -race. Порядок: своя попытка → подсказки → эталон и ответ на английском. Отметка «сделано» — в плане, у задачи дня." })
+      practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе. Скачай заготовку и тесты, запусти go test -race — или вставь решение на странице задачи и проверь на сервере. Порядок: своя попытка → подсказки → эталон и ответ на английском. ✅ — задача прошла проверку на сервере; отметка «сделано» — в плане, у задачи дня." })
     ]),
     ...Object.entries(byWeek).map(([week, tasks]) => practiceEl("section", { className: "practice-week" }, [
       practiceEl("h3", { text: `Неделя ${week}` }),
       practiceEl("ul", { className: "practice-index" }, tasks.map(task => practiceEl("li", { className: "practice-index-item" }, [
         practiceEl("a", { href: `#/practice/${task.id}`, className: "practice-index-link" }, [
-          practiceEl("strong", { text: `${task.code}. ${task.title}` }),
+          practiceEl("strong", { text: `${solved[task.id] ? "✅ " : ""}${task.code}. ${task.title}` }),
           practiceEl("span", { lang: "en", className: "muted-text", text: task.titleEN })
         ]),
         practiceEl("p", { text: task.goalRU })
@@ -137,7 +254,8 @@ function renderPracticeTask(view, task) {
   view.replaceChildren(practiceEl("article", { className: "practice-task" }, [
     practiceEl("p", { className: "practice-meta" }, [
       practiceEl("a", { href: "#/practice", text: "← Все задачи практикума" }),
-      ` · Неделя ${task.week} · ${task.code}`
+      ` · Неделя ${task.week} · ${task.code}`,
+      practiceSolved()[task.id] ? " · ✅ решено на сервере" : ""
     ]),
     practiceEl("h2", { id: "practice-title", tabindex: "-1", text: `${task.code}. ${task.title}` }),
     practiceEl("p", { lang: "en", className: "practice-title-en", text: task.titleEN }),
@@ -165,6 +283,7 @@ function renderPracticeTask(view, task) {
         practiceCode(task.files.tests.code, `Тесты ${task.files.tests.name}`)
       ])
     ]),
+    practiceServerCheck(task),
     practiceSection("Подсказки — по одной", task.hints.map((hint, i) => practiceEl("details", { className: "practice-hint" }, [
       practiceEl("summary", { text: `Подсказка ${i + 1}` }),
       practiceEl("p", { text: hint })
