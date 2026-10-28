@@ -107,6 +107,30 @@ export function liquidHazards(files) {
   return found;
 }
 
+// Схема шага: панель или массив панелей с дорожками, слотами и фишками.
+export function validateBoard(board, label) {
+  const errors = [];
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const panels = Array.isArray(board) ? board : [board];
+  if (!panels.length) return [`${label}.board: empty`];
+  panels.forEach((panel, p) => {
+    const at = `${label}.board[${p}]`;
+    if (!isObject(panel) || !Array.isArray(panel.lanes) || !panel.lanes.length) { errors.push(`${at}: expected lanes`); return; }
+    if (panel.hl !== undefined && !(Array.isArray(panel.hl) && panel.hl.every(text))) errors.push(`${at}: hl must be a list of IDs`);
+    if (panel.list !== undefined && !(isObject(panel.list) && Array.isArray(panel.list.items) && panel.list.items.every(text))) errors.push(`${at}: list.items must be text`);
+    panel.lanes.forEach((lane, l) => {
+      if (!isObject(lane) || !text(lane.title) || !Array.isArray(lane.slots)) { errors.push(`${at}.lanes[${l}]: expected title and slots`); return; }
+      lane.slots.forEach((slot, s) => {
+        const ok = isObject(slot) && text(slot.label) && Array.isArray(slot.items)
+          && slot.items.every(item => text(item) || (isObject(item) && text(item.g)));
+        if (!ok) errors.push(`${at}.lanes[${l}].slots[${s}]: expected label and items`);
+      });
+    });
+  });
+  return errors;
+}
+
 export function validateContent(data) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
@@ -162,6 +186,7 @@ export function validateContent(data) {
       const label = `${s.id}.steps[${index}]`;
       if (!step || typeof step !== 'object') { errors.push(`${label}: expected object`); return; }
       fields(step, ['title', 'desc'], label);
+      if (step.board !== undefined) errors.push(...validateBoard(step.board, label));
       if (step.check !== undefined) {
         if (!step.check || typeof step.check !== 'object') { errors.push(`${label}: invalid check`); return; }
         fields(step.check, ['promptEN', 'promptRU', 'answerEN', 'answerRU'], label);

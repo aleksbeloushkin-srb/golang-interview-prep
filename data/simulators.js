@@ -9,6 +9,7 @@ const SIMULATORS = [
     "cardId": "c6",
     "cardLabel": "Q6: регистры простыми словами →",
     "learningHint": "Кто — текущая G (R14); где стек — адрес RSP; откуда продолжить — PC, загружаемый в поток инструкций. R14 на g0 и M.curg — не одно и то же: системный стек обслуживает пользовательскую G. На arm64 имена и соглашения другие.",
+    "boardLegend": "M1 — поток ОС с процессором P1; R14 — какая G сейчас текущая, RSP — чей стек, RIP — какой код. Рамка и слово «изменилось» отмечают то, что поменялось на этом шаге.",
     "sources": [
       {
         "title": "Go 1.26.1: ABIInternal",
@@ -36,6 +37,75 @@ const SIMULATORS = [
         "title": "1. Сначала вычислить аргументы",
         "desc": "G1 выполняет go doWork(n): значение функции и аргументы вычисляются в G1. Затем новая G2 выполнит сам вызов. В показанном примере передаётся копия int; чтение изменяемого n внутри замыкания было бы другой программой.",
         "descEN": "G1 evaluates the function and arguments of go doWork(n). G2 will execute the call later. Passing an int value is different from closing over mutable n.",
+        "board": [
+          {
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "RSP · стек",
+                    "items": [
+                      "стек G1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "Будущий вызов",
+                "slots": [
+                  {
+                    "label": "Что запустить",
+                    "items": [
+                      {
+                        "g": "doWork(1)",
+                        "flag": "копия n"
+                      }
+                    ]
+                  }
+                ],
+                "note": "G2 ещё не существует."
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G5"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G1 вычисляет doWork и аргумент n: в вызов уйдёт копия 1",
+                "Само тело doWork пока не выполняется"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Сейчас работает G1",
@@ -89,6 +159,91 @@ const SIMULATORS = [
         "title": "2. Подготовить G2",
         "desc": "После вычисления аргументов runtime переходит на системный стек g0 и подготавливает G2: переиспользует доступную структуру либо создаёт новую. Нужен пригодный стек; 2 КиБ — базовый минимум реализации, а не неизменный размер каждой горутины. M.curg при этом обозначает обслуживаемую пользовательскую G1, тогда как текущая G на системном стеке — g0.",
         "descEN": "After evaluating arguments, the runtime prepares G2 on g0, reusing or allocating its state and a suitable stack. The 2 KiB baseline is not every goroutine’s fixed size. M.curg still identifies the user G1 being serviced, while the current G on the system stack is g0.",
+        "board": [
+          {
+            "hl": [
+              "g0",
+              "G2"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      {
+                        "g": "g0",
+                        "flag": "системный стек"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "M.curg",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "RIP · код",
+                    "items": [
+                      "newproc1"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "state": "подготовка",
+                "slots": [
+                  {
+                    "label": "Структура",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "из пула или новая"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Стек",
+                    "items": [
+                      "минимум 2 КиБ или адаптивный размер"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G5"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "Переход на системный стек: R14 = g0, а M.curg по-прежнему G1",
+                "G2: свободная структура из пула (gfget) или новая (malg)"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -142,6 +297,85 @@ const SIMULATORS = [
         "title": "3. Сохранить стартовый контекст",
         "desc": "В G2.sched подготавливаются SP и PC для запуска doWork. На amd64 создаётся путь возврата через goexit после завершения функции. Это сохранённые данные будущего запуска; активные регистры пока обслуживают runtime на g0.",
         "descEN": "G2 receives saved start state, including its stack position and entry PC. The amd64 return path leads to goexit. Saved state in memory is different from registers currently running the runtime.",
+        "board": [
+          {
+            "hl": [
+              "doWork",
+              "goexit"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      "g0"
+                    ]
+                  },
+                  {
+                    "label": "RIP · код",
+                    "items": [
+                      "подготовка G2"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "state": "подготовка",
+                "slots": [
+                  {
+                    "label": "sched.sp",
+                    "items": [
+                      "вершина стека G2"
+                    ]
+                  },
+                  {
+                    "label": "sched.pc",
+                    "items": [
+                      "doWork"
+                    ]
+                  },
+                  {
+                    "label": "Возврат",
+                    "items": [
+                      "goexit"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G5"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "В G2.sched записаны sp и pc = doWork; после doWork возврат пойдёт в goexit",
+                "Это данные будущего запуска: регистры CPU всё ещё работают на g0"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -195,6 +429,66 @@ const SIMULATORS = [
         "title": "4. Сделать G2 доступной планировщику",
         "desc": "После подготовки G2 становится runnable. Показан путь постановки через runqput с предпочтением runnext: прежний элемент этого слота может перейти в обычную очередь. Это готовность к запуску, без обещания немедленного выполнения или горячего кеша.",
         "descEN": "G2 becomes runnable and is queued. The illustrated path requests runnext placement, potentially displacing the previous entry. This does not promise when or on which CPU G2 will execute.",
+        "board": [
+          {
+            "hl": [
+              "G2",
+              "G5"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      "g0"
+                    ]
+                  },
+                  {
+                    "label": "RIP · код",
+                    "items": [
+                      "runqput"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "runnable"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      "G5"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Без sysmon runnext не используется; в сборках с -race рантайм в половине случаев ставит G в обычную очередь."
+              }
+            ],
+            "list": {
+              "items": [
+                "G2 → runnext P1 (runqput с next = true)",
+                "G5 — прежний кандидат: runnext → хвост runq",
+                "G2 готова, но ещё не исполняется"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -248,6 +542,65 @@ const SIMULATORS = [
         "title": "5. Восстановить и перейти",
         "desc": "Когда планировщик выбирает G2, execute переводит её в running, а gogo восстанавливает контекст: текущую G, SP, BP и контекст замыкания, затем переходит к saved PC. JMP меняет поток исполнения; RSP теперь указывает в стек G2. Показаны ключевые действия, не полный листинг.",
         "descEN": "When G2 is selected, execute marks it running and gogo restores its continuation. The stack pointer now addresses G2’s stack, and a jump transfers execution to its saved PC. More runtime bookkeeping is omitted.",
+        "board": [
+          {
+            "hl": [
+              "G2"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "RSP · стек",
+                    "items": [
+                      "стек G2"
+                    ]
+                  },
+                  {
+                    "label": "RIP · код",
+                    "items": [
+                      "doWork"
+                    ]
+                  }
+                ],
+                "note": "Когда и почему P1 освободился для G2, в примере не показано."
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": []
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      "G5"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "execute: G2 runnable → running",
+                "gogo: R14 = G2, RSP → стек G2, переход (JMP) на сохранённый pc — doWork"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -301,6 +654,82 @@ const SIMULATORS = [
         "title": "6. Завершить G2",
         "desc": "После возврата doWork путь goexit вызывает mcall(goexit0). Выполнение переходит на g0; runtime завершает G2 и возвращается к планированию. Структура G может переиспользоваться; сохранение её стека зависит от размера и политики runtime.",
         "descEN": "After doWork returns, goexit reaches mcall(goexit0) and system-stack cleanup. G2 finishes; its state may be reused. Retaining its stack is a separate runtime policy decision.",
+        "board": [
+          {
+            "hl": [
+              "G2",
+              "g0"
+            ],
+            "lanes": [
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "поток, P1",
+                "slots": [
+                  {
+                    "label": "R14 · кто",
+                    "items": [
+                      "g0"
+                    ]
+                  },
+                  {
+                    "label": "RIP · код",
+                    "items": [
+                      "goexit0 → schedule"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2",
+                "state": "_Gdead",
+                "slots": [
+                  {
+                    "label": "Структура",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "в пул свободных G"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Стек",
+                    "items": [
+                      "сохранён или освобождён"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "slots": [
+                  {
+                    "label": "runnext",
+                    "items": []
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      "G5"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "doWork вернулась → goexit → mcall(goexit0): переход на g0",
+                "G2 получает _Gdead; структура идёт в пул, стек — по политике рантайма",
+                "M1 на g0 ищет следующую G (schedule)"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистры amd64: смысл",
@@ -367,6 +796,113 @@ const SIMULATORS = [
         "title": "1. Несколько источников работы",
         "desc": "P — ресурсы рантайма, M — поток ОС, G — горутина. В findRunnable есть проверки GC, таймеров и другой служебной работы, поэтому это не простая неизменная очередь приоритетов. При schedtick % 61 == 0 и наблюдаемой непустой GRQ рантайм пробует взять глобальную работу для справедливости. Тик не равен миллисекунде; runnext может его наследовать.",
         "descEN": "G is a goroutine, M an OS thread and P the resources needed to run user Go code. The scheduler has several work sources and special runtime work. A schedtick % 61 check can favor global work, but it is not a wall-clock interval or a complete priority contract.",
+        "board": [
+          {
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      "G4"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "grq",
+                "title": "Глобальная очередь (GRQ)",
+                "slots": [
+                  {
+                    "label": "голова →",
+                    "items": [
+                      "G5",
+                      "G6"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "timer",
+                "title": "Таймеры P1",
+                "slots": [
+                  {
+                    "label": "Срок истёк",
+                    "items": [
+                      "G7"
+                    ]
+                  }
+                ],
+                "note": "Сработавший таймер делает свою G готовой."
+              },
+              {
+                "kind": "netpoll",
+                "title": "netpoller",
+                "slots": [
+                  {
+                    "label": "Готовы после I/O",
+                    "items": [
+                      "G8"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P2",
+                "tag": "M2",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G9"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G10",
+                      "G11"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Очередь другого P — источник для перехвата."
+              }
+            ],
+            "list": {
+              "title": "Где P1 ищет следующую G (findRunnable, Go 1.26.1, упрощённо)",
+              "ordered": true,
+              "items": [
+                "Таймеры P1: сработавшие делают свои G готовыми",
+                "Служебная работа рантайма, например воркер GC",
+                "Раз в 61 тик планировщика — GRQ, если она не пуста (справедливость)",
+                "runnext, затем runq P1",
+                "GRQ",
+                "netpoller без ожидания",
+                "Перехват у других P"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Источники / Work sources",
@@ -420,6 +956,53 @@ const SIMULATORS = [
         "title": "2. Запросить вытеснение — ещё не переключить",
         "desc": "Отдельный сценарий: G1 исполняется на M1 с P1. Sysmon наблюдает неизменный schedtick; порог forcePreemptNS равен 10 мс в проверенной реализации. Он запрашивает вытеснение. На поддерживаемом Unix-пути используется SIGURG, но точная задержка и успешность этой попытки не гарантированы.",
         "descEN": "In this scenario G1 runs on M1 with P1. Sysmon observes an unchanged scheduling tick and can request preemption using the checked 10 ms threshold. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
+        "board": [
+          {
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "вытеснение запрошено"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G2",
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "sysmon",
+                "title": "sysmon",
+                "tag": "поток без P",
+                "slots": [],
+                "note": "Видит, что schedtick P1 не менялся ≥ 10 мс, и вызывает preemptone для G1."
+              }
+            ],
+            "list": {
+              "items": [
+                "sysmon → G1: запрос вытеснения (флаг preempt и stackguard0 = stackPreempt)",
+                "sysmon → M1: сигнал SIGURG на поддерживаемом Unix-пути",
+                "G1 всё ещё исполняется: запрос ещё не переключение"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "До безопасного переключения",
@@ -473,6 +1056,63 @@ const SIMULATORS = [
         "title": "3. Безопасная точка → сохранение → планировщик",
         "desc": "Продолжение шага 2: обработчик обнаружил допустимую точку и подготовил возврат через asyncPreempt. После возобновления этот путь сохраняет регистры и входит в планировщик. В обычном пути уступки G1 становится runnable; следующий выбор зависит от доступной работы. Это не отменяет G1 и не снимает её блокировки.",
         "descEN": "Continuing step 2, the handler found a safe point and arranged asyncPreempt on resumption. That path saves registers and enters the scheduler. In the ordinary yield path G1 becomes runnable; the next selection depends on available work. Preemption neither cancels G1 nor releases its locks.",
+        "board": [
+          {
+            "hl": [
+              "G1",
+              "G2"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "пример выбора"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "grq",
+                "title": "Глобальная очередь (GRQ)",
+                "slots": [
+                  {
+                    "label": "голова →",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "runnable"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Go 1.26.1: при вытеснении ради остановки мира для GC G1 остаётся в runnext P1; в Go 1.25 — всегда GRQ."
+              }
+            ],
+            "list": {
+              "items": [
+                "G1: исполнение → GRQ (asyncPreempt → gopreempt_m → globrunqput)",
+                "G2: runq P1 → исполнение — один из возможных выборов планировщика",
+                "Незавершённая операция и мьютексы остаются за G1"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Переход / Transition",
@@ -526,6 +1166,70 @@ const SIMULATORS = [
         "title": "4. Перед перехватом: пять готовых G",
         "desc": "Новый сценарий, не продолжение очередей шага 3. P2 ищет работу и рассматривает обычную очередь P1. Для наглядности очередь неизменна на время успешной попытки: [A,B,C,D,E], голова слева; runnext пуст. runqgrab рассчитывает n - n/2 = 3 и через CAS забирает префикс с головы. При конкурирующем изменении нужна повторная проверка.",
         "descEN": "This is a new stable-queue example. P2 considers P1’s ordinary queue [A,B,C,D,E], head on the left, with empty runnext. runqgrab computes n - n/2 = 3 and claims the head prefix with CAS. Concurrent changes can require retrying.",
+        "board": [
+          {
+            "hl": [
+              "A",
+              "B",
+              "C"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "X"
+                    ]
+                  },
+                  {
+                    "label": "runnext",
+                    "items": []
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "A",
+                      "B",
+                      "C",
+                      "D",
+                      "E"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P2",
+                "tag": "M2",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": []
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [],
+                    "queue": true
+                  }
+                ],
+                "note": "Своей работы нет → findRunnable → перехват у P1."
+              }
+            ],
+            "list": {
+              "title": "Что выбрано",
+              "items": [
+                "Размер пачки: n − ⌊n/2⌋ = 5 − 2 = 3",
+                "Пачка берётся с головы: A, B, C",
+                "X исполняется и в пачку не входит"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "P1 до / Before",
@@ -579,6 +1283,66 @@ const SIMULATORS = [
         "title": "5. После перехвата: одна к исполнению, две в очередь",
         "desc": "Продолжение шага 4: runqsteal возвращает последний элемент взятой пачки, C, для исполнения, а A и B публикует в очереди P2. В P1 остаются D и E. Все пять G учтены, уже работающую G не перемещали. Это модель успешного пути без конкурирующих изменений; выбор жертвы и общее расписание не обещаны.",
         "descEN": "Continuing step 4, runqsteal returns C, the last element of the grabbed batch, for execution. A and B are queued on P2; D and E remain on P1. All five are accounted for. This models a successful stable-queue path, not a guaranteed program schedule.",
+        "board": [
+          {
+            "hl": [
+              "A",
+              "B",
+              "C"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "X"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "D",
+                      "E"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P2",
+                "tag": "M2",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "C"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "A",
+                      "B"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "C — последний в пачке: runq P1 → исполнение на P2",
+                "A, B: runq P1 → runq P2",
+                "D, E остаются у P1; учтены все пять G"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "P1 после / After",
@@ -627,6 +1391,94 @@ const SIMULATORS = [
         "title": "6. Syscall: различие Go 1.25 и 1.26",
         "desc": "Новый сценарий: G1 входит в обычный runtime-aware syscall на M1. В Go 1.25 связь M–P снимается, а P получает _Psyscall. В Go 1.26.1 обычный вход может сохранить связь M1–P1, а G1 переходит в _Gsyscall; отдельного действующего состояния Psyscall больше нет. Для изъятия P рантайм удерживает состояние G, проверяет связи и безопасно отсоединяет P. Заведомо блокирующий entersyscallblock отдаёт P отдельным путём.",
         "descEN": "In a new syscall scenario, Go 1.25 detaches M from P and marks P _Psyscall. In Go 1.26.1, ordinary entry can retain M–P attachment while G is _Gsyscall. Retaking P holds the G state, validates the links and detaches P safely. The known-blocking entry path gives up P separately.",
+        "board": [
+          {
+            "caption": "Go 1.25 · обычный вход",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "syscall",
+                "title": "M1",
+                "tag": "в syscall",
+                "slots": [
+                  {
+                    "label": "G",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "_Gsyscall"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "без M",
+                "slots": [
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G2"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "state": "_Psyscall",
+                "note": "sysmon может забрать P1: retake → handoffp."
+              }
+            ],
+            "list": {
+              "items": [
+                "M1 ↔ P1: связь снята при входе",
+                "P1 помечен _Psyscall"
+              ]
+            }
+          },
+          {
+            "caption": "Go 1.26.1 · обычный вход",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "_Gsyscall"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G2"
+                    ],
+                    "queue": true
+                  }
+                ],
+                "state": "_Prunning",
+                "note": "Syscall определяют по состоянию G1, а не P1."
+              }
+            ],
+            "list": {
+              "items": [
+                "Связь M1–P1 может сохраниться",
+                "Изъятие P: setBlockOnExitSyscall → takeP → resume → handoffp",
+                "_Psyscall_unused — бывшее состояние, сейчас не используется"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Go 1.25 · обычный вход",
@@ -700,6 +1552,93 @@ const SIMULATORS = [
         "title": "7. Syscall вернулся: для Go-кода снова нужен P",
         "desc": "В обеих версиях возврат к обычному Go-коду требует P. Если P можно сохранить или получить, исполнение продолжается. Если P недоступен, G1 может попасть в очередь, а M1 остановиться. Поэтому число M не равно GOMAXPROCS; один syscall также не означает обязательное создание нового M. При cgo внешний код может вычислять, а не только ждать в ядре.",
         "descEN": "In both versions, resuming normal user Go code requires a P. The thread may keep or acquire one. Otherwise G1 can be queued while M1 stops. Thread count need not equal GOMAXPROCS, and a syscall need not create a new thread. Foreign cgo code may compute rather than wait in the kernel.",
+        "board": [
+          {
+            "caption": "P удалось сохранить или получить",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G2"
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G1: syscall завершён → продолжает Go-код на P1"
+              ]
+            }
+          },
+          {
+            "caption": "Свободного P нет",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M3",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G2"
+                    ]
+                  }
+                ],
+                "note": "P1 уже работает с другим потоком."
+              },
+              {
+                "kind": "grq",
+                "title": "Глобальная очередь (GRQ)",
+                "slots": [
+                  {
+                    "label": "голова →",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "runnable"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "m",
+                "title": "M1",
+                "tag": "без P",
+                "slots": [],
+                "note": "stopm: поток засыпает до новой работы."
+              }
+            ],
+            "list": {
+              "items": [
+                "G1 → GRQ: ждёт планирования",
+                "M1 останавливается",
+                "Поэтому число M не равно GOMAXPROCS"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Есть P",
@@ -758,6 +1697,105 @@ const SIMULATORS = [
         "title": "8. Сеть: припарковать G, сохранить поток для работы",
         "desc": "Отдельный стандартный Unix-сценарий поллируемого сокета: чтение пока невозможно, поэтому G1 ждёт через netpoller. M1 с P1 может исполнять другую G; нет отдельного занятого потока на каждый ожидающий сокет. Событие готовности позволяет возобновить G1 и повторить I/O, но не гарантирует немедленного запуска или наличия всех запрошенных байтов. Пользовательская реализация net.Conn может вести себя иначе.",
         "descEN": "For a standard pollable Unix socket, a read that would block parks G1 through netpoll. M1 with P1 can run another G. Readiness permits resumption and an I/O retry; it guarantees neither immediate scheduling nor all requested bytes. A custom net.Conn implementation may behave differently.",
+        "board": [
+          {
+            "caption": "Чтение пока невозможно",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "netpoll",
+                "title": "netpoller",
+                "slots": [
+                  {
+                    "label": "Ждут",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "чтение fd"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G1: исполнение → ожидание в netpoller (gopark)",
+                "M1 и P1 исполняют G2: отдельный поток на сокет не нужен"
+              ]
+            }
+          },
+          {
+            "caption": "Сокет готов",
+            "hl": [
+              "G1"
+            ],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      {
+                        "g": "G1",
+                        "flag": "runnable"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "netpoll",
+                "title": "netpoller",
+                "slots": [
+                  {
+                    "label": "Ждут",
+                    "items": []
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "G1: netpoller → очередь готовых (локальная или глобальная — решает рантайм)",
+                "Когда G1 запустится, она повторит Read; данных может быть меньше, чем запрошено"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Ожидание / Waiting",
@@ -804,6 +1842,7 @@ const SIMULATORS = [
       }
     ],
     "learningHint": "Не смешивай три перехода: runnable → running; запрос → безопасное вытеснение; занятый M → доступный другому M процессор P. Голова очереди слева. Цвет выделяет изменение, смысл повторяется текстом.",
+    "boardLegend": "G — горутина, M — поток ОС, P — право исполнять Go-код (их GOMAXPROCS). Очереди: голова слева. Рамка и слово «изменилось» отмечают фишки, которые сдвинулись на этом шаге.",
     "sources": [
       {
         "title": "go1.26.1: runtime/proc.go",

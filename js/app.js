@@ -318,7 +318,7 @@ function initSimulators() {
     card.id = sim.id;
 
     const stepsHtml = sim.steps
-      .map((st, idx) => `<button type="button" class="step-pill ${idx === 0 ? "active" : ""}" onclick="renderSimStep(${simIdx}, ${idx})">${escapeHtml(st.title)}</button>`)
+      .map((st, idx) => `<button type="button" class="step-pill ${idx === 0 ? "active" : ""}" aria-label="${escapeHtml(st.title)}" onclick="renderSimStep(${simIdx}, ${idx})"><span class="step-num">${idx + 1}</span><span class="step-title">${escapeHtml(st.title.replace(/^\d+\.\s*/, ""))}</span></button>`)
       .join("");
 
     card.innerHTML = `
@@ -333,7 +333,9 @@ function initSimulators() {
       <div class="sim-steps" id="${sim.id}-steps">${stepsHtml}</div>
       <p id="${sim.id}-status" class="muted-text sim-step-start" tabindex="-1" aria-live="polite"></p>
       <div id="${sim.id}-desc" class="short-answer"></div>
+      <div id="${sim.id}-board"></div>
       <div id="${sim.id}-scene"></div>
+      <details class="sim-table hidden" id="${sim.id}-table"><summary>Подробности шага: таблица</summary></details>
       <div class="sim-grid" id="${sim.id}-grid"></div>
       <div id="${sim.id}-recall"></div>
       <div class="sim-navigation">
@@ -343,6 +345,14 @@ function initSimulators() {
       ${referencesHtml(sim)}
     `;
     container.appendChild(card);
+    card.querySelector(".sim-steps").addEventListener("keydown", event => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      const next = Number(card.dataset.step) + (event.key === "ArrowRight" ? 1 : -1);
+      renderSimStep(simIdx, next);
+      const pill = card.querySelectorAll(".step-pill")[Number(card.dataset.step)];
+      if (pill) pill.focus();
+    });
     card.querySelectorAll("[data-step-direction]").forEach(button => {
       button.addEventListener("click", () => {
         const next = Number(card.dataset.step) + Number(button.dataset.stepDirection);
@@ -372,6 +382,7 @@ function renderSimStep(simIdx, stepIdx) {
 
   document.getElementById(`${sim.id}-status`).textContent = `Шаг ${stepIdx + 1} из ${sim.steps.length}: ${step.title.replace(/^\d+\.\s*/, "")}`;
   document.getElementById(`${sim.id}-desc`).textContent = step.desc;
+  document.getElementById(`${sim.id}-board`).innerHTML = step.board ? boardHtml(step.board, sim.boardLegend) : "";
   document.getElementById(`${sim.id}-scene`).innerHTML = step.scene ? `
     <div class="channel-scene" aria-label="Состояние участников передачи">
       <div class="channel-part channel-sender"><h4>Отправитель G2</h4><p>${escapeHtml(step.scene.sender)}</p></div>
@@ -395,6 +406,11 @@ function renderSimStep(simIdx, stepIdx) {
     </div>` : ""}`;
 
   const grid = document.getElementById(`${sim.id}-grid`);
+  // Если у шага есть схема, таблица дублирует её и сворачивается; без схемы таблица остаётся основной.
+  const table = document.getElementById(`${sim.id}-table`);
+  table.classList.toggle("hidden", !step.board);
+  if (step.board && grid.parentElement !== table) table.append(grid);
+  if (!step.board && grid.parentElement === table) table.after(grid);
   grid.innerHTML = step.boxes
     .map(box => `
       <div class="sim-box">
@@ -410,6 +426,54 @@ function renderSimStep(simIdx, stepIdx) {
       </div>
     `)
     .join("");
+}
+
+/* --- Схема-доска: дорожки P/очередей, фишки G и «Что изменилось» ---
+   Данные: board = [{ caption?, lanes: [{ kind, title, tag?, state?, slots: [{ label, items, queue? }], note? }],
+   hl?: [id], list?: { title, items, ordered? } }]. Элемент: "G1" или { g: "G1", flag: "..." }.
+   Изменения выделяются рамкой и словом «изменилось», не только цветом. */
+function boardChipHtml(item, hl) {
+  const g = typeof item === "string" ? item : item.g;
+  const flag = typeof item === "string" ? "" : item.flag;
+  const changed = hl.includes(g);
+  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed ? `<span class="g-changed">изменилось</span>` : ""}</li>`;
+}
+
+function boardLaneHtml(lane, hl) {
+  const slots = (lane.slots || []).map(slot => {
+    const items = slot.items || [];
+    const list = items.length
+      ? `<${slot.queue ? "ol" : "ul"} class="board-items${slot.queue ? " is-queue" : ""}">${items.map(item => boardChipHtml(item, hl)).join("")}</${slot.queue ? "ol" : "ul"}>`
+      : `<span class="board-empty">пусто</span>`;
+    return `<div class="board-slot"><span class="board-slot-label">${escapeHtml(slot.label)}</span>${list}</div>`;
+  }).join("");
+  const label = [lane.title, lane.tag, lane.state].filter(Boolean).join(", ");
+  return `<section class="board-lane lane-${escapeHtml(lane.kind || "other")}" aria-label="${escapeHtml(label)}">
+    <div class="board-lane-head"><strong>${escapeHtml(lane.title)}</strong>${lane.tag ? `<span class="board-tag">${escapeHtml(lane.tag)}</span>` : ""}${lane.state ? `<code class="board-state">${escapeHtml(lane.state)}</code>` : ""}</div>
+    ${slots}
+    ${lane.note ? `<p class="board-note">${escapeHtml(lane.note)}</p>` : ""}
+  </section>`;
+}
+
+function boardHtml(board, legend) {
+  const panels = Array.isArray(board) ? board : [board];
+  return `<div class="board-wrap">
+    ${legend ? `<p class="board-legend">${escapeHtml(legend)}</p>` : ""}
+    <div class="board-panels${panels.length > 1 ? " is-compare" : ""}">
+      ${panels.map(panel => {
+        const hl = panel.hl || [];
+        const list = panel.list && panel.list.items && panel.list.items.length ? `<div class="board-changes">
+          <h4>${escapeHtml(panel.list.title || "Что изменилось")}</h4>
+          <${panel.list.ordered ? "ol" : "ul"}>${panel.list.items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</${panel.list.ordered ? "ol" : "ul"}>
+        </div>` : "";
+        return `<figure class="board-panel">
+          ${panel.caption ? `<figcaption class="board-caption">${escapeHtml(panel.caption)}</figcaption>` : ""}
+          <div class="board-lanes">${(panel.lanes || []).map(lane => boardLaneHtml(lane, hl)).join("")}</div>
+          ${list}
+        </figure>`;
+      }).join("")}
+    </div>
+  </div>`;
 }
 
 /* --- БАЗА ЗНАНИЙ (WIKI) И ТАБЛИЦА-ШПАРГАЛКА --- */
