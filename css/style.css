@@ -774,6 +774,12 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .board-changes h4 { font-size: 0.85rem; margin-bottom: 6px; }
 .board-changes ol, .board-changes ul { padding-left: 20px; margin: 0; }
 .board-changes li { margin: 3px 0; overflow-wrap: anywhere; }
+/* На телефоне дорожки идут столбиком и уводят итог шага далеко вниз: список — сразу под подписью панели. */
+@media (max-width: 640px) {
+  .board-panel { display: flex; flex-direction: column; }
+  .board-panel > .board-caption { order: -2; }
+  .board-panel > .board-changes { order: -1; margin: 0 0 12px; }
+}
 .sim-table { margin-top: 16px; }
 .sim-table > summary { color: var(--accent); cursor: pointer; }
 .lane-g { border-left-color: var(--accent); }
