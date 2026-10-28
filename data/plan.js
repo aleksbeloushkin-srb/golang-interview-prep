@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28d",
+  revision: "2026-10-28e",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -50,29 +50,29 @@ const PLAN = {
           label: "Вт", minutes: 90, tasks: [
             { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures" },
             { id: "w1-tue-2", text: "Go by Example от Values до Closures — набрать руками, не копировать", refs: [{ t: "Go by Example", u: "https://gobyexample.com/" }] },
-            { id: "w1-tue-3", text: "W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор", talk: "w1-1" }
+            { id: "w1-tue-3", text: "W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор", links: ["p-money"], talk: "w1-1" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors" },
-            { id: "w1-wed-2", text: "Сайт: интерфейсы и receivers — только короткий ответ и «как работает»", links: ["c34", "c33"] },
-            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", talk: "w1-2" },
+            { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors", links: ["c39"] },
+            { id: "w1-wed-2", text: "Сайт: интерфейсы и receivers — только короткий ответ и «как работает»", links: ["c34", "c33", "q2", "q28"] },
+            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", links: ["p-account", "p-validation", "c39", "q29"], talk: "w1-2" },
             { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w1-thu-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", links: ["q20"], refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
-            { id: "w1-thu-2", text: "defer / panic / recover: карточка и три ловушки из quiz — сначала ответить без вариантов", links: ["c35", "q2", "q3", "q5"] },
+            { id: "w1-thu-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", links: ["c39", "q29", "q30", "q20"], refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
+            { id: "w1-thu-2", text: "defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов", links: ["c35", "q3", "q5", "q31", "q32"] },
             { id: "w1-thu-3", text: "Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5", talk: "w1-5" }
+            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5", links: ["p-deferpanic"], talk: "w1-5" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34"], talk: "w1-6" },
-            { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость" },
+            { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-6" },
+            { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость", links: ["c40", "q33", "q34"] },
             { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать)", lc: 238, talk: "lc238" },
             { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
             { id: "w1-sat-5", text: "Повторный проговор LC 49 и LC 347 без подсказок" },
@@ -117,25 +117,25 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w2-tue-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c30", "c32"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] },
-            { id: "w2-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c31", "sim7"], optional: true },
-            { id: "w2-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", talk: "w2-1" },
+            { id: "w2-tue-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c32", "c40", "q33"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] },
+            { id: "w2-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c30", "c31", "sim7"], optional: true },
+            { id: "w2-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", links: ["c41"], refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", links: ["p-removeslice"], talk: "w2-1" },
             { id: "w2-tue-5", text: "Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия", links: ["sim9"], optional: true }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет)", refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
-            { id: "w2-wed-2", text: "W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить", talk: "w2-3" },
+            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)", links: ["c42", "p-generics"], refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
+            { id: "w2-wed-2", text: "W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить", links: ["p-generics", "c42"], talk: "w2-3" },
             { id: "w2-wed-3", text: "LeetCode 15. 3Sum + проговор", lc: 15, talk: "lc15" }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/" },
-            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы", refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
-            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2" },
+            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/", links: ["c43"] },
+            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
+            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2", links: ["p-account", "p-generics"] },
             { id: "w2-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" }
           ]
         },
@@ -143,7 +143,7 @@ const PLAN = {
           label: "Сб", minutes: 240, tasks: [
             { id: "w2-sat-1", text: "«Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка", links: ["q1"] },
             { id: "w2-sat-7", text: "Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией)", optional: true, refs: [{ t: "39 вопросов (Нияз)", u: "https://t.me/niyaz_golang/758" }, { t: "ТОП-12 Ozon", u: "https://t.me/niyaz_golang/672" }] },
-            { id: "w2-sat-2", text: "W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера", talk: "w2-4" },
+            { id: "w2-sat-2", text: "W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера", links: ["p-txsum"], talk: "w2-4" },
             { id: "w2-sat-3", text: "LeetCode 739. Daily Temperatures + проговор (записать)", lc: 739, talk: "lc739" },
             { id: "w2-sat-4", text: "Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache", lc: 146, talk: "lc146", optional: true },
             { id: "w2-sat-5", text: "Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией", optional: true, refs: [{ t: "Habr: «Коллеги, вы меня огорчаете»", u: "https://habr.com/ru/articles/521582" }] },
@@ -1060,27 +1060,27 @@ const PLAN = {
     "w1-tue-1": { accept: "Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной." },
     "w1-tue-2": { accept: "Примеры набраны и запускаются; по каждому — одна фраза, что он показывает." },
     "w1-tue-3": { accept: "Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками." },
-    "w1-wed-1": { accept: "Без подсказки: type switch по ошибке и Stringer на своём типе." },
-    "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена.", exercise: "Упражнение T/*T на компиляцию: какое присваивание интерфейсу скомпилируется (расширение c34, без новой карточки)." },
-    "w1-wed-3": { accept: "Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки.", exercise: "Короткие вопросы по %w, errors.Is/As, sentinel vs typed и задача «замени %w на %v — что сломается» (новая тема)." },
-    "w1-thu-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; задача %w → %v объяснена.", exercise: "Та же новая тема ошибок; errors.Join связать с q20 и указать версию 1.20." },
-    "w1-thu-2": { accept: "q2, q3, q5: ответ до вариантов совпал с разбором по причине; объяснение по-английски. Изменённое условие: q3 с безымянным результатом.", exercise: "Варианты к q3/q5: безымянный результат, panic в другой горутине (расширение c35)." },
+    "w1-wed-1": { accept: "Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch." },
+    "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов." },
+    "w1-wed-3": { accept: "Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки." },
+    "w1-thu-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v) и q30 (errors.Join, Go 1.20) объяснены до вариантов." },
+    "w1-thu-2": { accept: "q3, q5, q31, q32: ответ до вариантов совпал с разбором по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5." },
     "w1-thu-4": { accept: "Порядок трёх defer предсказан до запуска; SafeDiv возвращает ошибку при делении на ноль без паники наружу. Изменённое условие: panic во вложенной функции." },
-    "w1-sat-1": { accept: "Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.", exercise: "Упражнение T/*T на компиляцию (то же, что для w1-wed-2)." },
-    "w1-sat-2": { accept: "Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin.", exercise: "Карточка zero values и nil по типам; вопросы «скомпилируется ли» про embedding и сравнимость ключа map (новые темы)." },
+    "w1-sat-1": { accept: "Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация." },
+    "w1-sat-2": { accept: "Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 — ответ до раскрытия; q33 (ключ map) и q34 (встраивание) — до вариантов." },
     "w1-sat-4": { accept: "Диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен." },
     "w1-sat-5": { accept: "Обе задачи проговорены без подсказок, по 5 минут; запись сделана." },
     "w1-sat-6": { accept: "Все вопросы самопроверки — ответ по-английски без подсказки; ошибочные отмечены для повтора." },
 
-    "w2-mon-1": { accept: "c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1].", exercise: "Открытые задачи P1, P2, P10 как варианты к c29/q6." },
-    "w2-mon-2": { accept: "q4 и q6: дефект найден до вариантов, исправление предложено (копия или ограничение cap)." },
-    "w2-tue-1": { accept: "Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 решена.", exercise: "Открытая задача P3 (nil map) к c30/c32." },
-    "w2-tue-3": { accept: "P8 решена до сверки; по-английски: что возвращают len(s), s[i] и range по строке.", exercise: "Новая базовая карточка UTF-8: byte, rune, обход строки." },
+    "w2-mon-1": { accept: "c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки." },
+    "w2-mon-2": { accept: "q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает." },
+    "w2-tue-1": { accept: "Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 (ниже на этой странице) решена; q33 — до вариантов." },
+    "w2-tue-3": { accept: "P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке." },
     "w2-tue-4": { accept: "Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22." },
     "w2-wed-1": { accept: "Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым." },
-    "w2-wed-2": { accept: "Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером.", exercise: "Новая карточка generics vs interface с выбором подхода." },
-    "w2-thu-1": { accept: "Объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт.", exercise: "Карточка модули, пакеты, internal/ (новая тема)." },
-    "w2-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит.", exercise: "Короткие вопросы по table-driven, t.Helper, t.Parallel (новая тема)." },
+    "w2-wed-2": { accept: "Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена." },
+    "w2-thu-1": { accept: "c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт." },
+    "w2-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup." },
     "w2-thu-3": { accept: "Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь." },
     "w2-thu-4": { accept: "P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски." },
     "w2-sat-1": { accept: "10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod." },
@@ -1134,7 +1134,7 @@ const PLAN = {
   // Открывать после своей попытки вслух; сверять смысл, а не заучивать дословно.
   modelAnswers: {
     "w1-mon-1": {
-      hook: "var gives the zero value; := declares and infers; defer runs LIFO.",
+      hook: "var x T gives the zero value; := declares and infers; defer runs LIFO.",
       en: "var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs."
     },
     "w1-tue-1": {
@@ -1143,7 +1143,7 @@ const PLAN = {
     },
     "w1-tue-3": {
       hook: "Money is integer minor units plus a currency, never float64.",
-      en: "I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits units and cents: 1250 becomes \"12.50 EUR\" and 5 becomes \"0.05 EUR\". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100."
+      en: "I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. float64 cannot represent most decimal fractions exactly, and rounding errors accumulate in sums. String() splits major and minor units: 1250 becomes \"12.50 EUR\" and 5 becomes \"0.05 EUR\". I format the absolute value and prepend the sign, so -5 is \"-0.05 EUR\". The number of minor digits belongs to the currency: JPY has none and some currencies have three, so I don't hard-code 100."
     },
     "w1-wed-1": {
       hook: "A type switch branches on the dynamic type inside an interface.",
@@ -1162,19 +1162,19 @@ const PLAN = {
       en: "I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With %w the cause stays in the chain; with %v it becomes plain text, so errors.Is and errors.As stop matching. errors.Join, since Go 1.20, combines several errors, and Is and As check each of them."
     },
     "w1-thu-2": {
-      hook: "Defer arguments are evaluated at once; deferred closures can change named results.",
+      hook: "Defer arguments are evaluated immediately; deferred closures can change named results.",
       en: "Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
     },
     "w1-thu-4": {
       hook: "recover works only in a deferred call of the panicking goroutine.",
-      en: "recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
+      en: "recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
     },
     "w1-sat-1": {
       hook: "Service lacks pointer-receiver methods in its method set; &Service{} has them.",
-      en: "var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface holds a copy of the value that is not addressable, so a pointer method could not modify the caller's value."
+      en: "var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
     },
     "w1-sat-2": {
-      hook: "Every type has a usable zero value; nil map writes panic; nil channels block.",
+      hook: "Every type has a zero value; nil slices are usable, nil map writes panic, nil channels block.",
       en: "Every type has a zero value: 0, \"\", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
     },
 
@@ -1183,16 +1183,16 @@ const PLAN = {
       en: "A slice is a descriptor with a pointer, a length and a capacity over an underlying array. Re-slicing shares that array, so a write through one slice is visible through the other. append writes in place while capacity allows and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a, so a later append cannot overwrite the original; copy or slices.Clone gives an independent slice."
     },
     "w2-mon-2": {
-      hook: "Shared backing array plus spare capacity is the bug.",
-      en: "In both tasks the defect is that two slices share one backing array and append still has spare capacity, so it overwrites data the caller can see. The fix is either an independent copy or a full slice expression that limits capacity, so append must allocate."
+      hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
+      en: "q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected."
     },
     "w2-tue-1": {
       hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
-      en: "Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Concurrent writes need synchronization; the runtime may detect them and crash. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
+      en: "Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
     },
     "w2-tue-3": {
       hook: "len counts bytes; range decodes runes.",
-      en: "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count characters I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character."
+      en: "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character."
     },
     "w2-tue-4": {
       hook: "Removing in place changes the caller's array; copy first for independence.",
@@ -1216,12 +1216,12 @@ const PLAN = {
     },
     "w2-sat-2": {
       hook: "Validate each line, report all errors, exit non-zero on failure.",
-      en: "txsum reads CSV lines, validates every field and sums amounts per currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
+      en: "txsum reads CSV lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
     },
 
     "w3-mon-1": {
       hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
-      en: "A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done under two separate locks."
+      en: "A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
     },
     "w3-tue-1": {
       hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
@@ -1229,7 +1229,7 @@ const PLAN = {
     },
     "w3-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
-      en: "N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancellation or a consumer that stops reading cannot leave goroutines blocked."
+      en: "N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel."
     },
     "w3-tue-3": {
       hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
@@ -1245,7 +1245,7 @@ const PLAN = {
     },
     "w3-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex.",
-      en: "Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as checking a balance and then updating it. For that I hold one Mutex around the check and the update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
+      en: "Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as moving money between two accounts so the total stays constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
     },
     "w3-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
@@ -1280,8 +1280,8 @@ const PLAN = {
     { id: "p5", code: "func f() (x int) {\n    defer func() { x++ }()\n    return 1\n}\n\nfunc main() {\n    fmt.Println(f())\n}", output: "2", why: "return 1 assigns to the named result x first, then the deferred function increments it.", whyRU: "return 1 сначала присваивает значение именованному результату x, затем отложенная функция его увеличивает." },
     { id: "p6", code: "type E struct{}\n\nfunc (*E) Error() string { return \"e\" }\n\nfunc g() error {\n    var p *E\n    return p\n}\n\nfunc main() {\n    fmt.Println(g() == nil)\n}", output: "false", why: "The interface holds the type *E with a nil value, so the interface itself isn't nil.", whyRU: "В интерфейсе лежит тип *E с нулевым указателем, поэтому сам интерфейс не равен nil." },
     { id: "p7", code: "type P struct{ v int }\nps := []P{{1}, {2}}\nfor _, p := range ps {\n    p.v = 10\n}\nfmt.Println(ps)", output: "[{1} {2}]", why: "The range variable is a copy of each element; to modify the slice, use the index.", whyRU: "Переменная range — копия элемента; чтобы изменить срез, нужно обращаться по индексу." },
-    { id: "p8", code: "s := \"héllo\"\nfmt.Println(len(s), s[1], len([]rune(s)))", output: "6 195 5", why: "len counts bytes; the precomposed é (U+00E9) takes two bytes in UTF-8, s[1] is its first byte 0xC3 = 195; there are five runes.", whyRU: "len считает байты; é (составной символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять." },
-    { id: "p9", code: "var fs []func()\nfor i := 0; i < 3; i++ {\n    fs = append(fs, func() { fmt.Print(i) })\n}\nfor _, f := range fs {\n    f()\n}", output: "012", why: "Since Go 1.22 each loop iteration has its own variable. With language version below 1.22 in go.mod (or -lang=go1.21) all closures share one variable and print 333.", whyRU: "С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22, все замыкания разделяют одну переменную и печатают 333.", version: "Зависит от версии языка модуля, а не только от установленного toolchain" },
+    { id: "p8", code: "s := \"héllo\"\nfmt.Println(len(s), s[1], len([]rune(s)))", output: "6 195 5", why: "len counts bytes; the precomposed é (U+00E9) takes two bytes in UTF-8, s[1] is its first byte 0xC3 = 195; there are five runes.", whyRU: "len считает байты; é (готовый, предкомпонованный символ U+00E9) занимает в UTF-8 два байта, s[1] — первый из них, 0xC3 = 195; рун пять." },
+    { id: "p9", code: "var fs []func()\nfor i := 0; i < 3; i++ {\n    fs = append(fs, func() { fmt.Print(i) })\n}\nfor _, f := range fs {\n    f()\n}", output: "012", why: "Since Go 1.22 each loop iteration has its own variable. With language version below 1.22 in go.mod (or -lang=go1.21) all closures share one variable and print 333.", whyRU: "С Go 1.22 у каждой итерации своя переменная. Если версия языка в go.mod ниже 1.22 (или сборка с -gcflags=-lang=go1.21), все замыкания разделяют одну переменную и печатают 333.", version: "Зависит от версии языка модуля, а не только от установленного toolchain" },
     { id: "p10", code: "a := [3]int{1, 2, 3}\nb := a\nb[0] = 100\nfmt.Println(a[0])", output: "1", why: "Arrays are values in Go, so assignment copies the whole array, unlike a slice.", whyRU: "Массивы в Go — значения: присваивание копирует весь массив, в отличие от среза." }
   ]
 };

@@ -1,0 +1,32 @@
+// Package validation: practice task W1-3. Replace each TODO with your solution.
+package validation
+
+// ValidationError is a typed error: it carries data the caller can read with errors.As.
+type ValidationError struct {
+	Field  string
+	Reason string
+}
+
+// Error formats "invalid <field>: <reason>".
+func (e *ValidationError) Error() string {
+	// TODO
+	panic("TODO")
+}
+
+type User struct {
+	Email string
+	Age   int
+}
+
+// Validate returns a *ValidationError for the first invalid field:
+// email must contain "@", age must be at least 18. A valid user gives nil.
+func Validate(u User) error {
+	// TODO
+	panic("TODO")
+}
+
+// Register wraps Validate's error with context, keeping it reachable by errors.As.
+func Register(u User) error {
+	// TODO
+	panic("TODO")
+}

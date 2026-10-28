@@ -1,0 +1,40 @@
+// Package txsum: practice task W2-4. Sum transactions from CSV lines
+// "account,amount,currency" per account and currency. Replace each TODO.
+package txsum
+
+import (
+	"errors"
+	"io"
+)
+
+var (
+	ErrColumns  = errors.New("want 3 columns: account,amount,currency")
+	ErrAmount   = errors.New("amount must be a number with at most 2 decimals")
+	ErrCurrency = errors.New("unknown currency") // known: EUR, USD, RSD
+)
+
+// LineError says which input line failed (lines count from 1, including the header).
+type LineError struct {
+	Line int
+	Err  error
+}
+
+// Error formats "line 5: <cause>".
+func (e *LineError) Error() string { panic("TODO") }
+
+// Unwrap returns the cause, so errors.Is and errors.As look inside.
+func (e *LineError) Unwrap() error { panic("TODO") }
+
+type Key struct{ Account, Currency string }
+
+// ParseAmount turns "12.50", "12.5", "12" or "-3.10" into minor units (1250, 1250, 1200, -310).
+// Anything else, including three decimals, is an error wrapping ErrAmount.
+func ParseAmount(s string) (int64, error) { panic("TODO") }
+
+// Sum adds up every valid line and reports every bad line (skipping it).
+// Blank lines and the header "account,amount,currency" are ignored.
+func Sum(r io.Reader) (map[Key]int64, []error) { panic("TODO") }
+
+// Run is the CLI: "account CUR 12.50" lines sorted by account then currency to
+// stdout, one error per line to stderr, exit code 1 if any line was bad, else 0.
+func Run(stdin io.Reader, stdout, stderr io.Writer) int { panic("TODO") }

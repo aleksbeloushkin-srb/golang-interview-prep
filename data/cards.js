@@ -2437,5 +2437,368 @@ func Drain(a, b <-chan int, consume func(int)) {
       "followUpEN": "Why should a container default calculation be verified on Linux instead of inferred from a macOS test?",
       "followUpRU": "Почему выбор default для контейнера нужно проверять в Linux, а не выводить из теста на macOS?"
     }
+  },
+  // ==========================================
+  // МОДУЛЬ 6: ИДИОМЫ GO — ОШИБКИ, ТИПЫ, СТРОКИ, GENERICS, МОДУЛИ, ТЕСТЫ (C39 - C44)
+  // ==========================================
+  {
+    "id": "c39",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?",
+    "qRU": "Как добавить к ошибке контекст и когда нужны errors.Is, errors.As и errors.Join?",
+    "shortEN": "Wrap with fmt.Errorf and %w: it adds context and keeps the original error in the chain. errors.Is checks whether a specific error value, usually a sentinel like io.EOF, is anywhere in the chain; errors.As finds the first error of a given type so you can read its fields. errors.Join (Go 1.20) combines several errors into one that Is and As can still search.",
+    "shortRU": "Оборачивай через fmt.Errorf с %w: контекст добавляется, а исходная ошибка остаётся в цепочке. errors.Is проверяет, есть ли в цепочке конкретное значение — обычно sentinel вроде io.EOF; errors.As находит первую ошибку нужного типа и даёт прочитать её поля. errors.Join (Go 1.20) объединяет несколько ошибок в одну, внутри которой Is и As тоже ищут.",
+    "detailsEN": [
+      "Sentinel or typed? A sentinel (var ErrNotFound = errors.New(\"not found\")) names a condition the caller branches on. A typed error, a struct that implements error, carries data such as a field name or a status code. Compare with errors.Is and errors.As rather than == or a type assertion, because those see only the outermost error.",
+      "%w versus %v: with %w the new error has an Unwrap method that returns the original, so Is and As can reach it. With %v the original is only formatted into the text; the chain is cut and errors.Is returns false. Wrapping makes the inner error part of your API, so wrap on purpose.",
+      "Add context once per layer, as \"operation subject: cause\" (\"load user 7: …\"). Handle an error once: log it or return it, not both, otherwise one failure is reported several times.",
+      "errors.Join returns nil when every argument is nil; otherwise its message joins the messages with newlines and its Unwrap returns []error. errors.Is and errors.As search every branch, but errors.Unwrap returns nil for it, because errors.Unwrap only calls an Unwrap() error method. fmt.Errorf with several %w verbs (Go 1.20) builds the same kind of multi-error."
+    ],
+    "detailsRU": [
+      "Sentinel или тип? Sentinel (var ErrNotFound = errors.New(\"not found\")) называет условие, по которому вызывающий ветвится. Ошибка-тип — структура, реализующая error, — несёт данные: имя поля, код статуса. Сравнивай через errors.Is и errors.As, а не через == или приведение типа: они видят только внешнюю ошибку.",
+      "%w или %v: с %w у новой ошибки есть метод Unwrap, возвращающий исходную, и Is с As до неё доходят. С %v исходная ошибка только подставляется в текст; цепочка обрывается, и errors.Is возвращает false. Обёртка делает внутреннюю ошибку частью твоего API — оборачивай осознанно.",
+      "Добавляй контекст один раз на уровень, в виде «операция объект: причина» («load user 7: …»). Обрабатывай ошибку один раз: либо логируй, либо возвращай, иначе один сбой попадёт в лог несколько раз.",
+      "errors.Join возвращает nil, если все аргументы nil; иначе сообщения соединяются переводом строки, а Unwrap возвращает []error. errors.Is и errors.As ищут во всех ветках, но errors.Unwrap для неё возвращает nil: он вызывает только метод Unwrap() error. fmt.Errorf с несколькими %w (Go 1.20) создаёт такую же составную ошибку."
+    ],
+    "practicalRU": "Порядок мысли: кто будет проверять эту ошибку и что ему нужно — условие или данные? Условие — sentinel и errors.Is, данные — тип и errors.As. Контекст — через %w, не %v. Логируй там, где ошибку обрабатывают, а не на каждом уровне.",
+    "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"io/fs\"\n\t\"os\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\ntype QueryError struct {\n\tQuery string\n\tErr   error\n}\n\nfunc (e *QueryError) Error() string { return e.Query + \": \" + e.Err.Error() }\nfunc (e *QueryError) Unwrap() error { return e.Err }\n\nfunc main() {\n\terr := fmt.Errorf(\"load user 7: %w\", &QueryError{Query: \"SELECT\", Err: ErrNotFound})\n\tfmt.Println(err)\n\tfmt.Println(errors.Is(err, ErrNotFound))\n\tvar qe *QueryError\n\tfmt.Println(errors.As(err, &qe), qe.Query)\n\n\t_, err = os.Open(\"/no/such/file\")\n\tfmt.Println(errors.Is(err, fs.ErrNotExist))\n\n\tfmt.Printf(\"%q\\n\", errors.Join(errors.New(\"a\"), errors.New(\"b\")).Error())\n}",
+    "versionNote": "errors.Is, errors.As, Unwrap и %w — с Go 1.13; errors.Join и несколько %w в одном fmt.Errorf — с Go 1.20. Пример выполнен Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Package errors",
+        "url": "https://pkg.go.dev/errors"
+      },
+      {
+        "title": "Working with Errors in Go 1.13",
+        "url": "https://go.dev/blog/go1.13-errors"
+      },
+      {
+        "title": "Go 1.20 release notes: wrapping multiple errors",
+        "url": "https://go.dev/doc/go1.20#errors"
+      }
+    ],
+    "practice": {
+      "kind": "Измени одну букву",
+      "promptEN": "A function returns fmt.Errorf(\"find user 7: %v\", ErrNotFound). What does errors.Is(err, ErrNotFound) return, and what single change fixes it? When would you return a typed error instead?",
+      "promptRU": "Функция возвращает fmt.Errorf(\"find user 7: %v\", ErrNotFound). Что вернёт errors.Is(err, ErrNotFound) и какое одно изменение это исправит? Когда лучше вернуть ошибку-тип?",
+      "pointsEN": [
+        "false: %v puts the text in the message but cuts the chain.",
+        "Replace %v with %w; then Unwrap returns ErrNotFound and errors.Is finds it.",
+        "Return a typed error when the caller needs data, such as a field or a code, and read it with errors.As."
+      ],
+      "pointsRU": [
+        "false: %v вставляет текст в сообщение, но обрывает цепочку.",
+        "Заменить %v на %w; тогда Unwrap вернёт ErrNotFound и errors.Is его найдёт.",
+        "Ошибку-тип возвращай, когда вызывающему нужны данные — поле или код; читай их через errors.As."
+      ],
+      "followUpEN": "For err := errors.Join(errA, errB), what do errors.Is(err, errB) and errors.Unwrap(err) return?",
+      "followUpRU": "Для err := errors.Join(errA, errB): что вернут errors.Is(err, errB) и errors.Unwrap(err)?"
+    }
+  },
+  {
+    "id": "c40",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "What is the zero value of each kind of type, and which nil values are safe to use?",
+    "qRU": "Какое нулевое значение у каждого вида типов и какими nil-значениями можно безопасно пользоваться?",
+    "shortEN": "Every variable starts at its type's zero value: 0, false, \"\", nil for pointers, slices, maps, channels, functions and interfaces, and a struct of zero fields. A nil slice behaves like an empty one for len, range and append; a nil map can be read, but writing to it panics; a nil channel blocks forever. Good Go types make the zero value useful, like sync.Mutex and strings.Builder.",
+    "shortRU": "Любая переменная начинается с нулевого значения своего типа: 0, false, \"\", nil у указателей, срезов, map, каналов, функций и интерфейсов, структура из нулевых полей. Nil-срез ведёт себя как пустой для len, range и append; nil map можно читать, но запись вызывает panic; nil-канал блокирует навсегда. Хорошие типы в Go делают нулевое значение полезным, как sync.Mutex и strings.Builder.",
+    "detailsEN": [
+      "Reading is safe for nil collections: len and range work on nil slices and maps, and indexing a nil map returns the zero value. Writing differs: append to a nil slice allocates, but assignment to a nil map panics with \"assignment to entry in nil map\". Create a map with make or a literal before writing.",
+      "Calling a method on a nil pointer is legal; it panics only if the method dereferences the receiver. A nil pointer stored in an interface makes the interface non-nil (see C33).",
+      "Comparability: a struct is comparable only if all its fields are, and only comparable types can be map keys. Slice, map and func fields make a struct non-comparable; arrays such as [2]int are comparable. A map[any]int accepts a []int key at compile time but panics at run time: hash of unhashable type.",
+      "Design for a useful zero value: var mu sync.Mutex is unlocked, var sb strings.Builder and var buf bytes.Buffer are empty and ready, var wg sync.WaitGroup is ready. Unlike Kotlin, Go has no nullable types: a nil map or pointer is an ordinary value, and the compiler does not force a check."
+    ],
+    "detailsRU": [
+      "Читать nil-коллекции безопасно: len и range работают с nil-срезом и nil map, а индекс nil map возвращает нулевое значение. Запись различается: append к nil-срезу выделяет память, а присваивание в nil map вызывает panic «assignment to entry in nil map». Перед записью создай map через make или литерал.",
+      "Вызвать метод у nil-указателя можно; panic будет, только если метод разыменует ресивер. Nil-указатель внутри интерфейса делает интерфейс не-nil (см. C33).",
+      "Сравнимость: структура сравнима, только если сравнимы все её поля, и ключом map может быть только сравнимый тип. Поля-срезы, map и функции делают структуру несравнимой; массивы вроде [2]int сравнимы. map[any]int примет ключ []int при компиляции, но при выполнении будет panic: hash of unhashable type.",
+      "Проектируй полезное нулевое значение: var mu sync.Mutex не заблокирован, var sb strings.Builder и var buf bytes.Buffer пусты и готовы, var wg sync.WaitGroup готов. В отличие от Kotlin, в Go нет nullable-типов: nil map или указатель — обычное значение, и компилятор не заставляет его проверять."
+    ],
+    "practicalRU": "Для Kotlin-разработчика: nil встроен в указатели, срезы, map, каналы, функции и интерфейсы, а проверки компилятор не требует. Запомни таблицу «читать можно, писать нельзя» для map и «nil-канал блокирует навсегда» (C14).",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar (\n\t\ti  int\n\t\ts  string\n\t\tp  *int\n\t\tsl []int\n\t\tm  map[string]int\n\t\tch chan int\n\t\te  error\n\t)\n\tfmt.Println(i, s == \"\", p == nil, sl == nil, len(sl), m == nil, m[\"k\"], ch == nil, e == nil)\n\n\tsl = append(sl, 1) // append to a nil slice allocates\n\tvar sb strings.Builder\n\tsb.WriteString(\"ok\") // the zero Builder is ready to use\n\tvar mu sync.Mutex\n\tmu.Lock() // the zero Mutex is unlocked\n\tmu.Unlock()\n\tfmt.Println(sl, sb.String())\n\t// m[\"k\"] = 1 would panic: assignment to entry in nil map\n}",
+    "versionNote": "Правила нулевых значений и сравнимости не менялись с Go 1.0. Пример выполнен Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Go specification: the zero value",
+        "url": "https://go.dev/ref/spec#The_zero_value"
+      },
+      {
+        "title": "Go specification: map types",
+        "url": "https://go.dev/ref/spec#Map_types"
+      },
+      {
+        "title": "Go specification: comparison operators",
+        "url": "https://go.dev/ref/spec#Comparison_operators"
+      },
+      {
+        "title": "Effective Go: allocation with new (useful zero values)",
+        "url": "https://go.dev/doc/effective_go#allocation_new"
+      }
+    ],
+    "practice": {
+      "kind": "Читать или писать",
+      "promptEN": "var m map[string]int; var s []int; var ch chan int. Which of m[\"a\"], m[\"a\"] = 1, append(s, 1), len(ch) and ch <- 1 work, panic or block?",
+      "promptRU": "var m map[string]int; var s []int; var ch chan int. Что из m[\"a\"], m[\"a\"] = 1, append(s, 1), len(ch) и ch <- 1 работает, вызывает panic или блокирует?",
+      "pointsEN": [
+        "m[\"a\"] returns 0; m[\"a\"] = 1 panics: assignment to entry in nil map.",
+        "append(s, 1) allocates a new array; len(ch) is 0.",
+        "ch <- 1 blocks forever; in a select, a case on a nil channel is never chosen."
+      ],
+      "pointsRU": [
+        "m[\"a\"] возвращает 0; m[\"a\"] = 1 — panic: assignment to entry in nil map.",
+        "append(s, 1) выделяет новый массив; len(ch) равен 0.",
+        "ch <- 1 блокирует навсегда; в select ветка с nil-каналом никогда не выбирается."
+      ],
+      "followUpEN": "Why is map[[]int]bool a compile error, while a []int key in map[any]int is a run-time panic?",
+      "followUpRU": "Почему map[[]int]bool — ошибка компиляции, а ключ []int в map[any]int — panic при выполнении?"
+    }
+  },
+  {
+    "id": "c41",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "What do len, indexing and range return for a Go string, and when do you need []rune?",
+    "qRU": "Что возвращают len, индекс и range для строки Go и когда нужен []rune?",
+    "shortEN": "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes, s[i] is a byte, and range over a string decodes UTF-8, giving each rune with its starting byte index. Convert to []rune when you need characters by position, and build strings in a loop with strings.Builder.",
+    "shortRU": "Строка — неизменяемая последовательность байтов, обычно в UTF-8. len(s) считает байты, s[i] — байт, а range по строке декодирует UTF-8 и выдаёт руну с индексом её первого байта. []rune нужен, когда символы требуются по позиции; строку в цикле собирай через strings.Builder.",
+    "detailsEN": [
+      "\"héllo, 世界\" has 9 runes but 14 bytes: é takes 2 bytes and each of 世 and 界 takes 3. utf8.RuneCountInString counts runes without allocating; []rune(s) allocates a new slice.",
+      "range yields the starting byte index of each rune, so indexes jump: 0, 1, 3 for \"hé世\". An invalid byte comes out as U+FFFD, one byte at a time. Slicing s[i:j] works on bytes and can cut a rune in half.",
+      "Conversions copy: []byte(s) and string(b) create new memory, although the compiler avoids some copies, for example in a lookup m[string(b)]. A substring shares the original's memory, so a small substring can keep a large string alive; strings.Clone (Go 1.20) makes an independent copy.",
+      "s += x in a loop copies the growing string each time; strings.Builder grows one buffer and is the idiomatic choice. rune is an alias for int32 and byte for uint8. What a user sees as one character can be several runes: é may also be e plus a combining accent."
+    ],
+    "detailsRU": [
+      "В \"héllo, 世界\" 9 рун, но 14 байт: é занимает 2 байта, 世 и 界 — по 3. utf8.RuneCountInString считает руны без выделения памяти; []rune(s) создаёт новый срез.",
+      "range выдаёт индекс первого байта каждой руны, поэтому индексы прыгают: 0, 1, 3 для \"hé世\". Некорректный байт превращается в U+FFFD, по одному на байт. Срез s[i:j] работает с байтами и может разрезать руну пополам.",
+      "Преобразования копируют: []byte(s) и string(b) создают новую память, хотя компилятор избегает части копий — например, при поиске m[string(b)]. Подстрока разделяет память с исходной строкой, поэтому маленькая подстрока может удерживать большую строку; strings.Clone (Go 1.20) делает независимую копию.",
+      "s += x в цикле каждый раз копирует растущую строку; strings.Builder наращивает один буфер — это идиоматичный выбор. rune — псевдоним int32, byte — uint8. То, что пользователь видит как один символ, может быть несколькими рунами: é бывает ещё и e плюс комбинируемое ударение."
+    ],
+    "practicalRU": "Три вопроса на интервью: что вернёт len, что вернёт s[i] и какие индексы даёт range. Ответ «байты, байт, начало руны» — верный.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n\t\"unicode/utf8\"\n)\n\nfunc main() {\n\ts := \"héllo, 世界\"\n\tfmt.Println(len(s), utf8.RuneCountInString(s))\n\tfmt.Println(s[1], s[1:3])\n\tfor i, r := range \"hé世\" {\n\t\tfmt.Print(i, \":\", string(r), \" \")\n\t}\n\tfmt.Println()\n\trunes := []rune(s)\n\tfmt.Println(string(runes[1]), len(runes))\n\n\tb := []byte(\"go\") // a copy: strings are immutable\n\tb[0] = 'G'\n\tfmt.Println(string(b))\n\n\tvar sb strings.Builder\n\tfor range 3 {\n\t\tsb.WriteString(\"ab\")\n\t}\n\tfmt.Println(sb.String())\n}",
+    "versionNote": "Семантика строк и range по строке не менялась; strings.Clone — Go 1.20; range по целому числу в примере — Go 1.22. Пример выполнен Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Strings, bytes, runes and characters in Go",
+        "url": "https://go.dev/blog/strings"
+      },
+      {
+        "title": "Go specification: for statements with range clause",
+        "url": "https://go.dev/ref/spec#For_range"
+      },
+      {
+        "title": "Package unicode/utf8",
+        "url": "https://pkg.go.dev/unicode/utf8"
+      },
+      {
+        "title": "strings.Builder",
+        "url": "https://pkg.go.dev/strings#Builder"
+      }
+    ],
+    "practice": {
+      "kind": "Посчитай байты",
+      "promptEN": "For s := \"héllo\": what are len(s), s[1] and len([]rune(s))? How would you reverse s without breaking é?",
+      "promptRU": "Для s := \"héllo\": чему равны len(s), s[1] и len([]rune(s))? Как развернуть s, не сломав é?",
+      "pointsEN": [
+        "len(s) is 6 bytes; s[1] is 195 (0xC3), the first byte of é; there are 5 runes.",
+        "Reverse the []rune slice, not the bytes, and convert back with string(runes).",
+        "A decomposed é (e plus a combining accent) still breaks: that needs normalization or a grapheme library."
+      ],
+      "pointsRU": [
+        "len(s) — 6 байт; s[1] — 195 (0xC3), первый байт é; рун пять.",
+        "Разворачивать срез []rune, а не байты, и собрать обратно через string(runes).",
+        "Разложенное é (e плюс комбинируемое ударение) всё равно сломается: нужна нормализация или библиотека для графем."
+      ],
+      "followUpEN": "Why can a 10-byte substring keep a 1 GB string in memory, and how do you avoid it?",
+      "followUpRU": "Почему подстрока из 10 байт может удерживать в памяти строку в 1 ГБ и как этого избежать?"
+    }
+  },
+  {
+    "id": "c42",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "When do you choose generics, and when an interface?",
+    "qRU": "Когда выбирать generics, а когда интерфейс?",
+    "shortEN": "Use type parameters when the same algorithm works on many types and the caller's type should come back out, as in Map, Max or Set[T comparable]. Use an interface when different types behave differently behind the same methods and the implementation is chosen at run time, as with io.Reader or a Shape. If one concrete type is enough, use that.",
+    "shortRU": "Параметры типа — когда один и тот же алгоритм работает для многих типов и вызывающий должен получить свой тип обратно: Map, Max, Set[T comparable]. Интерфейс — когда разные типы ведут себя по-разному за одними методами, а реализация выбирается во время выполнения: io.Reader, Shape. Если хватает одного конкретного типа — используй его.",
+    "detailsEN": [
+      "A constraint says what the algorithm needs: any for nothing, comparable for == and map keys, cmp.Ordered for < (Go 1.21), and unions such as ~int | ~float64 for arithmetic. The tilde admits defined types like type Celsius float64.",
+      "A generic function returns the caller's type: Max([]Celsius) returns Celsius with no type assertion. An interface version would take []any or a wrapper type and force assertions.",
+      "An interface holds values of different dynamic types in one slice, like []Shape{Rect{}, Circle{}}; a generic []T holds one type per instantiation. Interfaces are also how you replace a dependency with a fake in tests.",
+      "Cost: interface calls are dynamic, and the gc compiler implements generics with GC-shape stenciling and dictionaries, so generic code is not automatically faster — measure. Go 1.27 adds generic methods (a method may have its own type parameters); interface methods still cannot."
+    ],
+    "detailsRU": [
+      "Ограничение говорит, что нужно алгоритму: any — ничего, comparable — == и ключи map, cmp.Ordered — < (Go 1.21), объединения вроде ~int | ~float64 — арифметика. Тильда допускает определённые типы вроде type Celsius float64.",
+      "Обобщённая функция возвращает тип вызывающего: Max([]Celsius) вернёт Celsius без приведения. Вариант через интерфейс принимал бы []any или тип-обёртку и требовал приведений.",
+      "Интерфейс хранит значения разных динамических типов в одном срезе, как []Shape{Rect{}, Circle{}}; обобщённый []T хранит один тип на каждую конкретизацию. Через интерфейсы же подменяют зависимости в тестах.",
+      "Стоимость: вызовы через интерфейс динамические, а компилятор gc реализует generics через GC-shape stenciling со словарями, поэтому обобщённый код не обязательно быстрее — измеряй. В Go 1.27 появились generic-методы (у метода свои параметры типа); у методов интерфейса их по-прежнему нет."
+    ],
+    "practicalRU": "Правило: та же логика для разных типов — generics; разное поведение за одним методом — интерфейс. Начинай с конкретного типа и обобщай, когда появился второй вызывающий с другим типом.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"math\"\n)\n\n// Generics: one algorithm, many types known at compile time.\ntype Number interface{ ~int | ~int64 | ~float64 }\n\nfunc Sum[T Number](xs []T) T {\n\tvar s T\n\tfor _, x := range xs {\n\t\ts += x\n\t}\n\treturn s\n}\n\ntype Celsius float64 // ~float64 lets defined types in\n\n// Interfaces: different behaviour behind one method set, chosen at run time.\ntype Shape interface{ Area() float64 }\n\ntype Rect struct{ W, H float64 }\n\nfunc (r Rect) Area() float64 { return r.W * r.H }\n\ntype Circle struct{ R float64 }\n\nfunc (c Circle) Area() float64 { return math.Pi * c.R * c.R }\n\nfunc TotalArea(shapes []Shape) float64 {\n\ttotal := 0.0\n\tfor _, s := range shapes {\n\t\ttotal += s.Area()\n\t}\n\treturn total\n}\n\nfunc main() {\n\tfmt.Println(Sum([]int{1, 2, 3}), Sum([]Celsius{1.5, 2}))\n\tfmt.Printf(\"%.2f\\n\", TotalArea([]Shape{Rect{2, 3}, Circle{1}}))\n}",
+    "versionNote": "Параметры типа — Go 1.18; cmp.Ordered и встроенные min и max — Go 1.21; generic-методы — Go 1.27. Пример выполнен Go 1.24.7.",
+    "sources": [
+      {
+        "title": "Tutorial: Getting started with generics",
+        "url": "https://go.dev/doc/tutorial/generics"
+      },
+      {
+        "title": "When To Use Generics",
+        "url": "https://go.dev/blog/when-generics"
+      },
+      {
+        "title": "Go specification: type constraints",
+        "url": "https://go.dev/ref/spec#Type_constraints"
+      },
+      {
+        "title": "Go 1.27 release notes",
+        "url": "https://go.dev/doc/go1.27"
+      }
+    ],
+    "practice": {
+      "kind": "Выбери подход",
+      "promptEN": "You need (a) the largest value of a []float64 or a []Celsius, and (b) the total area of a list that mixes rectangles and circles. Which is generic, which is an interface, and why?",
+      "promptRU": "Нужно (а) найти наибольшее значение в []float64 или []Celsius и (б) посчитать общую площадь списка, где вперемешку прямоугольники и круги. Что из этого generics, а что интерфейс, и почему?",
+      "pointsEN": [
+        "(a) Generic Max[T cmp.Ordered]: the same algorithm, and the caller gets Celsius back.",
+        "(b) An interface Shape with Area(): different behaviour per type, mixed in one slice.",
+        "A Max over []any would need type switches and give up compile-time checks."
+      ],
+      "pointsRU": [
+        "(а) Обобщённый Max[T cmp.Ordered]: тот же алгоритм, и вызывающий получает Celsius обратно.",
+        "(б) Интерфейс Shape с Area(): своё поведение у каждого типа, все в одном срезе.",
+        "Max по []any потребовал бы switch по типам и отказа от проверок компилятора."
+      ],
+      "followUpEN": "Why must T be comparable in Set[T], and can a struct with a slice field be a set element?",
+      "followUpRU": "Почему в Set[T] тип T должен быть comparable и может ли элементом быть структура с полем-срезом?"
+    }
+  },
+  {
+    "id": "c43",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "What is the difference between a module and a package, and what does an internal directory enforce?",
+    "qRU": "Чем модуль отличается от пакета и что гарантирует каталог internal?",
+    "shortEN": "A package is one directory of .go files compiled together; its import path is the module path plus the directory. A module is a versioned set of packages with a go.mod that declares the module path, the Go version and the dependencies. A package under internal/ can be imported only by code in the tree rooted at the parent of internal, and the go command enforces it.",
+    "shortRU": "Пакет — один каталог .go-файлов, которые компилируются вместе; его путь импорта — путь модуля плюс каталог. Модуль — набор пакетов с версией и файлом go.mod, где указаны путь модуля, версия Go и зависимости. Пакет внутри internal/ может импортировать только код из дерева, корень которого — родитель internal; это проверяет команда go.",
+    "detailsEN": [
+      "go.mod records the module path, the go directive (the minimum language version, which also selects semantics such as per-iteration loop variables), an optional toolchain line (Go 1.21+), and require lines; go.sum stores checksums. go mod tidy adds missing requirements and removes unused ones.",
+      "Visibility is per package: identifiers that start with an upper-case letter are exported. internal/ adds a second boundary: a/b/internal/c can be imported from a/b and below, and from nowhere else — not from another module, and not from a/x.",
+      "A common layout is cmd/<binary>/main.go for executables and internal/ for code others should not import. It is a convention, not a standard; a small service can be one main package. Avoid catch-all package names like util or common.",
+      "Minimal version selection: a build uses, for each module, the highest of the minimum versions its dependents require, not the newest release. A major version 2 or higher changes the import path (example.com/m/v2)."
+    ],
+    "detailsRU": [
+      "go.mod хранит путь модуля, директиву go (минимальная версия языка, которая заодно выбирает семантику — например, переменную цикла на каждую итерацию), необязательную строку toolchain (Go 1.21+) и строки require; go.sum хранит контрольные суммы. go mod tidy добавляет недостающие зависимости и удаляет лишние.",
+      "Видимость — на уровне пакета: идентификаторы с заглавной буквы экспортируются. internal/ добавляет вторую границу: a/b/internal/c можно импортировать из a/b и ниже и больше ниоткуда — ни из другого модуля, ни из a/x.",
+      "Частая раскладка — cmd/<binary>/main.go для исполняемых файлов и internal/ для кода, который другим импортировать не нужно. Это соглашение, а не стандарт; небольшой сервис может быть одним пакетом main. Избегай пакетов-свалок вроде util или common.",
+      "Минимальный выбор версий: для каждого модуля сборка берёт наибольшую из минимальных версий, которые требуют зависимые, а не самый свежий выпуск. Мажорная версия 2 и выше меняет путь импорта (example.com/m/v2)."
+    ],
+    "practicalRU": "Сравнение с Kotlin и Gradle: модуль Go ближе к артефакту с версией, пакет — к package. Видимость только «экспортировано или нет» плюс internal/; protected нет.",
+    "code": "myapp/\n├── go.mod                   // module github.com/me/myapp\n├── cmd/myapp/main.go        // package main\n└── internal/store/store.go  // importable only from github.com/me/myapp/...\n\n$ go mod init github.com/me/myapp\n$ go get golang.org/x/sync@latest\n$ go mod tidy\n$ go build ./... && go test ./...",
+    "versionNote": "Модули по умолчанию — с Go 1.16; строка toolchain — с Go 1.21; директива go задаёт семантику языка (например, переменные цикла — с 1.22). Правило internal действует для любых путей импорта.",
+    "sources": [
+      {
+        "title": "Go Modules Reference",
+        "url": "https://go.dev/ref/mod"
+      },
+      {
+        "title": "Organizing a Go module",
+        "url": "https://go.dev/doc/modules/layout"
+      },
+      {
+        "title": "cmd/go: internal directories",
+        "url": "https://pkg.go.dev/cmd/go#hdr-Internal_Directories"
+      }
+    ],
+    "practice": {
+      "kind": "Найди границу",
+      "promptEN": "Module github.com/me/shop has the package internal/pay. Can github.com/me/shop/cmd/api import it? Can a package in another module, github.com/me/tools? Where would you put code meant to be shared with other modules?",
+      "promptRU": "В модуле github.com/me/shop есть пакет internal/pay. Может ли его импортировать github.com/me/shop/cmd/api? А пакет другого модуля github.com/me/tools? Куда положить код, которым нужно делиться с другими модулями?",
+      "pointsEN": [
+        "cmd/api can: it is inside the tree rooted at shop, the parent of internal.",
+        "github.com/me/tools cannot: the go command rejects the import.",
+        "Shared code goes in a non-internal package with a stable API, versioned with the module."
+      ],
+      "pointsRU": [
+        "cmd/api может: он внутри дерева с корнем shop — родителем internal.",
+        "github.com/me/tools не может: команда go отклонит импорт.",
+        "Общий код — в пакет вне internal со стабильным API и версией модуля."
+      ],
+      "followUpEN": "What else does the go directive in go.mod change, besides the minimum version?",
+      "followUpRU": "Что ещё меняет директива go в go.mod, кроме минимальной версии?"
+    }
+  },
+  {
+    "id": "c44",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?",
+    "qRU": "Как написать табличный тест и что меняют t.Run, t.Helper, t.Parallel и t.Cleanup?",
+    "shortEN": "A table-driven test lists named cases in a slice of structs and runs each with t.Run, so failures name the case and -run can select one. t.Helper marks a helper so failures point at the caller's line. t.Parallel lets subtests run concurrently after the parent's function returns, so give them only per-case data and register shared teardown with t.Cleanup, not defer.",
+    "shortRU": "Табличный тест перечисляет именованные случаи в срезе структур и запускает каждый через t.Run: в ошибке видно имя случая, а -run выбирает один. t.Helper помечает вспомогательную функцию, и ошибка указывает на строку вызывающего. t.Parallel запускает подтесты параллельно после возврата из функции родителя, поэтому им нужны только свои данные, а общий teardown регистрируют через t.Cleanup, а не defer.",
+    "detailsEN": [
+      "t.Run(name, f) creates a subtest; go test -run 'TestAbs/negative' runs one case. t.Errorf records a failure and continues; t.Fatalf stops the test, and it must be called from the test's goroutine, not from goroutines the test starts.",
+      "t.Parallel pauses the subtest until its parent's function returns, then runs it with the other parallel subtests. A defer in the parent therefore runs before them; t.Cleanup runs after the test and all its subtests finish.",
+      "Since Go 1.22 each loop iteration has its own tt, so capturing it in a parallel subtest is safe; with an older go directive, copy it (tt := tt). Parallel subtests must not share mutable data without synchronization; go test -race reports the data races that actually happen during the run.",
+      "Useful flags: -run, -count=1 (no cached result), -race, -cover and -coverprofile, -shuffle=on to catch order dependence, -parallel to cap concurrency, -v to see subtests. testing/synctest (Go 1.25) tests code with time and goroutines without sleeping."
+    ],
+    "detailsRU": [
+      "t.Run(name, f) создаёт подтест; go test -run 'TestAbs/negative' запускает один случай. t.Errorf фиксирует ошибку и продолжает; t.Fatalf останавливает тест, и вызывать его можно только из горутины теста, а не из горутин, которые тест запустил.",
+      "t.Parallel ставит подтест на паузу до возврата из функции родителя и затем выполняет его вместе с другими параллельными подтестами. Поэтому defer родителя срабатывает раньше них, а t.Cleanup — после завершения теста и всех его подтестов.",
+      "С Go 1.22 у каждой итерации цикла своя tt, и захват её параллельным подтестом безопасен; при более старой директиве go нужна копия (tt := tt). Параллельные подтесты не должны делить изменяемые данные без синхронизации; go test -race сообщает о гонках, которые действительно случились во время запуска.",
+      "Полезные флаги: -run, -count=1 (без кеша), -race, -cover и -coverprofile, -shuffle=on — найти зависимость от порядка, -parallel — ограничить параллельность, -v — увидеть подтесты. testing/synctest (Go 1.25) проверяет код со временем и горутинами без sleep."
+    ],
+    "practicalRU": "Шаблон держи в пальцах: срез структур с полем name, цикл, t.Run, внутри — проверка через helper с t.Helper. Общий ресурс закрывай через t.Cleanup.",
+    "code": "package abs\n\nimport \"testing\"\n\nfunc Abs(n int) int {\n\tif n < 0 {\n\t\treturn -n\n\t}\n\treturn n\n}\n\nfunc assertEqual(t *testing.T, got, want int) {\n\tt.Helper() // a failure is reported at the caller's line\n\tif got != want {\n\t\tt.Errorf(\"got %d, want %d\", got, want)\n\t}\n}\n\nfunc TestAbs(t *testing.T) {\n\ttests := []struct {\n\t\tname     string\n\t\tin, want int\n\t}{\n\t\t{\"positive\", 3, 3},\n\t\t{\"negative\", -3, 3},\n\t\t{\"zero\", 0, 0},\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tt.Parallel() // each subtest reads only its own tt (per-iteration variable, Go 1.22+)\n\t\t\tassertEqual(t, Abs(tt.in), tt.want)\n\t\t})\n\t}\n}",
+    "versionNote": "t.Cleanup — Go 1.14; -shuffle — Go 1.17; переменная цикла на итерацию — Go 1.22 (по директиве go в go.mod); testing/synctest — Go 1.25. Пример выполнен Go 1.24.7 с -race.",
+    "sources": [
+      {
+        "title": "Package testing",
+        "url": "https://pkg.go.dev/testing"
+      },
+      {
+        "title": "Go wiki: TableDrivenTests",
+        "url": "https://go.dev/wiki/TableDrivenTests"
+      },
+      {
+        "title": "Using Subtests and Sub-benchmarks",
+        "url": "https://go.dev/blog/subtests"
+      }
+    ],
+    "practice": {
+      "kind": "Найди порядок",
+      "promptEN": "A test opens a database, defers db.Close(), and runs two subtests that call t.Parallel() and query the database. Why do they see a closed database, and what is the fix?",
+      "promptRU": "Тест открывает базу, делает defer db.Close() и запускает два подтеста с t.Parallel(), которые обращаются к базе. Почему они видят закрытую базу и как это исправить?",
+      "pointsEN": [
+        "Parallel subtests pause until the parent's function returns.",
+        "The parent's defer runs at that moment, before the subtests continue.",
+        "Register the teardown with t.Cleanup(db.Close): it runs after all subtests finish."
+      ],
+      "pointsRU": [
+        "Параллельные подтесты ждут, пока функция родителя вернётся.",
+        "Defer родителя срабатывает именно в этот момент — до продолжения подтестов.",
+        "Регистрировать закрытие через t.Cleanup(db.Close): оно выполнится после всех подтестов."
+      ],
+      "followUpEN": "Why must t.Fatal not be called from a goroutine started by the test?",
+      "followUpRU": "Почему t.Fatal нельзя вызывать из горутины, которую запустил тест?"
+    }
   }
 ];

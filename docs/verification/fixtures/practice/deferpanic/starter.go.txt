@@ -1,0 +1,16 @@
+// Package deferpanic: practice tasks W1-4 and W1-5. Replace each TODO with your solution.
+package deferpanic
+
+// DeferOrder appends 1, 2, 3 to the result with three deferred calls made in that order
+// and returns what they produced. Predict the result before running the test.
+func DeferOrder() (order []int) {
+	// TODO: a loop with defer
+	panic("TODO")
+}
+
+// SafeDiv returns a / b. Division by zero must give an error, not a panic.
+// Do not check b == 0 directly: let the runtime panic and recover from it.
+func SafeDiv(a, b int) (q int, err error) {
+	// TODO
+	panic("TODO")
+}

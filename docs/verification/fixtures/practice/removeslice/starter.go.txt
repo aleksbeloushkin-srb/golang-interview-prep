@@ -1,0 +1,14 @@
+// Package removeslice: practice task W2-1. Replace each TODO with your solution.
+package removeslice
+
+// RemoveInPlace removes s[i] by shifting the tail left inside the same backing array.
+func RemoveInPlace(s []int, i int) []int {
+	// TODO
+	panic("TODO")
+}
+
+// RemoveCopy returns a new slice without s[i] and leaves s untouched.
+func RemoveCopy(s []int, i int) []int {
+	// TODO
+	panic("TODO")
+}

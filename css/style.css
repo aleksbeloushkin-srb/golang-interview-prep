@@ -821,6 +821,7 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .practice-section h4 { font-size: 0.95rem; margin: 16px 0 6px; }
 .practice-section ul { padding-left: 20px; }
 .practice-section li { margin: 4px 0; overflow-wrap: anywhere; }
+.practice-section p { overflow-wrap: anywhere; }
 .practice-contract li { margin: 6px 0; }
 .practice-file-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
 .practice-copy-status { font-size: 0.85rem; color: var(--green); min-width: 0; overflow-wrap: anywhere; }
