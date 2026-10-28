@@ -3741,7 +3741,7 @@ const SIMULATORS = [
         "board": [
           {
             "hl": [
-              "case, ok = false"
+              "case: v — нулевое значение, ok = false"
             ],
             "hlLabel": "ловушка",
             "lanes": [
@@ -3811,7 +3811,7 @@ const SIMULATORS = [
                     "label": "итог",
                     "items": [
                       {
-                        "g": "case, ok = false"
+                        "g": "case: v — нулевое значение, ok = false"
                       }
                     ]
                   }
@@ -3897,16 +3897,16 @@ const SIMULATORS = [
                     "label": "обход",
                     "items": [
                       {
-                        "g": "B",
-                        "flag": "1"
+                        "g": "A",
+                        "flag": "2"
                       },
                       {
                         "g": "C",
                         "flag": "0"
                       },
                       {
-                        "g": "A",
-                        "flag": "2"
+                        "g": "B",
+                        "flag": "1"
                       }
                     ],
                     "queue": true
@@ -3935,7 +3935,8 @@ const SIMULATORS = [
                     ],
                     "queue": true
                   }
-                ]
+                ],
+                "note": "Порядок по адресам — чтобы два select с общими каналами не заблокировали друг друга."
               },
               {
                 "kind": "chan",
@@ -3974,8 +3975,7 @@ const SIMULATORS = [
               "items": [
                 "Заблокировать все каналы в lockorder; один и тот же канал — один раз",
                 "Обойти в pollorder: ждёт отправитель, есть данные в буфере или канал закрыт?",
-                "Нашёл → выполнить и вернуть индекс; нет, но есть default → chosen = −1; иначе — регистрация (шаг 4)",
-                "Порядок по адресам нужен, чтобы два select с общими каналами не заблокировали друг друга"
+                "Нашёл → выполнить и вернуть индекс; нет, но есть default → chosen = −1; иначе — регистрация (шаг 4)"
               ]
             }
           }
@@ -4006,7 +4006,7 @@ const SIMULATORS = [
             "rows": [
               {
                 "k": "pollorder (пример)",
-                "v": "[1, 0, 2] → B, C, A",
+                "v": "[2, 0, 1] → A, C, B",
                 "hl": false
               },
               {
@@ -4209,7 +4209,8 @@ const SIMULATORS = [
               "true",
               "false",
               "1",
-              "RUNNABLE"
+              "RUNNABLE",
+              "sudog C"
             ],
             "lanes": [
               {
@@ -4229,7 +4230,8 @@ const SIMULATORS = [
                     "label": "дальше",
                     "items": [
                       {
-                        "g": "значение → G1"
+                        "g": "значение → G1",
+                        "flag": "если case присваивает v"
                       },
                       {
                         "g": "goready(G1)"
@@ -4325,7 +4327,7 @@ const SIMULATORS = [
               "ordered": true,
               "title": "Гонка двух отправителей",
               "items": [
-                "W1 извлекает sudog C, CAS(selectDone, 0, 1) = true → передаёт значение и будит G1",
+                "W1 извлекает sudog C, CAS(selectDone, 0, 1) = true → копирует значение в G1 (если case его присваивает) и будит G1",
                 "W2 извлекает sudog A, CAS = false → запись пропущена, W2 ищет другого получателя или ждёт",
                 "Одно ожидание select может забрать только одна операция"
               ]
@@ -4393,6 +4395,11 @@ const SIMULATORS = [
         "board": [
           {
             "hl": [
+              "RUNNING",
+              "sudog B",
+              "recvOK = true",
+              "0",
+              "nil",
               "chosen = 0",
               "case <-chC"
             ],
@@ -4423,6 +4430,24 @@ const SIMULATORS = [
                       }
                     ],
                     "queue": true
+                  },
+                  {
+                    "label": "selectDone",
+                    "items": [
+                      {
+                        "g": "0",
+                        "flag": "сброс"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "param",
+                    "items": [
+                      {
+                        "g": "nil",
+                        "flag": "сброс"
+                      }
+                    ]
                   }
                 ]
               },
@@ -4497,7 +4522,7 @@ const SIMULATORS = [
               "ordered": true,
               "title": "Проход 3",
               "items": [
-                "Снова lock в lockorder — второй и последний захват набора",
+                "selectDone = 0, param = nil; снова lock в lockorder — второй и последний захват набора",
                 "Победитель C уже извлечён W1, A — проигравшей W2; из очереди убирается только B",
                 "releaseSudog для всех трёх, unlock",
                 "chosen = 0 — индекс в scases; компилятор переводит его в case <-chC"
@@ -4510,12 +4535,12 @@ const SIMULATORS = [
             "title": "Очистка",
             "rows": [
               {
-                "k": "B.recvq",
+                "k": "chB.recvq",
                 "v": "Удалить оставшийся sudog_B",
                 "hl": false
               },
               {
-                "k": "C.recvq и A.recvq",
+                "k": "chC.recvq и chA.recvq",
                 "v": "Записи уже извлечены в нашей трассе",
                 "hl": false
               },
@@ -4592,10 +4617,18 @@ const SIMULATORS = [
                 "title": "Закрытый канал",
                 "slots": [
                   {
-                    "label": "чтение",
+                    "label": "чтение, в буфере есть данные",
                     "items": [
                       {
-                        "g": "готово: 0, false"
+                        "g": "значение, true"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "чтение, буфер пуст",
+                    "items": [
+                      {
+                        "g": "нулевое значение, false"
                       }
                     ]
                   },
@@ -4667,7 +4700,7 @@ const SIMULATORS = [
               "title": "Правила",
               "items": [
                 "nil-канал исключается из опроса и блокировок",
-                "Закрытый канал всегда готов: чтение даёт 0, false, выбранная отправка — panic",
+                "Закрытый канал всегда готов: чтение отдаёт остаток буфера, затем нулевое значение и false; выбранная отправка — panic",
                 "default выбирается, только если готовых операций нет"
               ]
             }
@@ -4727,24 +4760,20 @@ const SIMULATORS = [
                 "title": "До выбора: один раз, по порядку исходника",
                 "slots": [
                   {
-                    "label": "каналы",
+                    "label": "по порядку",
                     "items": [
                       {
                         "g": "ch"
                       },
                       {
-                        "g": "in"
-                      }
-                    ]
-                  },
-                  {
-                    "label": "значение отправки",
-                    "items": [
-                      {
                         "g": "build()",
                         "flag": "вызван всегда"
+                      },
+                      {
+                        "g": "in"
                       }
-                    ]
+                    ],
+                    "queue": true
                   },
                   {
                     "label": "адрес слева от <-",
@@ -4798,8 +4827,8 @@ const SIMULATORS = [
                 "hl": false
               },
               {
-                "k": "case dst[index()] = <-ch:",
-                "v": "ch вычислен; index() ещё не вызван",
+                "k": "case dst[index()] = <-in:",
+                "v": "in вычислен; index() ещё не вызван",
                 "hl": false
               }
             ]

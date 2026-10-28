@@ -868,7 +868,7 @@ func WriteReport(path string, payload []byte) (err error) {
     "explanationRU": "Вывод — 0. У Inc получатель по значению: при каждом вызове копируется весь Counter, вместе с mu и n. Блокируется и увеличивается копия, оригинал не меняется. Компилятор это разрешает, runtime не проверяет; go vet (copylocks) сообщает: «Inc passes lock by value». Deadlock нет: копия берёт текущее состояние мьютекса, здесь свободное; копия занятого мьютекса была бы занятой. Исправление — получатель-указатель func (c *Counter) Inc(), тогда вывод 2. Тип с мьютексом передают и хранят по указателю.",
     "speechEN": "It prints 0. Inc has a value receiver, so every call copies the whole Counter, including the mutex and n; the copy is locked and incremented, and the original stays at zero. Neither the compiler nor the runtime stops this, but go vet's copylocks check reports that Inc passes a lock by value. With a pointer receiver it prints 2.",
     "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Counter struct {\n\tmu sync.Mutex\n\tn  int\n}\n\nfunc (c *Counter) Inc() {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tc.n++\n}\n\nfunc main() {\n\tvar c Counter\n\tc.Inc()\n\tc.Inc()\n\tfmt.Println(c.n)\n}",
-    "versionNote": "Поведение одинаково в Go 1.17–1.27. Программа, исправление и go vet выполнены Go 1.24.7: вывод 0, после исправления 2.",
+    "versionNote": "Семантика получателя по значению не менялась с Go 1.0. Программа, исправление и go vet выполнены Go 1.24.7: вывод 0, после исправления 2.",
     "sources": [
       {
         "title": "sync.Mutex: must not be copied after first use",
@@ -926,7 +926,7 @@ func WriteReport(path string, payload []byte) (err error) {
   {
     "id": "q25",
     "title": "Задача 25: Приоритет & и переполнение uint8",
-    "ru": "Что напечатает программа? Почему −7 % 4 и −7 & 3 различаются?",
+    "ru": "Что напечатает программа? Почему -7 % 4 и -7 & 3 различаются?",
     "en": "What does the program print? Why do -7 % 4 and -7 & 3 differ?",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := 6\n\tif x&1 == 0 {\n\t\tfmt.Println(\"even\")\n\t} else {\n\t\tfmt.Println(\"odd\")\n\t}\n\tvar b uint8 = 200\n\tb += 100\n\tfmt.Println(b, -7%4, -7&3)\n}",
     "options": [
@@ -938,8 +938,8 @@ func WriteReport(path string, payload []byte) (err error) {
       "even, затем 44 1 1: для степени двойки % и & совпадают всегда."
     ],
     "correct": 1,
-    "explanationRU": "Вывод: even, затем 44 -3 1. В Go у & тот же приоритет, что у * (5), у == — 3, поэтому x&1 == 0 — это (x&1) == 0; в C наоборот. uint8 переполняется циклически: 200 + 100 = 300, 300 − 256 = 44, паники нет. Остаток берёт знак делимого: −7 % 4 = −3. А −7 & 3 работает с битами дополнительного кода: …11111001 & 011 = 001, то есть 1. Поэтому x % 4 == x & 3 только для неотрицательных x.",
-    "speechEN": "It prints even, then 44 -3 1. In Go, & binds tighter than ==, so x&1 == 0 means (x&1) == 0, the opposite of C. uint8 arithmetic wraps, so 300 becomes 44. The remainder takes the sign of the dividend, so -7 % 4 is -3, while -7 & 3 works on two's-complement bits and gives 1. So x % n equals x & (n-1) only for non-negative x.",
+    "explanationRU": "Вывод: even, затем 44 -3 1. В Go у & тот же приоритет, что у * (5), у == — 3, поэтому x&1 == 0 — это (x&1) == 0; в C наоборот. uint8 переполняется циклически: 200 + 100 = 300, 300 − 256 = 44, паники нет. Остаток берёт знак делимого: -7 % 4 = -3. А -7 & 3 работает с битами дополнительного кода: …11111001 & 011 = 001, то есть 1. Поэтому x % 4 и x & 3 гарантированно совпадают только при x ≥ 0; при отрицательном x — лишь если x кратно 4. Для n, не являющегося степенью двойки, замена % на & неверна вовсе.",
+    "speechEN": "It prints even, then 44 -3 1. In Go, & binds tighter than ==, so x&1 == 0 means (x&1) == 0, the opposite of C. uint8 arithmetic wraps, so 300 becomes 44. The remainder takes the sign of the dividend, so -7 % 4 is -3, while -7 & 3 works on two's-complement bits and gives 1. For a power-of-two n, x % n equals x & (n-1) for every non-negative x; for negative x they differ unless x is a multiple of n.",
     "versionNote": "Правила спецификации не менялись с Go 1.0. Программа выполнена Go 1.24.7.",
     "sources": [
       {
@@ -1012,7 +1012,7 @@ func WriteReport(path string, payload []byte) (err error) {
       "Ошибка компиляции: в select нельзя использовать nil-канал."
     ],
     "correct": 1,
-    "explanationRU": "Вывод: build, затем default. При входе в select канал и отправляемое значение каждой ветки вычисляются ровно один раз, в порядке исходника, и только потом выбирается операция. Поэтому build() отработает, даже если победит default. Ветка с nil-каналом никогда не готова и исключается из опроса; других готовых нет — выполняется default. Без default такой select ждал бы вечно. Дорогую подготовку с побочными эффектами выноси из case и делай отменяемой через context.",
+    "explanationRU": "Вывод: build, затем default. При входе в select канал и отправляемое значение каждой ветки вычисляются ровно один раз, в порядке исходника, и только потом выбирается операция. Поэтому build() отработает, даже если победит default. Отправка в nil-канал никогда не готова: select с одной операцией и default компилируется в selectnbsend, а chansend для nil сразу возвращает false — выполняется default. Без default горутина заблокировалась бы навсегда; в этой программе runtime завершил бы её с fatal error: all goroutines are asleep - deadlock! Дорогую подготовку с побочными эффектами выноси из case и делай отменяемой через context.",
     "speechEN": "It prints build, then default. On entering select, the channel and the value to send in every case are evaluated exactly once, in source order, before any case is chosen. So build runs even though default wins. A send on a nil channel is never ready, so with nothing else ready the default branch runs.",
     "versionNote": "Порядок вычисления — правило спецификации select. Программа выполнена Go 1.24.7.",
     "sources": [
@@ -1023,6 +1023,10 @@ func WriteReport(path string, payload []byte) (err error) {
       {
         "title": "Compiler select lowering — Go 1.26.1",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/select.go"
+      },
+      {
+        "title": "chan.go (chansend, selectnbsend) — Go 1.26.1",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/chan.go"
       }
     ],
     "cardIds": [
