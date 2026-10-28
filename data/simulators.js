@@ -3667,6 +3667,7 @@ const SIMULATORS = [
     "subtitle": "Сначала выбери путь по форме select, затем пройди общий selectgo. Go 1.25/1.26; трасса и адреса условные, порядок событий не гарантирован.",
     "cardId": "c19",
     "cardLabel": "Карточка Q19 (selectgo) →",
+    "boardLegend": "Схема — условная трасса: адреса и порядок опроса выбраны для примера. Очереди и массивы читаются слева направо. Рамкой выделено то, что изменилось на шаге.",
     "steps": [
       {
         "title": "1. Какой путь создаёт компилятор?",
@@ -3716,6 +3717,99 @@ const SIMULATORS = [
         "title": "2. Проба: выбрана ветка ≠ получено значение",
         "desc": "Для чтения с default helper возвращает два флага. selected отвечает за выбор ветки, received становится ok в Go. Закрытый пустой канал готов к чтению, хотя настоящего значения уже нет.",
         "descEN": "The non-blocking receive helper returns selected and received. A closed, drained channel selects the receive with ok=false; this is different from an unavailable receive.",
+        "predict": {
+          "promptEN": "ch is closed and empty. select { case v, ok := <-ch: …; default: … } — which branch runs, and what are v and ok?",
+          "promptRU": "ch закрыт и пуст. select { case v, ok := <-ch: …; default: … } — какая ветка выполнится и чему равны v и ok?"
+        },
+        "board": [
+          {
+            "hl": [
+              "case, ok = false"
+            ],
+            "hlLabel": "ловушка",
+            "lanes": [
+              {
+                "kind": "chan",
+                "title": "Открытый пустой или nil",
+                "slots": [
+                  {
+                    "label": "selectnbrecv",
+                    "items": [
+                      {
+                        "g": "selected = false"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      {
+                        "g": "default"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Есть значение (даже 0)",
+                "slots": [
+                  {
+                    "label": "selectnbrecv",
+                    "items": [
+                      {
+                        "g": "selected = true"
+                      },
+                      {
+                        "g": "received = true"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      {
+                        "g": "case, ok = true"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Закрыт и пуст",
+                "slots": [
+                  {
+                    "label": "selectnbrecv",
+                    "items": [
+                      {
+                        "g": "selected = true"
+                      },
+                      {
+                        "g": "received = false"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      {
+                        "g": "case, ok = false"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "selected решает, какая ветка: case или default",
+                "received становится ok в v, ok := <-ch",
+                "Закрытый пустой канал всегда готов: в цикле for + select такая ветка будет выбираться снова и снова — после закрытия присвой каналу nil"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Результаты selectnbrecv",
@@ -3749,6 +3843,126 @@ const SIMULATORS = [
         "title": "3. Общий путь: перестановка, опрос и default",
         "desc": "Дальше — три чтения chA, chB, chC в таком порядке исходника. Компилятор размещает их в scases с конца: C, B, A. Runtime строит случайный pollorder и порядок блокировок по адресам. Первый проход ищет готовую операцию.",
         "descEN": "For three receives written A, B, C, the compiler stores cases as C, B, A. Runtime polls in randomized order and locks distinct channels in address order. A ready case proceeds; otherwise default returns immediately if present.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "scases (порядок компилятора)",
+                "slots": [
+                  {
+                    "label": "индексы 0→2",
+                    "items": [
+                      {
+                        "g": "C",
+                        "flag": "0"
+                      },
+                      {
+                        "g": "B",
+                        "flag": "1"
+                      },
+                      {
+                        "g": "A",
+                        "flag": "2"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ],
+                "note": "Отправки кладутся с начала массива, чтения — с конца."
+              },
+              {
+                "kind": "var",
+                "title": "pollorder (случайный)",
+                "slots": [
+                  {
+                    "label": "обход",
+                    "items": [
+                      {
+                        "g": "B",
+                        "flag": "1"
+                      },
+                      {
+                        "g": "C",
+                        "flag": "0"
+                      },
+                      {
+                        "g": "A",
+                        "flag": "2"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "lockorder (по адресу hchan)",
+                "slots": [
+                  {
+                    "label": "захват",
+                    "items": [
+                      {
+                        "g": "B",
+                        "flag": "0x1000"
+                      },
+                      {
+                        "g": "C",
+                        "flag": "0x2000"
+                      },
+                      {
+                        "g": "A",
+                        "flag": "0x3000"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Каналы",
+                "slots": [
+                  {
+                    "label": "chA",
+                    "items": [
+                      {
+                        "g": "пуст"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "chB",
+                    "items": [
+                      {
+                        "g": "пуст"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "chC",
+                    "items": [
+                      {
+                        "g": "пуст"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "selectgo, проход 1",
+              "items": [
+                "Заблокировать все каналы в lockorder; один и тот же канал — один раз",
+                "Обойти в pollorder: ждёт отправитель, есть данные в буфере или канал закрыт?",
+                "Нашёл → выполнить и вернуть индекс; нет, но есть default → chosen = −1; иначе — регистрация (шаг 4)",
+                "Порядок по адресам нужен, чтобы два select с общими каналами не заблокировали друг друга"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Индексы не равны номерам строк",
@@ -3817,6 +4031,113 @@ const SIMULATORS = [
         "title": "4. Нет готовых: зарегистрироваться и уснуть",
         "desc": "В нашей трассе нет default и готовых операций. Под уже захваченными блокировками создаются три sudog — по одному на чтение. gopark с selparkcommit отпускает блокировки при парковке. Это ожидание одной горутины сразу в нескольких очередях.",
         "descEN": "With no ready case and no default, selectgo registers one sudog per active case while holding the same locks, then parks and releases the locks.",
+        "board": [
+          {
+            "hl": [
+              "sudog A",
+              "sudog B",
+              "sudog C",
+              "WAITING"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "WAITING",
+                        "flag": "selparkcommit"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "waiting · lockorder",
+                    "items": [
+                      {
+                        "g": "sudog B"
+                      },
+                      {
+                        "g": "sudog C"
+                      },
+                      {
+                        "g": "sudog A"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "selectDone",
+                    "items": [
+                      {
+                        "g": "0"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "chA",
+                "slots": [
+                  {
+                    "label": "recvq",
+                    "items": [
+                      {
+                        "g": "sudog A",
+                        "flag": "G1, isSelect"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "chB",
+                "slots": [
+                  {
+                    "label": "recvq",
+                    "items": [
+                      {
+                        "g": "sudog B",
+                        "flag": "G1, isSelect"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "chC",
+                "slots": [
+                  {
+                    "label": "recvq",
+                    "items": [
+                      {
+                        "g": "sudog C",
+                        "flag": "G1, isSelect"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Проход 2",
+              "items": [
+                "Под теми же блокировками: по sudog на каждый case, в порядке lockorder",
+                "Каждый sudog — в recvq своего канала, isSelect = true",
+                "gopark(selparkcommit): блокировки отпускаются уже после перехода G1 в waiting"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Регистрация G1",
@@ -3865,6 +4186,135 @@ const SIMULATORS = [
         "title": "5. Два отправителя: кто заберёт ожидание?",
         "desc": "W1 пишет в C, W2 — в A. В этом допустимом исходе W1 первым меняет selectDone с 0 на 1 через CAS и передаёт значение G1. W2 извлекает свою запись, проигрывает CAS и ищет другого получателя. CAS не даёт обеим операциям использовать одно ожидание.",
         "descEN": "Two sends compete for the same select waiter. Here W1 wins CAS(0, 1), transfers its value and makes G1 runnable. W2 loses and skips that waiter. Runnable does not mean already running.",
+        "board": [
+          {
+            "hl": [
+              "true",
+              "false",
+              "1",
+              "RUNNABLE"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "W1 → chC",
+                "slots": [
+                  {
+                    "label": "CAS selectDone 0 → 1",
+                    "items": [
+                      {
+                        "g": "true",
+                        "flag": "успела первой"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "дальше",
+                    "items": [
+                      {
+                        "g": "значение → G1"
+                      },
+                      {
+                        "g": "goready(G1)"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "W2 → chA",
+                "slots": [
+                  {
+                    "label": "CAS selectDone 0 → 1",
+                    "items": [
+                      {
+                        "g": "false",
+                        "flag": "уже занято"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "дальше",
+                    "items": [
+                      {
+                        "g": "пропустить sudog A"
+                      },
+                      {
+                        "g": "искать другого"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNABLE"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "selectDone",
+                    "items": [
+                      {
+                        "g": "1"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "param",
+                    "items": [
+                      {
+                        "g": "sudog C"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Очереди",
+                "slots": [
+                  {
+                    "label": "chA.recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "chB.recvq",
+                    "items": [
+                      {
+                        "g": "sudog B",
+                        "flag": "ещё там"
+                      }
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "chC.recvq",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Гонка двух отправителей",
+              "items": [
+                "W1 извлекает sudog C, CAS(selectDone, 0, 1) = true → передаёт значение и будит G1",
+                "W2 извлекает sudog A, CAS = false → запись пропущена, W2 ищет другого получателя или ждёт",
+                "Одно ожидание select может забрать только одна операция"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "W1 → chC",
@@ -3923,6 +4373,121 @@ const SIMULATORS = [
         "title": "6. Очистить записи и вернуться в нужный case",
         "desc": "G1 возобновляется и снова захватывает каналы в lockorder. Удаляет оставшуюся запись B; C уже извлечена победителем, A — проигравшим. Освобождает все три sudog и блокировки. Компилятор переводит внутренний chosen=0 в третью ветку исходника, chC.",
         "descEN": "After resuming, G1 locks the channels again, removes remaining registrations and releases the sudogs and locks. The compiler maps chosen=0 back to the third source case, chC.",
+        "board": [
+          {
+            "hl": [
+              "chosen = 0",
+              "case <-chC"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1",
+                "slots": [
+                  {
+                    "label": "статус",
+                    "items": [
+                      {
+                        "g": "RUNNING"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "второй захват",
+                    "items": [
+                      {
+                        "g": "B"
+                      },
+                      {
+                        "g": "C"
+                      },
+                      {
+                        "g": "A"
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Очереди",
+                "slots": [
+                  {
+                    "label": "chB.recvq",
+                    "items": [],
+                    "queue": true
+                  },
+                  {
+                    "label": "удалён",
+                    "items": [
+                      {
+                        "g": "sudog B",
+                        "flag": "dequeueSudoG"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "sudog",
+                "slots": [
+                  {
+                    "label": "releaseSudog",
+                    "items": [
+                      {
+                        "g": "B"
+                      },
+                      {
+                        "g": "C"
+                      },
+                      {
+                        "g": "A"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Результат",
+                "slots": [
+                  {
+                    "label": "selectgo",
+                    "items": [
+                      {
+                        "g": "chosen = 0"
+                      },
+                      {
+                        "g": "recvOK = true"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "компилятор",
+                    "items": [
+                      {
+                        "g": "case <-chC",
+                        "flag": "третья ветка"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "ordered": true,
+              "title": "Проход 3",
+              "items": [
+                "Снова lock в lockorder — второй и последний захват набора",
+                "Победитель C уже извлечён W1, A — проигравшей W2; из очереди убирается только B",
+                "releaseSudog для всех трёх, unlock",
+                "chosen = 0 — индекс в scases; компилятор переводит его в case <-chC"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Очистка",
@@ -3976,6 +4541,121 @@ const SIMULATORS = [
         "title": "7. Nil, closed и повтор одного канала",
         "desc": "Nil исключается из опроса. Закрытое чтение готово; выбранная отправка в закрытый канал вызывает panic. Две ветки с одним каналом остаются двумя вариантами выбора, но сам канал блокируется один раз. Default не конкурирует с готовыми операциями.",
         "descEN": "Nil channels are omitted from polling. A closed receive is ready; a selected send on a closed channel panics. Duplicate channel cases remain separate choices, while the channel is locked once. Default is used only if no communication can proceed.",
+        "board": [
+          {
+            "hl": [
+              "panic"
+            ],
+            "hlQuiet": true,
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Только nil-каналы",
+                "slots": [
+                  {
+                    "label": "без default",
+                    "items": [
+                      {
+                        "g": "ждать вечно"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "с default",
+                    "items": [
+                      {
+                        "g": "default"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Закрытый канал",
+                "slots": [
+                  {
+                    "label": "чтение",
+                    "items": [
+                      {
+                        "g": "готово: 0, false"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "выбрана отправка",
+                    "items": [
+                      {
+                        "g": "panic"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "отправка + default",
+                    "items": [
+                      {
+                        "g": "panic",
+                        "flag": "default не спасает"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "chan",
+                "title": "Один канал в двух case",
+                "slots": [
+                  {
+                    "label": "блокировка",
+                    "items": [
+                      {
+                        "g": "один раз"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "выбор",
+                    "items": [
+                      {
+                        "g": "одна ветка, одно чтение"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "default и готовые",
+                "slots": [
+                  {
+                    "label": "есть готовая",
+                    "items": [
+                      {
+                        "g": "выбрана готовая"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "готовых несколько",
+                    "items": [
+                      {
+                        "g": "случайно, по pollorder"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Правила",
+              "items": [
+                "nil-канал исключается из опроса и блокировок",
+                "Закрытый канал всегда готов: чтение даёт 0, false, выбранная отправка — panic",
+                "default выбирается, только если готовых операций нет"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "Граничные случаи",
@@ -4014,6 +4694,83 @@ const SIMULATORS = [
         "title": "8. Когда вычисляются выражения?",
         "desc": "Сначала один раз, в порядке исходника, вычисляются каналы и отправляемые значения. Только затем выбирается операция. Левая часть присваивания при чтении вычисляется после выбранного чтения. Default, nil и уже закрытый Done не делают build() ленивым.",
         "descEN": "Channel operands and send values are evaluated once in source order before selection. Receive-assignment destinations are evaluated after a selected receive. Default, nil and an already-closed Done channel do not make build() lazy.",
+        "predict": {
+          "promptEN": "select { case ch <- build(): …; case dst[index()] = <-in: …; default: … } Nothing is ready and default runs. Which of build() and index() were called?",
+          "promptRU": "select { case ch <- build(): …; case dst[index()] = <-in: …; default: … } Готовых нет, выполняется default. Какие из build() и index() были вызваны?"
+        },
+        "board": [
+          {
+            "hl": [
+              "build()"
+            ],
+            "hlLabel": "ловушка",
+            "lanes": [
+              {
+                "kind": "var",
+                "title": "До выбора: один раз, по порядку исходника",
+                "slots": [
+                  {
+                    "label": "каналы",
+                    "items": [
+                      {
+                        "g": "ch"
+                      },
+                      {
+                        "g": "in"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "значение отправки",
+                    "items": [
+                      {
+                        "g": "build()",
+                        "flag": "вызван всегда"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "адрес слева от <-",
+                    "items": [
+                      {
+                        "g": "index()",
+                        "flag": "ещё не вызван"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "После выбора",
+                "slots": [
+                  {
+                    "label": "выбрано чтение",
+                    "items": [
+                      {
+                        "g": "значение → index() → присвоить → тело"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "выбран default",
+                    "items": [
+                      {
+                        "g": "index() не вызывается"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "items": [
+                "build() отработал, даже если победил default или канал nil",
+                "Дорогую подготовку выноси из case и делай её отменяемой через context"
+              ]
+            }
+          }
+        ],
         "boxes": [
           {
             "title": "До выбора",
