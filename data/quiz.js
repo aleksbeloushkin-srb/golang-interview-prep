@@ -1308,5 +1308,141 @@ func WriteReport(path string, payload []byte) (err error) {
     "cardIds": [
       "c44"
     ]
+  },
+  // =========================================================================
+  // ЧАСТЬ 6: СЕРВИС НЕДЕЛИ 5 — HANDLER, МАРШРУТЫ, ЛОГИ, ERRORS.AS (Q36 - Q39)
+  // =========================================================================
+  {
+    "id": "q36",
+    "title": "Задача 36: http.Error без return",
+    "ru": "Что получит клиент на GET /accounts/abc? Какой код ответа, какой Content-Type и какое тело?",
+    "en": "What does the client get for GET /accounts/abc: which status, Content-Type and body?",
+    "code": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"io\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"strconv\"\n)\n\nfunc getAccount(w http.ResponseWriter, r *http.Request) {\n\tid, err := strconv.Atoi(r.PathValue(\"id\"))\n\tif err != nil {\n\t\thttp.Error(w, \"bad id\", http.StatusBadRequest)\n\t}\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(map[string]int{\"id\": id})\n}\n\nfunc main() {\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /accounts/{id}\", getAccount)\n\tsrv := httptest.NewServer(mux)\n\tdefer srv.Close()\n\n\tresp, err := http.Get(srv.URL + \"/accounts/abc\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tbody, _ := io.ReadAll(resp.Body)\n\tresp.Body.Close()\n\tfmt.Printf(\"%d %s\\n%q\\n\", resp.StatusCode, resp.Header.Get(\"Content-Type\"), body)\n}",
+    "options": [
+      "400, text/plain, тело «bad id\\n» — http.Error завершает handler.",
+      "400, text/plain, тело «bad id\\n{\"id\":0}\\n».",
+      "200, application/json, тело {\"id\":0} — последний заголовок побеждает.",
+      "400, application/json, тело «bad id\\n{\"id\":0}\\n».",
+      "500: сервер ловит повторную запись в ответ.",
+      "Ошибка компиляции: после http.Error нужен return."
+    ],
+    "correct": 1,
+    "explanationRU": "http.Error только пишет ответ: ставит Content-Type text/plain, вызывает WriteHeader(400) и пишет текст. Handler продолжает работу: Header().Set после отправленных заголовков ничего не меняет, а Encode дописывает JSON в то же тело. Клиент получает 400, text/plain и «bad id» вместе с {\"id\":0}. Исправление — return сразу после http.Error (так же после любого раннего ответа).",
+    "speechEN": "The client gets 400 with text/plain and a body that has both \"bad id\" and the JSON. http.Error writes the response but doesn't stop the handler, so the code keeps going: the late header change is ignored because headers are already sent, and the JSON is appended to the body. Always return right after writing an error.",
+    "correctedCode": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"io\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"strconv\"\n)\n\nfunc getAccount(w http.ResponseWriter, r *http.Request) {\n\tid, err := strconv.Atoi(r.PathValue(\"id\"))\n\tif err != nil {\n\t\thttp.Error(w, \"bad id\", http.StatusBadRequest)\n\t\treturn\n\t}\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tjson.NewEncoder(w).Encode(map[string]int{\"id\": id})\n}\n\nfunc main() {\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /accounts/{id}\", getAccount)\n\tsrv := httptest.NewServer(mux)\n\tdefer srv.Close()\n\n\tresp, err := http.Get(srv.URL + \"/accounts/abc\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tbody, _ := io.ReadAll(resp.Body)\n\tresp.Body.Close()\n\tfmt.Printf(\"%d %s\\n%q\\n\", resp.StatusCode, resp.Header.Get(\"Content-Type\"), body)\n}",
+    "versionNote": "Шаблон с {id} и r.PathValue — Go 1.22. Программа выполнена Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "net/http: Error",
+        "url": "https://pkg.go.dev/net/http#Error"
+      },
+      {
+        "title": "net/http: ResponseWriter",
+        "url": "https://pkg.go.dev/net/http#ResponseWriter"
+      }
+    ],
+    "cardIds": [
+      "c45",
+      "c46"
+    ]
+  },
+  {
+    "id": "q37",
+    "title": "Задача 37: Маршруты Go 1.22 и 405",
+    "ru": "Что напечатает программа? Обрати внимание на /accounts/new и на запрос без id.",
+    "en": "What does the program print? Look at /accounts/new and at the request without an id.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n)\n\nfunc main() {\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /accounts/{id}\", func(w http.ResponseWriter, r *http.Request) {\n\t\tfmt.Fprint(w, \"account \"+r.PathValue(\"id\"))\n\t})\n\tmux.HandleFunc(\"GET /accounts/new\", func(w http.ResponseWriter, r *http.Request) {\n\t\tfmt.Fprint(w, \"new-account form\")\n\t})\n\tmux.HandleFunc(\"POST /accounts\", func(w http.ResponseWriter, r *http.Request) {\n\t\tw.WriteHeader(http.StatusCreated)\n\t})\n\n\tfor _, req := range []struct{ method, path string }{\n\t\t{\"GET\", \"/accounts/new\"},\n\t\t{\"GET\", \"/accounts/42\"},\n\t\t{\"DELETE\", \"/accounts/42\"},\n\t\t{\"GET\", \"/accounts\"},\n\t} {\n\t\trec := httptest.NewRecorder()\n\t\tmux.ServeHTTP(rec, httptest.NewRequest(req.method, req.path, nil))\n\t\tfmt.Printf(\"%s %s → %d %q allow=%q\\n\", req.method, req.path, rec.Code, rec.Body.String(), rec.Header().Get(\"Allow\"))\n\t}\n}",
+    "options": [
+      "new → «account new»; 42 → 200; DELETE → 404; GET /accounts → 404.",
+      "new → «new-account form»; 42 → 200; DELETE → 405, Allow: GET, HEAD; GET /accounts → 405, Allow: POST.",
+      "new → «new-account form»; 42 → 200; DELETE → 404; GET /accounts → 404.",
+      "Паника при регистрации: /accounts/new и /accounts/{id} конфликтуют.",
+      "new → «account new»; 42 → 200; DELETE → 405; GET /accounts → 405.",
+      "new → «new-account form»; 42 → 200; DELETE → 405, Allow: GET; GET /accounts → 200."
+    ],
+    "correct": 1,
+    "explanationRU": "С Go 1.22 побеждает более конкретный шаблон: /accounts/new конкретнее /accounts/{id}, поэтому это не конфликт. Если путь совпал с шаблоном, но метод другой, ServeMux отвечает 405 и перечисляет разрешённые методы в Allow; шаблон GET разрешает и HEAD. GET /accounts совпадает по пути только с POST /accounts — снова 405 с Allow: POST.",
+    "speechEN": "The new-account form wins over the wildcard because the more specific pattern takes precedence. DELETE on an account gets 405 with Allow: GET, HEAD, since a GET pattern also serves HEAD, and GET on /accounts gets 405 with Allow: POST. Since Go 1.22 the standard mux does method routing, so many services don't need a router library.",
+    "versionNote": "Методы и подстановки в шаблонах ServeMux — Go 1.22 (в модуле с go 1.22+). Программа выполнена Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "net/http: ServeMux",
+        "url": "https://pkg.go.dev/net/http#ServeMux"
+      },
+      {
+        "title": "Routing Enhancements for Go 1.22",
+        "url": "https://go.dev/blog/routing-enhancements"
+      }
+    ],
+    "cardIds": [
+      "c45"
+    ]
+  },
+  {
+    "id": "q38",
+    "title": "Задача 38: Пароль в структурном логе",
+    "ru": "Что окажется в логе? Как исправить так, чтобы новое поле структуры не утекло случайно?",
+    "en": "What ends up in the log? How do you fix it so that a new struct field does not leak by accident?",
+    "code": "package main\n\nimport (\n\t\"log/slog\"\n\t\"os\"\n)\n\ntype Login struct {\n\tUser     string\n\tPassword string\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{\n\t\tReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {\n\t\t\tif a.Key == slog.TimeKey {\n\t\t\t\treturn slog.Attr{} // drop the time so the output is stable\n\t\t\t}\n\t\t\treturn a\n\t\t},\n\t}))\n\tin := Login{User: \"aleks\", Password: \"hunter2\"}\n\tlog.Info(\"login attempt\", \"request_id\", \"r-1\", \"input\", in)\n}",
+    "options": [
+      "Только msg и request_id: slog не логирует структуры.",
+      "{\"input\":{\"User\":\"aleks\",\"Password\":\"hunter2\"}} — пароль в логе.",
+      "Пароль заменён на ***: JSONHandler скрывает поля с именем Password.",
+      "{\"input\":\"{aleks hunter2}\"} — структура как строка %v.",
+      "Ошибка выполнения: JSONHandler не умеет логировать структуры.",
+      "{\"input\":{}} — неэкспортируемые поля не пишутся."
+    ],
+    "correct": 1,
+    "explanationRU": "JSONHandler кодирует структуру как обычный JSON: все экспортируемые поля, включая Password. slog ничего не маскирует сам. Надёжное исправление — метод LogValue() slog.Value у типа Login, который возвращает только безопасные поля: он действует везде, где тип попадает в лог, и новое поле не появится, пока его не добавят осознанно. Вариант попроще — логировать в месте вызова только \"user\", in.User.",
+    "speechEN": "The password goes straight into the log: the JSON handler encodes every exported field and slog does not redact anything. I give the type a LogValue method that returns only safe fields, so wherever the type is logged it's redacted, and a new field stays hidden until someone adds it on purpose.",
+    "correctedCode": "package main\n\nimport (\n\t\"log/slog\"\n\t\"os\"\n)\n\ntype Login struct {\n\tUser     string\n\tPassword string\n}\n\n// LogValue controls how a Login is logged: the password never leaves the process.\nfunc (l Login) LogValue() slog.Value {\n\treturn slog.GroupValue(slog.String(\"user\", l.User))\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{\n\t\tReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {\n\t\t\tif a.Key == slog.TimeKey {\n\t\t\t\treturn slog.Attr{} // drop the time so the output is stable\n\t\t\t}\n\t\t\treturn a\n\t\t},\n\t}))\n\tin := Login{User: \"aleks\", Password: \"hunter2\"}\n\tlog.Info(\"login attempt\", \"request_id\", \"r-1\", \"input\", in)\n}",
+    "versionNote": "log/slog и LogValuer — Go 1.21. Программа выполнена Go 1.24.7 и 1.27.3; время убрано через ReplaceAttr.",
+    "sources": [
+      {
+        "title": "log/slog: LogValuer",
+        "url": "https://pkg.go.dev/log/slog#LogValuer"
+      },
+      {
+        "title": "Package log/slog",
+        "url": "https://pkg.go.dev/log/slog"
+      }
+    ],
+    "cardIds": [
+      "c48"
+    ]
+  },
+  {
+    "id": "q39",
+    "title": "Задача 39: errors.As с целью-значением",
+    "ru": "Что напечатает программа? Что скажет go vet?",
+    "en": "What does the program print? What does go vet say?",
+    "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"net/http\"\n)\n\ntype ValidationError struct{ Field string }\n\nfunc (e *ValidationError) Error() string { return \"invalid \" + e.Field }\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc status(err error) int {\n\tvar ve ValidationError\n\tif errors.As(err, &ve) {\n\t\treturn http.StatusBadRequest\n\t}\n\tif errors.Is(err, ErrNotFound) {\n\t\treturn http.StatusNotFound\n\t}\n\treturn http.StatusInternalServerError\n}\n\nfunc main() {\n\tdefer func() { fmt.Println(\"recovered:\", recover()) }()\n\terr := fmt.Errorf(\"create account: %w\", &ValidationError{Field: \"owner\"})\n\tfmt.Println(status(err))\n}",
+    "options": [
+      "400: errors.As находит ValidationError в цепочке.",
+      "500: значение и указатель — разные типы, совпадения нет.",
+      "recovered: errors: *target must be interface or implement error.",
+      "404: ошибка не валидационная, срабатывает errors.Is.",
+      "Ошибка компиляции: &ve не реализует error.",
+      "400, но только если убрать обёртку fmt.Errorf."
+    ],
+    "correct": 2,
+    "explanationRU": "Error объявлен на *ValidationError, поэтому сам тип ValidationError интерфейс error не реализует. errors.As проверяет цель во время выполнения и паникует: «errors: *target must be interface or implement error». Компилятор это пропускает, а go vet (проверка errorsas) сообщает: second argument to errors.As must be a non-nil pointer to either a type that implements error, or to any interface type. Исправление — var ve *ValidationError; тогда status вернёт 400.",
+    "speechEN": "It panics: the error method is on the pointer type, so a ValidationError value doesn't implement error, and errors.As rejects that target at run time. The compiler accepts it, but go vet flags it. The target must be a pointer to the type that implements error, here a pointer to *ValidationError; then the function returns 400.",
+    "correctedCode": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"net/http\"\n)\n\ntype ValidationError struct{ Field string }\n\nfunc (e *ValidationError) Error() string { return \"invalid \" + e.Field }\n\nvar ErrNotFound = errors.New(\"not found\")\n\nfunc status(err error) int {\n\tvar ve *ValidationError\n\tif errors.As(err, &ve) {\n\t\treturn http.StatusBadRequest\n\t}\n\tif errors.Is(err, ErrNotFound) {\n\t\treturn http.StatusNotFound\n\t}\n\treturn http.StatusInternalServerError\n}\n\nfunc main() {\n\tdefer func() { fmt.Println(\"recovered:\", recover()) }()\n\terr := fmt.Errorf(\"create account: %w\", &ValidationError{Field: \"owner\"})\n\tfmt.Println(status(err))\n}",
+    "versionNote": "errors.As — Go 1.13. Программа и сообщение go vet — Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "errors: As",
+        "url": "https://pkg.go.dev/errors#As"
+      },
+      {
+        "title": "go vet: errorsas",
+        "url": "https://pkg.go.dev/golang.org/x/tools/go/analysis/passes/errorsas"
+      }
+    ],
+    "cardIds": [
+      "c46",
+      "c39"
+    ]
   }
 ];

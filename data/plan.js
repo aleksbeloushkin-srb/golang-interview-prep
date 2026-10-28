@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28g",
+  revision: "2026-10-28h",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -322,20 +322,20 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
-            { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)" }
+            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
+            { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)", links: ["p-httperr", "c46", "q39"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
             { id: "w5-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
-            { id: "w5-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["q18", "q19"] },
+            { id: "w5-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["c47", "q18", "q19"] },
             { id: "w5-wed-3", text: "LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор", lc: 236 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
+            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", links: ["c48", "q38"], refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
             { id: "w5-thu-2", text: "Docker Compose: postgres + сервис; healthcheck" }
           ]
         },
@@ -1119,11 +1119,11 @@ const PLAN = {
 
     "w5-mon-1": { accept: "ADR на английском: контекст, решение, альтернативы, последствия; что в scope и вне его." },
     "w5-mon-2": { accept: "Пакет ledger не импортирует net/http и драйвер БД; Money в int64 покрыт тестами." },
-    "w5-tue-1": { accept: "Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405.", exercise: "Прикладная карточка: жизненный цикл handler и дедлайны запроса (неделя 5)." },
-    "w5-tue-2": { accept: "Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай.", exercise: "Карточка: ошибки домена → HTTP-коды через errors.As." },
+    "w5-tue-1": { accept: "Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405. c45 и диаграмма 10 — ответ до раскрытия; q36 и q37 — до вариантов." },
+    "w5-tue-2": { accept: "Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай. c46 — ответ до раскрытия; q39 — до вариантов." },
     "w5-wed-1": { accept: "Миграции применяются на чистой БД; у пула заданы лимиты и таймаут подключения." },
-    "w5-wed-2": { accept: "q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации.", exercise: "Карточка: пул и ресурсы SQL, граница транзакции." },
-    "w5-thu-1": { accept: "JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения.", exercise: "Короткая карточка про slog." },
+    "w5-wed-2": { accept: "q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации. c47 — ответ до раскрытия." },
+    "w5-thu-1": { accept: "JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения. c48 — ответ до раскрытия; q38 — до вариантов." },
     "w5-thu-2": { accept: "docker compose up поднимает сервис после healthcheck БД." },
     "w5-sat-1": { accept: "Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится." },
     "w5-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." }
@@ -1133,6 +1133,22 @@ const PLAN = {
   // hook — одна строка для запоминания; en — короткий ответ для интервью.
   // Открывать после своей попытки вслух; сверять смысл, а не заучивать дословно.
   modelAnswers: {
+    "w5-tue-1": {
+      hook: "One goroutine per connection; r.Context() ends when the client leaves or the handler returns; four timeouts, zero means none.",
+      en: "net/http serves each connection in its own goroutine and runs the handler there; Go 1.22 patterns match method and path, give 405 with Allow, and r.PathValue reads the id. I pass r.Context() to every downstream call, because it is cancelled when the client disconnects and after the handler returns. On http.Server I set ReadHeaderTimeout and IdleTimeout, usually ReadTimeout and WriteTimeout, since zero means no limit. Tests go through httptest against the real handler."
+    },
+    "w5-tue-2": {
+      hook: "Domain errors in, status codes out — in one function; 500 hides the cause and logs it once.",
+      en: "The domain returns sentinel and typed errors and doesn't import net/http. One function at the HTTP boundary maps them with errors.Is and errors.As, so wrapped errors still match: validation to 400 with the field, not found to 404, insufficient funds to 409. Anything else is a 500 with a generic body, and the real error is logged once with the request id. errors.As needs a pointer to the type that implements error."
+    },
+    "w5-wed-2": {
+      hook: "*sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.",
+      en: "*sql.DB is a connection pool, opened once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so I defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
+    },
+    "w5-thu-1": {
+      hook: "One JSON logger, request_id via With in middleware, LogValue for secrets, log errors once.",
+      en: "I create one slog logger with a JSON handler at startup, and a middleware adds request_id with With and puts that logger into the request context. I log key-value attributes, not formatted strings. Types with secrets get a LogValue method, so passwords and tokens never reach the log, and each error is logged once, where it is handled."
+    },
     "w1-mon-1": {
       hook: "var x T gives the zero value; := declares and infers; defer runs LIFO.",
       en: "var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs."

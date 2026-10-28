@@ -9482,6 +9482,868 @@ const SIMULATORS = [
         }
       }
     ]
+  },
+  {
+    "id": "sim10",
+    "title": "Диаграмма 10: HTTP-запрос в net/http — горутина, контекст, shutdown",
+    "subtitle": "Один запрос HTTP/1.1 от Accept до ответа, обрыв клиента, keep-alive и остановка сервера. Сверено с net/http/server.go Go 1.27.3; HTTP/2 обслуживает каждый запрос в своей горутине, здесь не показан.",
+    "cardId": "c45",
+    "cardLabel": "C45: жизненный цикл handler и дедлайны →",
+    "boardLegend": "Дорожки: сервер с циклом Accept, горутина соединения (в ней же выполняется handler), фоновое чтение, контекст запроса и клиент. Рамкой выделено то, что изменилось на шаге.",
+    "learningHint": "Как запомнить: «горутина на соединение, контекст на запрос». Перед шагами 4, 5 и 7 ответь на вопрос, потом открой ответ. В конце закрой схему и нарисуй по памяти пять дорожек шага 8 — это ответ на вопрос интервью «что происходит с запросом в Go-сервере».",
+    "sources": [
+      {
+        "title": "net/http server.go: Serve → go c.serve — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go#L3604"
+      },
+      {
+        "title": "net/http server.go: conn.serve — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go#L1949"
+      },
+      {
+        "title": "net/http server.go: readRequest и дедлайны — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go#L1032"
+      },
+      {
+        "title": "net/http server.go: Shutdown — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go#L3255"
+      },
+      {
+        "title": "net/http: Server (документация)",
+        "url": "https://pkg.go.dev/net/http#Server"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Accept → своя горутина на соединение",
+        "desc": "Server.Serve в цикле вызывает Accept. На каждое новое TCP-соединение создаётся conn и запускается go c.serve(connCtx). Цикл Accept сразу возвращается за следующим соединением, а это соединение дальше живёт в своей горутине.",
+        "descEN": "Server.Serve loops on Accept. For each new TCP connection it creates a conn and starts go c.serve(connCtx). The Accept loop goes straight back for the next connection; this one lives on in its own goroutine.",
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Accept вернул новое соединение conn #1",
+                "go c.serve: у соединения своя горутина",
+                "Цикл Accept снова ждёт следующее соединение"
+              ]
+            },
+            "hl": [
+              "conn #1",
+              "go c.serve"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "открыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "StateNew"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "запущена",
+                    "items": [
+                      {
+                        "g": "go c.serve",
+                        "flag": "новая горутина"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "сейчас",
+                    "items": [
+                      "ждёт байты запроса"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      "открыл TCP-соединение"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "How many goroutines does the server start for three requests sent one after another over one keep-alive connection?",
+          "promptRU": "Сколько горутин запустит сервер для трёх запросов, отправленных друг за другом по одному keep-alive соединению?",
+          "answerEN": "One for the connection (plus short-lived background-read goroutines while handlers run). HTTP/1.1 serves requests on a connection one at a time in that goroutine.",
+          "answerRU": "Одну на соединение (плюс короткоживущие горутины фонового чтения, пока работают handler). HTTP/1.1 обслуживает запросы соединения по одному в этой горутине."
+        }
+      },
+      {
+        "title": "2. Чтение запроса: дедлайны и контекст",
+        "desc": "readRequest ставит дедлайн чтения: ReadHeaderTimeout (или ReadTimeout, если первый не задан) на заголовки, ReadTimeout на весь запрос; WriteTimeout начнёт отсчёт после чтения заголовков. Для запроса создаётся ctx, cancelCtx := context.WithCancel — это и есть r.Context(). ServeMux выбирает handler по методу и пути: GET /accounts/{id}.",
+        "descEN": "readRequest sets read deadlines: ReadHeaderTimeout (or ReadTimeout if it is unset) for the headers and ReadTimeout for the whole request; WriteTimeout starts counting once the headers are read. It creates ctx, cancelCtx := context.WithCancel for the request: that is r.Context(). ServeMux picks the handler by method and path: GET /accounts/{id}.",
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Дедлайн чтения: ReadHeaderTimeout, затем ReadTimeout",
+                "r.Context() создан для этого запроса",
+                "ServeMux выбрал handler по методу и пути"
+              ]
+            },
+            "hl": [
+              "ReadHeaderTimeout",
+              "r.Context()",
+              "GET /accounts/{id}"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "открыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "StateActive"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "читает",
+                    "items": [
+                      "GET /accounts/42"
+                    ]
+                  },
+                  {
+                    "label": "маршрут",
+                    "items": [
+                      {
+                        "g": "GET /accounts/{id}",
+                        "flag": "ServeMux"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "timer",
+                "title": "Дедлайны соединения",
+                "slots": [
+                  {
+                    "label": "заголовки",
+                    "items": [
+                      {
+                        "g": "ReadHeaderTimeout",
+                        "flag": "или ReadTimeout"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "весь запрос",
+                    "items": [
+                      "ReadTimeout"
+                    ]
+                  },
+                  {
+                    "label": "ответ",
+                    "items": [
+                      "WriteTimeout"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Контекст запроса",
+                "slots": [
+                  {
+                    "label": "r.Context()",
+                    "items": [
+                      {
+                        "g": "r.Context()",
+                        "flag": "WithCancel"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      "отправил запрос"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "What protects the server from a client that sends one header byte per minute?",
+          "promptRU": "Что защищает сервер от клиента, который присылает по байту заголовка в минуту?",
+          "answerEN": "ReadHeaderTimeout (or ReadTimeout): the read deadline expires and the connection is closed. With all timeouts at zero there is no limit at all.",
+          "answerRU": "ReadHeaderTimeout (или ReadTimeout): истекает дедлайн чтения, и соединение закрывается. Если все таймауты нулевые, ограничения нет вообще."
+        }
+      },
+      {
+        "title": "3. Handler выполняется в той же горутине",
+        "desc": "Перед вызовом handler сервер запускает фоновое чтение соединения: оно заметит, если клиент закроет соединение (для запроса с телом — после того как тело прочитано). Затем serverHandler.ServeHTTP вызывает handler прямо в горутине соединения. Handler передаёт r.Context() в db.QueryContext.",
+        "descEN": "Before calling the handler, the server starts a background read on the connection: it notices if the client closes it (for a request with a body, once the body has been read). Then serverHandler.ServeHTTP calls the handler right in the connection goroutine. The handler passes r.Context() to db.QueryContext.",
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Запущено фоновое чтение — отдельная горутина",
+                "Handler работает в горутине соединения",
+                "r.Context() передан в QueryContext"
+              ]
+            },
+            "hl": [
+              "handler",
+              "backgroundRead",
+              "QueryContext(ctx)"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "открыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "StateActive"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "выполняет",
+                    "items": [
+                      {
+                        "g": "handler",
+                        "flag": "ServeHTTP"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": [
+                      {
+                        "g": "QueryContext(ctx)",
+                        "flag": "база"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · фоновое чтение",
+                "slots": [
+                  {
+                    "label": "запущена",
+                    "items": [
+                      {
+                        "g": "backgroundRead",
+                        "flag": "go cr.backgroundRead()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": [
+                      "EOF от клиента"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Контекст запроса",
+                "slots": [
+                  {
+                    "label": "r.Context()",
+                    "items": [
+                      "активен"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      "ждёт ответ"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Why can't the server read the next request on this connection while the handler runs?",
+          "promptRU": "Почему сервер не читает следующий запрос этого соединения, пока работает handler?",
+          "answerEN": "HTTP/1.1 answers requests on a connection in order, so the server must reply first; net/http does not implement pipelining in parallel. That is why running the handler in the connection goroutine is enough.",
+          "answerRU": "HTTP/1.1 отвечает на запросы соединения по порядку, сервер должен сначала ответить; параллельную конвейерную обработку net/http не делает. Поэтому достаточно выполнять handler в горутине соединения."
+        }
+      },
+      {
+        "title": "4. Клиент ушёл → контекст отменён",
+        "desc": "Клиент закрыл вкладку. Фоновое чтение получает ошибку и вызывает cancelCtx: r.Context().Done() закрыт, Err() == context.Canceled. Драйвер прерывает QueryContext и возвращает ошибку; handler заканчивает работу. Ответ записать уже некому, но база больше не работает впустую.",
+        "descEN": "The client closed the tab. The background read gets an error and calls cancelCtx: r.Context().Done() is closed and Err() is context.Canceled. The driver aborts QueryContext and returns an error; the handler finishes. Nobody is left to read the response, but the database stops doing useless work.",
+        "predict": {
+          "promptEN": "The client closes the tab while the handler waits for the database. What does the server do, and what does QueryContext return?",
+          "promptRU": "Клиент закрыл вкладку, пока handler ждёт базу. Что сделает сервер и что вернёт QueryContext?"
+        },
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Фоновое чтение увидело EOF и вызвало cancelCtx",
+                "r.Context(): Done() закрыт, Err() = context.Canceled",
+                "QueryContext вернул ошибку, handler завершился"
+              ]
+            },
+            "hl": [
+              "закрыл соединение",
+              "cancelCtx()",
+              "Canceled",
+              "context canceled"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "открыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "StateActive"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "выполняет",
+                    "items": [
+                      "handler"
+                    ]
+                  },
+                  {
+                    "label": "получил",
+                    "items": [
+                      {
+                        "g": "context canceled",
+                        "flag": "из QueryContext"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · фоновое чтение",
+                "slots": [
+                  {
+                    "label": "увидела",
+                    "items": [
+                      "EOF"
+                    ]
+                  },
+                  {
+                    "label": "вызвала",
+                    "items": [
+                      "cancelCtx()"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Контекст запроса",
+                "slots": [
+                  {
+                    "label": "r.Context()",
+                    "items": [
+                      {
+                        "g": "Canceled",
+                        "flag": "Done() закрыт"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      "закрыл соединение"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "What changes if the handler passed context.Background() to the query?",
+          "promptRU": "Что изменится, если handler передаст в запрос context.Background()?",
+          "answerEN": "The query runs to the end and keeps a pool connection busy for a response nobody will read.",
+          "answerRU": "Запрос доработает до конца и будет держать соединение из пула ради ответа, который никто не прочитает."
+        }
+      },
+      {
+        "title": "5. Handler вернулся → контекст отменён всегда, соединение ждёт",
+        "desc": "Обычный путь: handler записал ответ и вернулся. Сервер сразу вызывает cancelCtx — r.Context() отменяется после каждого запроса, даже успешного. finishRequest досылает ответ. Если соединение можно переиспользовать, оно переходит в StateIdle с дедлайном IdleTimeout (или ReadTimeout), и та же горутина ждёт следующий запрос.",
+        "descEN": "The normal path: the handler wrote its response and returned. The server calls cancelCtx right away: r.Context() is cancelled after every request, successful or not. finishRequest flushes the response. If the connection can be reused it moves to StateIdle with an IdleTimeout (or ReadTimeout) deadline, and the same goroutine waits for the next request.",
+        "predict": {
+          "promptEN": "The handler has returned. What is the state of r.Context() now, and what is the connection goroutine doing?",
+          "promptRU": "Handler вернулся. В каком состоянии r.Context() и чем занята горутина соединения?"
+        },
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "cancelCtx после ServeHTTP: контекст отменён всегда",
+                "Ответ досылается, соединение → StateIdle",
+                "Та же горутина ждёт следующий запрос до IdleTimeout"
+              ]
+            },
+            "hl": [
+              "StateIdle",
+              "отменён после ServeHTTP",
+              "ждёт следующий запрос"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "открыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "StateIdle"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "сделала",
+                    "items": [
+                      {
+                        "g": "finishRequest",
+                        "flag": "ответ отправлен"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "сейчас",
+                    "items": [
+                      {
+                        "g": "ждёт следующий запрос",
+                        "flag": "IdleTimeout"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "Контекст запроса",
+                "slots": [
+                  {
+                    "label": "r.Context()",
+                    "items": [
+                      "отменён после ServeHTTP"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      "получил 200"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "A handler starts go audit(r.Context(), event) and returns. Why does the audit often fail with context canceled?",
+          "promptRU": "Handler запускает go audit(r.Context(), event) и возвращается. Почему аудит часто падает с context canceled?",
+          "answerEN": "The request context is cancelled as soon as ServeHTTP returns. Work that outlives the response needs its own context, for example context.WithoutCancel(r.Context()) with a timeout, and an owner that waits for it.",
+          "answerRU": "Контекст запроса отменяется, как только ServeHTTP вернулся. Работе, которая переживает ответ, нужен свой контекст — например, context.WithoutCancel(r.Context()) с таймаутом — и владелец, который её дождётся."
+        }
+      },
+      {
+        "title": "6. Panic: в handler и в его горутине",
+        "desc": "Если handler паникует, defer в conn.serve восстанавливает panic, пишет в лог сервера «http: panic serving …» и закрывает это соединение; остальные соединения и процесс живут. Panic в горутине, которую handler запустил сам, никто не восстанавливает — процесс завершается.",
+        "descEN": "If the handler panics, the deferred recover in conn.serve catches it, logs \"http: panic serving …\" to the server's error log and closes this connection; other connections and the process keep running. A panic in a goroutine the handler started itself is not recovered by anyone, and the process exits.",
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Panic в handler: recover в conn.serve, соединение закрыто",
+                "Panic в горутине из handler: процесс завершается"
+              ]
+            },
+            "hl": [
+              "recover",
+              "процесс завершён"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G · conn #1",
+                "slots": [
+                  {
+                    "label": "panic в handler",
+                    "items": [
+                      {
+                        "g": "recover",
+                        "flag": "в conn.serve"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      {
+                        "g": "соединение закрыто",
+                        "flag": "лог: http: panic serving"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · go work() из handler",
+                "slots": [
+                  {
+                    "label": "panic",
+                    "items": [
+                      "никто не ловит"
+                    ]
+                  },
+                  {
+                    "label": "итог",
+                    "items": [
+                      {
+                        "g": "процесс завершён",
+                        "flag": "все соединения"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Does the server's recovery make panics an acceptable way to report errors?",
+          "promptRU": "Делает ли восстановление в сервере panic допустимым способом сообщать об ошибках?",
+          "answerEN": "No. It is a safety net that drops one connection; errors are returned and mapped to status codes, and goroutines a handler starts need their own recover if they can panic.",
+          "answerRU": "Нет. Это страховка, которая теряет одно соединение; ошибки возвращают и переводят в коды ответа, а горутинам, запущенным из handler, нужен свой recover, если они могут паниковать."
+        }
+      },
+      {
+        "title": "7. Shutdown: приём закрыт, активные дорабатывают",
+        "desc": "Shutdown(ctx) отмечает inShutdown и закрывает listener: Serve сразу возвращает ErrServerClosed, новые соединения не принимаются. Затем в цикле закрываются простаивающие соединения, а активные дорабатывают свой запрос; опрос идёт с интервалом от 1 мс, растущим до 500 мс. Shutdown возвращается, когда активных не осталось, или с ошибкой ctx, если время вышло. Hijacked-соединения (WebSocket) он не ждёт.",
+        "descEN": "Shutdown(ctx) sets inShutdown and closes the listener: Serve returns ErrServerClosed at once, and new connections are refused. Then it repeatedly closes idle connections while active ones finish their request, polling every 1 ms at first and backing off to 500 ms. Shutdown returns when no active connection is left, or with ctx's error if time runs out. It does not wait for hijacked connections such as WebSockets.",
+        "predict": {
+          "promptEN": "Shutdown(ctx) is called with one idle and one active connection. What happens to each of them and to new connections?",
+          "promptRU": "Вызван Shutdown(ctx), есть одно простаивающее и одно активное соединение. Что будет с каждым и с новыми соединениями?"
+        },
+        "board": [
+          {
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Listener закрыт: Serve вернул ErrServerClosed",
+                "Простаивающие соединения закрыты",
+                "Активные дорабатывают; Shutdown ждёт их или ctx"
+              ]
+            },
+            "hl": [
+              "закрыт",
+              "conn #1",
+              "conn #2",
+              "ErrServerClosed"
+            ],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Server · цикл Accept",
+                "slots": [
+                  {
+                    "label": "listener",
+                    "items": [
+                      {
+                        "g": "закрыт",
+                        "flag": "Accept()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "соединения",
+                    "items": [
+                      {
+                        "g": "conn #1",
+                        "flag": "idle → закрыто"
+                      },
+                      {
+                        "g": "conn #2",
+                        "flag": "active → дорабатывает"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · Serve",
+                "slots": [
+                  {
+                    "label": "вернул",
+                    "items": [
+                      "ErrServerClosed"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G · Shutdown(ctx)",
+                "slots": [
+                  {
+                    "label": "опрос",
+                    "items": [
+                      {
+                        "g": "closeIdleConns",
+                        "flag": "1 мс … 500 мс"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "вернётся",
+                    "items": [
+                      {
+                        "g": "когда активных нет",
+                        "flag": "или ctx.Err()"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Клиент",
+                "slots": [
+                  {
+                    "label": "что делает",
+                    "items": [
+                      {
+                        "g": "новое соединение",
+                        "flag": "отказ"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "check": {
+          "promptEN": "Why does main have to wait for Shutdown to return, not just for Serve?",
+          "promptRU": "Почему main должен ждать возврата Shutdown, а не только Serve?",
+          "answerEN": "Serve returns ErrServerClosed immediately after Shutdown starts, while requests are still running. If main exits then, the in-flight requests are cut off.",
+          "answerRU": "Serve возвращает ErrServerClosed сразу после начала Shutdown, пока запросы ещё выполняются. Если main завершится в этот момент, запросы в полёте оборвутся."
+        }
+      },
+      {
+        "title": "8. Вся картина и ответ за минуту",
+        "desc": "Нарисуй по памяти пять дорожек: Accept → горутина соединения → handler в ней же → r.Context() отменяется при уходе клиента и после ответа → keep-alive или закрытие → Shutdown. Потом произнеси ответ на английском.",
+        "descEN": "Redraw the five lanes from memory: Accept → connection goroutine → handler in it → r.Context() cancelled when the client leaves and after the response → keep-alive or close → Shutdown. Then say the answer in English.",
+        "board": [
+          {
+            "lanes": [
+              {
+                "kind": "table",
+                "title": "Что запомнить",
+                "slots": [
+                  {
+                    "label": "горутины",
+                    "items": [
+                      {
+                        "g": "одна на соединение",
+                        "flag": "HTTP/1.1"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "r.Context()",
+                    "items": [
+                      "отмена: клиент ушёл",
+                      "отмена: ServeHTTP вернулся"
+                    ]
+                  },
+                  {
+                    "label": "таймауты",
+                    "items": [
+                      {
+                        "g": "ReadHeader · Read · Write · Idle",
+                        "flag": "0 = без лимита"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "panic",
+                    "items": [
+                      "в handler — закрыто соединение",
+                      "в своей горутине — падает процесс"
+                    ]
+                  },
+                  {
+                    "label": "Shutdown",
+                    "items": [
+                      {
+                        "g": "listener закрыт → idle закрыты → active дорабатывают",
+                        "flag": "ждать возврата"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Answer in a minute (EN)",
+              "items": [
+                "net/http accepts each connection and serves it in its own goroutine; with HTTP/1.1, requests on that connection are handled one at a time in that goroutine.",
+                "Each request gets a context that is cancelled when the client disconnects or when the handler returns, so I pass r.Context() to every downstream call.",
+                "I always set ReadHeaderTimeout and IdleTimeout, usually ReadTimeout and WriteTimeout too, because the zero values mean no limit.",
+                "On SIGTERM I call Shutdown with a timeout: it closes the listener, closes idle connections and waits for active requests; main waits for it to return."
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Follow-up: how is HTTP/2 different for this picture?",
+          "promptRU": "Уточняющий вопрос: чем отличается картина для HTTP/2?",
+          "answerEN": "One connection carries many concurrent streams, and the server runs each request's handler in its own goroutine; the context is still per request.",
+          "answerRU": "По одному соединению идёт много одновременных потоков, и handler каждого запроса выполняется в своей горутине; контекст по-прежнему на запрос."
+        }
+      }
+    ]
   }
 ];
 

@@ -2800,5 +2800,236 @@ func Drain(a, b <-chan int, consume func(int)) {
       "followUpEN": "Why must t.Fatal not be called from a goroutine started by the test?",
       "followUpRU": "Почему t.Fatal нельзя вызывать из горутины, которую запустил тест?"
     }
+  },
+  // ==========================================
+  // МОДУЛЬ 7: СЕРВИС НА GO — HTTP, ОШИБКИ, SQL, ЛОГИ (C45 - C48)
+  // ==========================================
+  {
+    "id": "c45",
+    "mod": "m7",
+    "modName": "7. Go Service: HTTP, Errors, SQL, Logs",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": "sim10",
+    "qEN": "What happens to a request inside net/http, and which deadlines should a Go HTTP server set?",
+    "qRU": "Что происходит с запросом внутри net/http и какие дедлайны должен задавать HTTP-сервер на Go?",
+    "shortEN": "The server accepts a connection and serves it in its own goroutine; for each request the mux picks a handler by method and path, and the handler runs in that goroutine. r.Context() is cancelled when the client disconnects or when ServeHTTP returns, so pass it to every database or HTTP call. Set ReadHeaderTimeout and IdleTimeout on http.Server, and usually ReadTimeout and WriteTimeout too; the zero value means no limit.",
+    "shortRU": "Сервер принимает соединение и обслуживает его в отдельной горутине; для каждого запроса mux выбирает handler по методу и пути, и handler выполняется в этой горутине. r.Context() отменяется, когда клиент отключился или ServeHTTP вернулся, поэтому его передают в каждый запрос к базе или другому сервису. В http.Server задают ReadHeaderTimeout и IdleTimeout, обычно также ReadTimeout и WriteTimeout; нулевое значение — без ограничения.",
+    "detailsEN": [
+      "One goroutine per connection, not per request: with keep-alive, one connection carries requests one after another (HTTP/1.1), and the same goroutine serves them. A panic in a handler is recovered by the server for that connection only; a panic in a goroutine the handler starts crashes the process.",
+      "Routing since Go 1.22: patterns like \"GET /accounts/{id}\" match method and path, r.PathValue(\"id\") reads the wildcard, the more specific pattern wins (/accounts/new over /accounts/{id}), and a path that matches with the wrong method gets 405 with an Allow header.",
+      "Context: work started for the request must stop when r.Context() is done. Work that must outlive the response needs its own context, for example context.WithoutCancel (Go 1.21) plus a timeout, and an owner that waits for it on shutdown.",
+      "Timeouts: ReadHeaderTimeout protects against slow clients that never finish headers (Slowloris); ReadTimeout covers reading the whole request, WriteTimeout the time until the response is written, IdleTimeout the wait between keep-alive requests. http.TimeoutHandler or a context deadline limits one handler; Shutdown(ctx) drains in-flight requests."
+    ],
+    "detailsRU": [
+      "Горутина на соединение, а не на запрос: с keep-alive одно соединение несёт запросы один за другим (HTTP/1.1), и их обслуживает та же горутина. Panic в handler сервер перехватывает только для этого соединения; panic в горутине, которую handler запустил, роняет процесс.",
+      "Маршрутизация с Go 1.22: шаблоны вида \"GET /accounts/{id}\" учитывают метод и путь, r.PathValue(\"id\") читает подстановку, побеждает более конкретный шаблон (/accounts/new раньше /accounts/{id}), а путь, совпавший с другим методом, получает 405 с заголовком Allow.",
+      "Контекст: работа, начатая ради запроса, должна остановиться, когда r.Context() завершён. Работе, которая должна пережить ответ, нужен свой контекст — например, context.WithoutCancel (Go 1.21) с таймаутом — и владелец, который дождётся её при остановке.",
+      "Таймауты: ReadHeaderTimeout защищает от клиентов, которые никак не дошлют заголовки (Slowloris); ReadTimeout покрывает чтение всего запроса, WriteTimeout — время до записи ответа, IdleTimeout — ожидание следующего запроса keep-alive. http.TimeoutHandler или дедлайн контекста ограничивает один handler; Shutdown(ctx) дожидается запросов в полёте."
+    ],
+    "practicalRU": "На интервью: «горутина на соединение, контекст запроса отменяется при уходе клиента, у сервера четыре таймаута, нулевые — значит без ограничения». И пример, что handler делает с r.Context().",
+    "code": "package main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"time\"\n)\n\nfunc main() {\n\thandlerErr := make(chan error, 1)\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /report\", func(w http.ResponseWriter, r *http.Request) {\n\t\tselect {\n\t\tcase <-time.After(2 * time.Second): // slow work, e.g. a DB query with r.Context()\n\t\t\tfmt.Fprint(w, \"done\")\n\t\tcase <-r.Context().Done(): // the client went away: stop working\n\t\t\thandlerErr <- r.Context().Err()\n\t\t}\n\t})\n\tsrv := httptest.NewUnstartedServer(mux)\n\t// In production: always set server timeouts.\n\tsrv.Config.ReadHeaderTimeout = 5 * time.Second\n\tsrv.Config.IdleTimeout = 60 * time.Second\n\tsrv.Start()\n\tdefer srv.Close()\n\n\tclient := &http.Client{Timeout: 100 * time.Millisecond}\n\t_, err := client.Get(srv.URL + \"/report\")\n\tfmt.Println(\"client timed out:\", err != nil)\n\terr = <-handlerErr\n\tfmt.Println(\"handler saw:\", err, errors.Is(err, context.Canceled))\n}",
+    "versionNote": "Шаблоны маршрутов с методом и {id}, r.PathValue и автоматический 405 — Go 1.22; context.WithoutCancel — Go 1.21; ReadHeaderTimeout — Go 1.8. Пример выполнен Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "net/http: Server",
+        "url": "https://pkg.go.dev/net/http#Server"
+      },
+      {
+        "title": "Routing Enhancements for Go 1.22",
+        "url": "https://go.dev/blog/routing-enhancements"
+      },
+      {
+        "title": "net/http: Request.Context",
+        "url": "https://pkg.go.dev/net/http#Request.Context"
+      }
+    ],
+    "practice": {
+      "kind": "Найди, что остановится",
+      "promptEN": "A handler calls db.QueryContext(r.Context(), …) and the client closes the browser tab after one second. What happens to the query, and what changes if the handler used context.Background() instead?",
+      "promptRU": "Handler вызывает db.QueryContext(r.Context(), …), а клиент через секунду закрывает вкладку. Что будет с запросом к базе и что изменится, если handler передал context.Background()?",
+      "pointsEN": [
+        "The server notices the closed connection and cancels r.Context(); the driver stops the query and returns context.Canceled.",
+        "With context.Background() the query runs to the end and holds a pool connection for nothing.",
+        "Either way the response is lost; the point is not wasting the database."
+      ],
+      "pointsRU": [
+        "Сервер замечает закрытое соединение и отменяет r.Context(); драйвер останавливает запрос и возвращает context.Canceled.",
+        "С context.Background() запрос доработает до конца и зря держит соединение из пула.",
+        "Ответ потерян в обоих случаях; смысл в том, чтобы не нагружать базу впустую."
+      ],
+      "followUpEN": "Why does http.ListenAndServe(\":8080\", mux) in production deserve a review comment?",
+      "followUpRU": "Почему http.ListenAndServe(\":8080\", mux) в продакшене заслуживает комментария на review?"
+    }
+  },
+  {
+    "id": "c46",
+    "mod": "m7",
+    "modName": "7. Go Service: HTTP, Errors, SQL, Logs",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you turn domain errors into HTTP status codes without leaking internals?",
+    "qRU": "Как превращать ошибки домена в HTTP-коды, не выдавая наружу внутренние детали?",
+    "shortEN": "Keep HTTP out of the domain: the ledger package returns sentinels and typed errors, and one function at the HTTP boundary maps them with errors.Is and errors.As — validation to 400 with the field, not found to 404, a business rule such as insufficient funds to 409 or 422. Everything else is 500 with a generic body, and the real error goes to the log, once.",
+    "shortRU": "HTTP не должен проникать в домен: пакет ledger возвращает sentinel-ошибки и ошибки-типы, а одна функция на границе HTTP переводит их через errors.Is и errors.As — валидация в 400 с полем, «не найдено» в 404, бизнес-правило вроде нехватки средств в 409 или 422. Всё остальное — 500 с общим текстом, а настоящая ошибка — в лог, один раз.",
+    "detailsEN": [
+      "Why one function: every handler answers the same error the same way, and adding a new domain error touches one place. Handlers end with writeError(w, err) and return.",
+      "Use errors.As with a pointer target when Error has a pointer receiver: var ve *ValidationError. A value target such as var ve ValidationError makes errors.As panic at run time, and go vet reports it.",
+      "Choose and document the code for business rules: 409 Conflict says the request conflicts with the current state, 422 Unprocessable Content says it is well-formed but cannot be applied; teams pick one and write down why.",
+      "The 500 body says nothing about the cause: no SQL, no stack traces, no hostnames. Log the error with the request id where it is handled. RFC 9457 problem details (application/problem+json) is a standard shape for error bodies."
+    ],
+    "detailsRU": [
+      "Почему одна функция: каждый handler отвечает на одну и ту же ошибку одинаково, а новая ошибка домена добавляется в одном месте. Handler заканчивается writeError(w, err) и return.",
+      "errors.As — с указателем, если Error объявлен на указателе: var ve *ValidationError. Цель-значение вроде var ve ValidationError вызывает panic во время выполнения, и go vet об этом предупреждает.",
+      "Код для бизнес-правил выбирают и записывают: 409 Conflict — запрос конфликтует с текущим состоянием, 422 Unprocessable Content — запрос корректен, но применить его нельзя; команда выбирает одно и пишет почему.",
+      "Тело ответа 500 ничего не говорит о причине: ни SQL, ни стека, ни имён хостов. Ошибку логируют с request id там, где её обрабатывают. RFC 9457 problem details (application/problem+json) — стандартная форма тела ошибки."
+    ],
+    "practicalRU": "Это продолжение W1-3 (ValidationError): там errors.As доставал поле, здесь то же поле уходит в ответ 400. Отдельный вопрос интервью — «почему не 200 с {success: false}».",
+    "code": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"errors\"\n\t\"fmt\"\n\t\"log/slog\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"os\"\n)\n\n// Domain errors: the ledger package knows nothing about HTTP.\nvar (\n\tErrNotFound          = errors.New(\"account not found\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\ntype ValidationError struct{ Field, Reason string }\n\nfunc (e *ValidationError) Error() string { return \"invalid \" + e.Field + \": \" + e.Reason }\n\n// writeError is the one place that maps domain errors to HTTP.\nfunc writeError(w http.ResponseWriter, log *slog.Logger, err error) {\n\tstatus, body := http.StatusInternalServerError, map[string]string{\"error\": \"internal error\"}\n\tvar ve *ValidationError\n\tswitch {\n\tcase errors.As(err, &ve):\n\t\tstatus, body = http.StatusBadRequest, map[string]string{\"error\": ve.Reason, \"field\": ve.Field}\n\tcase errors.Is(err, ErrNotFound):\n\t\tstatus, body = http.StatusNotFound, map[string]string{\"error\": \"account not found\"}\n\tcase errors.Is(err, ErrInsufficientFunds):\n\t\tstatus, body = http.StatusConflict, map[string]string{\"error\": \"insufficient funds\"}\n\tdefault:\n\t\tlog.Error(\"unexpected error\", \"err\", err) // details go to the log, not to the client\n\t}\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(status)\n\tjson.NewEncoder(w).Encode(body)\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {\n\t\tif a.Key == slog.TimeKey {\n\t\t\treturn slog.Attr{}\n\t\t}\n\t\treturn a\n\t}}))\n\tfor _, err := range []error{\n\t\tfmt.Errorf(\"create: %w\", &ValidationError{\"owner\", \"must not be empty\"}),\n\t\tfmt.Errorf(\"transfer: %w\", ErrNotFound),\n\t\tfmt.Errorf(\"transfer: %w\", ErrInsufficientFunds),\n\t\terrors.New(\"pq: connection refused\"),\n\t} {\n\t\trec := httptest.NewRecorder()\n\t\twriteError(rec, log, err)\n\t\tfmt.Print(rec.Code, \" \", rec.Body.String())\n\t}\n}",
+    "versionNote": "errors.Is и errors.As — Go 1.13; log/slog — Go 1.21. Пример выполнен Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Package errors",
+        "url": "https://pkg.go.dev/errors"
+      },
+      {
+        "title": "RFC 9457: Problem Details for HTTP APIs",
+        "url": "https://www.rfc-editor.org/rfc/rfc9457"
+      },
+      {
+        "title": "RFC 9110: HTTP Semantics, status codes",
+        "url": "https://www.rfc-editor.org/rfc/rfc9110#name-status-codes"
+      }
+    ],
+    "practice": {
+      "kind": "Раздай коды",
+      "promptEN": "Map these to status codes and say what the client sees: a missing owner name, a transfer from an unknown account, a transfer larger than the balance, and \"pq: connection refused\".",
+      "promptRU": "Какие коды получат и что увидит клиент: пустое имя владельца, перевод с несуществующего счёта, перевод больше баланса и «pq: connection refused»?",
+      "pointsEN": [
+        "400 with the field name; 404 for the unknown account.",
+        "409 or 422 for insufficient funds — one choice, documented.",
+        "500 with a generic message; the driver error only in the log."
+      ],
+      "pointsRU": [
+        "400 с именем поля; 404 для несуществующего счёта.",
+        "409 или 422 для нехватки средств — один выбор, записанный.",
+        "500 с общим текстом; ошибка драйвера — только в логе."
+      ],
+      "followUpEN": "Where is the error logged, and why not in the repository layer as well?",
+      "followUpRU": "Где логируется ошибка и почему не ещё и в слое репозитория?"
+    }
+  },
+  {
+    "id": "c47",
+    "mod": "m7",
+    "modName": "7. Go Service: HTTP, Errors, SQL, Logs",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "What is *sql.DB, and how do you keep connections and transactions from leaking?",
+    "qRU": "Что такое *sql.DB и как не допустить утечки соединений и транзакций?",
+    "shortEN": "*sql.DB is a pool of connections, safe for concurrent use: open it once at startup and set limits. Every Rows holds a connection until it is closed, so defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: begin it with the request context, defer tx.Rollback(), run every statement on tx, and Commit at the end.",
+    "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Каждый Rows держит соединение, пока его не закроют, поэтому defer rows.Close() — сразу после запроса, а rows.Err() — после цикла. Транзакция занимает одно соединение: начать её с контекстом запроса, сделать defer tx.Rollback(), выполнять все запросы через tx и в конце Commit.",
+    "detailsEN": [
+      "Limits: SetMaxOpenConns caps connections, so a request waits for a free one instead of overloading the database; SetMaxIdleConns keeps some open for reuse; SetConnMaxLifetime and SetConnMaxIdleTime retire old connections. Without a cap, a traffic spike opens as many connections as there are goroutines.",
+      "Leaks: an unclosed Rows or a transaction that is never committed or rolled back keeps its connection busy. With a cap of 25, 25 leaks block every next query until its context ends.",
+      "defer tx.Rollback() is safe after Commit: it returns sql.ErrTxDone and does nothing. A statement on db instead of tx inside the transaction runs on another connection and outside the transaction.",
+      "rows.Next() returns false both at the end and on an error in the middle; only rows.Err() tells them apart. With pgx you use pgxpool.Pool the same way: one per process, contexts on every call."
+    ],
+    "detailsRU": [
+      "Лимиты: SetMaxOpenConns ограничивает число соединений, и запрос ждёт свободного вместо перегрузки базы; SetMaxIdleConns держит часть открытыми для повторного использования; SetConnMaxLifetime и SetConnMaxIdleTime закрывают старые. Без лимита всплеск трафика откроет столько соединений, сколько горутин.",
+      "Утечки: незакрытый Rows или транзакция без Commit и Rollback держат своё соединение занятым. При лимите 25 двадцать пять утечек блокируют каждый следующий запрос, пока не истечёт его контекст.",
+      "defer tx.Rollback() безопасен после Commit: вернёт sql.ErrTxDone и ничего не сделает. Запрос через db вместо tx внутри транзакции идёт по другому соединению и вне транзакции.",
+      "rows.Next() возвращает false и в конце, и при ошибке посередине; различает их только rows.Err(). С pgx так же работают с pgxpool.Pool: один на процесс, контекст в каждом вызове."
+    ],
+    "practicalRU": "Пара к q18 и q19: там ловушки, здесь шаблон, который их исключает. В проекте недели 5 — тот же шаблон для перевода между счетами.",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver\n// (for PostgreSQL: github.com/jackc/pgx/v5/stdlib).\npackage store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc Open(dsn string) (*sql.DB, error) {\n\tdb, err := sql.Open(\"pgx\", dsn) // a pool, not one connection; create it once\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdb.SetMaxOpenConns(10)\n\tdb.SetMaxIdleConns(10)\n\tdb.SetConnMaxLifetime(30 * time.Minute)\n\treturn db, nil\n}\n\n// Transfer is one transaction: both updates or neither.\nfunc Transfer(ctx context.Context, db *sql.DB, from, to string, amount int64) error {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"begin: %w\", err)\n\t}\n\tdefer tx.Rollback() // no-op after a successful Commit (returns sql.ErrTxDone)\n\n\tif _, err := tx.ExecContext(ctx, `UPDATE accounts SET balance = balance - $1 WHERE id = $2`, amount, from); err != nil {\n\t\treturn fmt.Errorf(\"debit %s: %w\", from, err)\n\t}\n\tif _, err := tx.ExecContext(ctx, `UPDATE accounts SET balance = balance + $1 WHERE id = $2`, amount, to); err != nil {\n\t\treturn fmt.Errorf(\"credit %s: %w\", to, err)\n\t}\n\treturn tx.Commit()\n}\n\n// Balances reads every row and always gives the connection back to the pool.\nfunc Balances(ctx context.Context, db *sql.DB) (map[string]int64, error) {\n\trows, err := db.QueryContext(ctx, `SELECT id, balance FROM accounts`)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer rows.Close() // also on early return: otherwise the connection stays busy\n\n\tout := map[string]int64{}\n\tfor rows.Next() {\n\t\tvar id string\n\t\tvar balance int64\n\t\tif err := rows.Scan(&id, &balance); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tout[id] = balance\n\t}\n\treturn out, rows.Err() // an error in the middle of the iteration ends Next with false\n}",
+    "versionNote": "BeginTx и *Context-методы — Go 1.8; SetConnMaxIdleTime — Go 1.15. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3); для запуска нужен драйвер.",
+    "sources": [
+      {
+        "title": "Package database/sql",
+        "url": "https://pkg.go.dev/database/sql"
+      },
+      {
+        "title": "Go: Managing connections",
+        "url": "https://go.dev/doc/database/manage-connections"
+      },
+      {
+        "title": "Go: Executing transactions",
+        "url": "https://go.dev/doc/database/execute-transactions"
+      }
+    ],
+    "practice": {
+      "kind": "Найди утечку",
+      "promptEN": "A function queries rows, and returns early inside the loop when Scan fails, without defer rows.Close(). The pool has SetMaxOpenConns(5). What do users see after five such failures?",
+      "promptRU": "Функция читает строки и при ошибке Scan выходит прямо из цикла, без defer rows.Close(). У пула SetMaxOpenConns(5). Что увидят пользователи после пяти таких ошибок?",
+      "pointsEN": [
+        "Each early return leaves its Rows open, holding a connection.",
+        "After five, every new query waits for a free connection until its context deadline.",
+        "Fix: defer rows.Close() right after the error check of the query, and check rows.Err()."
+      ],
+      "pointsRU": [
+        "Каждый ранний выход оставляет Rows открытым, и он держит соединение.",
+        "После пяти любой новый запрос ждёт свободного соединения до дедлайна своего контекста.",
+        "Исправление: defer rows.Close() сразу после проверки ошибки запроса и проверка rows.Err()."
+      ],
+      "followUpEN": "Why must every statement inside a transaction go through tx and not db?",
+      "followUpRU": "Почему каждый запрос внутри транзакции должен идти через tx, а не через db?"
+    }
+  },
+  {
+    "id": "c48",
+    "mod": "m7",
+    "modName": "7. Go Service: HTTP, Errors, SQL, Logs",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you log with log/slog in a service, and how do you keep secrets out of logs?",
+    "qRU": "Как логировать через log/slog в сервисе и как не допустить секретов в логах?",
+    "shortEN": "Create one slog.Logger with a JSON handler and a level at startup, add request-scoped attributes such as request_id with With in a middleware, and pass that logger through the request context. Log key-value attributes, not formatted strings. Give sensitive types a LogValue method so they log only safe fields, and log each error once, where it is handled.",
+    "shortRU": "При старте создают один slog.Logger с JSON-обработчиком и уровнем, в middleware добавляют атрибуты запроса вроде request_id через With и передают этот логгер через контекст запроса. Логируют пары ключ-значение, а не отформатированные строки. Чувствительным типам дают метод LogValue, чтобы в лог попадали только безопасные поля, а каждую ошибку логируют один раз — там, где её обрабатывают.",
+    "detailsEN": [
+      "Handlers: slog.NewJSONHandler for machines, slog.NewTextHandler for local reading; HandlerOptions sets the Level and can rewrite attributes with ReplaceAttr. slog.SetDefault also routes the old log package through it.",
+      "logger.With(\"request_id\", id) returns a logger that adds the attribute to every record; middleware creates it once per request. Context propagation is a convention: a small helper stores and reads the logger under a private context key.",
+      "slog logs a struct's fields as they are, so a struct with a Password field leaks it. A LogValue() slog.Value method replaces the value at log time; that is the place for redaction.",
+      "Levels are for operators: Debug for detail you switch on temporarily, Info for normal events, Warn for something odd but handled, Error for a failure someone should look at. Use LogAttrs or typed attributes on hot paths to avoid allocations."
+    ],
+    "detailsRU": [
+      "Обработчики: slog.NewJSONHandler — для машин, slog.NewTextHandler — для чтения глазами; HandlerOptions задаёт Level и может переписывать атрибуты через ReplaceAttr. slog.SetDefault заодно направляет через него старый пакет log.",
+      "logger.With(\"request_id\", id) возвращает логгер, который добавляет атрибут к каждой записи; middleware создаёт его один раз на запрос. Передача через контекст — соглашение: маленький helper кладёт и достаёт логгер по закрытому ключу контекста.",
+      "slog пишет поля структуры как есть, поэтому структура с полем Password его выдаст. Метод LogValue() slog.Value подменяет значение в момент записи — это и есть место для маскирования.",
+      "Уровни — для эксплуатации: Debug — подробности, которые включают на время, Info — обычные события, Warn — странное, но обработанное, Error — сбой, на который кто-то должен посмотреть. На горячих путях — LogAttrs или типизированные атрибуты, чтобы не выделять память."
+    ],
+    "practicalRU": "Для Kotlin-разработчика: slog — это SLF4J + MDC в одном, но MDC явный: логгер с атрибутами передаётся через контекст, а не через thread-local.",
+    "code": "package main\n\nimport (\n\t\"context\"\n\t\"log/slog\"\n\t\"os\"\n)\n\ntype Login struct{ User, Password string }\n\n// LogValue decides what a Login looks like in logs: never the password.\nfunc (l Login) LogValue() slog.Value {\n\treturn slog.GroupValue(slog.String(\"user\", l.User))\n}\n\ntype ctxKey struct{}\n\nfunc withLogger(ctx context.Context, l *slog.Logger) context.Context {\n\treturn context.WithValue(ctx, ctxKey{}, l)\n}\n\nfunc logger(ctx context.Context) *slog.Logger {\n\tif l, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {\n\t\treturn l\n\t}\n\treturn slog.Default()\n}\n\nfunc main() {\n\tbase := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{\n\t\tLevel: slog.LevelInfo,\n\t\tReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {\n\t\t\tif a.Key == slog.TimeKey {\n\t\t\t\treturn slog.Attr{} // stable output for the example\n\t\t\t}\n\t\t\treturn a\n\t\t},\n\t}))\n\t// Middleware: one logger per request with its id; handlers take it from the context.\n\tctx := withLogger(context.Background(), base.With(\"request_id\", \"r-42\"))\n\n\tlogger(ctx).Debug(\"not printed: below the level\")\n\tlogger(ctx).Info(\"login\", \"input\", Login{User: \"aleks\", Password: \"hunter2\"})\n\tlogger(ctx).Error(\"transfer failed\", \"err\", \"insufficient funds\", \"amount_minor\", 1250)\n}",
+    "versionNote": "log/slog — Go 1.21 (LogValuer там же). Пример выполнен Go 1.24.7 и 1.27.3; время из вывода убрано через ReplaceAttr, чтобы вывод был стабильным.",
+    "sources": [
+      {
+        "title": "Package log/slog",
+        "url": "https://pkg.go.dev/log/slog"
+      },
+      {
+        "title": "Structured Logging with slog",
+        "url": "https://go.dev/blog/slog"
+      }
+    ],
+    "practice": {
+      "kind": "Убери секрет",
+      "promptEN": "log.Info(\"login\", \"input\", req) prints the whole request struct, including Password. Give two fixes and say which one survives a new field being added to the struct later.",
+      "promptRU": "log.Info(\"login\", \"input\", req) печатает всю структуру запроса, включая Password. Предложи два исправления и скажи, какое переживёт новое поле, добавленное в структуру позже.",
+      "pointsEN": [
+        "Log only the safe fields at the call site: \"user\", req.User.",
+        "Or add a LogValue method to the type that returns only safe fields.",
+        "LogValue is the safer default: it applies everywhere the type is logged, and a new field is hidden until someone adds it on purpose."
+      ],
+      "pointsRU": [
+        "Логировать только безопасные поля в месте вызова: \"user\", req.User.",
+        "Или добавить типу метод LogValue, возвращающий только безопасные поля.",
+        "LogValue надёжнее: действует везде, где логируют этот тип, а новое поле скрыто, пока его не добавят осознанно."
+      ],
+      "followUpEN": "Why is logging an error and returning it at every layer a problem?",
+      "followUpRU": "Почему плохо и логировать, и возвращать ошибку на каждом уровне?"
+    }
   }
 ];

@@ -1,0 +1,27 @@
+// Package accountsapi: practice task W5-1. Replace the TODO with your solution.
+package accountsapi
+
+import "net/http"
+
+type Account struct {
+	ID      string `json:"id"`
+	Owner   string `json:"owner"`
+	Balance int64  `json:"balance"` // minor units
+}
+
+// Store is what the handlers need; the ledger package or a test fake implements it.
+type Store interface {
+	Create(owner string) Account
+	Get(id string) (Account, bool)
+}
+
+// NewHandler returns the routes:
+//
+//	POST /accounts        {"owner": "..."} → 201 + Location, the account as JSON
+//	GET  /accounts/{id}   → 200 with the account, 404 if unknown
+//
+// Other methods on these paths must get 405. Errors are JSON: {"error": "..."}.
+func NewHandler(s Store) http.Handler {
+	// TODO
+	panic("TODO")
+}

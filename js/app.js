@@ -432,7 +432,7 @@ function renderSimStep(simIdx, stepIdx) {
   table.classList.toggle("hidden", !step.board || !(step.boxes || []).length);
   if (step.board && grid.parentElement !== table) table.append(grid);
   if (!step.board && grid.parentElement === table) table.after(grid);
-  grid.innerHTML = step.boxes
+  grid.innerHTML = (step.boxes || []) // шаг со схемой может обойтись без таблицы
     .map(box => `
       <div class="sim-box">
         <h4>${escapeHtml(box.title)}</h4>
