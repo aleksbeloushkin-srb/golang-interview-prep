@@ -46,7 +46,8 @@ func Square(ctx context.Context, in <-chan int) <-chan int {
 }
 
 // Sum adds up every value from in until in is closed.
-// If ctx is done first, it returns 0 and ctx.Err().
+// If ctx is done, it returns 0 and ctx.Err(), even when in has closed too:
+// upstream stages close their outputs on cancellation as well.
 func Sum(ctx context.Context, in <-chan int) (int, error) {
 	total := 0
 	for {
@@ -55,6 +56,10 @@ func Sum(ctx context.Context, in <-chan int) (int, error) {
 			return 0, ctx.Err()
 		case n, ok := <-in:
 			if !ok {
+				// A closed input may be the result of the same cancellation.
+				if err := ctx.Err(); err != nil {
+					return 0, err
+				}
 				return total, nil
 			}
 			total += n

@@ -34,12 +34,13 @@ func TestSetCopiesInput(t *testing.T) {
 
 func TestSnapshotIsIndependent(t *testing.T) {
 	c := New()
-	c.Set("a", Item{Value: []byte("one")})
+	c.Set("a", Item{Value: []byte("one"), Tags: []string{"t1"}})
 	snap := c.Snapshot()
 	snap["a"].Value[0] = '!'
+	snap["a"].Tags[0] = "changed"
 	delete(snap, "a")
-	if it, ok := c.Get("a"); !ok || string(it.Value) != "one" {
-		t.Fatalf("cache changed through a snapshot: %q %v", it.Value, ok)
+	if it, ok := c.Get("a"); !ok || string(it.Value) != "one" || it.Tags[0] != "t1" {
+		t.Fatalf("cache changed through a snapshot: %q %v %v", it.Value, it.Tags, ok)
 	}
 }
 
@@ -64,11 +65,17 @@ func TestBytesInvariantUnderConcurrency(t *testing.T) {
 			r := rand.New(rand.NewPCG(uint64(g), 1))
 			for range 2000 {
 				key := fmt.Sprint(r.IntN(50))
-				switch r.IntN(3) {
+				switch r.IntN(5) {
 				case 0:
 					c.Set(key, Item{Value: make([]byte, r.IntN(100))})
 				case 1:
 					c.Delete(key)
+				case 2: // readers must lock too, or -race reports them
+					_, _ = c.Len(), c.Bytes()
+				case 3:
+					for _, it := range c.Snapshot() {
+						_ = len(it.Value)
+					}
 				default:
 					if it, ok := c.Get(key); ok && len(it.Value) > 0 {
 						it.Value[0] = 1 // must not race with the cache

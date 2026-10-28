@@ -67,6 +67,9 @@ func TestConsumerLeavesEarly(t *testing.T) {
 	for range 3 {
 		<-squares
 	}
+	// An observation window, not synchronization: by now every stage is blocked on
+	// its next send, so a send without a select on ctx.Done would never return.
+	time.Sleep(20 * time.Millisecond)
 	cancel() // the consumer stops reading and says so
 	waitUntil(t, "all stages to exit", func() bool { return runtime.NumGoroutine() <= before })
 }
@@ -92,7 +95,37 @@ func TestSumCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	in := make(chan int) // never closed
-	if _, err := sumWithin(t, ctx, in); !errors.Is(err, context.Canceled) {
-		t.Fatalf("got %v, want context.Canceled", err)
+	if total, err := sumWithin(t, ctx, in); total != 0 || !errors.Is(err, context.Canceled) {
+		t.Fatalf("got %d, %v; want 0, context.Canceled", total, err)
+	}
+}
+
+// Cancellation closes the upstream channels too, so Sum may see a closed input
+// and a done context at the same time: it must report the cancellation, never a
+// partial total with a nil error.
+func TestSumCancelledMidStream(t *testing.T) {
+	for range 100 {
+		ctx, cancel := context.WithCancel(context.Background())
+		in := make(chan int)
+		type result struct {
+			total int
+			err   error
+		}
+		done := make(chan result, 1)
+		go func() {
+			total, err := Sum(ctx, in)
+			done <- result{total, err}
+		}()
+		in <- 5
+		cancel()
+		close(in)
+		select {
+		case r := <-done:
+			if r.total != 0 || !errors.Is(r.err, context.Canceled) {
+				t.Fatalf("got %d, %v; want 0, context.Canceled", r.total, r.err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("Sum did not return")
+		}
 	}
 }
