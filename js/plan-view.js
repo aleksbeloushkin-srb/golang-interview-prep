@@ -214,6 +214,11 @@ function planTaskItem(task, week) {
   const checkbox = planEl("input", { type: "checkbox", id: inputId });
   checkbox.checked = Boolean(planState.saved.done[task.id]);
   checkbox.addEventListener("change", () => {
+    if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+      checkbox.checked = !checkbox.checked; // только чтение: вернуть как было
+      siteNeedSignIn("Чтобы отмечать задачи плана");
+      return;
+    }
     if (checkbox.checked) planState.saved.done[task.id] = true;
     else delete planState.saved.done[task.id];
     planSave();
@@ -408,6 +413,10 @@ function planFullDate(iso) {
 
 // Новый старт сохраняется, отметки задач не трогаются; в сообщении — прежняя дата, чтобы её можно было вернуть.
 function planSetStart(iso, reason) {
+  if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+    siteNeedSignIn("Чтобы менять неделю старта");
+    return;
+  }
   const previous = planState.saved.start;
   if (iso === previous) {
     planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;
@@ -485,6 +494,11 @@ function planControls() {
 
   const importInput = planEl("input", { type: "file", id: "plan-import", accept: "application/json,.json", className: "plan-file" });
   importInput.addEventListener("change", async () => {
+    if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+      importInput.value = "";
+      siteNeedSignIn("Чтобы загружать отметки плана");
+      return;
+    }
     const file = importInput.files && importInput.files[0];
     if (!file) return;
     try {
@@ -519,6 +533,10 @@ function planControls() {
 
   const resetButton = planEl("button", { type: "button", className: "btn btn-sm", text: "Сбросить отметки плана" });
   resetButton.addEventListener("click", () => {
+    if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+      siteNeedSignIn("Чтобы сбрасывать отметки плана");
+      return;
+    }
     if (!window.confirm("Удалить все отметки плана? Отметки карточек не затрагиваются.")) return;
     planState.saved.done = {};
     planSave();

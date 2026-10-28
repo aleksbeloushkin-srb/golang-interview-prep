@@ -83,11 +83,17 @@ try {
   await call('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
   await check('keyboard reveals answer', 'state.revealed===true');
   await check('visible focus', "getComputedStyle(document.activeElement).outlineStyle!=='none'");
+  // With the backend configured and nobody signed in the site is read-only (js/auth.js).
+  const readOnly = await evaluate("typeof siteCanEdit==='function' && !siteCanEdit()");
   await evaluate("markCard('review')");
-  const oldOrigin = await evaluate('performance.timeOrigin');
-  await call('Page.reload');
-  await ready(`performance.timeOrigin!==${oldOrigin} && document.readyState==='complete' && typeof state!=='undefined'`);
-  await check('progress survives reload', `state.progress[${JSON.stringify(cardId)}]==='review'`);
+  if (readOnly) {
+    await check('read-only: mark refused without sign-in', `state.progress[${JSON.stringify(cardId)}]!=='review' && !document.getElementById('signin-notice').classList.contains('hidden')`);
+  } else {
+    const oldOrigin = await evaluate('performance.timeOrigin');
+    await call('Page.reload');
+    await ready(`performance.timeOrigin!==${oldOrigin} && document.readyState==='complete' && typeof state!=='undefined'`);
+    await check('progress survives reload', `state.progress[${JSON.stringify(cardId)}]==='review'`);
+  }
   await route('quiz');
   await evaluate('document.querySelectorAll(`input[name=${QUIZ_QUESTIONS[0].id}]`)[QUIZ_QUESTIONS[0].correct].click()');
   await check('quiz answer', "document.getElementById(QUIZ_QUESTIONS[0].id+'-title-res').textContent.includes('Верно')");

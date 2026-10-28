@@ -127,6 +127,10 @@ function updateProgressBar() {
 }
 
 function resetProgress() {
+  if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+    siteNeedSignIn("Чтобы сбрасывать отметки");
+    return;
+  }
   if (!window.confirm("Удалить все сохранённые отметки карточек? Это действие нельзя отменить.")) return;
   state.progress = {};
   state.index = 0;
@@ -273,6 +277,10 @@ function prevCard() {
 }
 
 function markCard(status) {
+  if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+    siteNeedSignIn("Чтобы отмечать карточки");
+    return;
+  }
   const list = getFilteredCards();
   if (!list.length || !state.revealed || !["mastered", "review"].includes(status)) return;
   const card = list[state.index];
