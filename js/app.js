@@ -640,7 +640,7 @@ function handleRoute() {
   const route = parts[0] || "cards";
   const param = parts[1] || null;
 
-  const validRoutes = ["plan", "cards", "simulators", "wiki", "cheatsheet", "quiz"];
+  const validRoutes = ["plan", "practice", "cards", "simulators", "wiki", "cheatsheet", "quiz"];
   const activeRoute = validRoutes.includes(route) ? route : "cards";
 
   document.querySelectorAll(".route-view").forEach(sec => {

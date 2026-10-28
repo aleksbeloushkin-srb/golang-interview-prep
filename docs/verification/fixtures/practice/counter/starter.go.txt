@@ -1,0 +1,56 @@
+// Package counter: practice task W3-4. One counter, three ways to make it
+// safe for concurrent use. Replace each TODO with your solution.
+package counter
+
+import (
+	"sync"
+	"sync/atomic"
+)
+
+// Counter is safe for concurrent use. Close releases resources;
+// the counter must not be used after Close.
+type Counter interface {
+	Inc()
+	Value() int64
+	Close()
+}
+
+// MutexCounter guards the value with a mutex.
+type MutexCounter struct {
+	mu sync.Mutex
+	n  int64
+}
+
+func NewMutexCounter() Counter { return &MutexCounter{} }
+
+func (c *MutexCounter) Inc()         { panic("TODO") }
+func (c *MutexCounter) Value() int64 { panic("TODO") }
+func (c *MutexCounter) Close()       {}
+
+// AtomicCounter uses one atomic word.
+type AtomicCounter struct {
+	n atomic.Int64
+}
+
+func NewAtomicCounter() Counter { return &AtomicCounter{} }
+
+func (c *AtomicCounter) Inc()         { panic("TODO") }
+func (c *AtomicCounter) Value() int64 { panic("TODO") }
+func (c *AtomicCounter) Close()       {}
+
+// ChanCounter gives the value to one owner goroutine; others talk to it over channels.
+type ChanCounter struct {
+	// TODO: channels to the owner goroutine
+}
+
+// NewChanCounter starts the owner goroutine.
+func NewChanCounter() Counter {
+	// TODO
+	panic("TODO")
+}
+
+func (c *ChanCounter) Inc()         { panic("TODO") }
+func (c *ChanCounter) Value() int64 { panic("TODO") }
+
+// Close stops the owner goroutine.
+func (c *ChanCounter) Close() { panic("TODO") }

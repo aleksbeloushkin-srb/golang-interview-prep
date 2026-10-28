@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards } from './check-content.mjs';
+import { existsSync } from 'node:fs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice } from './check-content.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 
@@ -57,11 +58,39 @@ test('loader fails on invalid JavaScript rather than reporting success', () => {
 });
 
 const plan = loadPlan(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
+const practice = loadPractice(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
+const readFixture = file => { const url = new URL('../' + file, import.meta.url); return existsSync(url) ? readFileSync(url, 'utf8') : null; };
 
 test('current plan passes structural validation against site data', () => {
   assert.ok(plan, 'data/plan.js should load');
-  assert.deepEqual(validatePlan(plan, current), []);
+  assert.deepEqual(validatePlan(plan, current, practice), []);
 });
+
+test('plan: practice links need data/practice.js', () => {
+  assert.match(validatePlan(plan, current).join('\n'), /unknown site ID p-/);
+});
+
+test('current practice tasks pass validation and match their Go fixtures', () => {
+  assert.ok(practice, 'data/practice.js should load');
+  assert.deepEqual(validatePractice(practice, current, plan, readFixture), []);
+});
+
+const practiceFailures = [
+  ['bad ID', p => { p[0].id = 'workerpool'; }, /start with p-/],
+  ['duplicate ID', p => { p[1].id = p[0].id; }, /must be unique/],
+  ['unknown plan task', p => { p[0].planTasks = ['w99-mon-1']; }, /unknown plan task w99-mon-1/],
+  ['unknown site link', p => { p[0].links = ['c999']; }, /unknown site ID c999/],
+  ['contract translations of different length', p => { p[0].contractEN.pop(); }, /differ in length/],
+  ['solution that differs from the fixture', p => { p[0].files.solution.code += '\n// edited'; }, /files.solution differs/],
+  ['missing fixture file', p => { p[0].fixture = 'docs/verification/fixtures/practice/nope'; }, /fixture file .* is missing/],
+];
+for (const [name, mutate, expected] of practiceFailures) {
+  test('practice: rejects ' + name, () => {
+    const data = structuredClone(practice);
+    mutate(data);
+    assert.match(validatePractice(data, current, plan, readFixture).join('\n'), expected);
+  });
+}
 
 test('missing plan file is optional for older commits', () => {
   assert.equal(loadPlan(() => { throw Error('not in commit'); }), null);
@@ -85,7 +114,7 @@ for (const [name, mutate, expected] of planFailures) {
   test('plan: rejects ' + name, () => {
     const data = structuredClone(plan);
     mutate(data);
-    assert.match(validatePlan(data, current).join('\n'), expected);
+    assert.match(validatePlan(data, current, practice).join('\n'), expected);
   });
 }
 

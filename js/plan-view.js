@@ -148,6 +148,10 @@ function planSiteItem(id) {
     const card = CARDS.find(c => c.id === id);
     return card ? { href: `#/cards/${id}`, label: `${id.toUpperCase()} · ${card.qEN.replace(/^Q\d+:\s*/, "")}`, kind: "Карточка", level: card.level, reviewed: Boolean(card.sources && card.sources.length) } : null;
   }
+  if (id.startsWith("p-")) {
+    const task = typeof PRACTICE !== "undefined" ? PRACTICE.find(p => p.id === id) : null;
+    return task ? { href: `#/practice/${id}`, label: `${task.code} · ${task.title}`, kind: "Практикум", reviewed: true } : null;
+  }
   if (id.startsWith("q")) {
     const quiz = QUIZ_QUESTIONS.find(q => q.id === id);
     return quiz ? { href: `#/quiz/${id}`, label: `${id.toUpperCase()} · ${quiz.title.replace(/^Задача \d+:\s*/, "")}`, kind: "Quiz", reviewed: Boolean(quiz.sources && quiz.sources.length) } : null;
@@ -307,7 +311,7 @@ function planSiteMaterials(week) {
     if (!ids.includes(id)) ids.push(id);
   })));
   if (!ids.length) return null;
-  const groups = { "Карточка": [], "Quiz": [], "Диаграмма": [] };
+  const groups = { "Практикум": [], "Карточка": [], "Quiz": [], "Диаграмма": [] };
   ids.map(planSiteItem).filter(Boolean).forEach(item => groups[item.kind].push(item));
   const lists = Object.entries(groups).filter(([, items]) => items.length).map(([kind, items]) =>
     planEl("div", { className: "plan-materials-group" }, [

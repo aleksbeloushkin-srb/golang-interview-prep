@@ -1,0 +1,13 @@
+// Package fanin: practice task W3-3. Replace the TODO with your solution.
+package fanin
+
+import "context"
+
+// Merge forwards every value from all inputs to the returned channel.
+// It closes the output after all inputs are closed, or after ctx is done.
+// Merge never closes the inputs: they belong to their senders. A nil input
+// never delivers and is never closed, so Merge ignores it.
+func Merge[T any](ctx context.Context, inputs ...<-chan T) <-chan T {
+	// TODO
+	panic("TODO")
+}

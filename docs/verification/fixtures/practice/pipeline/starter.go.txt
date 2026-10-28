@@ -1,0 +1,25 @@
+// Package pipeline: practice task W3-2. Replace each TODO with your solution.
+package pipeline
+
+import "context"
+
+// Generate sends nums one by one on the returned channel.
+// It closes the channel after the last value or as soon as ctx is done.
+func Generate(ctx context.Context, nums ...int) <-chan int {
+	// TODO
+	panic("TODO")
+}
+
+// Square sends n*n for every n received from in.
+// It closes its output when in is closed or ctx is done, even if in is never closed.
+func Square(ctx context.Context, in <-chan int) <-chan int {
+	// TODO
+	panic("TODO")
+}
+
+// Sum adds up every value from in until in is closed.
+// If ctx is done first, it returns 0 and ctx.Err().
+func Sum(ctx context.Context, in <-chan int) (int, error) {
+	// TODO
+	panic("TODO")
+}

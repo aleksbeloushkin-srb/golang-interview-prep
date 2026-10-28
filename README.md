@@ -17,6 +17,7 @@
 ## 🔗 Быстрые ссылки (Live Demo)
 
 * 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
+* 🛠 **[Практикум (5 задач недели 3)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/practice)** — worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
 * 🗂 **[1. Тренажёр карточек (38 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards)** — с фильтрацией по 5 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
 * 🔬 **[2. Интерактивные диаграммы рантайма (9 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[3. Полная база знаний (Wiki — все 38 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
@@ -103,10 +104,12 @@ golang-runtime-prep/
 │   ├── cards.js        # База из 38 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
 │   ├── simulators.js   # Пошаговые состояния для 9 диаграмм и сводной таблицы
 │   ├── quiz.js         # 27 задач на Production Code Review (по 6 вариантов ответа)
-│   └── plan.js         # План 13 недель: задачи, критерии готовности, LeetCode, опорные тексты
+│   ├── plan.js         # План 13 недель: задачи, критерии готовности, LeetCode, опорные тексты
+│   └── practice.js     # Практикум: контракт, заготовка, тесты, подсказки, эталон (из docs/verification/fixtures/practice)
 └── js/
-    ├── app.js          # Hash-роутер (#/plan, #/cards, #/simulators, #/wiki, #/quiz), фильтры и localStorage
-    └── plan-view.js    # Раздел «План 13 недель» и его отметки (go_prep_plan_v1)
+    ├── app.js          # Hash-роутер (#/plan, #/practice, #/cards, #/simulators, #/wiki, #/quiz), фильтры и localStorage
+    ├── plan-view.js    # Раздел «План 13 недель» и его отметки (go_prep_plan_v1)
+    └── practice-view.js # Раздел «Практикум»: ничего не хранит, отметки — в плане
 
 ```
 
