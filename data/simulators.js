@@ -802,7 +802,7 @@ const SIMULATORS = [
   {
     "id": "sim2",
     "title": "Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание",
-    "subtitle": "Восемь учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall и сеть — отдельные сценарии. Go 1.26.1 с явным сравнением 1.25.",
+    "subtitle": "Десять учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall, сеть и GOMAXPROCS — отдельные сценарии; шаг 10 — вся картина и ответ за минуту. Go 1.26.1 с явным сравнением 1.25.",
     "cardId": "c9",
     "cardLabel": "Q9: поиск и перехват работы →",
     "steps": [
@@ -1890,6 +1890,251 @@ const SIMULATORS = [
           "answerEN": "No. Readiness and stream framing are separate; handle partial reads and the protocol’s message boundaries.",
           "answerRU": "Нет. Готовность и границы сообщений потока — разные вещи; учитывай частичные чтения и формат протокола."
         }
+      },
+      {
+        "title": "9. GOMAXPROCS в контейнере (Go 1.25+)",
+        "desc": "Отдельный сценарий: Linux-контейнер на хосте с 16 логическими CPU, лимит CPU 2,5 (quota/period). При go 1.25 и новее в go.mod рантайм по умолчанию берёт минимум из числа CPU по affinity и лимита, округлённого вверх и не меньше 2: здесь 3. Значит, Go-код одновременно исполняют не больше трёх потоков — по одному на P; потоков M может быть больше (syscall, cgo). Requests в Kubernetes на значение не влияют. sysmon перепроверяет лимит не чаще раза в секунду; явный GOMAXPROCS (переменная окружения или runtime.GOMAXPROCS) отключает автоматическое обновление.",
+        "descEN": "A separate scenario: a Linux container on a host with 16 logical CPUs and a CPU limit of 2.5 (quota/period). With go 1.25 or later in go.mod, the default is the minimum of the affinity CPU count and the limit rounded up, but not below 2: here 3. At most three threads execute Go code at once, one per P; there can be more Ms for syscalls or cgo. Kubernetes requests do not affect the value. sysmon rechecks the limit at most once per second; setting GOMAXPROCS explicitly, through the environment or runtime.GOMAXPROCS, disables the automatic updates.",
+        "predict": {
+          "promptEN": "A container has a CPU limit of 2.5 on a 16-CPU host. What GOMAXPROCS does Go 1.25+ choose by default, and why?",
+          "promptRU": "У контейнера лимит CPU 2,5 на хосте с 16 CPU. Какой GOMAXPROCS выберет Go 1.25+ по умолчанию и почему?"
+        },
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Контейнер",
+                "tag": "Linux, cgroup",
+                "slots": [
+                  {
+                    "label": "CPU хоста",
+                    "items": [
+                      "16"
+                    ]
+                  },
+                  {
+                    "label": "Лимит CPU",
+                    "items": [
+                      "2,5"
+                    ]
+                  }
+                ],
+                "note": "GOMAXPROCS = min(16, max(⌈2,5⌉, 2)) = 3"
+              },
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G4"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P2",
+                "tag": "M2",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G2"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P3",
+                "tag": "M3",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G3"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "syscall",
+                "title": "M4",
+                "tag": "в syscall",
+                "slots": [
+                  {
+                    "label": "G",
+                    "items": [
+                      {
+                        "g": "G5",
+                        "flag": "_Gsyscall"
+                      }
+                    ]
+                  }
+                ],
+                "note": "Потоков больше, чем P: это нормально."
+              }
+            ],
+            "list": {
+              "title": "Как получено число P",
+              "ordered": true,
+              "items": [
+                "CPU по affinity: 16",
+                "Лимит 2,5 округляется вверх до 3; меньше 2 не бывает",
+                "GOMAXPROCS = min(16, 3) = 3",
+                "Requests не участвуют; без лимита берётся число CPU; явная настройка отключает автообновление"
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "A pod has a CPU request of 1 and a limit of 4 on a 16-CPU node. What GOMAXPROCS does Go 1.25+ choose by default?",
+          "promptRU": "У пода request CPU 1 и limit 4 на узле с 16 CPU. Какой GOMAXPROCS выберет Go 1.25+ по умолчанию?",
+          "answerEN": "4. The CPU limit (quota) counts, rounded up and at least 2; the request does not.",
+          "answerRU": "4. Учитывается лимит (quota), округлённый вверх и не меньше 2; request не учитывается."
+        }
+      },
+      {
+        "title": "10. Вся картина и ответ за минуту",
+        "desc": "Сводный кадр: все части планировщика на одной схеме. На интервью удобно отвечать в таком порядке: зачем планировщик → G, M, P → очереди и справедливость → перехват → syscall и сеть → вытеснение → GOMAXPROCS. Каждая часть — одно-два предложения и сразу граница: что не гарантируется. Каркас ниже — по-английски, как на интервью.",
+        "descEN": "A summary frame with every part of the scheduler on one board. In an interview, answer in this order: why a scheduler → G, M, P → queues and fairness → stealing → syscalls and network → preemption → GOMAXPROCS. Give each part one or two sentences and one boundary: what is not guaranteed. The outline below is in English, as in an interview.",
+        "board": [
+          {
+            "hl": [],
+            "lanes": [
+              {
+                "kind": "p",
+                "title": "P1",
+                "tag": "M1",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "runnext",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [
+                      "G3",
+                      "G4"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "p",
+                "title": "P2",
+                "tag": "M2",
+                "slots": [
+                  {
+                    "label": "Исполняется",
+                    "items": [
+                      "G5"
+                    ]
+                  },
+                  {
+                    "label": "runq · голова →",
+                    "items": [],
+                    "queue": true
+                  }
+                ],
+                "note": "Очередь пуста → перехват у P1."
+              },
+              {
+                "kind": "grq",
+                "title": "Глобальная очередь (GRQ)",
+                "slots": [
+                  {
+                    "label": "голова →",
+                    "items": [
+                      "G6"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "netpoll",
+                "title": "netpoller",
+                "slots": [
+                  {
+                    "label": "Ждут",
+                    "items": [
+                      {
+                        "g": "G7",
+                        "flag": "сокет"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "syscall",
+                "title": "M3",
+                "tag": "в syscall",
+                "slots": [
+                  {
+                    "label": "G",
+                    "items": [
+                      {
+                        "g": "G8",
+                        "flag": "_Gsyscall"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "sysmon",
+                "title": "sysmon",
+                "tag": "поток без P",
+                "slots": [],
+                "note": "Долгий запуск → запрос вытеснения; долгий syscall → забрать P; опрос сети; GOMAXPROCS — не чаще раза в секунду."
+              }
+            ],
+            "list": {
+              "title": "Ответ за минуту (EN)",
+              "ordered": true,
+              "items": [
+                "Why: goroutines are cheap and numerous while OS threads are expensive, so the runtime multiplexes many Gs onto a few Ms (M:N).",
+                "GMP: G is a goroutine, M an OS thread, P the right to run Go code; GOMAXPROCS is the number of Ps, so it bounds parallelism, not concurrency.",
+                "Queues: each P has runnext and a local run queue of up to 256 Gs; the global queue is checked every 61 scheduler ticks for fairness.",
+                "Balancing: an idle P steals half of another P's local queue, taken from the head.",
+                "Syscalls and network: a long syscall can lose its P to another thread; a network wait parks the G in the netpoller without holding a thread.",
+                "Preemption: since Go 1.14 sysmon asks a goroutine that has run for about 10 ms to yield, using a signal on Unix; it is a request, not an immediate switch.",
+                "GOMAXPROCS: since Go 1.25 the default follows the container CPU limit; set it by hand only with a measured reason."
+              ]
+            }
+          }
+        ],
+        "boxes": [],
+        "check": {
+          "promptEN": "Without looking: name the seven parts of the one-minute answer in order, each with one boundary.",
+          "promptRU": "Не глядя: назови семь частей ответа за минуту по порядку, у каждой — одну границу.",
+          "answerEN": "Why (M:N) → GMP → queues and the 61-tick fairness check → stealing half from the head → syscalls can lose P, network waits park in the netpoller → preemption is a request (sysmon, about 10 ms, signal) → GOMAXPROCS follows the container limit since 1.25. Boundary for all: no promised order or timing.",
+          "answerRU": "Зачем (M:N) → GMP → очереди и проверка раз в 61 тик → перехват половины с головы → syscall может потерять P, сеть паркует в netpoller → вытеснение — запрос (sysmon, около 10 мс, сигнал) → GOMAXPROCS по лимиту контейнера с 1.25. Общая граница: ни порядок, ни время не обещаны."
+        }
       }
     ],
     "learningHint": "Не смешивай три перехода: runnable → running; запрос → безопасное вытеснение; занятый M → доступный другому M процессор P. Голова очереди слева. Цвет выделяет изменение, смысл повторяется текстом.",
@@ -1918,6 +2163,10 @@ const SIMULATORS = [
       {
         "title": "go1.26.1: internal/poll/fd_unix.go",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/poll/fd_unix.go"
+      },
+      {
+        "title": "go1.26.1: runtime/cgroup_linux.go",
+        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/cgroup_linux.go"
       }
     ]
   },

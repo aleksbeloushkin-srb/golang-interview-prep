@@ -157,7 +157,7 @@ function planSiteItem(id) {
 
 // Официальная документация и сами сервисы; остальное помечается как вторичный материал.
 const PLAN_PRIMARY_HOSTS = ["go.dev", "pkg.go.dev", "grpc.io", "opentelemetry.io", "golang.testcontainers.org",
-  "google.github.io", "www.postgresql.org", "kafka.apache.org", "leetcode.com", "www.pramp.com", "interviewing.io"];
+  "google.github.io", "www.postgresql.org", "kafka.apache.org", "kubernetes.io", "www.rabbitmq.com", "leetcode.com", "www.pramp.com", "interviewing.io"];
 
 // Пометки у ссылки на материал сайта: глубина и статус редакции.
 function planItemBadges(item) {

@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-27b.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28.
 
 ## Фазы
 
@@ -383,8 +383,8 @@
 
 ### Чт · 90 мин
 
-- [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
-  - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения.
+- [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту» — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c10)
+  - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке.
 - [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [C23](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
   - Готово, когда: c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM.
 - [ ] W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода
@@ -576,6 +576,7 @@
 - [ ] Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race
 - [ ] Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?» — проговор: «Transactional outbox»
 - [ ] LeetCode 435. Non-overlapping Intervals + проговор — [LC 435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/)
+- [ ] Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1 — [PostgreSQL: Indexes](https://www.postgresql.org/docs/current/indexes.html), [PostgreSQL: Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)
 
 **LeetCode недели:** [973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/) (Heap), [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/) (Greedy / heap), [435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/) (Greedy intervals)
 
@@ -684,12 +685,15 @@
 
 - [ ] Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком
 - [ ] Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации
+- [ ] Ключевые слова из 5 целевых вакансий в CV (≈20 мин): стек, домен, уровень — только то, что реально делал; так CV проходит автоматический отбор (ATS)
+- [ ] «Tell me about yourself» v1 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go и эта компания; записать *(по желанию)*
 
 ### Сб · 240 мин
 
 - [ ] Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском — проговор: «Craft Deep-Dive по проекту»
 - [ ] LeetCode 743. Network Delay Time (Dijkstra) + проговор — [LC 743. Network Delay Time](https://leetcode.com/problems/network-delay-time/)
 - [ ] Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки
+- [ ] Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds — [C7](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2), [Kubernetes: Pod lifecycle и завершение](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/), [Kubernetes: liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), [Kubernetes: requests и limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
 
 **LeetCode недели:** [210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/) (Topological sort), [684. Redundant Connection](https://leetcode.com/problems/redundant-connection/) (Union-find), [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) (Dijkstra)
 
@@ -704,6 +708,11 @@
 - Какие сигналы скажут, что сервис деградирует?
 - Что произойдёт при SIGTERM во время перевода?
 - Какие 3 компромисса ты сознательно принял?
+
+**Материал сайта:**
+
+- [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/cards/c7)
+- [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-runtime-prep/#/simulators/sim2)
 
 **Чего пока нет на сайте:**
 
@@ -740,6 +749,7 @@
 - [ ] Ещё 1 чужой PR в формате 40 минут
 - [ ] Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10
 - [ ] Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв) *(по желанию)* — [LC 322. Coin Change](https://leetcode.com/problems/coin-change/)
+- [ ] Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов
 
 **LeetCode недели:** [70. Climbing Stairs](https://leetcode.com/problems/climbing-stairs/) (DP), [198. House Robber](https://leetcode.com/problems/house-robber/) (DP), [322. Coin Change](https://leetcode.com/problems/coin-change/) (DP)
 
@@ -792,6 +802,7 @@
 
 - [ ] Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)
 - [ ] Отклики волны 2 до праздников: Topi, Bolt, Zendesk
+- [ ] Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией *(по желанию)*
 
 ### Сб · 240 мин
 
@@ -846,6 +857,7 @@
 
 - [ ] Повторить один дизайн с нуля за 40 минут и записать
 - [ ] 2 повторные задачи LeetCode из слабых тем с проговором
+- [ ] Проговор «Kafka vs RabbitMQ: when would you choose which?» — журнал с партициями и хранением против брокера очередей с маршрутизацией и подтверждениями *(по желанию)* — [Apache Kafka: документация](https://kafka.apache.org/documentation/), [RabbitMQ: queues](https://www.rabbitmq.com/docs/queues)
 
 **LeetCode недели:** [33. Search in Rotated Sorted Array](https://leetcode.com/problems/search-in-rotated-sorted-array/) (Binary search)
 
