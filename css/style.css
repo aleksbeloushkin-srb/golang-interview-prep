@@ -845,3 +845,19 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .quiz-own-status { display: inline-block; margin-left: 8px; font-size: 0.9rem; overflow-wrap: anywhere; }
 .answer-first .quiz-own { display: block; }
 .answer-first .quiz-options:not(.revealed) { display: none; }
+
+/* Вход и синхронизация (js/auth.js) */
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-left: auto; min-width: 0; }
+.account-email { font-size: 0.85rem; color: var(--muted); overflow-wrap: anywhere; }
+.account-status { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.account-status:empty { display: none; }
+.sync-choice { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--amber); border-radius: 8px; background: var(--surface); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sync-choice p { margin: 0; flex-basis: 100%; overflow-wrap: anywhere; }
+
+/* Практикум: проверка на сервере */
+.practice-solution-input { display: block; width: 100%; max-width: 100%; box-sizing: border-box; margin: 6px 0 8px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--code-bg); color: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; resize: vertical; }
+.practice-solution-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.practice-check-ok { color: var(--green); font-weight: 600; }
+.practice-check-fail { color: #f87171; font-weight: 600; }
+.practice-check-tests { list-style: none; padding-left: 0; }
+.practice-check-tests li { margin: 4px 0; overflow-wrap: anywhere; }
