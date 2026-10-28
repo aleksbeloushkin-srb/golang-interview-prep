@@ -7,9 +7,13 @@
 
 const AUTH_PENDING_KEY = "go_prep_auth_pending_v1";
 const AUTH_RESUME_KEY = "go_prep_auth_resume_v1";
+// Не секрет: «в прошлый раз входил». По нему при новом открытии сайт сам проходит вход
+// (Cognito и Google помнят сессию, обычно без единого клика). Одна попытка на вкладку.
+const AUTH_HINT_KEY = "go_prep_signed_in_v1";
+const AUTH_TRIED_KEY = "go_prep_auth_tried_v1";
 const SYNC_PREFIX = "go_prep_";
 // Не синхронизируем служебные ключи входа и черновики практикума (они в sessionStorage).
-const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY]);
+const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY]);
 const SYNC_INTERVAL_MS = 5000;
 
 const authState = {
@@ -17,7 +21,7 @@ const authState = {
   refreshToken: null,
   expiresAt: 0,
   email: "",
-  sync: { version: 0, last: null, ready: false, status: "" }
+  sync: { version: 0, last: null, ready: false, status: "", kind: "" }
 };
 
 class AuthRequiredError extends Error {}
@@ -71,8 +75,26 @@ async function authSignIn(route) {
   window.location.assign(`${BACKEND.authDomain}/oauth2/authorize?${params}`);
 }
 
+function authHint(on) {
+  try {
+    if (on) localStorage.setItem(AUTH_HINT_KEY, "1");
+    else localStorage.removeItem(AUTH_HINT_KEY);
+  } catch {
+    // без хранилища просто не будет автоматического входа
+  }
+}
+
+function authHasHint() {
+  try {
+    return localStorage.getItem(AUTH_HINT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 function authSignOut() {
   authState.accessToken = authState.refreshToken = null;
+  authHint(false);
   const params = new URLSearchParams({ client_id: BACKEND.clientId, logout_uri: authRedirectUri() });
   window.location.assign(`${BACKEND.authDomain}/logout?${params}`);
 }
@@ -115,18 +137,21 @@ async function authHandleRedirect() {
   history.replaceState(null, "", window.location.pathname + ((pending && pending.route) || window.location.hash || ""));
   window.dispatchEvent(new HashChangeEvent("hashchange"));
   if (query.has("error")) {
-    authSetStatus(`Вход не удался: ${query.get("error_description") || query.get("error")}`);
+    authHint(false);
+    authSetStatus(`Вход не удался: ${query.get("error_description") || query.get("error")}`, "warn");
     return false;
   }
   if (!pending || pending.state !== query.get("state")) {
-    authSetStatus("Вход не удался: ответ не от нашего запроса. Попробуй ещё раз.");
+    authSetStatus("Вход не удался: ответ не от нашего запроса. Попробуй ещё раз.", "warn");
     return false;
   }
   try {
     await authToken({ grant_type: "authorization_code", code: query.get("code"), redirect_uri: authRedirectUri(), code_verifier: pending.verifier });
+    authHint(true);
+    authSession(AUTH_TRIED_KEY, null); // удалось — при следующей перезагрузке снова войти сам
     return true;
   } catch (e) {
-    authSetStatus(`Вход не удался (${e.message}). Попробуй ещё раз.`);
+    authSetStatus(`Вход не удался (${e.message}). Попробуй ещё раз.`, "warn");
     return false;
   }
 }
@@ -153,6 +178,23 @@ async function apiFetch(path, options = {}) {
     throw new AuthRequiredError("сессия истекла");
   }
   return resp;
+}
+
+// --- Без входа сайт только для чтения: отметки прогресса и проверка — после входа.
+
+// true, если можно менять прогресс. Если бэкенд не подключён (нет config.js), сайт работает как раньше.
+function siteCanEdit() {
+  return typeof BACKEND === "undefined" || authIsSignedIn();
+}
+
+// Показать, что для действия нужен вход, с кнопкой входа рядом.
+function siteNeedSignIn(what) {
+  const box = document.getElementById("signin-notice");
+  if (!box) return;
+  const button = authButton("Войти через Google", () => authSignIn());
+  box.replaceChildren(authEl("span", { text: `Без входа сайт работает только на чтение. ${what || "Чтобы отмечать прогресс"}, войди через Google.` }), button);
+  box.classList.remove("hidden");
+  button.focus();
 }
 
 // --- Синхронизация прогресса: все ключи go_prep_* из localStorage одним объектом.
@@ -189,7 +231,7 @@ async function syncPush(snapshot, version) {
 
 async function syncStart() {
   authState.sync.ready = false;
-  authSetStatus("Сверяю прогресс с сервером…");
+  authSetStatus("Сверяю прогресс с сервером…", "busy");
   const local = syncSnapshot() || {};
   let server;
   try {
@@ -197,7 +239,7 @@ async function syncStart() {
     if (!resp.ok) throw new Error(`загрузка: ${resp.status}`);
     server = await resp.json();
   } catch (e) {
-    authSetStatus(`Прогресс не сверен: ${e.message}`);
+    authSetStatus(`Прогресс не сверен: ${e.message}`, "warn");
     return;
   }
   if (!server.progress) {
@@ -208,7 +250,7 @@ async function syncStart() {
   if (syncSame(local, server.progress)) {
     authState.sync.last = local;
     authState.sync.ready = true;
-    authSetStatus("Прогресс совпадает с сервером.");
+    authSetStatus("Прогресс совпадает с сервером.", "ok");
     return;
   }
   syncAskWhich(server);
@@ -222,9 +264,9 @@ async function syncPushReport(snapshot, version, done) {
       return;
     }
     authState.sync.ready = true;
-    authSetStatus(done);
+    authSetStatus(done, "ok");
   } catch (e) {
-    authSetStatus(`Не сохранилось: ${e.message}`);
+    authSetStatus(`Не сохранилось: ${e.message}`, "warn");
   }
 }
 
@@ -240,7 +282,7 @@ function syncAskWhich(server) {
         Object.keys(syncSnapshot() || {}).forEach(k => localStorage.removeItem(k));
         Object.entries(server.progress).forEach(([k, v]) => localStorage.setItem(k, v));
       } catch {
-        authSetStatus("Не удалось записать прогресс в этот браузер.");
+        authSetStatus("Не удалось записать прогресс в этот браузер.", "warn");
         return;
       }
       // Перезагрузка подхватит прогресс во всех разделах; вход восстановится сам.
@@ -254,7 +296,7 @@ function syncAskWhich(server) {
   );
   panel.classList.remove("hidden");
   panel.querySelector("button").focus();
-  authSetStatus("Выбери, какой прогресс оставить.");
+  authSetStatus("Выбери, какой прогресс оставить.", "warn");
 }
 
 // Раз в несколько секунд и при уходе со страницы — отправить изменения.
@@ -269,9 +311,9 @@ async function syncTick() {
       await syncStart();
       return;
     }
-    authSetStatus(`Сохранено на сервере в ${new Date().toLocaleTimeString("ru-RU")}.`);
+    authSetStatus(`Сохранено на сервере в ${new Date().toLocaleTimeString("ru-RU")}.`, "ok");
   } catch (e) {
-    authSetStatus(`Не сохранилось: ${e.message}. Повторю позже.`);
+    authSetStatus(`Не сохранилось: ${e.message}. Повторю позже.`, "warn");
   }
   authState.sync.ready = true;
 }
@@ -295,25 +337,64 @@ function authButton(text, onClick) {
   return b;
 }
 
-function authSetStatus(text) {
+// kind: ok | busy | warn. В шапке — точка и короткая подпись, полный текст — во всплывающей
+// подсказке и в role="status" для читалки.
+const AUTH_STATUS_LABEL = { ok: "сохранено", busy: "синхронизация…", warn: "не сохранено" };
+
+function authSetStatus(text, kind = "ok") {
   authState.sync.status = text;
+  authState.sync.kind = kind;
   const s = document.getElementById("account-status");
-  if (s) s.textContent = text;
+  if (!s) return;
+  s.hidden = false;
+  s.dataset.kind = kind;
+  s.title = text;
+  s.querySelector(".account-status-label").textContent = AUTH_STATUS_LABEL[kind] || "";
+  s.querySelector(".visually-hidden").textContent = text;
+}
+
+// Простая иконка «войти»: стрелка в дверной проём (своя, не логотип).
+function authSignInIcon() {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "account-icon");
+  for (const d of ["M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4", "M10 16l4-4-4-4", "M14 12H4"]) {
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  }
+  return svg;
 }
 
 function authRender() {
   const box = document.getElementById("account");
   if (!box) return;
-  const status = authEl("span", { id: "account-status", className: "account-status", role: "status", text: authState.sync.status });
+  const status = authEl("span", { id: "account-status", className: "account-status" }, [
+    authEl("span", { className: "account-dot", "aria-hidden": "true" }),
+    authEl("span", { className: "account-status-label", "aria-hidden": "true" }),
+    authEl("span", { className: "visually-hidden", role: "status" })
+  ]);
   if (authIsSignedIn()) {
-    box.replaceChildren(
-      authEl("span", { className: "account-email", text: authState.email || "Вы вошли" }),
-      authButton("Выйти", authSignOut),
-      status
-    );
+    const email = authState.email || "Вы вошли";
+    const out = authEl("button", { type: "button", className: "account-signout", text: "Выйти" });
+    out.addEventListener("click", authSignOut);
+    box.replaceChildren(authEl("div", { className: "account-chip" }, [
+      authEl("span", { className: "account-avatar", "aria-hidden": "true", text: email.charAt(0).toUpperCase() }),
+      authEl("span", { className: "account-email", title: email, text: email }),
+      status,
+      out
+    ]));
   } else {
-    box.replaceChildren(authButton("Войти через Google", () => authSignIn()), status);
+    const signIn = authEl("button", { type: "button", className: "account-signin", "aria-label": "Войти через Google" }, [authSignInIcon(), authEl("span", { className: "account-signin-full", text: "Войти через Google" }), authEl("span", { className: "account-signin-short", text: "Войти" })]);
+    signIn.addEventListener("click", () => authSignIn());
+    box.replaceChildren(signIn, status);
   }
+  if (authState.sync.status) authSetStatus(authState.sync.status, authState.sync.kind);
+  else status.hidden = true;
+  document.documentElement.dataset.auth = authIsSignedIn() ? "in" : "out";
+  if (authIsSignedIn()) document.getElementById("signin-notice")?.classList.add("hidden");
   document.dispatchEvent(new CustomEvent("auth-changed"));
 }
 
@@ -323,6 +404,12 @@ async function authInit() {
   const signedIn = await authHandleRedirect();
   if (!signedIn && authSession(AUTH_RESUME_KEY)) {
     authSession(AUTH_RESUME_KEY, null);
+    authSignIn();
+    return;
+  }
+  // Входил раньше — войти снова сам, один раз на вкладку (если не вышло, остаёмся в режиме чтения).
+  if (!signedIn && authHasHint() && !authSession(AUTH_TRIED_KEY) && !new URLSearchParams(window.location.search).has("error")) {
+    authSession(AUTH_TRIED_KEY, "1");
     authSignIn();
     return;
   }
