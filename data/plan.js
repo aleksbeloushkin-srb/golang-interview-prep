@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28b",
+  revision: "2026-10-28c",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -126,7 +126,7 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered", refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
+            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет)", refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
             { id: "w2-wed-2", text: "W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить", talk: "w2-3" },
             { id: "w2-wed-3", text: "LeetCode 15. 3Sum + проговор", lc: 15, talk: "lc15" }
           ]
@@ -322,7 +322,7 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}", refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
+            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
             { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)" }
           ]
         },
