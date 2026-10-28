@@ -102,3 +102,21 @@ func TestCancelWithOpenInputs(t *testing.T) {
 	collect(t, out)
 	waitUntil(t, "goroutines to exit", func() bool { return runtime.NumGoroutine() <= before })
 }
+
+// The consumer cancels and stops reading. A forwarder blocked on sending to
+// the output must notice the cancellation, otherwise it leaks.
+func TestCancelWithoutReading(t *testing.T) {
+	before := runtime.NumGoroutine()
+	ctx, cancel := context.WithCancel(context.Background())
+	a := make(chan int, 1) // open: only cancellation can stop the forwarders
+	b := make(chan int, 1)
+	a <- 1
+	b <- 2
+	out := Merge(ctx, a, b)
+	// A design with one goroutine per input takes both values; a single-goroutine
+	// design takes one. Either way a value is now waiting to be sent to out.
+	waitUntil(t, "Merge to take a value", func() bool { return len(a)+len(b) < 2 })
+	cancel()
+	waitUntil(t, "goroutines to exit while nobody reads", func() bool { return runtime.NumGoroutine() <= before })
+	collect(t, out)
+}

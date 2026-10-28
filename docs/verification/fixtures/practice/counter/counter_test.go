@@ -23,6 +23,25 @@ func TestConcurrentInc(t *testing.T) {
 			c := impl.new()
 			defer c.Close()
 			var wg sync.WaitGroup
+			stop := make(chan struct{})
+			readerDone := make(chan struct{})
+			go func() { // reads race with writes unless Value synchronizes too
+				defer close(readerDone)
+				var last int64
+				for {
+					select {
+					case <-stop:
+						return
+					default:
+					}
+					v := c.Value()
+					if v < last {
+						t.Errorf("Value() went back from %d to %d", last, v)
+						return
+					}
+					last = v
+				}
+			}()
 			wg.Add(goroutines)
 			for range goroutines {
 				go func() {
@@ -33,6 +52,8 @@ func TestConcurrentInc(t *testing.T) {
 				}()
 			}
 			wg.Wait()
+			close(stop)
+			<-readerDone
 			if got := c.Value(); got != goroutines*perG {
 				t.Fatalf("Value() = %d, want %d", got, goroutines*perG)
 			}

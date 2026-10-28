@@ -97,7 +97,7 @@ func TestAtMostNConcurrentCalls(t *testing.T) {
 		return n
 	}
 	results := Process(ctx, workers, feed(ctx, 20), fn)
-	waitUntil(t, "all workers busy", func() bool { return active.Load() == workers })
+	waitUntil(t, "all workers busy", func() bool { return active.Load() >= workers })
 	// An observation window: a pool without a limit would start more calls here.
 	time.Sleep(50 * time.Millisecond)
 	close(release)
@@ -118,11 +118,21 @@ func TestSlowConsumerBoundsWork(t *testing.T) {
 		calls.Add(1)
 		return n
 	})
+	if cap(results) > workers {
+		t.Fatalf("results buffer of %d: a slow consumer should make workers wait, not fill a large buffer", cap(results))
+	}
 	waitUntil(t, "workers started", func() bool { return calls.Load() >= workers })
-	time.Sleep(50 * time.Millisecond) // nobody reads results
-	// Each blocked worker holds one finished result, plus whatever the buffer holds.
-	if c, limit := int(calls.Load()), workers+cap(results); c > limit {
-		t.Fatalf("%d jobs processed without a reader, want at most %d", c, limit)
+	// Observation windows: nobody reads results, so the work must stop growing.
+	time.Sleep(50 * time.Millisecond)
+	first := int(calls.Load())
+	time.Sleep(50 * time.Millisecond)
+	if again := int(calls.Load()); again != first {
+		t.Fatalf("work keeps growing without a reader: %d, then %d jobs processed", first, again)
+	}
+	// Each blocked worker holds one finished result, plus the buffer, plus at most
+	// one value in flight in a forwarding goroutine, if the design has one.
+	if limit := workers + cap(results) + 1; first > limit {
+		t.Fatalf("%d jobs processed without a reader, want at most %d", first, limit)
 	}
 	cancel()
 	collect(t, results)
@@ -138,6 +148,23 @@ func TestCancelStopsEverything(t *testing.T) {
 	cancel()
 	collect(t, results)
 	waitUntil(t, "goroutines to exit", func() bool { return runtime.NumGoroutine() <= before })
+}
+
+// The consumer cancels and stops reading. A worker blocked on sending its
+// result must notice the cancellation, otherwise it leaks.
+func TestCancelWithoutReading(t *testing.T) {
+	const workers = 3
+	before := runtime.NumGoroutine()
+	ctx, cancel := context.WithCancel(context.Background())
+	var calls atomic.Int32
+	results := Process(ctx, workers, feed(ctx, 1000), func(_ context.Context, n int) int {
+		calls.Add(1)
+		return n
+	})
+	waitUntil(t, "every worker to finish a job", func() bool { return calls.Load() >= workers })
+	cancel()
+	waitUntil(t, "goroutines to exit while nobody reads", func() bool { return runtime.NumGoroutine() <= before })
+	collect(t, results) // closed; a buffered design may still hold values
 }
 
 // The caller may cancel without ever closing jobs: workers must still stop.
