@@ -112,8 +112,7 @@ function renderPracticeIndex(view) {
         ]),
         practiceEl("p", { text: task.goalRU })
       ])))
-    ])),
-    practiceEl("p", { className: "muted-text", text: "Неделя 4 (parallelfetch, ratelimit, shutdown, leak, escape, profile) появится позже." })
+    ]))
   );
 }
 
@@ -122,11 +121,15 @@ function renderPracticeTask(view, task) {
   const accept = typeof PLAN !== "undefined" && PLAN.acceptance ? task.planTasks.map(id => PLAN.acceptance[id] && PLAN.acceptance[id].accept).filter(Boolean) : [];
   const planLinks = task.planTasks.map(practicePlanLink).filter(Boolean);
   const siteLinks = (task.links || []).map(practiceSiteLink).filter(Boolean);
+  const pkg = task.files.solution.name.replace(/\.go$/, "");
+  // setup — команды до тестов (go get зависимостей), extraRun — после (профили, -gcflags=-m).
   const run = [
-    `mkdir ${task.files.solution.name.replace(/\.go$/, "")} && cd ${task.files.solution.name.replace(/\.go$/, "")}`,
-    `go mod init example.com/${task.files.solution.name.replace(/\.go$/, "")}`,
+    `mkdir ${pkg} && cd ${pkg}`,
+    `go mod init example.com/${pkg}`,
+    ...(task.setup || []),
     `# положи сюда ${task.files.starter.name} (заготовка) и ${task.files.tests.name} (тесты)`,
-    "go test -race -count=1 ./..."
+    "go test -race -count=1 ./...",
+    ...(task.extraRun || [])
   ].join("\n");
   const prev = PRACTICE[index - 1];
   const next = PRACTICE[index + 1];

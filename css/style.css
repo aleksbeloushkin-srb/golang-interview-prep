@@ -675,7 +675,7 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .sim-step-start { scroll-margin-top: 140px; }
 .sim-step-start:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
 .related-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
-.related-links a { color: var(--accent); text-underline-offset: 3px; padding: 10px 0; }
+.related-links a { color: var(--accent); text-underline-offset: 3px; padding: 10px 0; min-width: 0; overflow-wrap: anywhere; }
 #quiz-container > .sim-card { scroll-margin-top: 140px; }
 @media (max-width: 600px) {
   .channel-scene { grid-template-columns: minmax(0, 1fr); }

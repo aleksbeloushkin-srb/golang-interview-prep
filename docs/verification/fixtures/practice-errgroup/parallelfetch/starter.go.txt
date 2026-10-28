@@ -1,0 +1,16 @@
+// Package parallelfetch: practice task W4-1. Replace the TODO with your solution.
+// Suggested tool: golang.org/x/sync/errgroup (WithContext, SetLimit, Go, Wait).
+package parallelfetch
+
+import "context"
+
+// Fetch calls fetch for every URL, with at most limit calls running at a time
+// (limit < 1 means 1), and returns the bodies in the order of urls.
+//
+// The first error cancels the context passed to the other calls, no new calls
+// start after it, and Fetch returns that error only after every started call
+// has returned.
+func Fetch(ctx context.Context, urls []string, limit int, fetch func(context.Context, string) (string, error)) ([]string, error) {
+	// TODO
+	panic("TODO")
+}

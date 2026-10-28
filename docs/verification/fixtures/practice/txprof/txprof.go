@@ -1,0 +1,124 @@
+// Package txprof is the reference solution for practice task W4-6: the W2-4
+// txsum code after profiling. The profile showed strings.Split allocating a
+// []string for every line; three strings.Cut calls find the same fields
+// without allocating. Everything else is unchanged, and the W2-4 tests pass.
+package txprof
+
+import (
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
+	"slices"
+	"strconv"
+	"strings"
+)
+
+var (
+	ErrColumns  = errors.New("want 3 columns: account,amount,currency")
+	ErrAmount   = errors.New("amount must be a number with at most 2 decimals")
+	ErrCurrency = errors.New("unknown currency")
+)
+
+var currencies = map[string]bool{"EUR": true, "USD": true, "RSD": true}
+
+// LineError says which input line failed; Unwrap lets errors.Is see the cause.
+type LineError struct {
+	Line int
+	Err  error
+}
+
+func (e *LineError) Error() string { return fmt.Sprintf("line %d: %v", e.Line, e.Err) }
+func (e *LineError) Unwrap() error { return e.Err }
+
+type Key struct{ Account, Currency string }
+
+// ParseAmount turns "12.50", "12.5", "12" or "-3.10" into minor units.
+func ParseAmount(s string) (int64, error) {
+	whole, frac, hasDot := strings.Cut(s, ".")
+	if whole == "" || whole == "-" || (hasDot && (frac == "" || len(frac) > 2)) {
+		return 0, fmt.Errorf("%q: %w", s, ErrAmount)
+	}
+	for len(frac) < 2 {
+		frac += "0"
+	}
+	if strings.HasPrefix(frac, "-") || strings.HasPrefix(frac, "+") {
+		return 0, fmt.Errorf("%q: %w", s, ErrAmount)
+	}
+	minor, err := strconv.ParseInt(whole+frac, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%q: %w", s, ErrAmount)
+	}
+	return minor, nil
+}
+
+// Sum adds up every valid line. Bad lines are skipped and reported, all of them,
+// so one run shows every problem in the file. Blank lines and a header are ignored.
+func Sum(r io.Reader) (map[Key]int64, []error) {
+	totals := make(map[Key]int64)
+	var errs []error
+	sc := bufio.NewScanner(r)
+	for n := 1; sc.Scan(); n++ {
+		line := strings.TrimSpace(sc.Text())
+		if line == "" || (n == 1 && line == "account,amount,currency") {
+			continue
+		}
+		// strings.Cut returns substrings of line: no []string per line, unlike strings.Split.
+		account, rest, ok1 := strings.Cut(line, ",")
+		amount, currency, ok2 := strings.Cut(rest, ",")
+		if !ok1 || !ok2 || strings.Contains(currency, ",") {
+			errs = append(errs, &LineError{Line: n, Err: ErrColumns})
+			continue
+		}
+		account, amount, currency = strings.TrimSpace(account), strings.TrimSpace(amount), strings.TrimSpace(currency)
+		if account == "" {
+			errs = append(errs, &LineError{Line: n, Err: ErrColumns})
+			continue
+		}
+		minor, err := ParseAmount(amount)
+		if err != nil {
+			errs = append(errs, &LineError{Line: n, Err: err})
+			continue
+		}
+		if !currencies[currency] {
+			errs = append(errs, &LineError{Line: n, Err: fmt.Errorf("%q: %w", currency, ErrCurrency)})
+			continue
+		}
+		totals[Key{account, currency}] += minor
+	}
+	if err := sc.Err(); err != nil {
+		errs = append(errs, fmt.Errorf("read input: %w", err))
+	}
+	return totals, errs
+}
+
+// Run is the whole CLI: totals to stdout sorted by account and currency, errors to
+// stderr, exit code 1 if any line was bad. main is just os.Exit(Run(os.Stdin, os.Stdout, os.Stderr)).
+func Run(stdin io.Reader, stdout, stderr io.Writer) int {
+	totals, errs := Sum(stdin)
+	keys := make([]Key, 0, len(totals))
+	for k := range totals {
+		keys = append(keys, k)
+	}
+	slices.SortFunc(keys, func(a, b Key) int {
+		if c := strings.Compare(a.Account, b.Account); c != 0 {
+			return c
+		}
+		return strings.Compare(a.Currency, b.Currency)
+	})
+	for _, k := range keys {
+		v := totals[k]
+		sign := ""
+		if v < 0 {
+			sign, v = "-", -v
+		}
+		fmt.Fprintf(stdout, "%s %s %s%d.%02d\n", k.Account, k.Currency, sign, v/100, v%100)
+	}
+	for _, err := range errs {
+		fmt.Fprintln(stderr, err)
+	}
+	if len(errs) > 0 {
+		return 1
+	}
+	return 0
+}

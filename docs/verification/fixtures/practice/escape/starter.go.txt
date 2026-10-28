@@ -1,0 +1,36 @@
+// Package escape: practice task W4-5. Run go build -gcflags=-m . and
+// go test -run Allocations -v, explain every line of the -m output, then change
+// SumFirst and AppendID so that they stop allocating. Keep their results.
+package escape
+
+import "fmt"
+
+type Point struct{ X, Y int }
+
+// NewPoint and MakePoint are here to read, not to change: compare their -m lines.
+func NewPoint(x, y int) *Point {
+	p := Point{X: x, Y: y}
+	return &p
+}
+
+func MakePoint(x, y int) Point {
+	return Point{X: x, Y: y}
+}
+
+// SumFirst adds up to the first 64 values.
+// TODO: the scratch buffer goes to the heap. Why? Keep it on the stack.
+func SumFirst(xs []int) int {
+	buf := make([]int, min(len(xs), 64))
+	n := copy(buf, xs)
+	total := 0
+	for _, v := range buf[:n] {
+		total += v
+	}
+	return total
+}
+
+// AppendID appends "id-<n>" to dst.
+// TODO: two allocations per call. Where do they come from? Remove both.
+func AppendID(dst []byte, n int) []byte {
+	return append(dst, fmt.Sprintf("id-%d", n)...)
+}
