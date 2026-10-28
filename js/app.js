@@ -421,7 +421,7 @@ function renderSimStep(simIdx, stepIdx) {
   const grid = document.getElementById(`${sim.id}-grid`);
   // Если у шага есть схема, таблица дублирует её и сворачивается; без схемы таблица остаётся основной.
   const table = document.getElementById(`${sim.id}-table`);
-  table.classList.toggle("hidden", !step.board);
+  table.classList.toggle("hidden", !step.board || !(step.boxes || []).length);
   if (step.board && grid.parentElement !== table) table.append(grid);
   if (!step.board && grid.parentElement === table) table.after(grid);
   grid.innerHTML = step.boxes

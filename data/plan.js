@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-27b",
+  revision: "2026-10-28",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -268,7 +268,7 @@ const PLAN = {
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w4-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы", links: ["c7", "sim2", "c8", "c10"] },
+            { id: "w4-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту»", links: ["c7", "sim2", "c8", "c10"] },
             { id: "w4-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
             { id: "w4-thu-3", text: "W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода" },
             { id: "w4-thu-4", text: "По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы", links: ["c3", "c4", "c5", "c6", "c9", "c11", "c16", "c17", "c19", "c25", "c28", "c36", "c37", "sim1", "sim4"], optional: true }
@@ -399,7 +399,8 @@ const PLAN = {
           label: "Сб", minutes: 240, tasks: [
             { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race" },
             { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", talk: "outbox" },
-            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 }
+            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 },
+            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] }
           ]
         }
       ],
@@ -506,14 +507,17 @@ const PLAN = {
         {
           label: "Чт", minutes: 90, tasks: [
             { id: "w8-thu-1", text: "Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком" },
-            { id: "w8-thu-2", text: "Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации" }
+            { id: "w8-thu-2", text: "Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации" },
+            { id: "w8-thu-3", text: "Ключевые слова из 5 целевых вакансий в CV (≈20 мин): стек, домен, уровень — только то, что реально делал; так CV проходит автоматический отбор (ATS)" },
+            { id: "w8-thu-4", text: "«Tell me about yourself» v1 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go и эта компания; записать", optional: true }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском", talk: "deep-dive" },
             { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 },
-            { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" }
+            { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" },
+            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] }
           ]
         }
       ],
@@ -568,7 +572,8 @@ const PLAN = {
             { id: "w9-sat-1", text: "Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка" },
             { id: "w9-sat-2", text: "Ещё 1 чужой PR в формате 40 минут" },
             { id: "w9-sat-3", text: "Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10" },
-            { id: "w9-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true }
+            { id: "w9-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true },
+            { id: "w9-sat-5", text: "Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов" }
           ]
         }
       ],
@@ -615,7 +620,8 @@ const PLAN = {
         {
           label: "Чт", minutes: 90, tasks: [
             { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)" },
-            { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" }
+            { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
+            { id: "w10-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
           ]
         },
         {
@@ -675,7 +681,8 @@ const PLAN = {
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w11-sat-1", text: "Повторить один дизайн с нуля за 40 минут и записать" },
-            { id: "w11-sat-2", text: "2 повторные задачи LeetCode из слабых тем с проговором" }
+            { id: "w11-sat-2", text: "2 повторные задачи LeetCode из слабых тем с проговором" },
+            { id: "w11-sat-3", text: "Проговор «Kafka vs RabbitMQ: when would you choose which?» — журнал с партициями и хранением против брокера очередей с маршрутизацией и подтверждениями", optional: true, refs: [{ t: "Apache Kafka: документация", u: "https://kafka.apache.org/documentation/" }, { t: "RabbitMQ: queues", u: "https://www.rabbitmq.com/docs/queues" }] }
           ]
         }
       ],
@@ -1101,7 +1108,7 @@ const PLAN = {
     "w4-wed-1": { accept: "c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя." },
     "w4-wed-2": { accept: "Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается.", exercise: "Coding-задание shutdown (практикум недели 4)." },
     "w4-wed-3": { accept: "Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine.", exercise: "Упражнение leak (практикум недели 4)." },
-    "w4-thu-1": { accept: "c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения." },
+    "w4-thu-1": { accept: "c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке." },
     "w4-thu-2": { accept: "c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM." },
     "w4-thu-3": { accept: "Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно.", exercise: "Упражнение escape (практикум недели 4)." },
     "w4-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости.", exercise: "Упражнение profile (практикум недели 4)." },
