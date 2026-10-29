@@ -46,12 +46,8 @@ const SPEECH_FIXES = {
   ],
   'plan:w1-mon-1': [['x colon-equals expr is a short declaration inside a function', 'x colon-equals expression is the short declaration, used inside a function']],
   'card:c40:short': [
-    ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
-    ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
-  ],
-  'card:c39:short': [
-    ['errors dot Is, err, Err Not Found, asks is', 'errors dot Is, of err and Err Not Found, asks: is'],
-    ['errors dot As, err, address of qe, asks is', 'errors dot As, of err and address of qe, asks: is']
+    ['var n int gives you 0, and every type has such a zero value: empty string for strings,', 'var n int gives you zero, and every type has such a zero value: the empty string for strings,'],
+    ['Not safe: m[k] equals v on a nil map panics', 'Not safe: assigning to a nil map, m of k equals v, panics']
   ],
   'plan:w1-sat-2': [
     ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],

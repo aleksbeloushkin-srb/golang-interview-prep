@@ -4,6 +4,7 @@ package accountsapi
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -37,7 +38,8 @@ func NewHandler(s Store) http.Handler {
 		}
 		dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxBody))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&in); err != nil {
+		// One JSON object and nothing after it: "{...} garbage" or a second object is a bad request.
+		if err := dec.Decode(&in); err != nil || dec.Decode(&struct{}{}) != io.EOF {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "body must be JSON like {\"owner\": \"...\"}"})
 			return
 		}

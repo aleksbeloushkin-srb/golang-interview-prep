@@ -75,10 +75,11 @@ func TestClientErrorsAreExplainedAndNotLogged(t *testing.T) {
 		code      int
 		field     string
 	}{
-		"bad JSON":           {nil, `{`, 400, "body"},
-		"zero amount":        {nil, `{"from":"a","to":"b","amount":0}`, 400, "amount"},
-		"unknown account":    {fmt.Errorf("transfer: %w", ErrNotFound), `{"from":"a","to":"x","amount":5}`, 404, ""},
-		"insufficient funds": {fmt.Errorf("transfer: %w", ErrInsufficientFunds), `{"from":"a","to":"b","amount":5}`, 409, ""},
+		"bad JSON":            {nil, `{`, 400, "body"},
+		"data after the JSON": {nil, `{"from":"a","to":"b","amount":5} garbage`, 400, "body"},
+		"zero amount":         {nil, `{"from":"a","to":"b","amount":0}`, 400, "amount"},
+		"unknown account":     {fmt.Errorf("transfer: %w", ErrNotFound), `{"from":"a","to":"x","amount":5}`, 404, ""},
+		"insufficient funds":  {fmt.Errorf("transfer: %w", ErrInsufficientFunds), `{"from":"a","to":"b","amount":5}`, 409, ""},
 	} {
 		log, buf := newLog()
 		code, body := post(t, &fakeLedger{err: tt.ledgerErr}, log, tt.body)

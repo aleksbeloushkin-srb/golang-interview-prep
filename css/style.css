@@ -629,6 +629,12 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
   .card-controls .btn { justify-content: center; padding: 9px 7px; font-size: 0.82rem; min-width: 0; overflow-wrap: anywhere; }
   .card-navigation { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr); width: 100%; }
   .card-grades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  /* Панель заняла бы больше 30 % экрана (fitCardControls): прилипает только строка навигации */
+  .card-controls.controls-compact { display: contents; }
+  .card-controls.controls-compact .card-navigation { position: sticky; bottom: 0; z-index: 5; width: auto; margin: 16px -4px 0; padding: 12px 4px max(12px, env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--border); }
+  .card-controls.controls-compact > :not(.card-navigation) { margin-top: 10px; }
+  .card-controls.controls-compact .card-navigation { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr); }
+  .card-controls.controls-compact .nav-label { display: none; }
   .kbd-hint { display: none; }
   .short-answer, .practical-box { padding: 12px; }
   .sim-card { padding: 16px; }
@@ -922,8 +928,9 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .nav-icon { width: 24px; height: 24px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 640px) {
   :root { --bottom-nav-h: 58px; }
-  html { scroll-padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px); }
-  body { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+  /* --bottom-nav-space — фактическая высота панели (fitCardControls), с крупным текстом она больше */
+  html { scroll-padding-bottom: calc(var(--bottom-nav-space, calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))) + 8px); }
+  body { padding-bottom: calc(var(--bottom-nav-space, calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))) + 16px); }
   header { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
   .header-inner { grid-template-areas: "brand account"; }
   .nav-tabs { display: none; }
@@ -934,10 +941,10 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
   .bottom-tab.active::before { content: ""; position: absolute; top: 0; left: 24%; right: 24%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
   .bottom-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 12px; }
   /* Кнопки карточки стоят над панелью, а не под ней */
-  .card-controls { bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)); padding-bottom: 12px; }
+  .card-controls, .card-controls.controls-compact .card-navigation { bottom: var(--bottom-nav-space, calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))); padding-bottom: 12px; }
   body.keyboard-open { padding-bottom: 16px; }
   body.keyboard-open .bottom-nav { display: none; }
-  body.keyboard-open .card-controls { bottom: 0; }
+  body.keyboard-open .card-controls, body.keyboard-open .card-controls.controls-compact .card-navigation { bottom: 0; }
 }
 .more-sheet { width: 100%; max-width: 640px; max-height: 85vh; margin: auto auto 0; padding: 0; border: 1px solid var(--border); border-bottom: 0; border-radius: 16px 16px 0 0; background: var(--surface); color: var(--text); }
 .more-sheet::backdrop { background: rgba(2, 6, 23, 0.65); }
@@ -1000,6 +1007,8 @@ p + .tts { margin-top: 6px; }
 .grade-signin.hidden { display: none; }
 @media (max-width: 640px) {
   .card-grades { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* В потоке после ответа (крупный текст): кнопки оценки — по одной в строку, слова не рвутся */
+  .card-controls.controls-compact .card-grades { grid-template-columns: minmax(0, 1fr); }
   .kbd { display: none; }
 }
 .card-grades.hidden, .grade-criteria.hidden { display: none; }

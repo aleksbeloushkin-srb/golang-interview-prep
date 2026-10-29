@@ -100,11 +100,16 @@ func TestBadInput(t *testing.T) {
 		"empty owner":   `{"owner":"  "}`,
 		"unknown field": `{"owner":"alice","balance":1000000}`,
 		"empty body":    ``,
+		"trailing data": `{"owner":"alice"} garbage`,
+		"two objects":   `{"owner":"alice"}{"owner":"bob"}`,
 	} {
 		rec := do(t, h, "POST", "/accounts", body)
 		if rec.Code != http.StatusBadRequest || decode(t, rec)["error"] == nil {
 			t.Errorf("%s: got %d %s, want 400 with a JSON error", name, rec.Code, rec.Body)
 		}
+	}
+	if rec := do(t, h, "POST", "/accounts", "{\"owner\":\"alice\"}\n"); rec.Code != http.StatusCreated {
+		t.Errorf("trailing whitespace: got %d, want 201", rec.Code)
 	}
 	if rec := do(t, h, "POST", "/accounts", `{"owner":""}`); decode(t, rec)["field"] != "owner" {
 		t.Fatalf("an empty owner should name the field: %s", rec.Body)

@@ -74,7 +74,8 @@ func write(w http.ResponseWriter, r Response) {
 // Handler serves POST /transfers with an Idempotency-Key header.
 //
 // Contract:
-//   - no Idempotency-Key → 400; invalid JSON or an unknown field → 400; neither uses up the key;
+//   - no Idempotency-Key → 400; invalid JSON, an unknown field or anything but whitespace after
+//     the JSON object → 400; none of them calls the ledger or uses up the key;
 //   - the fingerprint is SHA-256 of the decoded request, so other spacing or field order is the same request;
 //   - success → 201 {"status":"done"}; ErrInsufficientFunds (wrapped) → 409 {"error":"insufficient funds"},
 //     stored like a success; any other ledger error → 500 without details, not stored;

@@ -112,11 +112,20 @@ func TestBadRequests(t *testing.T) {
 	if rec := post(h, "k", `{"from":"A","to":"B","amount":5,"admin":true}`); rec.Code != http.StatusBadRequest {
 		t.Errorf("unknown field: %d, want 400", rec.Code)
 	}
+	for name, body := range map[string]string{
+		"garbage after the object": transfer + ` garbage`,
+		"a second object":          transfer + ` {"unexpected":true}`,
+		"a second transfer":        transfer + transfer,
+	} {
+		if rec := post(h, "k", body); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: %d, want 400", name, rec.Code)
+		}
+	}
 	if ledger.Calls() != 0 {
 		t.Fatalf("ledger called %d times for bad requests, want 0", ledger.Calls())
 	}
-	if rec := post(h, "k", transfer); rec.Code != http.StatusCreated {
-		t.Fatalf("a bad request must not use up the key: %d %s", rec.Code, rec.Body)
+	if rec := post(h, "k", transfer+" \n\t "); rec.Code != http.StatusCreated {
+		t.Fatalf("a bad request must not use up the key, and trailing whitespace is fine: %d %s", rec.Code, rec.Body)
 	}
 }
 

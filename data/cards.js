@@ -1917,9 +1917,9 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "What does Go's hybrid write barrier protect, and which pointer writes need it?",
     "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
-    "shortEN": "While the GC marks, your code keeps moving pointers: it can copy the only pointer to an unmarked object into an already scanned object and then overwrite the original, and without a barrier that live object would be freed. Go’s hybrid barrier prevents this by shading the old target of a pointer write and, while the current stack is grey, the new one too. Thanks to that, writes to a goroutine’s own stack need no barrier, and each stack is scanned once, with no rescan at the end.",
+    "shortEN": "A pointer write can hide a live object from concurrent marking: your code copies the only pointer to an unmarked object into an already scanned object, then overwrites the original, so the GC never sees the object and would free it. Go’s hybrid barrier prevents this by shading the old target of a pointer write and, while the current stack is grey, the new one too. Thanks to that, writes to a goroutine’s own stack need no barrier, and each stack is scanned once, with no rescan at the end.",
     "anchorsEN": [
-      "pointer moved into a scanned object → would be freed",
+      "only pointer to an unmarked object → into a scanned one, original overwritten → freed",
       "shade the old target + the new while the stack is grey",
       "own stack: no barrier, scanned once"
     ],
@@ -1933,7 +1933,7 @@ const CARDS = [
     ],
     "practicalRU": "Проговори по схеме: «A уже прошли, B ещё нет; переносим B → C в A → C; C нельзя потерять». В Go-коде барьер вставляет компилятор — вручную вызывать runtime не нужно. Пример требует разных ненулевых a и b и исключительного доступа к обоим узлам. Для совместного доступа нужна своя синхронизация. sync.Pool используй после измерений: Get не обязан вернуть прежний объект, содержимое может исчезнуть в любой момент; ускорение в 5–10 раз и переиспользование на том же P не гарантируются.",
     "code": "package example\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\n// Move requires distinct, non-nil nodes and exclusive access.\nfunc Move(a, b *Node) {\n\ta.Next = b.Next\n\tb.Next = nil // Deleting a pointer can also need a GC barrier.\n}\n\n// Compiler-generated barriers protect GC, not concurrent callers.\n// White/grey/black states are a teaching model, not observable here.",
-    "shortRU": "Пока GC размечает, твой код продолжает перекладывать указатели: он может скопировать единственный указатель на неразмеченный объект в уже просканированный объект, а потом затереть исходный, и без барьера этот живой объект освободили бы. Гибридный барьер Go не даёт этому случиться: он красит старую цель записи указателя и, пока стек текущей горутины серый, ещё и новую. Благодаря этому записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце.",
+    "shortRU": "Запись указателя может спрятать живой объект от параллельной разметки: код копирует единственный указатель на неразмеченный объект в уже просканированный объект, а потом затирает исходный, поэтому GC объект не увидит и освободит его. Гибридный барьер Go не даёт этому случиться: он красит старую цель записи указателя и, пока стек текущей горутины серый, ещё и новую. Благодаря этому записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце.",
     "jvmRU": "G1 в Java использует барьер snapshot-at-the-beginning — он совпадает только с deletion-половиной барьера Go; insertion-половина G1 не нужна, потому что стеки потоков он сканирует в паузе stop-the-world, а Go сканирует стеки конкурентно. Ещё G1 нужен card marking, потому что он поколенческий и перемещает объекты; сборщик Go не делает ни того, ни другого.",
     "detailsRU": [
       "Представь: A уже просмотрен, B ещё нет, а B ссылается на неотмеченный C. Если перенести эту связь из B в A, простой конкурентный обход может пропустить C. Барьер учитывает изменения указателей и защищает C, даже если сборщик уже прошёл A, но ещё не дошёл до B.",
@@ -1999,9 +1999,9 @@ const CARDS = [
     "simId": null,
     "qEN": "What do a slice and a string refer to, and when does append allocate a new backing array?",
     "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
-    "shortEN": "s[1:3] and, for a slice a, b := a copy no elements: a slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
+    "shortEN": "s[1:3] copies no elements: it is a new slice header over the same array. A slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
     "anchorsEN": [
-      "s[1:3], b := a: no elements copied",
+      "s[1:3]: new header, same array, no copy",
       "slice = ptr + len + cap; string = ptr + len",
       "result fits in cap → in place, else new array"
     ],
@@ -2014,7 +2014,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
-    "shortRU": "s[1:3] и, если a — срез, b := a не копируют элементы: срез — указатель, длина и ёмкость над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Поэтому два среза могут делить элементы, и изменение через один видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
+    "shortRU": "s[1:3] не копирует элементы: это новый заголовок среза над тем же массивом. Срез — указатель, длина и ёмкость над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Поэтому два среза могут делить элементы, и изменение через один видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
     "jvmRU": "Срез сочетает рост как у ArrayList с представлениями над общим массивом, как subList или ByteBuffer: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не UTF-16, как в API строк Java.",
     "detailsRU": [
       "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
@@ -2360,7 +2360,7 @@ const CARDS = [
     "simId": null,
     "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
-    "shortEN": "If Set has a pointer receiver, c.Set() compiles on a Counter variable, but var s Setter = c does not. The call works because Go rewrites it to (&c).Set(), which needs an addressable value: an element of map[K]Counter or a function result of type Counter cannot do it, while a *Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, *Counter's has both.",
+    "shortEN": "If Set has a pointer receiver, you can call it on a Counter variable but cannot store that variable in a Setter: c.Set() compiles, var s Setter = c does not. The call works because Go rewrites it to (&c).Set(), which needs an addressable value: an element of map[K]Counter or a function result of type Counter cannot do it, while a *Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, *Counter's has both.",
     "anchorsEN": [
       "c.Set() compiles, var s Setter = c does not",
       "call: (&c).Set() needs an address",
@@ -2376,7 +2376,7 @@ const CARDS = [
     ],
     "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
-    "shortRU": "Если у Set получатель-указатель, c.Set() компилируется на переменной типа Counter, а var s Setter = c — нет. Вызов работает, потому что Go переписывает его в (&c).Set(), а для этого нужно адресуемое значение: элемент map[K]Counter или результат функции типа Counter не подходит, а для *Counter адрес не нужен. Присваивание не проходит, потому что интерфейс проверяет наборы методов: у Counter — только методы с получателем-значением, у *Counter — оба вида.",
+    "shortRU": "Если у Set получатель-указатель, метод можно вызвать на переменной типа Counter, но эту переменную нельзя положить в Setter: c.Set() компилируется, а var s Setter = c — нет. Вызов работает, потому что Go переписывает его в (&c).Set(), а для этого нужно адресуемое значение: элемент map[K]Counter или результат функции типа Counter не подходит, а для *Counter адрес не нужен. Присваивание не проходит, потому что интерфейс проверяет наборы методов: у Counter — только методы с получателем-значением, у *Counter — оба вида.",
     "jvmRU": "В Java получателей-значений нет: каждый метод видит объект через ссылку. В Go выбор между значением и указателем в получателе решает и то, может ли метод менять получателя, и то, какие интерфейсы реализует тип.",
     "detailsRU": [
       "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
@@ -2723,27 +2723,27 @@ const CARDS = [
     "simId": null,
     "qEN": "How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?",
     "qRU": "Как добавить к ошибке контекст и когда нужны errors.Is, errors.As и errors.Join?",
-    "shortEN": "An error starts at a low-level call, for example a query that returns ErrNotFound, and each layer passes it up with context: fmt.Errorf(\"load user 7: %w\", err) keeps the original inside. errors.Is(err, ErrNotFound) asks \"is this exact value anywhere in the chain?\", and sentinels like io.EOF are checked the same way. errors.As(err, &qe) asks \"is there a *QueryError in the chain?\" and stores it in qe, so you can read its fields. errors.Join (Go 1.20) combines several errors, and Is and As still search each of them.",
+    "shortEN": "An error usually starts low, for example a query that returns ErrNotFound, and each layer wraps it with %w, which adds context and keeps the cause. errors.Is checks whether the error matches a sentinel such as ErrNotFound, including through wrapping. errors.As finds the first error of a given type, such as *QueryError, and stores it so you can read its fields. errors.Join (Go 1.20) combines several errors into a tree that Is and As can search.",
     "anchorsEN": [
       "starts low (ErrNotFound); each layer wraps with %w",
-      "errors.Is: is this value anywhere in the chain?",
-      "errors.As: is there this type? → read its fields",
-      "errors.Join (1.20): Is and As search every error"
+      "errors.Is: matches a sentinel, through wrapping",
+      "errors.As: first error of that type → read its fields",
+      "errors.Join (1.20): a tree Is and As can search"
     ],
     "jvmEN": "Unlike Java exceptions, Go errors are ordinary return values: no stack unwinding, no checked exceptions and, by default, no stack trace. Wrapping with %w is like passing a cause to an exception’s constructor, errors.Is and errors.As are like walking getCause() with equals or instanceof, and errors.Join is roughly addSuppressed.",
-    "shortRU": "Ошибка возникает внизу — например, запрос возвращает ErrNotFound, — и каждый слой передаёт её наверх с контекстом: fmt.Errorf(\"load user 7: %w\", err) сохраняет исходную ошибку внутри. errors.Is(err, ErrNotFound) спрашивает «есть ли где-то в цепочке именно это значение?», и так же проверяют sentinel-ошибки вроде io.EOF. errors.As(err, &qe) спрашивает «есть ли в цепочке *QueryError?» и кладёт её в qe, чтобы прочитать её поля. errors.Join (Go 1.20) объединяет несколько ошибок, и Is и As по-прежнему ищут в каждой.",
+    "shortRU": "Ошибка обычно возникает внизу — например, запрос возвращает ErrNotFound, — и каждый слой оборачивает её через %w: это добавляет контекст и сохраняет причину. errors.Is проверяет, соответствует ли ошибка sentinel-значению вроде ErrNotFound, в том числе сквозь обёртки. errors.As находит первую ошибку нужного типа, например *QueryError, и кладёт её в переменную, чтобы прочитать её поля. errors.Join (Go 1.20) объединяет несколько ошибок в дерево, по которому Is и As умеют искать.",
     "jvmRU": "В отличие от исключений Java, ошибки Go — обычные возвращаемые значения: без раскрутки стека, без checked-исключений и по умолчанию без stack trace. Обёртка через %w похожа на передачу cause в конструктор исключения, errors.Is и errors.As — на проход по getCause() с equals или instanceof, а errors.Join — примерно addSuppressed.",
     "detailsEN": [
-      "Sentinel or typed? A sentinel (var ErrNotFound = errors.New(\"not found\")) names a condition the caller branches on. A typed error, a struct that implements error, carries data such as a field name or a status code. Compare with errors.Is and errors.As rather than == or a type assertion, because those see only the outermost error. Go 1.26 adds a generic form, qe, ok := errors.AsType[*QueryError](err).",
+      "Sentinel or typed? A sentinel (var ErrNotFound = errors.New(\"not found\")) names a condition the caller branches on. A typed error, a struct that implements error, carries data such as a field name or a status code. Compare with errors.Is and errors.As rather than == or a type assertion, because those see only the outermost error. A match is not only equality: an error with an Is(target error) bool method can report that it matches ErrNotFound without wrapping it. Go 1.26 adds a generic form, qe, ok := errors.AsType[*QueryError](err).",
       "%w versus %v: with %w the new error has an Unwrap method that returns the original, so Is and As can reach it. With %v the original is only formatted into the text; the chain is cut and errors.Is returns false. Wrapping makes the inner error part of your API, so wrap on purpose.",
       "Add context once per layer, as \"operation subject: cause\" (\"load user 7: …\"). Handle an error once: log it or return it, not both, otherwise one failure is reported several times.",
-      "errors.Join returns nil when every argument is nil; otherwise its message joins the messages with newlines and its Unwrap returns []error. errors.Is and errors.As search every branch, but errors.Unwrap returns nil for it, because errors.Unwrap only calls an Unwrap() error method. fmt.Errorf with several %w verbs (Go 1.20) builds the same kind of multi-error."
+      "errors.Join returns nil when every argument is nil; otherwise its message joins the messages with newlines and its Unwrap returns []error. errors.Is and errors.As walk that tree depth-first and stop at the first match, so with two *QueryError inside one Join, As returns the first. errors.Unwrap returns nil for it, because errors.Unwrap only calls an Unwrap() error method. fmt.Errorf with several %w verbs (Go 1.20) builds the same kind of multi-error."
     ],
     "detailsRU": [
-      "Sentinel или тип? Sentinel (var ErrNotFound = errors.New(\"not found\")) называет условие, по которому вызывающий ветвится. Ошибка-тип — структура, реализующая error, — несёт данные: имя поля, код статуса. Сравнивай через errors.Is и errors.As, а не через == или приведение типа: они видят только внешнюю ошибку. В Go 1.26 появилась обобщённая форма: qe, ok := errors.AsType[*QueryError](err).",
+      "Sentinel или тип? Sentinel (var ErrNotFound = errors.New(\"not found\")) называет условие, по которому вызывающий ветвится. Ошибка-тип — структура, реализующая error, — несёт данные: имя поля, код статуса. Сравнивай через errors.Is и errors.As, а не через == или приведение типа: они видят только внешнюю ошибку. Совпадение — не только равенство: ошибка с методом Is(target error) bool может сообщить, что соответствует ErrNotFound, не оборачивая её. В Go 1.26 появилась обобщённая форма: qe, ok := errors.AsType[*QueryError](err).",
       "%w или %v: с %w у новой ошибки есть метод Unwrap, возвращающий исходную, и Is с As до неё доходят. С %v исходная ошибка только подставляется в текст; цепочка обрывается, и errors.Is возвращает false. Обёртка делает внутреннюю ошибку частью твоего API — оборачивай осознанно.",
       "Добавляй контекст один раз на уровень, в виде «операция объект: причина» («load user 7: …»). Обрабатывай ошибку один раз: либо логируй, либо возвращай, иначе один сбой попадёт в лог несколько раз.",
-      "errors.Join возвращает nil, если все аргументы nil; иначе сообщения соединяются переводом строки, а Unwrap возвращает []error. errors.Is и errors.As ищут во всех ветках, но errors.Unwrap для неё возвращает nil: он вызывает только метод Unwrap() error. fmt.Errorf с несколькими %w (Go 1.20) создаёт такую же составную ошибку."
+      "errors.Join возвращает nil, если все аргументы nil; иначе сообщения соединяются переводом строки, а Unwrap возвращает []error. errors.Is и errors.As обходят это дерево в глубину и останавливаются на первом совпадении, поэтому из двух *QueryError внутри одного Join As вернёт первую. errors.Unwrap для неё возвращает nil: он вызывает только метод Unwrap() error. fmt.Errorf с несколькими %w (Go 1.20) создаёт такую же составную ошибку."
     ],
     "practicalRU": "Порядок мысли: кто будет проверять эту ошибку и что ему нужно — условие или данные? Условие — sentinel и errors.Is, данные — тип и errors.As. Контекст — через %w, не %v. Логируй там, где ошибку обрабатывают, а не на каждом уровне.",
     "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"io/fs\"\n\t\"os\"\n)\n\nvar ErrNotFound = errors.New(\"not found\")\n\ntype QueryError struct {\n\tQuery string\n\tErr   error\n}\n\nfunc (e *QueryError) Error() string { return e.Query + \": \" + e.Err.Error() }\nfunc (e *QueryError) Unwrap() error { return e.Err }\n\nfunc main() {\n\terr := fmt.Errorf(\"load user 7: %w\", &QueryError{Query: \"SELECT\", Err: ErrNotFound})\n\tfmt.Println(err)\n\tfmt.Println(errors.Is(err, ErrNotFound))\n\tvar qe *QueryError\n\tfmt.Println(errors.As(err, &qe), qe.Query)\n\n\t_, err = os.Open(\"/no/such/file\")\n\tfmt.Println(errors.Is(err, fs.ErrNotExist))\n\n\tfmt.Printf(\"%q\\n\", errors.Join(errors.New(\"a\"), errors.New(\"b\")).Error())\n}",
@@ -2789,16 +2789,16 @@ const CARDS = [
     "simId": null,
     "qEN": "What is the zero value of each kind of type, and which nil values are safe to use?",
     "qRU": "Какое нулевое значение у каждого вида типов и какими nil-значениями можно безопасно пользоваться?",
-    "shortEN": "var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; every array element and struct field is zeroed. A nil slice works like an empty one for len, range and append; reading a nil map returns the zero value, but m[k] = v panics; sending to or receiving from a nil channel blocks forever, and close panics. Good types make the zero value useful: var mu sync.Mutex and var b strings.Builder are ready to use.",
+    "shortEN": "var n int gives you 0, and every type has such a zero value: \"\" for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: m[k] = v on a nil map panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync.Mutex and strings.Builder work without any setup.",
     "anchorsEN": [
-      "var n int = 0, \"\", false; pointer, slice, map, chan, func, interface = nil",
-      "nil slice: len, range, append work",
-      "nil map: read ok, m[k] = v panics",
+      "var n int = 0; \"\", false; pointer, slice, map, chan, func, interface = nil",
+      "safe: nil slice (len, range, append), nil map read",
+      "not safe: m[k] = v on a nil map panics",
       "nil channel: send/receive block, close panics",
-      "var mu sync.Mutex is ready to use"
+      "sync.Mutex, strings.Builder: usable at zero"
     ],
     "jvmEN": "In Java a reference field starts as null; in Go many types are usable at their zero value: an empty string instead of null, a ready Mutex or Builder. But writing to a nil map or dereferencing a nil pointer still panics, and Go has no compile-time null safety like Kotlin’s T?: any pointer, slice, map, channel, function or interface may be nil.",
-    "shortRU": "var n int — это 0, var s string — \"\", var ok bool — false, а указатель, срез, map, канал, функция или интерфейс, объявленные без значения, равны nil; все элементы массива и поля структуры обнуляются. Nil-срез ведёт себя как пустой для len, range и append; чтение из nil map возвращает нулевое значение, но m[k] = v паникует; отправка в nil-канал и чтение из него блокируют навсегда, а close паникует. Хорошие типы делают нулевое значение полезным: var mu sync.Mutex и var b strings.Builder сразу готовы к работе.",
+    "shortRU": "var n int даёт 0, и такое нулевое значение есть у каждого типа: \"\" у строк, false у bool, nil у указателей, срезов, map, каналов, функций и интерфейсов, а у массивов и структур обнуляются все элементы и поля. Безопасно: nil-срез работает как пустой для len, range и append, а чтение из nil map возвращает нулевое значение. Небезопасно: m[k] = v в nil map паникует, а nil-канал навсегда блокирует отправку и чтение и паникует при close. Хорошие типы делают нулевое значение полезным: sync.Mutex и strings.Builder работают без настройки.",
     "jvmRU": "В Java поле-ссылка начинается с null; в Go многие типы пригодны в нулевом значении: пустая строка вместо null, готовые Mutex или Builder. Но запись в nil map или разыменование nil-указателя всё равно паникуют, а проверки null на этапе компиляции, как у T? в Kotlin, в Go нет: nil может быть любой указатель, срез, map, канал, функция или интерфейс.",
     "detailsEN": [
       "Reading is safe for nil collections: len and range work on nil slices and maps, and indexing a nil map returns the zero value. Writing differs: append to a nil slice allocates, but assignment to a nil map panics with \"assignment to entry in nil map\". Create a map with make or a literal before writing.",
@@ -3668,7 +3668,7 @@ const CARDS = [
       "commit after processing → at-least-once",
       "commit before → at-most-once: loss",
       "dedupe: event ID + effect in one tx",
-      "order per partition; same key → same partition"
+      "order per partition; key-hashing partitioner: same key → same partition"
     ],
     "jvmEN": "The semantics are Kafka's own and match what you know from the Java consumer, but Go clients differ in defaults. kafka-go's ReadMessage, in a consumer group (GroupID set), commits the offset when it returns the message, before you process it; use FetchMessage and CommitMessages instead. librdkafka, behind confluent-kafka-go, enables the idempotent producer only with enable.idempotence=true, while the Java producer enables it by default.",
     "shortRU": "At-least-once — если фиксировать offset после обработки: падение или ребалансировка между ними повторит сообщения с последнего commit, а при фиксации до обработки они вместо этого теряются (at-most-once). Поэтому обработку делают идемпотентной: ID каждого события сохраняют в той же транзакции, что и его результат, и пропускают уже виденные ID. Порядок есть только внутри партиции: если partitioner хеширует ключ, сообщения с одним ключом попадают в одну партицию, а каждую партицию в группе одновременно читает один потребитель.",
