@@ -1,0 +1,86 @@
+// Package idempotency: practice task W6-2. Replace each TODO with your solution.
+package idempotency
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"sync"
+)
+
+var (
+	ErrKeyReused         = errors.New("idempotency key reused with a different request")
+	ErrInProgress        = errors.New("a request with this idempotency key is still in progress")
+	ErrInsufficientFunds = errors.New("insufficient funds")
+)
+
+// Response is what the handler sent for a key; a repeat gets exactly the same.
+type Response struct {
+	Status int
+	Body   []byte
+}
+
+type entry struct {
+	fingerprint [32]byte
+	done        bool
+	resp        Response
+}
+
+// Store remembers, for each key, the request fingerprint and the response.
+type Store struct {
+	mu   sync.Mutex
+	keys map[string]*entry
+}
+
+func NewStore() *Store { return &Store{keys: make(map[string]*entry)} }
+
+// Do runs fn at most once per key.
+//
+// Contract:
+//   - a new key: claim it, run fn, store and return its response;
+//   - same key, same fingerprint, finished: return the stored response without calling fn;
+//   - same key, same fingerprint, still running: ErrInProgress at once (do not wait);
+//   - same key, other fingerprint: ErrKeyReused;
+//   - fn returns an error: release the key, so a retry runs fn again;
+//   - two concurrent calls must never both treat the key as new; fn must not run under the lock.
+func (s *Store) Do(key string, fingerprint [32]byte, fn func() (Response, error)) (Response, error) {
+	// TODO
+	panic("TODO")
+}
+
+// Transferer moves money; it is the ledger of week 5 reduced to one method.
+type Transferer interface {
+	Transfer(ctx context.Context, from, to string, amount int64) error
+}
+
+type transferRequest struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Amount int64  `json:"amount"`
+}
+
+func jsonResponse(status int, v any) Response {
+	body, _ := json.Marshal(v)
+	return Response{Status: status, Body: body}
+}
+
+func write(w http.ResponseWriter, r Response) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(r.Status)
+	w.Write(r.Body)
+}
+
+// Handler serves POST /transfers with an Idempotency-Key header.
+//
+// Contract:
+//   - no Idempotency-Key → 400; invalid JSON or an unknown field → 400; neither uses up the key;
+//   - the fingerprint is SHA-256 of the decoded request, so other spacing or field order is the same request;
+//   - success → 201 {"status":"done"}; ErrInsufficientFunds (wrapped) → 409 {"error":"insufficient funds"},
+//     stored like a success; any other ledger error → 500 without details, not stored;
+//   - key reused with another payload → 422; same key while the first is running → 409 with Retry-After;
+//   - the ledger gets r.Context().
+func Handler(store *Store, ledger Transferer) http.Handler {
+	// TODO
+	panic("TODO")
+}
