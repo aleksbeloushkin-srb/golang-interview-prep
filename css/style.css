@@ -1012,3 +1012,5 @@ p + .tts { margin-top: 6px; }
   .kbd { display: none; }
 }
 .card-grades.hidden, .grade-criteria.hidden { display: none; }
+/* «← Назад», «Далее →»: стрелка и подпись — отдельные элементы inline-flex, пробел между ними схлопывается */
+.card-navigation .btn { gap: 0.35em; }
