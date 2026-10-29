@@ -147,6 +147,7 @@ test('speech text reads Go code the way people say it', () => {
   assert.equal(toSpeech('0, false, "", nil; -5 is "-0.05 EUR"'), '0, false, empty string, nil; minus 5 is minus 0.05 euros');
   assert.equal(toSpeech('like Kotlin’s T?: any pointer'), "like Kotlin's nullable T: any pointer");
   assert.equal(toSpeech('First sentence. Second one.'), 'First sentence. Second one.');
+  assert.equal(toSpeech('an element of map[K]Counter or map[string]*Counter'), 'an element of map of K to Counter or map of string to pointer to Counter');
 });
 
 test('audio manifest: files must exist, stale entries are counted, unknown keys rejected', () => {

@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-29c",
+  revision: "2026-10-29d",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -960,7 +960,7 @@ const PLAN = {
         "P4 defer order — deferred calls run in LIFO order, and their arguments are evaluated when defer executes.",
         "P5 named result — return 1 assigns to the named result first, then the deferred function increments it.",
         "P6 typed nil — the interface holds the type *E with a nil value, so the interface itself isn't nil.",
-        "P9 loop variable — since Go 1.22 each iteration has its own variable; before 1.22 all closures shared one."
+        "P9 loop variable — since Go 1.22 a variable declared by the loop (:=) is new in each iteration; before 1.22, or with for i = range over an existing variable, all closures share one."
       ]
     },
     "w3-1": {
@@ -1195,7 +1195,7 @@ const PLAN = {
     },
     "w1-tue-1": {
       hook: "A closure captures the variable, not a copy of its value.",
-      en: "A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, each loop iteration has its own loop variable, so closures created in a loop no longer share one variable."
+      en: "A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so closures created in the loop no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations."
     },
     "w1-tue-3": {
       hook: "Money is integer minor units plus a currency, never float64.",
@@ -1206,8 +1206,8 @@ const PLAN = {
       en: "A type switch inspects the dynamic type stored in an interface value and runs the matching case, with the variable already converted to that type. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
     },
     "w1-wed-2": {
-      hook: "Interface = type + value; nil only if both are nil. T has value methods, *T has both.",
-      en: "An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. The method set of T contains methods with value receivers; the method set of *T contains both value and pointer receivers. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable variable is only shorthand for (&v).Notify()."
+      hook: "Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.",
+      en: "An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
     },
     "w1-wed-3": {
       hook: "Wrap with %w; Is compares, As extracts.",

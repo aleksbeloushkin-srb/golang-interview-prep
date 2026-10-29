@@ -2,7 +2,8 @@
    Файлы и манифест (data/audio.js) делает scripts/gen-audio.mjs. Кнопка появляется, только если
    запись сделана для текущего текста: хеш исходного текста совпадает с манифестом. */
 const TTS_VOICE_KEY = "go_prep_tts_voice_v1";
-const ttsState = { audio: null, key: null };
+// voice — выбор голоса в этой вкладке: работает и без localStorage; errorKey — запись, которая не загрузилась.
+const ttsState = { audio: null, key: null, voice: null, errorKey: null };
 
 // FNV-1a, 32 бита — тот же, что в scripts/speech-text.mjs.
 function ttsHash(text) {
@@ -20,6 +21,7 @@ function ttsVoices() {
 
 function ttsVoice() {
   const voices = ttsVoices();
+  if (voices.includes(ttsState.voice)) return ttsState.voice;
   let saved = null;
   try { saved = localStorage.getItem(TTS_VOICE_KEY); } catch { saved = null; }
   return voices.includes(saved) ? saved : voices[0];
@@ -35,15 +37,26 @@ function ttsVoiceLabel(voice) {
   return (AUDIO.voices[voice] && AUDIO.voices[voice].label) || voice;
 }
 
+// Состояние кнопки: играет, не загрузилось или готово к запуску.
+function ttsPlayView(key) {
+  if (ttsState.key === key && ttsState.audio && !ttsState.audio.paused) return { text: "⏸ Стоп", label: "Остановить", pressed: true };
+  if (ttsState.errorKey === key) return { text: "↻ Повторить", label: "Повторить загрузку записи", pressed: false };
+  return { text: "🔊 Слушать", label: "Слушать по-английски", pressed: false };
+}
+
+const TTS_ERROR = "Запись не загрузилась — проверь сеть и нажми «Повторить».";
+const TTS_VOICE_HINT = "запись начнётся сначала";
+
 // HTML кнопок для текста; пустая строка, если записи для этого текста нет.
 function ttsControlsHtml(key, text) {
   if (!ttsEntry(key, text)) return "";
-  const voice = ttsVoice();
-  const playing = ttsState.key === key && ttsState.audio && !ttsState.audio.paused;
+  const voice = escapeHtml(ttsVoiceLabel(ttsVoice()));
+  const view = ttsPlayView(key);
   const other = ttsVoices().length > 1;
   return `<span class="tts" data-tts-key="${escapeHtml(key)}" data-tts-hash="${ttsHash(text)}">
-    <button type="button" class="btn btn-sm tts-play" aria-pressed="${playing}" aria-label="${playing ? "Остановить" : "Слушать по-английски"}">${playing ? "⏸ Стоп" : "🔊 Слушать"}</button>
-    ${other ? `<button type="button" class="btn btn-sm tts-voice" title="Сменить голос" aria-label="Голос: ${escapeHtml(ttsVoiceLabel(voice))}. Сменить">${escapeHtml(ttsVoiceLabel(voice))} ⇄</button>` : ""}
+    <button type="button" class="btn btn-sm tts-play" aria-pressed="${view.pressed}" aria-label="${view.label}">${view.text}</button>
+    ${other ? `<button type="button" class="btn btn-sm tts-voice" title="Сменить голос: ${TTS_VOICE_HINT}" aria-label="Голос: ${voice}. Сменить, ${TTS_VOICE_HINT}">${voice} ⇄</button>` : ""}
+    <span class="tts-status" role="status">${ttsState.errorKey === key ? TTS_ERROR : ""}</span>
   </span>`;
 }
 
@@ -59,27 +72,38 @@ function ttsControlsNode(key, text) {
 function ttsRefresh() {
   document.querySelectorAll(".tts[data-tts-key]").forEach(box => {
     const key = box.dataset.ttsKey;
-    const playing = ttsState.key === key && ttsState.audio && !ttsState.audio.paused;
+    const view = ttsPlayView(key);
     const play = box.querySelector(".tts-play");
-    play.textContent = playing ? "⏸ Стоп" : "🔊 Слушать";
-    play.setAttribute("aria-pressed", String(playing));
-    play.setAttribute("aria-label", playing ? "Остановить" : "Слушать по-английски");
+    play.textContent = view.text;
+    play.setAttribute("aria-pressed", String(view.pressed));
+    play.setAttribute("aria-label", view.label);
     const voiceButton = box.querySelector(".tts-voice");
     if (voiceButton) {
       const label = ttsVoiceLabel(ttsVoice());
       voiceButton.textContent = `${label} ⇄`;
-      voiceButton.setAttribute("aria-label", `Голос: ${label}. Сменить`);
+      voiceButton.setAttribute("aria-label", `Голос: ${label}. Сменить, ${TTS_VOICE_HINT}`);
     }
+    const status = box.querySelector(".tts-status");
+    const message = ttsState.errorKey === key ? TTS_ERROR : "";
+    if (status && status.textContent !== message) status.textContent = message;
   });
 }
 
-function ttsStop() {
+// keepError — оставить сообщение об ошибке (остановка из-за самой ошибки).
+function ttsStop(keepError) {
   if (ttsState.audio) {
     ttsState.audio.pause();
     ttsState.audio = null;
   }
   ttsState.key = null;
+  if (!keepError) ttsState.errorKey = null;
   ttsRefresh();
+}
+
+function ttsFailed(audio, key) {
+  if (ttsState.audio !== audio) return; // ошибка старой записи, которую уже сменили
+  ttsState.errorKey = key;
+  ttsStop(true);
 }
 
 function ttsPlay(key) {
@@ -90,8 +114,8 @@ function ttsPlay(key) {
   ttsState.audio = audio;
   ttsState.key = key;
   audio.addEventListener("ended", () => { if (ttsState.audio === audio) ttsStop(); });
-  audio.addEventListener("error", () => { if (ttsState.audio === audio) ttsStop(); });
-  audio.play().catch(() => { if (ttsState.audio === audio) ttsStop(); });
+  audio.addEventListener("error", () => ttsFailed(audio, key));
+  audio.play().catch(() => ttsFailed(audio, key));
   ttsRefresh();
 }
 
@@ -103,7 +127,8 @@ function ttsToggle(key) {
 function ttsNextVoice() {
   const voices = ttsVoices();
   const next = voices[(voices.indexOf(ttsVoice()) + 1) % voices.length];
-  try { localStorage.setItem(TTS_VOICE_KEY, next); } catch { /* голос просто не запомнится */ }
+  ttsState.voice = next; // работает и без хранилища; localStorage — только чтобы помнить между визитами
+  try { localStorage.setItem(TTS_VOICE_KEY, next); } catch { /* голос не запомнится после перезагрузки */ }
   const replay = ttsState.key && ttsState.audio && !ttsState.audio.paused ? ttsState.key : null;
   if (replay) ttsPlay(replay);
   else ttsRefresh();
