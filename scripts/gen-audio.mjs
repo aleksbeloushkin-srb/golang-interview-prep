@@ -2,6 +2,7 @@
 //
 //   node scripts/gen-audio.mjs --week 1            # карточки, эталонные ответы плана и talk практикума недели 1
 //   node scripts/gen-audio.mjs --week 1 --dry-run  # только показать, что будет озвучено и как
+//   node scripts/gen-audio.mjs --cards c2,c7       # отдельные карточки: короткий ответ и сравнение с Java
 //   node scripts/gen-audio.mjs --prune             # удалить файлы, на которые манифест больше не ссылается
 //
 // Модель (kokoro-v1.0.onnx, voices-v1.0.bin) лежит в .tts/ — папка не в репозитории.
@@ -53,6 +54,11 @@ const SPEECH_FIXES = {
     ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
     ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
   ],
+  // Пилотная выборка (c2, c7, c28, c29, c47).
+  'card:c7:short': [['With GO-MAX-PROCS=4,', 'With GO-MAX-PROCS set to four,'], ['or in cgo', 'or in C-Go']],
+  'card:c29:short': [['s[1:3] copies no elements', 'Slicing s from one to three copies no elements']],
+  'card:c29:jvm': [['Array List-style growth with sub List- or Byte Buffer-style views', 'Array List style growth with sub-List or Byte Buffer style views']],
+  'card:c47:short': [['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
     ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],
@@ -97,6 +103,18 @@ export function collectWeek(n, data, plan, practice) {
   return items;
 }
 
+// Отдельные карточки вне недели (например, выборка для пилота).
+export function collectCards(ids, data) {
+  const items = [];
+  for (const id of ids) {
+    const card = data.cards.find(c => c.id === id);
+    if (!card) throw Error(`no card ${id}`);
+    items.push({ key: `card:${card.id}:short`, text: card.shortEN });
+    if (card.jvmEN) items.push({ key: `card:${card.id}:jvm`, text: card.jvmEN });
+  }
+  return items;
+}
+
 export function fileFor(key, voice, speech) {
   const v = VOICES[voice];
   const h = textHash(`${ENGINE}|${v.id}|${v.speed}|${speech}`);
@@ -118,7 +136,11 @@ function writeManifest(manifest) {
 function main() {
   const args = process.argv.slice(2);
   const weeks = [];
-  for (let i = 0; i < args.length; i++) if (args[i] === '--week') weeks.push(Number(args[++i]));
+  const cardIds = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--week') weeks.push(Number(args[++i]));
+    else if (args[i] === '--cards') cardIds.push(...args[++i].split(',').filter(Boolean));
+  }
   const dry = args.includes('--dry-run');
   const prune = args.includes('--prune');
 
@@ -126,7 +148,8 @@ function main() {
   const plan = loadPlan(read);
   const practice = loadPractice(read);
   const manifest = loadManifest();
-  const items = weeks.flatMap(n => collectWeek(n, data, plan, practice));
+  const seen = new Set();
+  const items = [...weeks.flatMap(n => collectWeek(n, data, plan, practice)), ...collectCards(cardIds, data)].filter(i => !seen.has(i.key) && seen.add(i.key));
   const jobs = [];
   for (const item of items) {
     const speech = speechFor(item.key, item.text);
