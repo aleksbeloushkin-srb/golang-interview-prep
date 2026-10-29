@@ -62,6 +62,7 @@ export function toSpeech(text) {
   s = s.replace(/&(\w+)\{\}/g, "address of a $1 literal");
   s = s.replace(/&(\w+)/g, "address of $1");
   s = s.replace(/\b(\w+)\{\}/g, "a $1 literal");
+  s = s.replace(/\bmap\[(\*?\w+)\](\*?\w+)/g, "map of $1 to $2"); // map[K]*V → map of K to pointer to V
   s = s.replace(/\*(\w+)/g, "pointer to $1");
   s = s.replace(/\[\](\w+)/g, "slice of $1");
   s = s.replace(/\b([A-Za-z_]\w*)\(\)/g, "$1"); // String() → String

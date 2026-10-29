@@ -25,8 +25,37 @@ export const VOICES = {
 };
 
 // Точечные правки произношения, когда общих правил не хватает: [было в тексте для речи, стало].
+// Каждая правка меняет только чтение, не смысл: сверяется с экранным текстом при ревью.
 const SPEECH_FIXES = {
-  'plan:w1-wed-1': [['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']]
+  'plan:w1-wed-1': [['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']],
+  'card:c33:short': [['and err not equal to nil is true', 'and err is not nil']],
+  'card:c34:short': [
+    ["pointer to Counter's has both", 'the method set of pointer to Counter has both'],
+    ['c dot Set becomes address of c dot Set', 'c dot Set becomes: take the address of c, then call Set']
+  ],
+  'plan:w1-wed-2': [
+    ["pointer to Service's has both", 'the method set of pointer to Service has both'],
+    ['shorthand for address of v dot Notify', 'shorthand for taking the address of v, then calling Notify']
+  ],
+  'card:c39:jvm': [
+    ['walking get Cause with equals or instanceof', 'walking the get-Cause chain with equals or instance-of'],
+    ['errors dot Join is roughly add Suppressed', "errors dot Join is roughly Java's add-Suppressed"]
+  ],
+  'plan:w1-mon-1': [['x colon-equals expr is a short declaration inside a function', 'x colon-equals expression is the short declaration, used inside a function']],
+  'card:c40:short': [['zero value: 0, false, empty string, nil for pointers', 'zero value: zero, false, the empty string, and nil for pointers']],
+  'plan:w1-sat-2': [['zero value: 0, empty string, false, nil for pointers', 'zero value: zero, the empty string, false, and nil for pointers']],
+  // Деньги: сумма — словами, вывод String() — как его печатают.
+  'plan:w1-tue-3': [
+    ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],
+    ['1250 becomes 12.50 euros and 5 becomes 0.05 euros', 'one thousand two hundred fifty prints as twelve point five zero E-U-R, and five prints as zero point zero five E-U-R'],
+    ['so minus 5 is minus 0.05 euros', 'so minus five prints as minus zero point zero five E-U-R'],
+    ["so I don't hard-code 100", "so I don't hard-code a hundred"]
+  ],
+  'practice:p-money:talk': [
+    ['so 12.50 euros is 1250', 'so twelve euros fifty is one thousand two hundred fifty'],
+    ['prints as minus 0.05 euros', 'prints as minus zero point zero five E-U-R'],
+    ['instead of hard-coding 100', 'instead of hard-coding a hundred']
+  ]
 };
 
 export function speechFor(key, text) {

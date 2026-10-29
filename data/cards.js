@@ -82,14 +82,14 @@ const CARDS = [
     "simId": null,
     "qEN": "Can a program have a race condition without a data race?",
     "qRU": "Может ли в программе быть логическая гонка без гонки данных?",
-    "shortEN": "Yes: a race condition is a timing-dependent logic bug, and it can exist even when every memory access is synchronized. A data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. If the balance check and the withdrawal each take the lock separately, two withdrawals can both pass the check, so the check and the withdrawal must run in one critical section.",
+    "shortEN": "Yes: a race condition is a timing-dependent logic bug, and it can exist even when every memory access is synchronized. A data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. If the balance check and the withdrawal each take the lock separately, two withdrawals can both pass the check, so the check and the withdrawal must be one atomic step, for example one critical section.",
     "anchorsEN": [
       "race condition = timing-dependent logic",
-      "data race = no sync + a write; -race finds it",
-      "check-then-act → one critical section"
+      "data race = no sync + a write; -race can detect it",
+      "check-then-act → one atomic step"
     ],
     "jvmEN": "Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with AtomicLong.",
-    "shortRU": "Да: логическая гонка — ошибка, зависящая от порядка событий, и она бывает, даже когда каждый доступ к памяти синхронизирован. Гонка данных — понятие уже: несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; её может обнаружить -race. Если проверка баланса и списание берут блокировку по отдельности, два списания могут оба пройти проверку, поэтому проверка и списание должны выполняться в одной критической секции.",
+    "shortRU": "Да: логическая гонка — ошибка, зависящая от порядка событий, и она бывает, даже когда каждый доступ к памяти синхронизирован. Гонка данных — понятие уже: несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; её может обнаружить -race. Если проверка баланса и списание берут блокировку по отдельности, два списания могут оба пройти проверку, поэтому проверка и списание должны быть одним атомарным шагом, например одной критической секцией.",
     "jvmRU": "Так же, как в Java: synchronized-геттеры и сеттеры делают безопасным каждый вызов, но не пару «проверить и изменить». Нужна одна блокировка на оба шага или цикл compare-and-set, как с AtomicLong.",
     "detailsEN": [
       "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
@@ -145,10 +145,10 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What happens when Go starts a goroutine?",
     "qRU": "Что происходит при запуске горутины?",
-    "shortEN": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine. On the system stack, newproc reuses a dead G or allocates one with a 2 KiB stack, saves where it should start, and puts it into runnext of the current P. That makes it runnable, not running: when it runs is up to the scheduler, so the caller must synchronize to wait for it.",
+    "shortEN": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine. On the system stack, newproc reuses a dead G or allocates one with the minimum stack, 2 KiB on Linux, saves where it should start, and normally puts it into runnext of the current P. That makes it runnable, not running: when it runs is up to the scheduler, so the caller must synchronize to wait for it.",
     "anchorsEN": [
       "arguments evaluated in the caller",
-      "newproc on g0 → G + 2 KiB → runnext",
+      "newproc on g0 → G + 2 KiB (Linux) → runnext",
       "runnable ≠ running → synchronize"
     ],
     "jvmEN": "Unlike new Thread(r).start() in Java, there is no object to keep: go returns nothing. The arguments are copied at the go statement, but a closure, unlike a Java lambda that captures effectively final values, captures the variables themselves.",
@@ -160,7 +160,7 @@ const CARDS = [
     ],
     "practicalRU": "Передавай значения явно, если работнику нужен снимок состояния. Замыкание, которое позже читает изменяемое общее состояние, имеет другую семантику и может создать гонку.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
-    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет в новой. На системном стеке newproc берёт завершившуюся G или создаёт новую со стеком 2 КиБ, сохраняет, откуда ей стартовать, и ставит её в runnext текущего P. Так она становится готовой к запуску, но не выполняется: когда её запустить, решает планировщик, поэтому чтобы её дождаться, нужна синхронизация.",
+    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет в новой. На системном стеке newproc берёт завершившуюся G или создаёт новую с минимальным стеком (2 КиБ в Linux), сохраняет, откуда ей стартовать, и обычно ставит её в runnext текущего P. Так она становится готовой к запуску, но не выполняется: когда её запустить, решает планировщик, поэтому чтобы её дождаться, нужна синхронизация.",
     "jvmRU": "В отличие от new Thread(r).start() в Java, хранить нечего: go ничего не возвращает. Аргументы копируются в момент оператора go, а замыкание, в отличие от лямбды Java с effectively final значениями, захватывает сами переменные.",
     "detailsRU": [
       "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart, включён по умолчанию).",
@@ -279,11 +279,11 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "How does a goroutine stack grow, and why do pointers remain valid?",
     "qRU": "Как растёт стек горутины и почему указатели остаются корректными?",
-    "shortEN": "When the stack pointer would pass the stack guard, the function prologue calls morestack; the runtime allocates a stack at least twice as big and copies the frames into it. Pointers stay valid because the compiler’s stack maps let the runtime fix every pointer into the old stack, and user heap objects never point into a stack. Growth stops at 1 GB on 64-bit systems: beyond that the program dies with a fatal stack overflow.",
+    "shortEN": "When the stack pointer would pass the stack guard, the function prologue calls morestack; the runtime allocates a stack at least twice as big and copies the frames into it. Pointers stay valid because the compiler’s stack maps and the runtime’s own bookkeeping let it fix every pointer into the old stack, and user heap objects never point into a stack. By default, growth stops at 1 GB on 64-bit systems: beyond that the program dies with a fatal stack overflow.",
     "anchorsEN": [
       "prologue: SP vs guard → morestack",
       "copy to ≥ 2×; stack maps fix the pointers",
-      "1 GB limit → fatal overflow"
+      "1 GB by default → fatal overflow"
     ],
     "jvmEN": "A Java platform thread stack cannot grow past -Xss: deep recursion ends with StackOverflowError, 1 MiB by default on 64-bit Linux. In Go the same recursion keeps working, because the stack doubles by copying, until the 1 GB limit, and then the program dies instead of throwing an error you can catch.",
     "detailsEN": [
@@ -294,7 +294,7 @@ const CARDS = [
     ],
     "practicalRU": "Используй обычные указатели и ограничивай глубину рекурсии. Если в профиле заметно копирование стеков, сначала изучи глубину вызовов и крупные кадры; worker pool не является универсальным лечением роста стека.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc descend(depth int, value *int) int {\n\tvar frame [1024]byte\n\tframe[0] = byte(depth)\n\tif depth == 0 {\n\t\t*value = 42\n\t\treturn 0\n\t}\n\tsum := descend(depth-1, value)\n\treturn sum + int(frame[0]) // Keep frame data live across the call.\n}\n\nfunc main() {\n\tvalue := 0\n\tsum := descend(64, &value)\n\tfmt.Println(value, sum) // 42 2080; not a measurement of stack addresses.\n}",
-    "shortRU": "Когда указатель стека вот-вот перейдёт границу guard, пролог функции вызывает morestack; рантайм выделяет стек минимум вдвое больше и копирует в него кадры. Указатели остаются корректными, потому что карты стека от компилятора позволяют рантайму исправить каждый указатель на старый стек, а объекты кучи из пользовательского кода никогда не указывают в стек. Рост останавливается на 1 ГБ на 64-битных системах: дальше программа падает с фатальной ошибкой stack overflow.",
+    "shortRU": "Когда указатель стека вот-вот перейдёт границу guard, пролог функции вызывает morestack; рантайм выделяет стек минимум вдвое больше и копирует в него кадры. Указатели остаются корректными, потому что карты стека от компилятора и собственный учёт рантайма позволяют исправить каждый указатель на старый стек, а объекты кучи из пользовательского кода никогда не указывают в стек. По умолчанию рост останавливается на 1 ГБ на 64-битных системах: дальше программа падает с фатальной ошибкой stack overflow.",
     "jvmRU": "Стек платформенного потока Java не растёт дальше -Xss: глубокая рекурсия заканчивается StackOverflowError, по умолчанию на 1 МиБ на 64-битном Linux. В Go та же рекурсия продолжает работать — стек удваивается копированием — до предела в 1 ГБ, а потом программа погибает, а не бросает ошибку, которую можно поймать.",
     "detailsRU": [
       "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
@@ -1023,14 +1023,14 @@ const CARDS = [
     "levelLabel": "🟡 Senior (Runtime)",
     "qEN": "Why does a channel wait queue contain sudog records instead of just goroutines?",
     "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
-    "shortEN": "Because one goroutine can wait on several channels at once, and each wait needs its own record. A sudog holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; a blocked select puts one sudog into the queue of every channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.",
+    "shortEN": "Because one goroutine can wait on several channels at once, and each wait needs its own record. A sudog holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; a blocked select enqueues one sudog for each case with a non-nil channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.",
     "anchorsEN": [
       "one goroutine, many waits",
       "sudog = g + channel + value pointer",
-      "select: one sudog per case"
+      "select: one sudog per non-nil case"
     ],
     "jvmEN": "A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.",
-    "shortRU": "Потому что одна горутина может ждать сразу на нескольких каналах, и каждому ожиданию нужна своя запись. sudog хранит горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую; заблокированный select кладёт по sudog в очередь каждого канала. Когда одна ветка выигрывает, остальные убираются из очередей, и все sudog возвращаются в кеш на P.",
+    "shortRU": "Потому что одна горутина может ждать сразу на нескольких каналах, и каждому ожиданию нужна своя запись. sudog хранит горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую; заблокированный select ставит в очередь по sudog на каждую ветку с не-nil каналом. Когда одна ветка выигрывает, остальные убираются из очередей, и все sudog возвращаются в кеш на P.",
     "jvmRU": "Поток Java, заблокированный на блокировке или очереди, ждёт в одном месте. Go нужна отдельная запись на каждое ожидание, потому что select позволяет одной горутине стоять сразу в нескольких очередях каналов.",
     "detailsEN": [
       "hchan contains buffer capacity and occupancy, send/receive indices, wait queues, closed state, type information and an internal runtime lock. The lock implementation depends on the platform; it is not a universal synonym for futex.",
@@ -1595,29 +1595,29 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How does escape analysis choose storage, and how do you verify a particular allocation?",
     "qRU": "Как escape analysis определяет размещение и как проверить конкретное выделение памяти?",
-    "shortEN": "The compiler keeps a value on the stack unless it might outlive its function, be reachable from the heap, or be too big for the frame. Returning &x, storing it in a global, or sharing it with a goroutine by reference are the usual causes. Since Go 1.25 a non-escaping make([]T, n) with a variable n gets a 32-byte stack buffer and moves to the heap only when larger, so -m can say “does not escape” while -benchmem shows an allocation: check both.",
+    "shortEN": "The compiler keeps a value on the stack unless it might outlive its function, be reachable from the heap, or be too big for the frame. Returning &x, storing it in a global, or sharing it with a goroutine by reference are the usual causes. Since Go 1.25 a non-escaping make([]T, n) with a variable n may use a small stack buffer, 32 bytes by default, and moves to the heap only when larger, so -m can say “does not escape” while -benchmem shows an allocation: check both.",
     "anchorsEN": [
       "stack unless: outlives · reachable from heap · too big",
       "return &x · global · shared with a goroutine",
-      "Go 1.25: make([]T, n) → 32-byte stack buffer",
+      "Go 1.25: make([]T, n) may use a small stack buffer",
       "verify with -gcflags=-m and -benchmem"
     ],
     "jvmEN": "In Java every object goes to the heap unless the JIT proves otherwise. In Go values live on the stack by default and move to the heap only when the compiler cannot prove that the stack is safe.",
     "detailsEN": [
       "Passing a pointer down is safe for stack storage only if the callee does not retain it beyond that lifetime. Conversely, returning &x from a small helper need not allocate at an inlined call site that consumes x locally. SaveGlobal below deliberately retains a pointer.",
       "Interfaces and closures do not automatically allocate. What matters is whether the concrete operation is known, whether captured data is retained, and what the compiler can prove. A goroutine may extend captured data lifetime, but this is not a rule that every closure goes to the heap.",
-      "Dynamic make is version-sensitive. Go 1.25 already has a conditional stack-buffer path for non-escaping slices; Go 1.26 release notes describe further cases. A small runtime capacity can use a stack buffer, while a larger capacity falls back to the heap. Escape of the slice can still require heap storage.",
+      "Dynamic make is version-sensitive. Go 1.25 already has a conditional stack-buffer path for non-escaping slices; Go 1.26 release notes describe further cases. A small runtime capacity can use a stack buffer, while a larger capacity falls back to the heap. In 1.25.1 the buffer holds 32 bytes / element size elements, so elements over 32 bytes get none; -N disables the path, and -d=variablemakethreshold changes the size. Escape of the slice can still require heap storage.",
       "There is no universal 64 KiB rule. In Go 1.26.1 the defaults distinguish explicit stack variables (128 KiB) and implicit allocations (64 KiB); alignment, total-frame constraints and flags also matter. These are implementation limits, not language guarantees.",
       "Inspect the actual caller with go build -gcflags=\"-m=2\", then benchmark with -benchmem and profile. A message about the helper body does not by itself describe an inlined copy. If replacing make with a fixed array, validate bounds and preserve ownership; returning its slice can move the array to the heap."
     ],
     "practicalRU": "В примере ReadLocal использует результат сразу, SaveGlobal передаёт адрес функции, которая удерживает его. Sum проверяет диапазон n и реально читает заполненные байты, поэтому пример не сводится к неиспользуемому buf. Проверяй и маленькие, и большие размеры: «не убегает» у динамического make не означает «никогда не выделяет в куче».",
     "code": "package example\n\nvar Saved *int\n\nfunc makeInt(v int) *int  { return &v }\nfunc retain(p *int)       { Saved = p }\nfunc ReadLocal(v int) int { return *makeInt(v) }\nfunc SaveGlobal(v int)    { retain(&v) }\n\nfunc Sum(n int) (int, bool) {\n\tif n < 0 || n > 1024 {\n\t\treturn 0, false\n\t}\n\tbuf := make([]byte, n)\n\tfor i := range buf {\n\t\tbuf[i] = byte(i)\n\t}\n\tsum := 0\n\tfor _, v := range buf {\n\t\tsum += int(v)\n\t}\n\treturn sum, true\n}",
-    "shortRU": "Компилятор оставляет значение на стеке, если оно не может пережить свою функцию, стать доступным из кучи или оказаться слишком большим для кадра. Обычные причины убегания — вернуть &x, сохранить его в глобальной переменной или передать горутине по ссылке. С Go 1.25 неубегающий make([]T, n) с переменным n получает 32-байтовый буфер на стеке и уходит в кучу, только если нужно больше, поэтому -m может написать «does not escape», а -benchmem покажет выделение: проверяй оба.",
+    "shortRU": "Компилятор оставляет значение на стеке, если оно не может пережить свою функцию, стать доступным из кучи или оказаться слишком большим для кадра. Обычные причины убегания — вернуть &x, сохранить его в глобальной переменной или передать горутине по ссылке. С Go 1.25 неубегающий make([]T, n) с переменным n может использовать небольшой буфер на стеке, по умолчанию 32 байта, и уходит в кучу, только если нужно больше, поэтому -m может написать «does not escape», а -benchmem покажет выделение: проверяй оба.",
     "jvmRU": "В Java каждый объект попадает в кучу, если JIT не докажет обратное. В Go значения по умолчанию живут на стеке и уходят в кучу, только когда компилятор не может доказать, что стек безопасен.",
     "detailsRU": [
       "Передача указателя вниз совместима со стеком лишь если вызываемая функция не сохраняет его дольше нужного времени жизни. И наоборот, return &x из небольшого помощника не обязательно выделяет память в куче в месте встроенного вызова с локальным использованием. Ниже SaveGlobal намеренно сохраняет указатель.",
       "Интерфейс и замыкание не означают автоматическую аллокацию. Важны известность конкретной операции, удержание захваченных данных и то, что может доказать компилятор. Горутина способна продлить время жизни захваченного значения, но не каждое замыкание обязано жить в куче.",
-      "Динамический make зависит от версии. В Go 1.25 уже есть условный путь со стековым буфером для неубегающего среза; release notes Go 1.26 описывают дополнительные случаи. Небольшая динамическая capacity может использовать стек, большая — кучу. Если срез уходит наружу, хранение в куче всё ещё может понадобиться.",
+      "Динамический make зависит от версии. В Go 1.25 уже есть условный путь со стековым буфером для неубегающего среза; release notes Go 1.26 описывают дополнительные случаи. Небольшая динамическая capacity может использовать стек, большая — кучу. В 1.25.1 буфер вмещает 32 байта / размер элемента элементов, поэтому элементам больше 32 байт он не достаётся; -N отключает этот путь, а -d=variablemakethreshold меняет размер. Если срез уходит наружу, хранение в куче всё ещё может понадобиться.",
       "Универсального правила 64 KiB нет. В Go 1.26.1 по умолчанию различаются явные переменные стека (128 KiB) и неявные выделения (64 KiB); влияют также выравнивание, ограничения всего кадра и флаги. Это пределы реализации, а не гарантии языка.",
       "Проверяй реальное место вызова через go build -gcflags=\"-m=2\", затем benchmark с -benchmem и профиль. Сообщение о теле помощника не описывает автоматически его встроенную копию. Заменяя make фиксированным массивом, проверяй границы и владение: возврат среза может перенести массив в кучу."
     ],
@@ -2358,28 +2358,29 @@ const CARDS = [
     "simId": null,
     "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
-    "shortEN": "Method sets decide which interfaces a type implements, while c.Set() is only call shorthand for addressable values. For a defined type T, the method set of T has only value-receiver methods and the method set of *T has both kinds: if Set has a pointer receiver, *Counter implements Setter and Counter does not. Go rewrites c.Set() to (&c).Set() when c is addressable, so it fails on a map element or a function result.",
+    "shortEN": "Method sets decide which interfaces a type implements; c.Set() is only call shorthand. If Set has a pointer receiver, *Counter implements Setter and Counter does not: Counter's method set has only its value-receiver methods, *Counter's has both. On a Counter value, c.Set() becomes (&c).Set(), so the value must be addressable: a variable works, an element of map[K]Counter or a function result of type Counter does not. A *Counter needs no address.",
     "anchorsEN": [
-      "T: value methods; *T: both",
       "interfaces use method sets",
-      "c.Set() = (&c).Set() only if addressable"
+      "Counter: value methods; *Counter: both",
+      "on a value, c.Set() = (&c).Set(): needs an address",
+      "a *Counter (map value, result) needs no address"
     ],
     "jvmEN": "Java has no value receivers: every method sees the object through a reference. In Go, choosing a value or a pointer receiver decides both whether the method can change the receiver and which interfaces the type satisfies.",
     "detailsEN": [
       "Interface satisfaction uses method sets, not call-site convenience. If Set is declared on *Counter, *Counter implements a Setter interface and Counter does not. Store &c when pointer methods are required; a heap-versus-stack decision is irrelevant to this rule.",
-      "For an addressable c, c.Set(2) is shorthand for (&c).Set(2). This is a method-call rule. Map indexes and temporary results are not automatically made addressable, so the same shorthand is not always available.",
+      "For an addressable c, c.Set(2) is shorthand for (&c).Set(2). This is a method-call rule. Elements of map[K]Counter and results of type Counter are not addressable, so the shorthand fails there; elements of map[K]*Counter and results of type *Counter are already pointers and need no address.",
       "A value receiver copies the receiver value; a pointer receiver receives a pointer. Copying a struct with slices, maps or pointers is shallow, so a value receiver does not guarantee isolation from the original data.",
-      "For map[K]Counter, read a value, modify the copy and store it back. Alternatively store *Counter when shared mutable identity is intended. Neither choice makes concurrent access safe by itself. Embedded methods follow additional promotion rules; start with the simple T/*T distinction."
+      "For map[K]Counter, read a value, modify the copy and store it back. Alternatively store *Counter when shared mutable identity is intended. Neither choice makes concurrent access safe by itself. Embedding adds promoted methods: a struct that embeds *Counter has Set in the method set of the struct value itself, so Outer{} implements Setter. Start with the plain T/*T rule and check embedded fields separately."
     ],
     "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
-    "shortRU": "Наборы методов решают, какие интерфейсы реализует тип, а c.Set() — лишь сокращённая запись вызова для адресуемых значений. Для определённого типа T набор методов T — только методы с получателем-значением, а набор *T — оба вида: если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет. Go переписывает c.Set() в (&c).Set(), когда c адресуемо, поэтому на элементе map или результате функции это не сработает.",
+    "shortRU": "Наборы методов решают, какие интерфейсы реализует тип; c.Set() — лишь сокращённая запись вызова. Если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет: в наборе методов Counter только методы с получателем-значением, у *Counter — оба вида. На значении Counter вызов c.Set() превращается в (&c).Set(), поэтому значение должно быть адресуемым: переменная подходит, а элемент map[K]Counter или результат функции типа Counter — нет. *Counter адрес не нужен.",
     "jvmRU": "В Java получателей-значений нет: каждый метод видит объект через ссылку. В Go выбор между значением и указателем в получателе решает и то, может ли метод менять получателя, и то, какие интерфейсы реализует тип.",
     "detailsRU": [
       "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
-      "Для адресуемой c вызов c.Set(2) сокращает (&c).Set(2). Это правило вызова метода. Индексы map и временные результаты не становятся адресуемыми автоматически, поэтому такая запись доступна не везде.",
+      "Для адресуемой c вызов c.Set(2) сокращает (&c).Set(2). Это правило вызова метода. Элементы map[K]Counter и результаты типа Counter неадресуемы, поэтому там такая запись не работает; элементы map[K]*Counter и результаты типа *Counter уже указатели, и адрес им не нужен.",
       "Value-ресивер копирует значение ресивера; pointer-ресивер получает указатель. Копия структуры со срезами, map или указателями поверхностная, поэтому value-ресивер не гарантирует изоляции от исходных данных.",
-      "Для map[K]Counter нужно прочитать значение, изменить копию и сохранить обратно. Можно хранить *Counter, если нужна общая изменяемая сущность. Ни один вариант сам по себе не делает конкурентный доступ безопасным. У встроенных методов есть дополнительные правила продвижения; начни с простого различия T/*T."
+      "Для map[K]Counter нужно прочитать значение, изменить копию и сохранить обратно. Можно хранить *Counter, если нужна общая изменяемая сущность. Ни один вариант сам по себе не делает конкурентный доступ безопасным. Встраивание добавляет продвигаемые методы: у структуры, которая встраивает *Counter, Set есть в наборе методов самого значения структуры, поэтому Outer{} реализует Setter. Начни с простого правила T/*T, а встроенные поля проверяй отдельно."
     ],
     "versionNote": "Правила набора методов и адресуемости здесь одинаковы в Go 1.17, 1.25 и 1.26. Пример не зависит от конкретного размещения объекта или формата itab.",
     "sources": [
@@ -2637,12 +2638,12 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
     "qRU": "Что именно гарантируют GOMAXPROCS с учётом контейнера, synctest и FlightRecorder?",
-    "shortEN": "GOMAXPROCS follows the container’s CPU limit, synctest gives tests fake time, and FlightRecorder keeps the last seconds of trace in memory, each with conditions. With go 1.25 or later in go.mod, on Linux GOMAXPROCS is the CPU count lowered to the CPU limit rounded up, but the limit alone never pushes it below 2, and an explicit setting stops updates. synctest’s time moves only when every goroutine in the bubble is durably blocked, not on mutexes or I/O.",
+    "shortEN": "On Linux, with go 1.25 or later in the main module's go.mod, the default GOMAXPROCS is the number of CPUs the process may use (its affinity mask), capped at the cgroup CPU limit rounded up. The limit alone never pushes it below 2, and an explicit setting stops automatic updates. synctest’s fake time moves only when every goroutine in the bubble is durably blocked, not on mutexes or I/O. FlightRecorder keeps roughly the last seconds of trace in memory, to save on demand.",
     "anchorsEN": [
-      "GOMAXPROCS: min(CPUs, ⌈limit⌉); the limit alone never below 2",
-      "an explicit setting stops updates",
+      "default: CPUs allowed by affinity, capped at the rounded-up cgroup limit",
+      "the limit alone never below 2; an explicit setting stops updates",
       "synctest: time moves when all durably blocked",
-      "FlightRecorder: a rolling window"
+      "FlightRecorder: a rolling window, saved on demand"
     ],
     "jvmEN": "The JVM has been container-aware since Java 10, and Java Flight Recorder is the closest analogue to FlightRecorder. For synctest, the closest analogue for a Kotlin developer is runTest from kotlinx-coroutines-test, whose virtual time skips delays; in plain Java you inject a fake Clock.",
     "detailsEN": [
@@ -2654,7 +2655,7 @@ const CARDS = [
     ],
     "practicalRU": "Не учи три API одной фразой. Спроси отдельно: «кто выбирает параллелизм?», «почему движется тестовое время?», «какую историю успели записать?». Пример проверяет дедлайн искусственным временем; это не ожидание реальной секунды.",
     "code": "package apis\n\nimport (\n\t\"context\"\n\t\"testing\"\n\t\"testing/synctest\"\n\t\"time\"\n)\n\nfunc TestDeadline(t *testing.T) {\n\tsynctest.Test(t, func(t *testing.T) {\n\t\tctx, cancel := context.WithTimeout(context.Background(), time.Second)\n\t\tdefer cancel()\n\t\tif ctx.Err() != nil {\n\t\t\tt.Fatal(\"deadline fired early\")\n\t\t}\n\t\ttime.Sleep(time.Second)\n\t\tsynctest.Wait()\n\t\tif ctx.Err() != context.DeadlineExceeded {\n\t\t\tt.Fatalf(\"got %v\", ctx.Err())\n\t\t}\n\t})\n}",
-    "shortRU": "GOMAXPROCS следует за лимитом CPU контейнера, synctest даёт тестам поддельное время, а FlightRecorder держит в памяти трассу последних секунд — и у каждого есть условия. Если в go.mod указано go 1.25 или новее, на Linux GOMAXPROCS — число CPU, уменьшенное до округлённого вверх лимита CPU, но сам лимит никогда не опускает его ниже 2, а явная настройка отключает обновления. Время synctest идёт, только когда все горутины пузыря устойчиво заблокированы, — не на мьютексах и вводе-выводе.",
+    "shortRU": "В Linux, если в go.mod главного модуля указано go 1.25 или новее, GOMAXPROCS по умолчанию — число CPU, которые процессу разрешено использовать (маска affinity), но не больше округлённого вверх лимита CPU cgroup. Сам лимит никогда не опускает его ниже 2, а явная настройка отключает автообновления. Поддельное время synctest идёт, только когда все горутины пузыря устойчиво заблокированы, — не на мьютексах и вводе-выводе. FlightRecorder держит в памяти примерно последние секунды трассы, чтобы сохранить их по запросу.",
     "jvmRU": "JVM учитывает контейнер с Java 10, а ближайший аналог FlightRecorder — Java Flight Recorder. Для synctest ближе всего для разработчика на Kotlin runTest из kotlinx-coroutines-test: его виртуальное время пропускает задержки; в чистой Java подставляют поддельный Clock.",
     "detailsRU": [
       "GOMAXPROCS по умолчанию учитывает логические CPU, affinity процесса и, в Linux, cgroup CPU bandwidth quota. Квота — CPU limit, а не CPU request и не число потоков ОС. Дробная квота округляется вверх; рантайм обычно сохраняет минимум 2, кроме случая, когда число CPU или доступность по affinity меньше 2. Начальные значения и автообновления зависят от GODEBUG и языковой версии главного модуля.",
@@ -3267,11 +3268,11 @@ const CARDS = [
     "anchorsEN": [
       "*sql.DB = a pool: open once, set limits",
       "ctx into every query: QueryContext, ExecContext",
-      "defer rows.Close(); check rows.Err()",
+      "check err, then defer rows.Close(); rows.Err()",
       "tx: BeginTx(ctx), defer Rollback, Commit"
     ],
     "jvmEN": "*sql.DB is the pooled DataSource, like HikariCP behind JDBC, not a single Connection. Without try-with-resources, Go relies on defer rows.Close() and defer tx.Rollback(); defer runs at function exit, not at the end of a block, so inside a loop move the body into a helper function.",
-    "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Контекст HTTP-запроса передают в каждое обращение к базе через QueryContext и ExecContext. Rows держит соединение, пока его не закроют, поэтому после проверки ошибки запроса — defer rows.Close(), а после цикла — rows.Err(). Транзакция занимает одно соединение: BeginTx(ctx), проверить ошибку, defer tx.Rollback(), все запросы через tx, в конце Commit.",
+    "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Контекст запроса передают в каждое обращение к базе через QueryContext и ExecContext. Rows держит соединение, пока его не закроют, поэтому после проверки ошибки запроса — defer rows.Close(), а после цикла — rows.Err(). Транзакция занимает одно соединение: BeginTx(ctx), проверить ошибку, defer tx.Rollback(), все запросы через tx, в конце Commit.",
     "jvmRU": "*sql.DB — это пул, DataSource вроде HikariCP за JDBC, а не один Connection. Без try-with-resources Go полагается на defer rows.Close() и defer tx.Rollback(); defer срабатывает при выходе из функции, а не в конце блока, поэтому тело цикла выносят во вспомогательную функцию.",
     "detailsEN": [
       "Limits: SetMaxOpenConns caps connections, so a request waits for a free one instead of overloading the database; SetMaxIdleConns keeps some open for reuse; SetConnMaxLifetime and SetConnMaxIdleTime retire old connections. Without a cap, a traffic spike opens as many connections as there are goroutines.",

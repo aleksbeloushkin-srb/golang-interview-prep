@@ -19,8 +19,8 @@ const AUDIO = {
     },
     "card:c33:short": {
       "hash": "c6cb00a4",
-      "michael": "audio/en/card-c33-short-michael-b5130104.mp3",
-      "heart": "audio/en/card-c33-short-heart-6c10e076.mp3"
+      "michael": "audio/en/card-c33-short-michael-c8e25079.mp3",
+      "heart": "audio/en/card-c33-short-heart-def9baf3.mp3"
     },
     "card:c34:jvm": {
       "hash": "7587119e",
@@ -28,9 +28,9 @@ const AUDIO = {
       "heart": "audio/en/card-c34-jvm-heart-c4928d56.mp3"
     },
     "card:c34:short": {
-      "hash": "ffbfe1c2",
-      "michael": "audio/en/card-c34-short-michael-2120d7f4.mp3",
-      "heart": "audio/en/card-c34-short-heart-9df05c9e.mp3"
+      "hash": "8974d157",
+      "michael": "audio/en/card-c34-short-michael-ba21367e.mp3",
+      "heart": "audio/en/card-c34-short-heart-f88880bc.mp3"
     },
     "card:c35:jvm": {
       "hash": "70df987e",
@@ -44,8 +44,8 @@ const AUDIO = {
     },
     "card:c39:jvm": {
       "hash": "50ac7db6",
-      "michael": "audio/en/card-c39-jvm-michael-27402954.mp3",
-      "heart": "audio/en/card-c39-jvm-heart-7e0d4fc6.mp3"
+      "michael": "audio/en/card-c39-jvm-michael-3f086c2d.mp3",
+      "heart": "audio/en/card-c39-jvm-heart-a048207f.mp3"
     },
     "card:c39:short": {
       "hash": "9f363461",
@@ -59,13 +59,13 @@ const AUDIO = {
     },
     "card:c40:short": {
       "hash": "12d1c2b7",
-      "michael": "audio/en/card-c40-short-michael-2a46f5db.mp3",
-      "heart": "audio/en/card-c40-short-heart-5aab2fc1.mp3"
+      "michael": "audio/en/card-c40-short-michael-de1e432b.mp3",
+      "heart": "audio/en/card-c40-short-heart-4dc3bacd.mp3"
     },
     "plan:w1-mon-1": {
       "hash": "44168530",
-      "michael": "audio/en/plan-w1-mon-1-michael-cbd6bfec.mp3",
-      "heart": "audio/en/plan-w1-mon-1-heart-1d0a174a.mp3"
+      "michael": "audio/en/plan-w1-mon-1-michael-0c9ff2c2.mp3",
+      "heart": "audio/en/plan-w1-mon-1-heart-8f21e2c4.mp3"
     },
     "plan:w1-sat-1": {
       "hash": "f621909f",
@@ -74,8 +74,8 @@ const AUDIO = {
     },
     "plan:w1-sat-2": {
       "hash": "495c6bfe",
-      "michael": "audio/en/plan-w1-sat-2-michael-0bbc1ed2.mp3",
-      "heart": "audio/en/plan-w1-sat-2-heart-278b0b70.mp3"
+      "michael": "audio/en/plan-w1-sat-2-michael-45af8d0c.mp3",
+      "heart": "audio/en/plan-w1-sat-2-heart-4ae137ee.mp3"
     },
     "plan:w1-thu-1": {
       "hash": "9a4045da",
@@ -93,14 +93,14 @@ const AUDIO = {
       "heart": "audio/en/plan-w1-thu-4-heart-7184008c.mp3"
     },
     "plan:w1-tue-1": {
-      "hash": "91f159e7",
-      "michael": "audio/en/plan-w1-tue-1-michael-bbcce299.mp3",
-      "heart": "audio/en/plan-w1-tue-1-heart-ea4e878b.mp3"
+      "hash": "7e8a0af0",
+      "michael": "audio/en/plan-w1-tue-1-michael-595f2bc0.mp3",
+      "heart": "audio/en/plan-w1-tue-1-heart-2940ec52.mp3"
     },
     "plan:w1-tue-3": {
       "hash": "030d392b",
-      "michael": "audio/en/plan-w1-tue-3-michael-8834640b.mp3",
-      "heart": "audio/en/plan-w1-tue-3-heart-705c93f5.mp3"
+      "michael": "audio/en/plan-w1-tue-3-michael-19d7779a.mp3",
+      "heart": "audio/en/plan-w1-tue-3-heart-10d214a4.mp3"
     },
     "plan:w1-wed-1": {
       "hash": "f20fae38",
@@ -108,9 +108,9 @@ const AUDIO = {
       "heart": "audio/en/plan-w1-wed-1-heart-9326bca8.mp3"
     },
     "plan:w1-wed-2": {
-      "hash": "a5b3027c",
-      "michael": "audio/en/plan-w1-wed-2-michael-ec012266.mp3",
-      "heart": "audio/en/plan-w1-wed-2-heart-8c391544.mp3"
+      "hash": "e0d3c308",
+      "michael": "audio/en/plan-w1-wed-2-michael-21bbbafe.mp3",
+      "heart": "audio/en/plan-w1-wed-2-heart-79316b38.mp3"
     },
     "plan:w1-wed-3": {
       "hash": "3f00ed4f",
@@ -129,8 +129,8 @@ const AUDIO = {
     },
     "practice:p-money:talk": {
       "hash": "b61d10ca",
-      "michael": "audio/en/practice-p-money-talk-michael-57b807ff.mp3",
-      "heart": "audio/en/practice-p-money-talk-heart-90d44b2d.mp3"
+      "michael": "audio/en/practice-p-money-talk-michael-d5075e47.mp3",
+      "heart": "audio/en/practice-p-money-talk-heart-5d8ecb7d.mp3"
     },
     "practice:p-validation:talk": {
       "hash": "e40edb65",

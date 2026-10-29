@@ -255,6 +255,13 @@ function renderCard() {
     ansBox.classList.remove("visible");
     document.getElementById("card-status").textContent = "";
     document.getElementById("card-practice").innerHTML = "";
+    // Пустая выдача — чистый экран: ни опор, ни критериев, ни звука прежней карточки.
+    if (typeof ttsStop === "function") ttsStop();
+    document.getElementById("card-anchors").innerHTML = "";
+    document.getElementById("card-short-tts").innerHTML = "";
+    document.querySelector("#card-controls .card-grades").classList.add("hidden");
+    document.getElementById("grade-criteria").classList.add("hidden");
+    document.getElementById("grade-signin").classList.add("hidden");
     return;
   }
 

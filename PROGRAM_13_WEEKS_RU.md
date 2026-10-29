@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29c.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29d.
 
 ## Фазы
 
@@ -1134,7 +1134,7 @@
 - P4 defer order — deferred calls run in LIFO order, and their arguments are evaluated when defer executes.
 - P5 named result — return 1 assigns to the named result first, then the deferred function increments it.
 - P6 typed nil — the interface holds the type *E with a nil value, so the interface itself isn't nil.
-- P9 loop variable — since Go 1.22 each iteration has its own variable; before 1.22 all closures shared one.
+- P9 loop variable — since Go 1.22 a variable declared by the loop (:=) is new in each iteration; before 1.22, or with for i = range over an existing variable, all closures share one.
 
 ### W3-1. Worker pool
 
@@ -1350,7 +1350,7 @@ var x T declares a variable with its zero value and also works at package level.
 
 *Remember:* A closure captures the variable, not a copy of its value.
 
-A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, each loop iteration has its own loop variable, so closures created in a loop no longer share one variable.
+A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so closures created in the loop no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations.
 
 </details>
 
@@ -1378,9 +1378,9 @@ A type switch inspects the dynamic type stored in an interface value and runs th
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* Interface = type + value; nil only if both are nil. T has value methods, *T has both.
+*Remember:* Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.
 
-An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. The method set of T contains methods with value receivers; the method set of *T contains both value and pointer receivers. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable variable is only shorthand for (&v).Notify().
+An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable Service variable is only shorthand for (&v).Notify(); a map element or a function result of type Service cannot be called that way, while a *Service can.
 
 </details>
 
