@@ -64,11 +64,15 @@ func TestTransferErrors(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := l.Transfer(tc.from, tc.to, tc.amount)
+			var err error
+			finishWithin(t, 2*time.Second, func() { err = l.Transfer(tc.from, tc.to, tc.amount) })
 			if !errors.Is(err, tc.want) {
 				t.Fatalf("Transfer(%d, %d, %d) = %v, want errors.Is %v", tc.from, tc.to, tc.amount, err, tc.want)
 			}
 		})
+	}
+	if t.Failed() {
+		return // a hung transfer may still hold a lock: reading balances would hang too
 	}
 	if balance(t, l, 1) != 100 || balance(t, l, 2) != 50 {
 		t.Errorf("a failed transfer changed balances: %d, %d", balance(t, l, 1), balance(t, l, 2))
@@ -128,6 +132,12 @@ func TestConcurrentTransfersKeepTheInvariant(t *testing.T) {
 			if got := l.Total(); got != want {
 				bad = got
 				return
+			}
+			for id := range int64(accounts) {
+				if b, err := l.Balance(id + 1); err != nil || b < 0 {
+					bad = -1
+					return
+				}
 			}
 		}
 	}()

@@ -128,6 +128,9 @@ func TestBusinessOutcomeIsStoredInfrastructureFailureIsNot(t *testing.T) {
 	ledger.err = nil
 	ledger.mu.Unlock()
 	second := post(h, "poor", transfer)
+	if second.Header().Get("Retry-After") != "" {
+		t.Errorf("a stored final answer must not carry Retry-After: that header marks \"still in progress\"")
+	}
 	if first.Code != http.StatusConflict || second.Code != http.StatusConflict || second.Body.String() != first.Body.String() || ledger.Calls() != 1 {
 		t.Fatalf("insufficient funds: first %d %s, repeat %d %s, calls %d; want the same stored 409 and 1 call",
 			first.Code, first.Body, second.Code, second.Body, ledger.Calls())
@@ -174,6 +177,12 @@ func TestConcurrentDuplicatesTransferOnce(t *testing.T) {
 	case <-ledger.entered:
 	case <-time.After(2 * time.Second):
 		t.Fatal("the first request never reached the ledger")
+	}
+
+	// Another body with the same key is rejected even while the first is still running.
+	if rec := post(h, "same", `{"from":"A","to":"B","amount":1}`); rec.Code != http.StatusUnprocessableEntity {
+		close(ledger.release)
+		t.Fatalf("other body, same key, while in progress: %d %s, want 422 (compare the fingerprint first)", rec.Code, rec.Body)
 	}
 
 	var conflicts, others atomic.Int32

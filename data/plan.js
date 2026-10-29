@@ -1151,7 +1151,7 @@ const PLAN = {
     },
     "w6-tue-2": {
       hook: "Claim the key atomically: INSERT … ON CONFLICT DO NOTHING in the transfer's transaction.",
-      en: "Check-then-insert fails under concurrency: both requests check, find nothing and both transfer. There is no data race, so the race detector stays silent. I claim the key with INSERT ON CONFLICT DO NOTHING on a unique column, in the same transaction as the transfer. A concurrent duplicate blocks on the unique index until the first transaction ends; then it sees the conflict and returns the stored response, or claims the key if the first one rolled back."
+      en: "Check-then-insert fails under concurrency: both requests check, find nothing and both transfer. There is no data race, so the race detector stays silent. I claim the key with INSERT ON CONFLICT DO NOTHING on a unique column, in the same transaction as the transfer. A concurrent duplicate blocks on the unique index until the first transaction ends; in Read Committed it then sees the conflict and returns the stored response, or claims the key if the first one rolled back."
     },
     "w6-wed-1": {
       hook: "Event row in the same transaction; a relay publishes; at-least-once.",
@@ -1163,7 +1163,7 @@ const PLAN = {
     },
     "w6-thu-1": {
       hook: "Commit the offset after the effect; dedupe by event ID; order per partition.",
-      en: "My consumer is at-least-once: it commits the offset only after the effect is committed in the database. A crash or a rebalance in between replays messages, so the handler stores the event ID in the same transaction as the effect and skips IDs it has seen. Ordering is per partition: events are keyed by account ID, so one account's events stay in one partition, and within a group each partition is read by one consumer at a time."
+      en: "My consumer is at-least-once: it commits the offset only after the effect is committed in the database. A crash or a rebalance in between replays messages, so the handler stores the event ID in the same transaction as the effect and skips IDs it has seen. Ordering is per partition: events are keyed by account ID and the producer hashes the key, so one account's events stay in one partition, and within a group each partition is read by one consumer at a time."
     },
     "w6-sat-1": {
       hook: "Per-account locks in ID order; check under the lock; 100 goroutines under -race.",

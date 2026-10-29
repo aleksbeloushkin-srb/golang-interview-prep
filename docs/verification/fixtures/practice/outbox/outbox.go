@@ -163,7 +163,7 @@ func (r *Relay) publishBatch(ctx context.Context, batch int) {
 		if ctx.Err() != nil {
 			return
 		}
-		// The sender's account is the key: its events stay in one partition, in order.
+		// The sender's account is the key: with a key-hashing partitioner its events go to one partition.
 		if err := r.Pub.Publish(ctx, strconv.FormatInt(ev.From, 10), ev); err != nil {
 			return // stop the batch to keep the order; this event goes first on the next poll
 		}
