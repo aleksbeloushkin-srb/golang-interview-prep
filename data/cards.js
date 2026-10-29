@@ -1234,14 +1234,14 @@ const CARDS = [
     "simId": "sim4",
     "qEN": "Does every select call selectgo, and how does the general path work?",
     "qRU": "Каждый ли select вызывает selectgo и как устроен общий путь?",
-    "shortEN": "No. The compiler rewrites simple forms: select {} blocks forever, a select with only default just runs it, one case becomes a plain channel operation, and one case plus default becomes a non-blocking selectnbsend or selectnbrecv. Only two or more channel cases call runtime.selectgo: it locks the channels in address order, polls them in random order and, if nothing is ready, parks on all of them until a winner’s CAS on selectDone wakes it.",
+    "shortEN": "No: the compiler rewrites simple selects, and only two or more channel cases call runtime.selectgo. select {} blocks forever, a select with only default just runs it, one case becomes a plain channel operation, and one case plus default becomes selectnbsend or selectnbrecv. selectgo locks the channels in address order, polls them in random order and, if nothing is ready, parks on all of them until a winner’s CAS on selectDone wakes it.",
     "anchorsEN": [
       "select {} → block; 1 case → plain op",
       "1 case + default → selectnb*",
       "≥ 2 → selectgo: lock by address, random poll",
       "park on all; CAS on selectDone wins"
     ],
-    "shortRU": "Нет. Компилятор переписывает простые формы: select {} блокирует навсегда, select только с default просто выполняет его, одна ветка становится обычной операцией с каналом, а одна ветка плюс default — неблокирующими selectnbsend или selectnbrecv. Только две и больше ветки с каналами вызывают runtime.selectgo: он блокирует каналы в порядке адресов, опрашивает их в случайном порядке и, если ничего не готово, паркуется на всех, пока победитель CAS по selectDone его не разбудит.",
+    "shortRU": "Нет: компилятор переписывает простые select, и только две и больше ветки с каналами вызывают runtime.selectgo. select {} блокирует навсегда, select только с default просто выполняет его, одна ветка становится обычной операцией с каналом, а одна ветка плюс default — selectnbsend или selectnbrecv. selectgo блокирует каналы в порядке адресов, опрашивает их в случайном порядке и, если ничего не готово, паркуется на всех, пока победитель CAS по selectDone его не разбудит.",
     "detailsEN": [
       "With one operation plus default, selectnbsend returns whether the send was selected; selectnbrecv returns both selected and received (the Go ok value). A closed, drained receive has selected=true and received=false. With multiple operations plus default, selectgo still runs, with block=false: it polls but does not register waiters or park when nothing is ready.",
       "sellock locks each distinct channel in address order. Pass 1 polls for ready operations. If none is ready and blocking is allowed, pass 2 enqueues sudogs while those same locks are still held.",
@@ -2032,7 +2032,7 @@ const CARDS = [
       "len < cap → in place, else new array",
       "growth: ×2 small → ×1.25 large"
     ],
-    "jvmEN": "A slice is closer to a view of an ArrayList than to a Java array: two slices can share one array, and append may or may not create a new one, so always use the slice that append returns. Go strings are immutable bytes, usually UTF-8, not UTF-16 chars as in Java.",
+    "jvmEN": "A slice combines ArrayList-style growth with subList- or ByteBuffer-style views over a shared array: two slices can share one array, and append may or may not create a new one, so always use the slice that append returns. Go strings are immutable bytes, usually UTF-8, not UTF-16 as Java’s String API.",
     "detailsEN": [
       "In the standard 64-bit runtime layout, a slice has a data pointer, len and cap (three words, usually 24 bytes); a string has a data pointer and byte length (two words, usually 16 bytes). These are not portable language constants. len(string) counts bytes, not Unicode code points.",
       "Assigning b := a copies the slice descriptor. Index writes can affect both views. append returns an updated descriptor: it does not change the len stored in a different slice variable. Draw the descriptors separately from their shared array.",
@@ -2042,7 +2042,7 @@ const CARDS = [
     "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
     "shortRU": "Срез — небольшой заголовок из указателя, длины и ёмкости, который смотрит на массив; строка — указатель и длина над неизменяемыми байтами. Копирование любого из них копирует только заголовок, поэтому два среза могут делить элементы. append пишет на месте, пока len < cap, а когда ёмкость кончается, выделяет новый, больший массив: примерно вдвое для малых срезов и ближе к 1,25 раза для больших.",
-    "jvmRU": "Срез ближе к представлению над ArrayList, чем к массиву Java: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не символы UTF-16, как в Java.",
+    "jvmRU": "Срез сочетает рост как у ArrayList с представлениями над общим массивом, как subList или ByteBuffer: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не UTF-16, как в API строк Java.",
     "detailsRU": [
       "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
       "Присваивание b := a копирует дескриптор среза. Запись по индексу может быть видна через оба среза. append возвращает обновлённый дескриптор: len другой переменной он не меняет. Рисуй дескрипторы отдельно от общего массива.",
@@ -2105,7 +2105,7 @@ const CARDS = [
       "load > 6.5 → double",
       "evacuation spread over writes"
     ],
-    "jvmEN": "Java’s HashMap also uses buckets, but each bucket is a linked list that becomes a tree after eight entries, and resizing copies everything at once. Go’s old map kept eight entries per bucket inline and grew incrementally.",
+    "jvmEN": "Java’s HashMap also uses buckets, but each bucket is a linked list that becomes a tree once it passes eight entries and the table has at least 64 buckets, and resizing copies everything at once. Go’s old map kept eight entries per bucket inline and grew incrementally.",
     "detailsEN": [
       "In the Go 1.17 implementation, low hash bits select one of 2^B primary buckets. Each bucket has eight tophash bytes, grouped keys and values, and an overflow link. Occupied tophash values encode the high hash byte, adjusted to avoid reserved states; a match still needs key equality.",
       "The growth test combines a load threshold of about 6.5 entries per primary bucket with a minimum-entry condition. Too much load doubles the primary bucket count. Too many overflow buckets without excess load instead triggers same-size growth to reorganize chains.",
@@ -2115,7 +2115,7 @@ const CARDS = [
     "practicalRU": "Опора: загрузка → больше бакетов; overflow → возможно прежний размер. Отделяй историческую реализацию от контракта языка. На обычном интервью сначала объясни обновление значения map, затем детали эвакуации.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\n\nfunc main() {\n\tm := map[string]Counter{\"go\": {N: 1}}\n\tv := m[\"go\"]\n\tv.N++\n\tfmt.Println(m[\"go\"].N)\n\tm[\"go\"] = v\n\tfmt.Println(m[\"go\"].N)\n}",
     "shortRU": "До Go 1.24 map была массивом из 2^B бакетов, в каждом — восемь ключей и значений и восемь байтов tophash; когда бакет заполнялся, к нему цеплялись overflow-бакеты. Младшие биты хеша выбирали бакет, а старший байт отсеивал кандидатов до сравнения ключей. Когда средняя загрузка превышала 6,5 на бакет, map удваивалась, а копирование — эвакуация — растягивалось на последующие записи, а не делалось сразу.",
-    "jvmRU": "HashMap в Java тоже использует бакеты, но каждый бакет — связный список, который после восьми записей превращается в дерево, а при расширении всё копируется сразу. Старая map в Go хранила восемь записей прямо в бакете и росла постепенно.",
+    "jvmRU": "HashMap в Java тоже использует бакеты, но каждый бакет — связный список, который превращается в дерево, когда в нём больше восьми записей и в таблице не меньше 64 бакетов, а при расширении всё копируется сразу. Старая map в Go хранила восемь записей прямо в бакете и росла постепенно.",
     "detailsRU": [
       "В реализации Go 1.17 младшие биты хеша выбирают один из 2^B основных бакетов. В каждом — восемь байтов tophash, сгруппированные ключи и значения и ссылка overflow. Занятые tophash кодируют старший байт хеша с поправкой на зарезервированные состояния; после совпадения всё равно сравниваются ключи.",
       "Условие роста сочетает порог около 6.5 элементов на основной бакет с проверкой минимального числа элементов. Избыточная загрузка удваивает число основных бакетов. Если велико только число overflow-бакетов, выполняется перестройка прежнего размера для переупаковки цепочек.",
@@ -2168,7 +2168,7 @@ const CARDS = [
     "simId": "sim7",
     "qEN": "How do Swiss Tables find a key and grow a Go map?",
     "qRU": "Как Swiss Tables находят ключ и расширяют map в Go?",
-    "shortEN": "A Swiss-table map stores entries in groups of eight slots, each group with eight control bytes. The hash is split: the low 7 bits, H2, are a fingerprint kept in a control byte, and the rest, H1, chooses the group where probing starts. A lookup compares H2 with all eight control bytes at once, checks only the matching keys, and stops at a group that has an empty slot. Growth is per table: a table doubles up to 1024 slots and then splits.",
+    "shortEN": "It hashes the key, uses H1, the high bits, to pick a starting group, and H2, the low 7 bits, to filter slots: each group has eight slots and eight control bytes holding H2 fingerprints. A lookup compares H2 with all eight control bytes at once, checks only the matching keys, and stops at a group with an empty slot. Growth is per table: a table doubles up to 1024 slots and then splits.",
     "anchorsEN": [
       "group = 8 slots + 8 control bytes",
       "H1 → group, H2 → fingerprint",
@@ -2185,7 +2185,7 @@ const CARDS = [
     ],
     "practicalRU": "Цепочка для воспроизведения: отпечаток → сравнить ключ → остановиться или продолжить. Проговори её и объясни, почему совпадения H2 недостаточно и чем deleted отличается от empty. В sim7 есть разбор условной группы.",
     "code": "// Teaching trace, not executable Go or actual hashes.\n// Search key: \"go\", chosen H2: 0x2A\n// slot:    0      1       2       3      4      5      6      7\n// ctrl:   2A     19      2A      80     11     80     80     80\n// key:   \"rust\" \"c\"     \"go\"   empty  \"js\"  empty  empty  empty\n// 1. Fingerprints select candidate slots 0 and 2.\n// 2. \"rust\" != \"go\"; \"go\" == \"go\": return slot 2's value.\n// 3. Only if no candidate key matched would empty stop this search.",
-    "shortRU": "Map на Swiss Tables хранит записи группами по восемь слотов, у каждой группы восемь управляющих байтов. Хеш делится: младшие 7 бит, H2, — отпечаток в управляющем байте, а остальные, H1, выбирают группу, с которой начинается пробирование. Поиск сравнивает H2 со всеми восемью управляющими байтами сразу, проверяет только совпавшие ключи и останавливается на группе, где есть пустой слот. Рост идёт по таблицам: таблица удваивается до 1024 слотов, а потом делится.",
+    "shortRU": "Он хеширует ключ, по H1 — старшим битам — выбирает стартовую группу, а по H2 — младшим 7 битам — отсеивает слоты: в каждой группе восемь слотов и восемь управляющих байтов с отпечатками H2. Поиск сравнивает H2 со всеми восемью управляющими байтами сразу, проверяет только совпавшие ключи и останавливается на группе с пустым слотом. Рост идёт по таблицам: таблица удваивается до 1024 слотов, а потом делится.",
     "jvmRU": "В отличие от HashMap в Java с цепочками в бакетах, Swiss Tables используют открытую адресацию: связанных узлов нет, записи лежат в плоских группах, поэтому поиск задевает меньше строк кеша. И при росте перехешируется одна таблица, а не вся map.",
     "detailsRU": [
       "В группе восемь управляющих байтов и восемь слотов ключ/значение. H2 — младшие семь бит хеша, H1 — оставшиеся биты для пробирования. Для 64-битного хеша это разбиение 57/7, но не правило для всех платформ. Занятый байт хранит H2, 0x80 означает empty, 0xFE — deleted. Ключи и значения не обязаны помещаться в одну кеш-линию.",
@@ -2247,14 +2247,14 @@ const CARDS = [
     "simId": "sim7",
     "qEN": "What do delete and clear release, and what can you rely on during map iteration?",
     "qRU": "Что освобождают delete и clear и на что можно рассчитывать при обходе map?",
-    "shortEN": "delete removes one entry and clear removes them all, so their keys and values can be collected if nothing else refers to them, but neither shrinks the map’s table: that memory stays until the whole map is dropped. To give it back after a spike, copy the live entries into a new map. Iteration order is unspecified and starts at a random place; an entry deleted before it is reached is not visited, and one added during iteration may or may not be.",
+    "shortEN": "delete removes one entry and clear removes them all, so whatever they reference can be collected, but neither shrinks the map’s table: that memory stays until the whole map is dropped. To give it back after a spike, copy the live entries into a new map. Iteration order is unspecified and starts at a random place; an entry deleted before it is reached is not visited, and one added during iteration may or may not be.",
     "anchorsEN": [
       "delete / clear free entries, not the table",
       "rebuild the map to shrink it",
       "order unspecified, random start",
       "added during range: maybe visited"
     ],
-    "jvmEN": "Like Java’s HashMap, a Go map never shrinks its table on remove or clear. Unlike HashMap, changing a Go map while ranging over it is allowed: there is no ConcurrentModificationException, only the unspecified visiting of new entries.",
+    "jvmEN": "Like Java’s HashMap, a Go map never shrinks its table on remove or clear. Unlike HashMap, changing a map from the same goroutine while ranging over it is allowed, with no ConcurrentModificationException; a write from another goroutine during iteration, however, is a fatal error that recover cannot catch.",
     "detailsEN": [
       "Separate three layers: entries, table storage, and process RSS. In Go 1.25/1.26, delete and clear can remove references to payloads while keeping table capacity. Payloads are collectible only if no other references retain them; GC and returning memory to the OS are separate events.",
       "In Swiss tables, deleting from a group with an empty slot can leave empty; otherwise a deleted marker preserves the probe path. Tombstones can be reused or pruned during insertion in Go 1.25 and 1.26, and clear resets them. None of these operations promises table shrinking.",
@@ -2263,8 +2263,8 @@ const CARDS = [
     ],
     "practicalRU": "Опора: delete убирает запись; clear очищает общую map; присваивание меняет одну переменную. Перед выводом об утечке спроси, кто ещё держит ссылку. Отработай различие на примере и сравни с удержанием массива в q4.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tm := map[string]int{\"go\": 1}\n\talias := m\n\tm = make(map[string]int)\n\tfmt.Println(len(m), len(alias))\n\tclear(alias)\n\tfmt.Println(len(m), len(alias))\n}",
-    "shortRU": "delete удаляет одну запись, clear — все, поэтому их ключи и значения можно собрать, если на них больше никто не ссылается, но ни то ни другое не уменьшает таблицу map: эта память остаётся, пока не отпустят всю map. Чтобы вернуть её после всплеска, скопируй живые записи в новую map. Порядок обхода не задан и начинается со случайного места; запись, удалённая до того, как до неё дошли, не встретится, а добавленная во время обхода — может встретиться, а может нет.",
-    "jvmRU": "Как HashMap в Java, map в Go не уменьшает таблицу при удалении или clear. В отличие от HashMap, менять map в Go во время range можно: ConcurrentModificationException нет, есть только неопределённость, встретятся ли новые записи.",
+    "shortRU": "delete удаляет одну запись, clear — все, поэтому всё, на что они ссылались, можно собрать, но ни то ни другое не уменьшает таблицу map: эта память остаётся, пока не отпустят всю map. Чтобы вернуть её после всплеска, скопируй живые записи в новую map. Порядок обхода не задан и начинается со случайного места; запись, удалённая до того, как до неё дошли, не встретится, а добавленная во время обхода — может встретиться, а может нет.",
+    "jvmRU": "Как HashMap в Java, map в Go не уменьшает таблицу при удалении или clear. В отличие от HashMap, менять map из той же горутины во время range можно, без ConcurrentModificationException; а вот запись из другой горутины во время обхода — фатальная ошибка, которую recover не перехватит.",
     "detailsRU": [
       "Разделяй три уровня: записи, хранилище таблицы и RSS процесса. В Go 1.25/1.26 delete и clear могут убрать ссылки на данные, сохранив вместимость таблицы. Данные доступны для GC, только если их не удерживают другие ссылки; сборка и возврат памяти ОС — отдельные события.",
       "В Swiss Tables удаление из группы с пустым слотом может оставить empty; иначе deleted сохраняет путь поиска. В Go 1.25 и 1.26 tombstones могут переиспользоваться или очищаться при вставке, а clear их сбрасывает. Ни одна из этих операций не обещает сжатия таблицы.",
@@ -2321,7 +2321,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What does an interface value contain, and why can a typed nil make an interface non-nil?",
     "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
-    "shortEN": "An interface value is two words: a pointer to type information, an itab for interfaces with methods, and a pointer to the data. It equals nil only when both are nil. So if a function returns a nil *MyError as error, the interface holds the type *MyError and a nil pointer, and err != nil is true. Return a literal nil for the no-error case, not a typed nil pointer.",
+    "shortEN": "An interface value is two words: a type word, which is an itab for interfaces with methods, and a data word. It equals nil only when both are nil. So if a function returns a nil *MyError as error, the interface holds the type *MyError and a nil pointer, and err != nil is true. Return a literal nil for the no-error case, not a typed nil pointer.",
     "anchorsEN": [
       "interface = (type / itab, data)",
       "nil only if both are nil",
@@ -2338,7 +2338,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: «какой тип внутри → какое значение → что именно сравниваем». При успехе функции, возвращающей error, возвращай nil явно. Для производительности сначала измерь конкретный вызов, а не размер заголовка.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar p *int\n\tvar x any = p\n\tfmt.Println(x == nil, p == nil)\n\tv, ok := x.(*int)\n\tfmt.Println(ok, v == nil)\n}",
-    "shortRU": "Значение интерфейса — два слова: указатель на информацию о типе (для интерфейсов с методами — itab) и указатель на данные. Оно равно nil, только когда nil оба. Поэтому если функция возвращает nil *MyError как error, интерфейс хранит тип *MyError и nil-указатель, и err != nil истинно. Для случая «ошибки нет» возвращай литерал nil, а не типизированный nil-указатель.",
+    "shortRU": "Значение интерфейса — два слова: слово типа (для интерфейсов с методами — itab) и слово данных. Оно равно nil, только когда nil оба. Поэтому если функция возвращает nil *MyError как error, интерфейс хранит тип *MyError и nil-указатель, и err != nil истинно. Для случая «ошибки нет» возвращай литерал nil, а не типизированный nil-указатель.",
     "jvmRU": "В Java такой ловушки нет: ссылка либо null, либо указывает на объект. В Go интерфейс хранит динамический тип отдельно от значения, поэтому «nil-указатель типа T» и «никакого значения» — разные вещи.",
     "detailsRU": [
       "При присваивании в базовый интерфейс, используемый как тип значения, конкретный тип должен реализовать его методы. Утверждение x.(T) проверяет сохранённый динамический тип; форма comma-ok сообщает о неуспехе без panic. Успешное утверждение типа при этом может вернуть nil-указатель.",
@@ -2389,7 +2389,7 @@ const CARDS = [
     "simId": null,
     "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
-    "shortEN": "The method set of T contains only methods with a value receiver; the method set of *T contains both value-receiver and pointer-receiver methods. That decides which interfaces a type satisfies: if Set has a pointer receiver, *Counter implements Setter and Counter does not. Calling c.Set() on an addressable variable works only because Go rewrites it to (&c).Set(); a map element or a function result is not addressable, so there it fails.",
+    "shortEN": "*T has more methods than T: the method set of T has the value-receiver methods (plus promoted ones), and the method set of *T has both value- and pointer-receiver methods. That decides which interfaces a type satisfies: if Set has a pointer receiver, *Counter implements Setter and Counter does not. c.Set() still works on an addressable operand because Go rewrites it to (&c).Set(); a map element or a function result is not addressable, so there it fails.",
     "anchorsEN": [
       "T: value-receiver methods",
       "*T: value + pointer methods",
@@ -2405,7 +2405,7 @@ const CARDS = [
     ],
     "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
-    "shortRU": "Набор методов T содержит только методы с получателем-значением; набор методов *T — и методы со значением, и методы с указателем. От этого зависит, какие интерфейсы тип реализует: если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет. Вызов c.Set() на адресуемой переменной работает только потому, что Go переписывает его в (&c).Set(); элемент map или результат функции не адресуемы, и там это не сработает.",
+    "shortRU": "У *T методов больше, чем у T: набор методов T — это методы с получателем-значением (плюс продвинутые), а набор методов *T — и со значением, и с указателем. От этого зависит, какие интерфейсы тип реализует: если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет. c.Set() всё же работает на адресуемом операнде, потому что Go переписывает его в (&c).Set(); элемент map или результат функции не адресуемы, и там это не сработает.",
     "jvmRU": "В Java получателей-значений нет: каждый метод видит объект через ссылку. В Go выбор между значением и указателем в получателе решает и то, может ли метод менять получателя, и то, какие интерфейсы реализует тип.",
     "detailsRU": [
       "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
@@ -2447,7 +2447,7 @@ const CARDS = [
     "simId": null,
     "qEN": "When do deferred calls run, and where can recover stop a panic?",
     "qRU": "Когда выполняются отложенные вызовы и где recover может остановить panic?",
-    "shortEN": "defer evaluates the function and its arguments right away and runs the call when the surrounding function returns or panics, in last-in, first-out order. Deferred calls run after the return values are set, so a deferred closure can still change a named result. recover stops a panic only when called directly in a deferred function of the panicking goroutine; a panic in another goroutine crashes the program.",
+    "shortEN": "defer evaluates the function and its arguments right away and runs the call when the surrounding function returns or panics, in last-in, first-out order. Deferred calls run after the return values are set, so a deferred closure can still change a named result. recover stops a panic only when called directly in a deferred function of the panicking goroutine: you cannot recover another goroutine’s panic, and an unrecovered panic in any goroutine crashes the program.",
     "anchorsEN": [
       "args evaluated at defer, call at exit",
       "LIFO, after results are set",
@@ -2458,18 +2458,18 @@ const CARDS = [
     "detailsEN": [
       "Passing x as an argument to a deferred call saves its current value. A deferred closure can instead read or modify an outer variable later. Named result parameters are variables, so a deferred closure can change the result after return expressions have been evaluated and assigned.",
       "Deferred calls belong to the function invocation, not to an iteration of a loop. For per-item resources, use a helper function with its own defer or explicitly release each resource. The immediate problem is lifetime, even if a particular compiler avoids an allocation.",
-      "Recovery stops the panic only within the goroutine that is unwinding. The recovering function returns after its deferred calls; execution does not resume at the panicking statement. An ordinary helper called by a deferred function cannot recover on that deferred function’s behalf.",
+      "Recovery stops the panic only within the goroutine that is unwinding. The function that deferred the recovering call runs its remaining deferred calls and returns to its caller; execution does not resume at the panicking statement. An ordinary helper called by a deferred function cannot recover on that deferred function’s behalf.",
       "The compiler may use open-coded defers or runtime defer records on the stack or heap. Go 1.26.1 considers the number of defers, escape information, return sites, instrumentation and build options. A short function is not an unconditional promise of open coding, zero allocations or nanosecond overhead.",
       "An unrecovered panic terminates the program. os.Exit skips deferred calls; fatal runtime failures are not ordinary recoverable panics. For expected failures, return errors. Recovering at a deliberate boundary must not silently turn failure into success."
     ],
     "practicalRU": "Опора: «сейчас сохранить аргументы → при return присвоить результат → выполнить defer в обратном порядке → вернуть результат». Сначала объясни эту цепочку без регистров; машинный код проверяй только для конкретной сборки.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc f() (n int) {\n\tn = 1\n\tdefer fmt.Println(\"arg\", n)\n\tdefer func() {\n\t\tn++\n\t\tfmt.Println(\"closure\", n)\n\t}()\n\treturn 2\n}\n\nfunc main() { fmt.Println(\"result\", f()) }",
-    "shortRU": "defer сразу вычисляет функцию и её аргументы, а вызов выполняет, когда окружающая функция возвращается или паникует, в порядке «последний пришёл — первый ушёл». Отложенные вызовы идут после того, как заданы результаты, поэтому отложенное замыкание ещё может изменить именованный результат. recover останавливает панику, только если вызван напрямую в отложенной функции той горутины, которая паникует; паника в другой горутине роняет программу.",
+    "shortRU": "defer сразу вычисляет функцию и её аргументы, а вызов выполняет, когда окружающая функция возвращается или паникует, в порядке «последний пришёл — первый ушёл». Отложенные вызовы идут после того, как заданы результаты, поэтому отложенное замыкание ещё может изменить именованный результат. recover останавливает панику, только если вызван напрямую в отложенной функции той горутины, которая паникует: панику чужой горутины не перехватить, а непойманная паника в любой горутине роняет программу.",
     "jvmRU": "defer похож на finally или try-with-resources, но действует на функцию, а не на блок, поэтому defer внутри цикла выполнится только при выходе из функции. recover похож на catch, но работает только в отложенной функции и только для своей горутины; непойманная паника в любой горутине убивает весь процесс.",
     "detailsRU": [
       "Передача x аргументом отложенного вызова сохраняет его текущее значение. Отложенное замыкание может вместо этого позже читать или менять внешнюю переменную. Именованные результаты — переменные, поэтому замыкание может изменить результат после вычисления и присваивания выражений return.",
       "Отложенный вызов относится к вызову функции, а не к итерации цикла. Для ресурса на одну итерацию используй вспомогательную функцию со своим defer или явное освобождение. Первая проблема — время жизни, даже если компилятор избежал аллокации.",
-      "Recover останавливает panic только в раскручиваемой горутине. Восстановившаяся функция возвращается после своих defer; выполнение не продолжается со строки panic. Обычный helper, вызванный отложенной функцией, не может выполнить recover вместо неё.",
+      "Recover останавливает panic только в раскручиваемой горутине. Функция, отложившая вызов с recover, выполняет оставшиеся defer и возвращается к вызывающему; выполнение не продолжается со строки panic. Обычный helper, вызванный отложенной функцией, не может выполнить recover вместо неё.",
       "Компилятор может использовать open-coded defer либо записи runtime на стеке или в куче. Go 1.26.1 учитывает число defer, escape-информацию, точки возврата, инструментирование и настройки сборки. Короткая функция не даёт безусловной гарантии open coding, нулевых аллокаций или наносекундной стоимости.",
       "Неперехваченный panic завершает программу. os.Exit пропускает defer; фатальные ошибки runtime не являются обычными перехватываемыми panic. Ожидаемые ошибки возвращай через error. Recover на выбранной границе не должен молча превращать ошибку в успех."
     ],
@@ -2602,12 +2602,12 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "How do push iterators differ from iter.Pull, and when must you call stop?",
     "qRU": "Чем push-итераторы отличаются от iter.Pull и когда нужно вызывать stop?",
-    "shortEN": "A push iterator, iter.Seq, is a function that calls yield for each value; range over it passes the loop body as yield, and when the loop breaks, yield returns false and the iterator must stop. iter.Pull turns it into a pair of functions, next and stop, for when you need values one at a time, for example to merge two sequences. If you quit before next reports the end, call stop, usually with defer, so the iterator can clean up.",
+    "shortEN": "A push iterator, iter.Seq, is a function that calls yield for each value; range over it passes the loop body as yield, and when the loop breaks, yield returns false and the iterator must stop. iter.Pull turns it into a pair of functions, next and stop, for when you need values one at a time, for example to merge two sequences. If you quit before next reports the end, call stop, usually with defer; otherwise the iterator never finishes and its goroutine and resources leak.",
     "anchorsEN": [
       "iter.Seq: the iterator calls yield",
       "break → yield returns false → stop",
       "iter.Pull → next, stop",
-      "defer stop() if you quit early"
+      "no stop() → iterator goroutine leaks"
     ],
     "jvmEN": "A push iterator is like Iterable.forEach with a way to break out, and iter.Pull gives you a Java-style Iterator, with hasNext and next folded into one next. stop plays the role of closing a Stream that holds resources.",
     "detailsEN": [
@@ -2618,7 +2618,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: push → «получаю через yield»; pull → «запрашиваю next»; ранний выход → stop. На интервью сначала объясни владение завершением, затем внутренний coro. Схема sim1 даёт общий контекст горутин, а не точную трассу iter.Pull.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"iter\"\n)\n\nfunc Backward(s []int) iter.Seq[int] {\n\treturn func(yield func(int) bool) {\n\t\tfor i := len(s) - 1; i >= 0; i-- {\n\t\t\tif !yield(s[i]) {\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc main() {\n\tnext, stop := iter.Pull(Backward([]int{1, 2, 3}))\n\tdefer stop()\n\tv, ok := next()\n\tfmt.Println(v, ok)\n\tstop()\n\tv, ok = next()\n\tfmt.Println(v, ok)\n}",
-    "shortRU": "Push-итератор, iter.Seq, — функция, которая вызывает yield для каждого значения; range по нему передаёт тело цикла как yield, а когда цикл прерывается, yield возвращает false, и итератор должен остановиться. iter.Pull превращает его в пару функций next и stop — когда значения нужны по одному, например чтобы слить две последовательности. Если бросаешь раньше, чем next сообщит о конце, вызови stop, обычно через defer, чтобы итератор мог освободить ресурсы.",
+    "shortRU": "Push-итератор, iter.Seq, — функция, которая вызывает yield для каждого значения; range по нему передаёт тело цикла как yield, а когда цикл прерывается, yield возвращает false, и итератор должен остановиться. iter.Pull превращает его в пару функций next и stop — когда значения нужны по одному, например чтобы слить две последовательности. Если бросаешь раньше, чем next сообщит о конце, вызови stop, обычно через defer; иначе итератор так и не завершится, и его горутина и ресурсы утекут.",
     "jvmRU": "Push-итератор похож на Iterable.forEach с возможностью выйти, а iter.Pull даёт Iterator в стиле Java, где hasNext и next слиты в одну next. stop играет роль закрытия Stream, который держит ресурсы.",
     "detailsRU": [
       "iter.Seq[V] — это func(yield func(V) bool). Цикл range по функции передаёт своё тело как yield; break приводит к false из yield. Итератор должен вернуться, а не вызывать yield снова. Push-форма сама по себе не обещает нулевых аллокаций или создания новой горутины.",
@@ -2672,14 +2672,14 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
     "qRU": "Что именно гарантируют GOMAXPROCS с учётом контейнера, synctest и FlightRecorder?",
-    "shortEN": "All three came with Go 1.25. GOMAXPROCS now defaults to the container’s CPU limit on Linux and follows changes to it, unless you set it explicitly. testing/synctest runs a test in a bubble with fake time that jumps forward when every goroutine in the bubble is blocked, so tests with timeouts run instantly and deterministically. trace.FlightRecorder keeps the last few seconds of execution trace in memory, so you can save it when something goes wrong.",
+    "shortEN": "Each guarantees less than it seems. Since Go 1.25, with a go 1.25 module, GOMAXPROCS defaults to the smallest of the CPU count, the affinity mask and the rounded-up cgroup CPU limit, and follows changes unless set explicitly. synctest’s fake time jumps to the next timer only when every goroutine in the bubble is durably blocked, on channels, timers or WaitGroups but not mutexes or I/O. FlightRecorder keeps a rolling window of recent trace, not exact history.",
     "anchorsEN": [
-      "GOMAXPROCS follows the cgroup CPU limit",
+      "GOMAXPROCS = min(CPUs, affinity, ⌈quota⌉)",
       "an explicit setting disables updates",
-      "synctest: fake time jumps when all blocked",
+      "synctest: time jumps when all durably blocked",
       "FlightRecorder: rolling trace, save on demand"
     ],
-    "jvmEN": "The JVM has been container-aware since Java 10, and Java Flight Recorder is the closest analogue to FlightRecorder. synctest has no direct Java equivalent; the nearest is injecting a fake Clock into the code under test.",
+    "jvmEN": "The JVM has been container-aware since Java 10, and Java Flight Recorder is the closest analogue to FlightRecorder. For synctest, the closest analogue for a Kotlin developer is runTest from kotlinx-coroutines-test, whose virtual time skips delays; in plain Java you inject a fake Clock.",
     "detailsEN": [
       "Default GOMAXPROCS considers logical CPUs, process affinity and, on Linux, cgroup CPU bandwidth quota. Quota is CPU limit, not CPU request or the number of OS threads. Fractional quota rounds up; the runtime normally keeps at least 2 unless CPU count or affinity is below 2. Defaults and periodic updates depend on GODEBUG and the main module’s language version.",
       "A positive GOMAXPROCS environment value or a GOMAXPROCS(n>0) call selects a manual setting and disables automatic updates. GOMAXPROCS(0) only queries. SetDefaultGOMAXPROCS restores the runtime default and automatic behavior while still respecting GODEBUG. Updating the toolchain alone does not necessarily change an older module’s defaults.",
@@ -2689,8 +2689,8 @@ const CARDS = [
     ],
     "practicalRU": "Не учи три API одной фразой. Спроси отдельно: «кто выбирает параллелизм?», «почему движется тестовое время?», «какую историю успели записать?». Пример проверяет дедлайн искусственным временем; это не ожидание реальной секунды.",
     "code": "package apis\n\nimport (\n\t\"context\"\n\t\"testing\"\n\t\"testing/synctest\"\n\t\"time\"\n)\n\nfunc TestDeadline(t *testing.T) {\n\tsynctest.Test(t, func(t *testing.T) {\n\t\tctx, cancel := context.WithTimeout(context.Background(), time.Second)\n\t\tdefer cancel()\n\t\tif ctx.Err() != nil {\n\t\t\tt.Fatal(\"deadline fired early\")\n\t\t}\n\t\ttime.Sleep(time.Second)\n\t\tsynctest.Wait()\n\t\tif ctx.Err() != context.DeadlineExceeded {\n\t\t\tt.Fatalf(\"got %v\", ctx.Err())\n\t\t}\n\t})\n}",
-    "shortRU": "Все три появились в Go 1.25. GOMAXPROCS по умолчанию теперь берётся из лимита CPU контейнера на Linux и следует за его изменениями, если не задать его явно. testing/synctest запускает тест в «пузыре» с поддельным временем, которое прыгает вперёд, когда все горутины пузыря заблокированы, поэтому тесты с таймаутами проходят мгновенно и детерминированно. trace.FlightRecorder держит в памяти трассу последних секунд, и её можно сохранить, когда что-то пошло не так.",
-    "jvmRU": "JVM учитывает контейнер с Java 10, а ближайший аналог FlightRecorder — Java Flight Recorder. Прямого аналога synctest в Java нет; ближе всего — подставить поддельный Clock в тестируемый код.",
+    "shortRU": "Каждый гарантирует меньше, чем кажется. С Go 1.25 и модулем go 1.25 GOMAXPROCS по умолчанию — наименьшее из числа CPU, маски affinity и округлённого вверх лимита CPU cgroup, и следует за изменениями, если не задан явно. Поддельное время synctest прыгает к ближайшему таймеру, только когда все горутины пузыря прочно заблокированы — на каналах, таймерах или WaitGroup, но не на мьютексах и вводе-выводе. FlightRecorder держит скользящее окно недавней трассы, а не точную историю.",
+    "jvmRU": "JVM учитывает контейнер с Java 10, а ближайший аналог FlightRecorder — Java Flight Recorder. Для synctest ближе всего для разработчика на Kotlin runTest из kotlinx-coroutines-test: его виртуальное время пропускает задержки; в чистой Java подставляют поддельный Clock.",
     "detailsRU": [
       "GOMAXPROCS по умолчанию учитывает логические CPU, affinity процесса и, в Linux, cgroup CPU bandwidth quota. Квота — CPU limit, а не CPU request и не число потоков ОС. Дробная квота округляется вверх; рантайм обычно сохраняет минимум 2, кроме случая, когда число CPU или доступность по affinity меньше 2. Начальные значения и автообновления зависят от GODEBUG и языковой версии главного модуля.",
       "Положительный GOMAXPROCS в окружении или вызов GOMAXPROCS(n>0) задаёт ручное значение и отключает автообновления. GOMAXPROCS(0) только читает настройку. SetDefaultGOMAXPROCS возвращает выбор runtime и автоматическое поведение, продолжая учитывать GODEBUG. Одно обновление toolchain не обязательно меняет defaults старого модуля.",
@@ -2762,9 +2762,9 @@ const CARDS = [
       "errors.As: a type, read its fields",
       "errors.Join: several, still searchable"
     ],
-    "jvmEN": "Unlike Java exceptions, Go errors are ordinary return values: no stack unwinding and no checked exceptions. Wrapping with %w is like passing a cause to an exception’s constructor, errors.Is is like comparing the cause, and errors.As is like catching by type.",
+    "jvmEN": "Unlike Java exceptions, Go errors are ordinary return values: no stack unwinding, no checked exceptions and, by default, no stack trace. Wrapping with %w is like passing a cause to an exception’s constructor, errors.Is and errors.As are like walking getCause() with equals or instanceof, and errors.Join is roughly addSuppressed.",
     "shortRU": "Оборачивай через fmt.Errorf с %w: контекст добавляется, а исходная ошибка остаётся в цепочке. errors.Is проверяет, есть ли в цепочке конкретное значение — обычно sentinel вроде io.EOF; errors.As находит первую ошибку нужного типа и даёт прочитать её поля. errors.Join (Go 1.20) объединяет несколько ошибок в одну, внутри которой Is и As тоже ищут.",
-    "jvmRU": "В отличие от исключений Java, ошибки Go — обычные возвращаемые значения: без раскрутки стека и без checked-исключений. Обёртка через %w похожа на передачу cause в конструктор исключения, errors.Is — на сравнение причины, а errors.As — на catch по типу.",
+    "jvmRU": "В отличие от исключений Java, ошибки Go — обычные возвращаемые значения: без раскрутки стека, без checked-исключений и по умолчанию без stack trace. Обёртка через %w похожа на передачу cause в конструктор исключения, errors.Is и errors.As — на проход по getCause() с equals или instanceof, а errors.Join — примерно addSuppressed.",
     "detailsEN": [
       "Sentinel or typed? A sentinel (var ErrNotFound = errors.New(\"not found\")) names a condition the caller branches on. A typed error, a struct that implements error, carries data such as a field name or a status code. Compare with errors.Is and errors.As rather than == or a type assertion, because those see only the outermost error.",
       "%w versus %v: with %w the new error has an Unwrap method that returns the original, so Is and As can reach it. With %v the original is only formatted into the text; the chain is cut and errors.Is returns false. Wrapping makes the inner error part of your API, so wrap on purpose.",
@@ -2826,11 +2826,11 @@ const CARDS = [
       "every type has a zero value",
       "nil slice = empty for len, range, append",
       "nil map: read ok, write panics",
-      "make the zero value useful"
+      "nil channel blocks; make zero useful"
     ],
-    "jvmEN": "In Java a reference field starts as null; in Go a variable is always usable at its zero value: an empty string, not null, and a ready Mutex or Builder. There are no nullable types as in Kotlin; nil exists only for pointers, slices, maps, channels, functions and interfaces.",
+    "jvmEN": "In Java a reference field starts as null; in Go many types are usable at their zero value: an empty string instead of null, a ready Mutex or Builder. But writing to a nil map or dereferencing a nil pointer still panics, and Go has no compile-time null safety like Kotlin’s T?: any pointer, slice, map, channel, function or interface may be nil.",
     "shortRU": "Любая переменная начинается с нулевого значения своего типа: 0, false, \"\", nil у указателей, срезов, map, каналов, функций и интерфейсов, структура из нулевых полей. Nil-срез ведёт себя как пустой для len, range и append; nil map можно читать, но запись вызывает panic; nil-канал блокирует навсегда. Хорошие типы в Go делают нулевое значение полезным, как sync.Mutex и strings.Builder.",
-    "jvmRU": "В Java поле-ссылка начинается с null; в Go переменная всегда пригодна в нулевом значении: пустая строка, а не null, готовые Mutex или Builder. Nullable-типов, как в Kotlin, нет; nil бывает только у указателей, срезов, map, каналов, функций и интерфейсов.",
+    "jvmRU": "В Java поле-ссылка начинается с null; в Go многие типы пригодны в нулевом значении: пустая строка вместо null, готовые Mutex или Builder. Но запись в nil map или разыменование nil-указателя всё равно паникуют, а проверки null на этапе компиляции, как у T? в Kotlin, в Go нет: nil может быть любой указатель, срез, map, канал, функция или интерфейс.",
     "detailsEN": [
       "Reading is safe for nil collections: len and range work on nil slices and maps, and indexing a nil map returns the zero value. Writing differs: append to a nil slice allocates, but assignment to a nil map panics with \"assignment to entry in nil map\". Create a map with make or a literal before writing.",
       "Calling a method on a nil pointer is legal; it panics only if the method dereferences the receiver. A nil pointer stored in an interface makes the interface non-nil (see C33).",
@@ -2898,9 +2898,9 @@ const CARDS = [
       "range → runes with byte index",
       "[]rune by position; Builder in loops"
     ],
-    "jvmEN": "Java strings are UTF-16: length() counts UTF-16 units and charAt returns a char. A Go string is bytes: len counts bytes, and only range or []rune works in Unicode code points.",
+    "jvmEN": "Java’s String API works in UTF-16: length() counts UTF-16 code units and charAt returns a char. A Go string is bytes: len counts bytes, and code points come from range, []rune or the unicode/utf8 package.",
     "shortRU": "Строка — неизменяемая последовательность байтов, обычно в UTF-8. len(s) считает байты, s[i] — байт, а range по строке декодирует UTF-8 и выдаёт руну с индексом её первого байта. []rune нужен, когда символы требуются по позиции; строку в цикле собирай через strings.Builder.",
-    "jvmRU": "Строки Java — в UTF-16: length() считает единицы UTF-16, а charAt возвращает char. Строка Go — это байты: len считает байты, и только range или []rune работают с кодовыми точками Unicode.",
+    "jvmRU": "API строк Java работает в UTF-16: length() считает кодовые единицы UTF-16, а charAt возвращает char. Строка Go — это байты: len считает байты, а кодовые точки дают range, []rune или пакет unicode/utf8.",
     "detailsEN": [
       "\"héllo, 世界\" has 9 runes but 14 bytes: é takes 2 bytes and each of 世 and 界 takes 3. utf8.RuneCountInString counts runes without allocating; []rune(s) allocates a new slice.",
       "range yields the starting byte index of each rune, so indexes jump: 0, 1, 3 for \"hé世\". An invalid byte comes out as U+FFFD, one byte at a time. Slicing s[i:j] works on bytes and can cut a rune in half.",
@@ -2965,12 +2965,12 @@ const CARDS = [
     "anchorsEN": [
       "type parameters: same algorithm, caller’s type back",
       "interface: different behaviour at run time",
-      "constraint = what the code needs",
+      "Max, Map, Set[T comparable] vs io.Reader",
       "one concrete type is enough? use it"
     ],
-    "jvmEN": "Go generics look like Java generics but are not erased: the compiler generates code per GC shape, so a []int stays a slice of ints, not a list of boxed Integers. And interfaces are satisfied implicitly, without an implements clause.",
+    "jvmEN": "Go generics look like Java generics but are not erased: the compiler generates code per GC shape plus a runtime dictionary, so Max[int] works on plain ints, while Java’s List<Integer> boxes because its type arguments must be reference types. And interfaces are satisfied implicitly, without an implements clause.",
     "shortRU": "Параметры типа — когда один и тот же алгоритм работает для многих типов и вызывающий должен получить свой тип обратно: Map, Max, Set[T comparable]. Интерфейс — когда разные типы ведут себя по-разному за одними методами, а реализация выбирается во время выполнения: io.Reader, Shape. Если хватает одного конкретного типа — используй его.",
-    "jvmRU": "Дженерики Go похожи на дженерики Java, но не стираются: компилятор генерирует код на каждую GC-форму, поэтому []int остаётся срезом int, а не списком упакованных Integer. А интерфейсы реализуются неявно, без implements.",
+    "jvmRU": "Дженерики Go похожи на дженерики Java, но не стираются: компилятор генерирует код на каждую GC shape плюс словарь времени выполнения, поэтому Max[int] работает с обычными int, а List<Integer> в Java упаковывает значения, потому что аргументы типа там должны быть ссылочными. А интерфейсы реализуются неявно, без implements.",
     "detailsEN": [
       "A constraint says what the algorithm needs: any for nothing, comparable for == and map keys, cmp.Ordered for < (Go 1.21), and unions such as ~int | ~float64 for arithmetic. The tilde admits defined types like type Celsius float64.",
       "A generic function returns the caller's type: Max([]Celsius) returns Celsius with no type assertion. An interface version would take []any or a wrapper type and force assertions.",
@@ -3038,9 +3038,9 @@ const CARDS = [
       "import path = module path + directory",
       "internal/: only the parent’s tree"
     ],
-    "jvmEN": "A module is like a Maven artifact with its own coordinates and versions, a package is like a Java package but tied to one directory, and internal/ gives the compiler-enforced boundary that Java gets from JPMS exports.",
+    "jvmEN": "A module is like a Maven artifact with its own coordinates and versions, and a package is like a Java package but tied to one directory. internal/ is a boundary enforced by the go command, close to a package that a JPMS module does not export.",
     "shortRU": "Пакет — один каталог .go-файлов, которые компилируются вместе; его путь импорта — путь модуля плюс каталог. Модуль — набор пакетов с версией и файлом go.mod, где указаны путь модуля, версия Go и зависимости. Пакет внутри internal/ может импортировать только код из дерева, корень которого — родитель internal; это проверяет команда go.",
-    "jvmRU": "Модуль похож на артефакт Maven со своими координатами и версиями, пакет — на пакет Java, но привязан к одному каталогу, а internal/ даёт проверяемую компилятором границу, которую в Java дают exports в JPMS.",
+    "jvmRU": "Модуль похож на артефакт Maven со своими координатами и версиями, а пакет — на пакет Java, но привязан к одному каталогу. internal/ — граница, которую проверяет команда go; это близко к пакету, который модуль JPMS не экспортирует.",
     "detailsEN": [
       "go.mod records the module path, the go directive (the minimum language version, which also selects semantics such as per-iteration loop variables), an optional toolchain line (Go 1.21+), and require lines; go.sum stores checksums. go mod tidy adds missing requirements and removes unused ones.",
       "Visibility is per package: identifiers that start with an upper-case letter are exported. internal/ adds a second boundary: a/b/internal/c can be imported from a/b and below, and from nowhere else — not from another module, and not from a/x.",
@@ -3101,12 +3101,12 @@ const CARDS = [
     "anchorsEN": [
       "cases in a slice, t.Run for each",
       "t.Helper → the caller’s line",
-      "t.Parallel waits for the parent",
+      "t.Parallel: runs after the parent returns",
       "t.Cleanup, not defer"
     ],
-    "jvmEN": "Table-driven tests play the role of JUnit 5 @ParameterizedTest, t.Run is like a dynamic or nested test, and t.Cleanup is like @AfterEach registered from inside the test. The standard library has no assertion library: you compare and call t.Errorf.",
+    "jvmEN": "Table-driven tests play the role of JUnit 5 @ParameterizedTest, t.Run is like a dynamic or nested test, and t.Cleanup is like @AfterEach registered from inside the test. There are no assertion functions in the standard library: you compare values and call t.Errorf to continue or t.Fatalf to stop.",
     "shortRU": "Табличный тест перечисляет именованные случаи в срезе структур и запускает каждый через t.Run: в ошибке видно имя случая, а -run выбирает один. t.Helper помечает вспомогательную функцию, и ошибка указывает на строку вызывающего. t.Parallel запускает подтесты параллельно после возврата из функции родителя, поэтому им нужны только свои данные, а общий teardown регистрируют через t.Cleanup, а не defer.",
-    "jvmRU": "Табличные тесты играют роль @ParameterizedTest из JUnit 5, t.Run похож на динамический или вложенный тест, а t.Cleanup — на @AfterEach, зарегистрированный изнутри теста. Библиотеки assert в стандартной библиотеке нет: сравниваешь сам и вызываешь t.Errorf.",
+    "jvmRU": "Табличные тесты играют роль @ParameterizedTest из JUnit 5, t.Run похож на динамический или вложенный тест, а t.Cleanup — на @AfterEach, зарегистрированный изнутри теста. Assert-функций в стандартной библиотеке нет: сравниваешь значения сам и вызываешь t.Errorf, чтобы продолжить, или t.Fatalf, чтобы остановиться.",
     "detailsEN": [
       "t.Run(name, f) creates a subtest; go test -run 'TestAbs/negative' runs one case. t.Errorf records a failure and continues; t.Fatalf stops the test, and it must be called from the test's goroutine, not from goroutines the test starts.",
       "t.Parallel pauses the subtest until its parent's function returns, then runs it with the other parallel subtests. A defer in the parent therefore runs before them; t.Cleanup runs after the test and all its subtests finish.",
@@ -3168,14 +3168,14 @@ const CARDS = [
     "qRU": "Что происходит с запросом внутри net/http и какие дедлайны должен задавать HTTP-сервер на Go?",
     "shortEN": "The server accepts a connection and serves it in its own goroutine; for each request the mux picks a handler by method and path, and the handler runs in that goroutine. r.Context() is cancelled when the client disconnects or when ServeHTTP returns, so pass it to every database or HTTP call. Set ReadHeaderTimeout and IdleTimeout on http.Server, and usually ReadTimeout and WriteTimeout too; the zero value means no limit.",
     "anchorsEN": [
-      "a goroutine per connection",
+      "a goroutine per HTTP/1 connection",
       "mux: method + path → handler",
-      "r.Context() cancelled on disconnect",
-      "set ReadHeaderTimeout, IdleTimeout"
+      "pass r.Context() downstream",
+      "set timeouts; zero = no limit"
     ],
-    "jvmEN": "It resembles a servlet container that runs each request on a thread, but Go uses a cheap goroutine per connection, and cancellation is explicit through r.Context() instead of an interrupted thread or a broken stream.",
+    "jvmEN": "It resembles a servlet container that runs each request on a thread, but Go uses a goroutine per HTTP/1 connection, or per stream in HTTP/2. Cancellation is explicit through r.Context(), whereas a servlet usually notices a disconnect only when a write throws IOException.",
     "shortRU": "Сервер принимает соединение и обслуживает его в отдельной горутине; для каждого запроса mux выбирает handler по методу и пути, и handler выполняется в этой горутине. r.Context() отменяется, когда клиент отключился или ServeHTTP вернулся, поэтому его передают в каждый запрос к базе или другому сервису. В http.Server задают ReadHeaderTimeout и IdleTimeout, обычно также ReadTimeout и WriteTimeout; нулевое значение — без ограничения.",
-    "jvmRU": "Похоже на контейнер сервлетов, где каждый запрос идёт в потоке, но Go использует дешёвую горутину на соединение, а отмена явная — через r.Context(), а не через прерванный поток или оборванный поток данных.",
+    "jvmRU": "Похоже на контейнер сервлетов, где каждый запрос выполняется в потоке, но Go использует горутину на соединение HTTP/1 или на stream в HTTP/2. Отмена явная — через r.Context(), а сервлет обычно узнаёт об отключении клиента, только когда запись бросает IOException.",
     "detailsEN": [
       "One goroutine per connection, not per request: with keep-alive, one connection carries requests one after another (HTTP/1.1), and the same goroutine serves them. A panic in a handler is recovered by the server for that connection only; a panic in a goroutine the handler starts crashes the process.",
       "Routing since Go 1.22: patterns like \"GET /accounts/{id}\" match method and path, r.PathValue(\"id\") reads the wildcard, the more specific pattern wins (/accounts/new over /accounts/{id}), and a path that matches with the wrong method gets 405 with an Allow header.",
@@ -3239,9 +3239,9 @@ const CARDS = [
       "400 + field · 404 · 409/422 · 500",
       "500: generic body, log once"
     ],
-    "jvmEN": "It is the same idea as a Spring @ControllerAdvice that maps exception types to status codes, but in Go it is one explicit function that checks the error with errors.Is and errors.As.",
+    "jvmEN": "It is the same idea as a Spring @ControllerAdvice that maps exception types to status codes. In Go it is one explicit function, often called from an adapter around handlers of type func(w, r) error, so no handler can forget it; it checks the error with errors.Is and errors.As.",
     "shortRU": "HTTP не должен проникать в домен: пакет ledger возвращает sentinel-ошибки и ошибки-типы, а одна функция на границе HTTP переводит их через errors.Is и errors.As — валидация в 400 с полем, «не найдено» в 404, бизнес-правило вроде нехватки средств в 409 или 422. Всё остальное — 500 с общим текстом, а настоящая ошибка — в лог, один раз.",
-    "jvmRU": "Та же идея, что @ControllerAdvice в Spring, который сопоставляет типы исключений и коды статуса, но в Go это одна явная функция, которая проверяет ошибку через errors.Is и errors.As.",
+    "jvmRU": "Та же идея, что @ControllerAdvice в Spring, который сопоставляет типам исключений коды статуса. В Go это одна явная функция, которую часто вызывает адаптер вокруг обработчиков вида func(w, r) error, чтобы ни один обработчик её не забыл; ошибку она проверяет через errors.Is и errors.As.",
     "detailsEN": [
       "Why one function: every handler answers the same error the same way, and adding a new domain error touches one place. Handlers end with writeError(w, err) and return.",
       "Use errors.As with a pointer target when Error has a pointer receiver: var ve *ValidationError. A value target such as var ve ValidationError makes errors.As panic at run time, and go vet reports it.",
@@ -3302,12 +3302,12 @@ const CARDS = [
     "anchorsEN": [
       "*sql.DB = a pool: open once, set limits",
       "defer rows.Close(); check rows.Err()",
-      "tx: defer Rollback, statements on tx",
-      "context on every call"
+      "tx: defer Rollback, statements on tx, Commit",
+      "request context into every query"
     ],
-    "jvmEN": "*sql.DB is the pooled DataSource, like HikariCP behind JDBC, not a single Connection. Without try-with-resources, Go relies on defer rows.Close() and defer tx.Rollback() to give the connection back.",
+    "jvmEN": "*sql.DB is the pooled DataSource, like HikariCP behind JDBC, not a single Connection. Without try-with-resources, Go relies on defer rows.Close() and defer tx.Rollback(); defer runs at function exit, not at the end of a block, so inside a loop move the body into a helper function.",
     "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Каждый Rows держит соединение, пока его не закроют, поэтому defer rows.Close() — сразу после запроса, а rows.Err() — после цикла. Транзакция занимает одно соединение: начать её с контекстом запроса, сделать defer tx.Rollback(), выполнять все запросы через tx и в конце Commit.",
-    "jvmRU": "*sql.DB — это пул, как HikariCP за JDBC, а не одно Connection. Без try-with-resources Go полагается на defer rows.Close() и defer tx.Rollback(), чтобы вернуть соединение.",
+    "jvmRU": "*sql.DB — это пул, DataSource вроде HikariCP за JDBC, а не один Connection. Без try-with-resources Go полагается на defer rows.Close() и defer tx.Rollback(); defer срабатывает при выходе из функции, а не в конце блока, поэтому тело цикла выносят во вспомогательную функцию.",
     "detailsEN": [
       "Limits: SetMaxOpenConns caps connections, so a request waits for a free one instead of overloading the database; SetMaxIdleConns keeps some open for reuse; SetConnMaxLifetime and SetConnMaxIdleTime retire old connections. Without a cap, a traffic spike opens as many connections as there are goroutines.",
       "Leaks: an unclosed Rows or a transaction that is never committed or rolled back keeps its connection busy. With a cap of 25, 25 leaks block every next query until its context ends.",
@@ -3368,12 +3368,12 @@ const CARDS = [
     "anchorsEN": [
       "one slog.Logger: JSON handler, level",
       "With(request_id) in middleware",
-      "key-value attributes, not format strings",
+      "logger through the request context",
       "LogValue redacts; log errors once"
     ],
-    "jvmEN": "slog plays the role of SLF4J with structured arguments, but there is no MDC: goroutines move between threads, so request attributes travel in a logger passed through the context instead of a ThreadLocal.",
+    "jvmEN": "slog plays the role of SLF4J with structured arguments, but there is no MDC: Go has no goroutine-local storage, and one request can span many goroutines. So instead of a ThreadLocal you pass a logger, or attributes that a handler reads, through context.Context.",
     "shortRU": "При старте создают один slog.Logger с JSON-обработчиком и уровнем, в middleware добавляют атрибуты запроса вроде request_id через With и передают этот логгер через контекст запроса. Логируют пары ключ-значение, а не отформатированные строки. Чувствительным типам дают метод LogValue, чтобы в лог попадали только безопасные поля, а каждую ошибку логируют один раз — там, где её обрабатывают.",
-    "jvmRU": "slog играет роль SLF4J со структурными аргументами, но MDC нет: горутины переходят между потоками, поэтому атрибуты запроса едут в логгере, который передают через контекст, а не в ThreadLocal.",
+    "jvmRU": "slog играет роль SLF4J со структурными аргументами, но MDC нет: в Go нет хранилища, привязанного к горутине, а один запрос может идти через много горутин. Поэтому вместо ThreadLocal логгер или атрибуты, которые читает обработчик, передаются через context.Context.",
     "detailsEN": [
       "Handlers: slog.NewJSONHandler for machines, slog.NewTextHandler for local reading; HandlerOptions sets the Level and can rewrite attributes with ReplaceAttr. slog.SetDefault also routes the old log package through it.",
       "logger.With(\"request_id\", id) returns a logger that adds the attribute to every record; middleware creates it once per request. Context propagation is a convention: a small helper stores and reads the logger under a private context key.",
