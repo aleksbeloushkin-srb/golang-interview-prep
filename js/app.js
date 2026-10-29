@@ -55,9 +55,9 @@ function russianExplanationHtml(card) {
 }
 
 // Первая фраза короткого ответа — сам ответ на вопрос; её выделяем: её говорят первой.
-// Граница — точка, пробел и заглавная буква (числа вроде 1.22 и KiB. внутри фразы не режутся).
+// Граница — точка и пробел (числа вроде 1.22 внутри фразы не режутся, «e.g.» и «i.e.» — тоже).
 function renderShortAnswer(el, text) {
-  const m = /^(.+?[.!?])\s+(?=[A-ZА-ЯЁ])/.exec(text);
+  const m = /^(.+?(?<!\be\.g|\bi\.e)[.!?])\s+(?=\S)/.exec(text);
   el.replaceChildren();
   if (!m) { el.textContent = text; return; }
   const first = document.createElement("strong");
