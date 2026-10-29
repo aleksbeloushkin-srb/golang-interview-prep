@@ -291,7 +291,8 @@ function renderPracticeTask(view, task) {
     practiceSection("После своей попытки", [
       practiceEl("details", { className: "practice-talk" }, [
         practiceEl("summary", { text: "Объяснение на английском за минуту" }),
-        practiceEl("p", { lang: "en", text: task.talkEN })
+        practiceEl("p", { lang: "en", text: task.talkEN }),
+        typeof ttsControlsNode === "function" ? ttsControlsNode(`practice:${task.id}:talk`, task.talkEN) : null
       ]),
       practiceEl("details", { className: "practice-reference" }, [
         practiceEl("summary", { text: "Эталонное решение" }),
