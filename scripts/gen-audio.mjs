@@ -32,7 +32,7 @@ const SPEECH_FIXES = {
     ['switch v colon-equals x., type, runs', 'switch v colon-equals x dot type runs'],
     ['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']
   ],
-  'card:c33:short': [['err not equal to nil is true', 'err is not nil']],
+  'card:c33:short': [['the caller sees err not equal to nil', 'the caller sees that err is not nil']],
   'card:c34:short': [
     ["pointer to Counter's has both", 'the method set of pointer to Counter has both'],
     ['Go rewrites it to address of c dot Set', 'Go rewrites it as: take the address of c, then call Set']
@@ -47,7 +47,7 @@ const SPEECH_FIXES = {
   ],
   'plan:w1-mon-1': [['x colon-equals expr is a short declaration inside a function', 'x colon-equals expression is the short declaration, used inside a function']],
   'card:c40:short': [
-    ['var n int gives you 0, and every type has such a zero value: empty string for strings,', 'var n int gives you zero, and every type has such a zero value: the empty string for strings,'],
+    ['var n int gives you 0, and you get empty string for strings,', 'var n int gives you zero, and you get the empty string for strings,'],
     ['Not safe: m[k] equals v on a nil map panics', 'Not safe: assigning to a nil map, m of k equals v, panics']
   ],
   'plan:w1-sat-2': [
@@ -55,10 +55,10 @@ const SPEECH_FIXES = {
     ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
   ],
   // Пилотная выборка (c2, c7, c28, c29, c47).
-  'card:c7:short': [['With GO-MAX-PROCS=4,', 'With GO-MAX-PROCS set to four,'], ['or in cgo', 'or in C-Go']],
-  'card:c29:short': [['s[1:3] copies no elements', 'Slicing s from one to three copies no elements']],
+  'card:c7:short': [['with GO-MAX-PROCS=4,', 'with GO-MAX-PROCS set to four,'], ['or in cgo', 'or in C-Go']],
+  'card:c29:short': [['s[1:3] copies no elements', 'slicing s from one to three copies no elements']],
   'card:c29:jvm': [['Array List-style growth with sub List- or Byte Buffer-style views', 'Array List style growth with sub-List or Byte Buffer style views']],
-  'card:c47:short': [['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
+  'card:c47:short': [['pointer to sql dot D-B is a connection pool', 'A sql dot D-B handle is a connection pool'], ['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
     ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],
