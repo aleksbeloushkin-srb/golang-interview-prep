@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-28h.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29a.
 
 ## Фазы
 
@@ -204,7 +204,7 @@
 - [ ] LeetCode 739. Daily Temperatures + проговор (записать) — [LC 739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/), проговор: «LC 739. Daily Temperatures»
 - [ ] Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache *(по желанию)* — [LC 146. LRU Cache](https://leetcode.com/problems/lru-cache/), проговор: «LC 146. LRU Cache»
 - [ ] Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией *(по желанию)* — [Habr: «Коллеги, вы меня огорчаете»](https://habr.com/ru/articles/521582)
-- [ ] Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов» — [Q1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q6)
+- [ ] Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов». q1, q2, q3, q6 — те же ловушки, что P9, P6, P5 и P1–P2 из первой задачи дня, но в виде рабочего кода: проверка, что понял, а не запомнил ответ; q4 и q5 — новые — [Q1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q4), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q6)
   - Готово, когда: q1–q6: ответ до вариантов, причина названа верно не меньше чем в 5 из 6; ошибки — в повтор.
 
 **LeetCode недели:** [3. Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/) (Sliding window), [15. 3Sum](https://leetcode.com/problems/3sum/) (Two pointers), [739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/) (Monotonic stack), [56. Merge Intervals](https://leetcode.com/problems/merge-intervals/) (Intervals), [146. LRU Cache](https://leetcode.com/problems/lru-cache/) (Design: map + list)
