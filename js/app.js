@@ -32,6 +32,7 @@ let state = {
   search: "",
   index: 0,
   revealed: false,
+  anchorsFor: null, // id карточки, для которой открыты опоры; на другой карточке они снова скрыты
   progress: loadProgress()
 };
 
@@ -67,23 +68,47 @@ function renderShortAnswer(el, text) {
 }
 
 // Опоры: 3–4 английских слова, по которым ответ пересказывается своими словами.
-function anchorsHtml(card) {
+function anchorsHtml(card, hint) {
   if (!card.anchorsEN || !card.anchorsEN.length) return "";
   return `<div class="card-anchors">
     <strong>Опоры для пересказа</strong>
     <ul class="anchor-list" lang="en">${card.anchorsEN.map(a => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
-    <p class="muted-text">Закрой ответ и перескажи его по этим словам вслух за 20 секунд.</p>
+    ${hint ? `<p class="muted-text">${escapeHtml(hint)}</p>` : ""}
   </div>`;
+}
+
+// На карточке три шага: вопрос → опоры → ответ. Опоры, однажды открытые, остаются и при закрытом ответе.
+function cardAnchorsHtml(card) {
+  if (!card.anchorsEN || !card.anchorsEN.length) return "";
+  if (state.anchorsFor !== card.id) {
+    return `<button type="button" class="btn btn-sm hint-btn" onclick="showAnchors()" aria-controls="card-anchors">Показать опоры <span class="kbd">H</span></button>`;
+  }
+  return anchorsHtml(card, state.revealed
+    ? "Закрой ответ и перескажи его по этим словам вслух за 20 секунд."
+    : "Перескажи ответ по этим словам вслух, потом открой ответ и сверь.");
+}
+
+function showAnchors() {
+  const list = getFilteredCards();
+  if (!list.length) return;
+  state.anchorsFor = list[state.index].id;
+  renderCard();
+  // Фокус на опоры: читалка сразу их прочтёт, а клавиатура продолжит с этого места.
+  const box = document.querySelector("#card-anchors .card-anchors");
+  if (box) {
+    box.tabIndex = -1;
+    box.focus({ preventScroll: true });
+  }
 }
 
 // Сравнение с Java и Kotlin: опора на то, что уже знаешь, и готовый ответ на «а как в Java?».
 function jvmHtml(card) {
   if (!card.jvmEN) return "";
-  return `<div class="jvm-box">
-    <strong>Если спросят про Java и Kotlin</strong>
+  return `<details class="jvm-box">
+    <summary>Если спросят про Java и Kotlin</summary>
     <p lang="en">${escapeHtml(card.jvmEN)}</p>
     ${card.jvmRU ? `<details class="translated-answer"><summary>По-русски</summary><p lang="ru">${escapeHtml(card.jvmRU)}</p></details>` : ""}
-  </div>`;
+  </details>`;
 }
 
 function referencesHtml(item) {
@@ -110,7 +135,7 @@ function practiceHtml(card) {
       <details class="translated-answer"><summary>Разбор на русском</summary><ul class="details-list" lang="ru">${exercise.pointsRU.map(point => `<li>${escapeHtml(point)}</li>`).join("")}</ul></details>
       <p lang="en"><strong>Follow-up:</strong> ${escapeHtml(exercise.followUpEN)}</p>
       <p lang="ru">${escapeHtml(exercise.followUpRU)}</p>
-      <p class="muted-text">Если упустил причину или условие, отметь тему «Нужно повторить». Это самопроверка, не автоматическая оценка ответа.</p>
+      <p class="muted-text">Если упустил причину или условие, отметь «С опорой» или «Не ответил». Это самопроверка, не автоматическая оценка ответа.</p>
     </details>
   </details>`;
 }
@@ -240,8 +265,11 @@ function renderCard() {
   document.getElementById("card-q-en").textContent = card.qEN;
   document.getElementById("card-q-ru").textContent = card.qRU;
   renderShortAnswer(document.getElementById("card-short-en"), card.shortEN);
-  document.getElementById("card-anchors").innerHTML = anchorsHtml(card);
+  document.getElementById("card-anchors").innerHTML = cardAnchorsHtml(card);
   document.getElementById("card-jvm").innerHTML = jvmHtml(card);
+  // Новая карточка — подробности снова свёрнуты: на экране только ответ и опоры.
+  const more = document.getElementById("card-more");
+  if (more && more.dataset.card !== card.id) { more.open = false; more.dataset.card = card.id; }
   document.getElementById("card-translation").innerHTML = russianExplanationHtml(card);
   document.getElementById("card-references").innerHTML = referencesHtml(card);
   document.getElementById("card-practice").innerHTML = practiceHtml(card);
@@ -276,14 +304,21 @@ function renderCard() {
   const st = state.progress[card.id] || "unseen";
   const pill = document.getElementById("card-status");
   pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
-  pill.textContent = st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая";
+  const last = lastAttempt(card.id);
+  pill.textContent = (st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
+  renderGradeSignIn();
+  // Оценивать имеет смысл только после сверки с ответом: до этого кнопки и критерии не занимают экран.
+  document.querySelector("#card-controls .card-grades").classList.toggle("hidden", !state.revealed);
+  document.getElementById("grade-criteria").classList.toggle("hidden", !state.revealed);
 
   ansBox.classList.toggle("visible", state.revealed);
 }
 
 function toggleAnswer() {
-  if (!getFilteredCards().length) return;
+  const list = getFilteredCards();
+  if (!list.length) return;
   state.revealed = !state.revealed;
+  if (state.revealed) state.anchorsFor = list[state.index].id; // опоры остаются и после закрытия ответа
   renderCard();
   if (window.matchMedia("(max-width: 640px)").matches) {
     if (state.revealed) document.getElementById("card-answer-box").scrollIntoView({ block: "start" });
@@ -326,6 +361,79 @@ function markCard(status) {
   renderCard();
   returnToQuestion();
 }
+
+/* --- САМООЦЕНКА ОТВЕТА: сам / с опорой / не ответил; история попыток с датой --- */
+const ATTEMPTS_KEY = "go_prep_attempts_v1";
+const ATTEMPT_LABELS = { self: "сам", anchors: "с опорой", none: "не ответил" };
+
+function loadAttempts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ATTEMPTS_KEY) || "{}");
+    return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+function lastAttempt(cardId) {
+  const list = loadAttempts()[cardId];
+  const a = Array.isArray(list) ? list[list.length - 1] : null;
+  if (!a || !ATTEMPT_LABELS[a.r] || typeof a.d !== "string") return "";
+  const [, m, d] = a.d.split("-");
+  return `${d}.${m}: ${ATTEMPT_LABELS[a.r]}`;
+}
+
+function recordAttempt(cardId, result) {
+  const all = loadAttempts();
+  const now = new Date();
+  const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const list = (Array.isArray(all[cardId]) ? all[cardId] : []).filter(a => a && ATTEMPT_LABELS[a.r]);
+  list.push({ d: day, r: result });
+  all[cardId] = list.slice(-20); // хватит, чтобы видеть динамику, и запись не растёт без конца
+  try {
+    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(all));
+  } catch {
+    // Без хранилища отметка в прогрессе всё равно сохраняется на странице (saveProgress сообщит об этом).
+  }
+}
+
+// «Сам» — изучено; «с опорой» и «не ответил» — на повторение. Отметка прежнего формата не меняется.
+function gradeCard(result) {
+  if (!ATTEMPT_LABELS[result]) return;
+  if (typeof siteCanEdit === "function" && !siteCanEdit()) {
+    // Подсказка о входе уже стоит под кнопками: перевести фокус туда, без прыжка в начало страницы.
+    const signIn = document.querySelector("#grade-signin button");
+    if (signIn) {
+      signIn.focus({ preventScroll: true });
+      signIn.scrollIntoView({ block: "nearest" });
+    } else siteNeedSignIn("Чтобы отмечать карточки");
+    return;
+  }
+  const list = getFilteredCards();
+  if (!list.length || !state.revealed) return;
+  recordAttempt(list[state.index].id, result);
+  markCard(result === "self" ? "mastered" : "review");
+}
+
+// Без входа отметки не сохраняются: сказать об этом до нажатия, а не после.
+function renderGradeSignIn() {
+  const box = document.getElementById("grade-signin");
+  if (!box) return;
+  const readOnly = typeof siteCanEdit === "function" && !siteCanEdit();
+  box.classList.toggle("hidden", !readOnly);
+  if (!readOnly || box.childElementCount) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "btn btn-sm";
+  button.textContent = "Войти";
+  button.addEventListener("click", () => authSignIn());
+  box.append("Отметки сохраняются после входа. ", button);
+}
+document.addEventListener("auth-changed", () => {
+  const box = document.getElementById("grade-signin");
+  if (box) box.replaceChildren();
+  renderGradeSignIn();
+});
 
 function setFilter(f) {
   state.filter = f;
@@ -674,11 +782,13 @@ function setQuizAnswerFirst(on) {
 function initQuizMode() {
   const toggle = document.getElementById("quiz-answer-first");
   if (!toggle) return;
-  let on = false;
+  // По умолчанию — сначала свой ответ: так тренируется то, что спросят на интервью. Выбор пользователя сохраняется.
+  let on = true;
   try {
-    on = localStorage.getItem(QUIZ_MODE_KEY) === "1";
+    const saved = localStorage.getItem(QUIZ_MODE_KEY);
+    if (saved !== null) on = saved === "1";
   } catch {
-    on = false;
+    on = true;
   }
   toggle.checked = on;
   document.getElementById("quiz-container").classList.toggle("answer-first", on);
@@ -815,8 +925,10 @@ window.addEventListener("keydown", e => {
   }
   if (e.code === "ArrowRight") nextCard();
   if (e.code === "ArrowLeft") prevCard();
-  if (e.key === "1") markCard("mastered");
-  if (e.key === "2") markCard("review");
+  if (e.key === "h" || e.key === "H" || e.key === "р" || e.key === "Р") showAnchors();
+  if (e.key === "1") gradeCard("self");
+  if (e.key === "2") gradeCard("anchors");
+  if (e.key === "3") gradeCard("none");
 });
 
 /* --- НИЖНЯЯ ПАНЕЛЬ НА ТЕЛЕФОНЕ: три главных раздела и шторка «Ещё» --- */

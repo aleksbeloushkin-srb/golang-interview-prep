@@ -10,6 +10,8 @@ const planState = {
   saved: null,
   storageMessage: "",
   startNote: "",
+  startNeedsSignIn: false,
+  datesOpen: false, // блок дат свёрнут: на первом экране — задача дня
   renderedDay: "",
   drafts: {} // черновики ответов predict: живут до перезагрузки страницы, не сохраняются
 };
@@ -412,11 +414,21 @@ function planFullDate(iso) {
 }
 
 // Новый старт сохраняется, отметки задач не трогаются; в сообщении — прежняя дата, чтобы её можно было вернуть.
+function planCanEdit() {
+  return typeof siteCanEdit !== "function" || siteCanEdit();
+}
+
 function planSetStart(iso, reason) {
-  if (typeof siteCanEdit === "function" && !siteCanEdit()) {
-    siteNeedSignIn("Чтобы менять неделю старта");
+  planState.datesOpen = true;
+  if (!planCanEdit()) {
+    // Подсказка у самого календаря: на телефоне уведомление наверху страницы не видно.
+    planState.startNote = "Без входа дата не меняется: сайт открыт только для чтения. Войди, и дата сохранится на всех устройствах.";
+    planState.startNeedsSignIn = true;
+    planRerender();
+    planFocusNote();
     return;
   }
+  planState.startNeedsSignIn = false;
   const previous = planState.saved.start;
   if (iso === previous) {
     planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;
@@ -426,8 +438,15 @@ function planSetStart(iso, reason) {
     planState.startNote = `${reason} Неделя 1 теперь с ${planFullDate(iso)} (было ${planFullDate(previous)}). Отметки задач не изменились.`;
   }
   planRerender();
+  planFocusNote();
+}
+
+// Фокус на сообщение о дате и прокрутка ровно настолько, чтобы его было видно.
+function planFocusNote() {
   const note = document.getElementById("plan-start-note");
-  if (note) note.focus({ preventScroll: true });
+  if (!note) return;
+  note.focus({ preventScroll: true });
+  note.scrollIntoView({ block: "nearest" });
 }
 
 // Календарь: «я начал», сдвиг на неделю, «сейчас я на неделе N», сброс. Неделя всегда с понедельника.
@@ -452,22 +471,40 @@ function planCalendar(today) {
     planSetStart(planAddWeeks(planThisMonday(), -(n - 1)), `Эта неделя — неделя ${n}.`);
   });
 
-  return planEl("section", { className: "plan-calendar", "aria-label": "Календарь плана" }, [
-    planEl("p", { className: "plan-calendar-status" }, [
-      planEl("strong", { text: "Календарь: " }),
-      `неделя 1 с понедельника ${planFullDate(start)} · ${status}`
+  const note = planState.startNote ? planEl("div", { id: "plan-start-note", className: "plan-start-note", role: "status", tabindex: "-1" }, [
+    planState.startNote,
+    planState.startNeedsSignIn && typeof authSignIn === "function" ? planSignInButton() : null
+  ]) : null;
+  const readOnly = !planCanEdit() && !planState.startNeedsSignIn
+    ? planEl("p", { className: "muted-text plan-readonly" }, ["Без входа — только просмотр: дату можно поменять после входа. ", typeof authSignIn === "function" ? planSignInButton() : null])
+    : null;
+
+  const dates = planEl("details", { id: "plan-dates", className: "plan-calendar", open: planState.datesOpen ? "" : null }, [
+    planEl("summary", { className: "plan-calendar-status" }, [
+      planEl("strong", { text: "Даты: " }),
+      `неделя 1 с ${planFullDate(start)} · ${status}`,
+      planEl("span", { className: "plan-calendar-edit", text: " · изменить" })
     ]),
+    readOnly,
     planEl("div", { className: "plan-settings-row" }, [
       button("Я начал на этой неделе", () => planSetStart(planThisMonday(), "Старт — эта неделя."), "Неделя 1 = текущая неделя"),
       button("← План на неделю раньше", () => planSetStart(planAddWeeks(start, -1), "План сдвинут на неделю раньше."), "Текущий номер недели увеличится на 1"),
       button("План на неделю позже →", () => planSetStart(planAddWeeks(start, 1), "План сдвинут на неделю позже."), "Пауза: текущий номер недели уменьшится на 1"),
-      button("Сбросить дату", () => planSetStart(PLAN.defaultStart, "Дата старта сброшена."), `Вернуть ${planFullDate(PLAN.defaultStart)}`)
+      button(`Сбросить на ${planFormatDate(planParseDate(PLAN.defaultStart))}`, () => planSetStart(PLAN.defaultStart, "Дата старта сброшена."), `Вернуть исходную дату ${planFullDate(PLAN.defaultStart)}`)
     ]),
     planEl("div", { className: "plan-settings-row" }, [
       planEl("label", { for: "plan-current-week", text: "Сейчас я на неделе" }), select
     ]),
-    planState.startNote ? planEl("p", { id: "plan-start-note", className: "plan-start-note", role: "status", tabindex: "-1", text: planState.startNote }) : null
+    note
   ]);
+  dates.addEventListener("toggle", () => { planState.datesOpen = dates.open; });
+  return dates;
+}
+
+function planSignInButton() {
+  const node = planEl("button", { type: "button", className: "btn btn-sm", text: "Войти через Google" });
+  node.addEventListener("click", () => authSignIn());
+  return node;
 }
 
 function planControls() {
@@ -607,9 +644,9 @@ function renderPlan(weekId, dayKey) {
         planEl("div", { className: "progress-bar-wrap" }, planEl("div", { id: "plan-overall-fill", className: "progress-bar-fill" }))
       ]),
       planTodayBanner(today),
+      chips,
       planCalendar(today),
       planEl("p", { className: "muted-text", text: "Галочка значит «сделано по плану», а не «вспомнил без подсказки». Проверка памяти — в карточках и quiz." }),
-      chips,
       planControls()
     ]),
     planEl("article", { className: "sim-card plan-week" }, [
@@ -634,6 +671,10 @@ function renderPlan(weekId, dayKey) {
     ])
   );
   planUpdateCounters(week);
+  // В строке недель на телефоне показанная неделя должна быть видна.
+  const activeChip = root.querySelector(".plan-chip.active");
+  const strip = activeChip && activeChip.parentElement;
+  if (strip && strip.scrollWidth > strip.clientWidth) strip.scrollLeft = activeChip.offsetLeft - strip.offsetLeft - (strip.clientWidth - activeChip.offsetWidth) / 2;
 
   if (dayKey) {
     const target = document.getElementById(`plan-${week.id}-${dayKey}`);
@@ -682,3 +723,13 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("hashchange", handlePlanRoute);
 document.addEventListener("DOMContentLoaded", handlePlanRoute);
+
+// Вошёл или вышел — убрать или показать подсказку о входе у дат плана.
+document.addEventListener("auth-changed", () => {
+  if (!planState.saved) return;
+  if (planState.startNeedsSignIn) {
+    planState.startNeedsSignIn = false;
+    planState.startNote = "";
+  }
+  planRerender();
+});
