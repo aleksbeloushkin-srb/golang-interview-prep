@@ -1,7 +1,7 @@
 # ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-48_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Flashcards](https://img.shields.io/badge/Flashcards-54_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Simulators](https://img.shields.io/badge/Simulators-10_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
 [![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-39_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
@@ -19,14 +19,14 @@
 На телефоне разделы — в нижней панели: План, Карточки, Диаграммы, Quiz и «Ещё» (Практикум, База знаний, Шпаргалка). На компьютере — вкладки в шапке в том же порядке.
 
 * 🔐 **Вход через Google** (кнопка в шапке): прогресс карточек, плана и практикума сохраняется на сервере и одинаков на всех устройствах; в практикуме — «Проверить на сервере» (`go test -race` в AWS, по тестам: что прошло, что нет). Без входа сайт открыт только на чтение: материалы, quiz и заготовки доступны, отметки не сохраняются. Бэкенд — [golang-interview-prep-api](https://github.com/aleksbeloushkin-srb/golang-interview-prep-api).
-* 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
-* 🛠 **[Практикум (20 задач недель 1–5)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof; неделя 5: HTTP API счетов на ServeMux и ошибки домена → HTTP-коды: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
-* 🗂 **[Карточки (48 вопросов и ответов)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 7 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`); карточка идёт в три шага: вопрос → «Показать опоры» (H) → ответ; самооценка «Не ответил / С опорой / Сам ✓» с датой попытки.
+* 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–6, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
+* 🛠 **[Практикум (23 задачи недель 1–6)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof; неделя 5: HTTP API счетов на ServeMux и ошибки домена → HTTP-коды; неделя 6: параллельные переводы с порядком блокировок, идемпотентный перевод (Idempotency-Key), outbox с relay и идемпотентным потребителем: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
+* 🗂 **[Карточки (54 вопроса и ответа)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 8 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`); карточка идёт в три шага: вопрос → «Показать опоры» (H) → ответ; самооценка «Не ответил / С опорой / Сам ✓» с датой попытки.
 * 🔊 **Озвучка английских ответов (пока неделя 1)** — кнопка «🔊 Слушать» у короткого ответа, сравнения с Java, эталонных ответов плана и объяснения в практикуме; голос Michael или Heart (медленнее), клавиша L. Файлы — `audio/en/`, манифест — `data/audio.js`; кнопка показывается, только если запись сделана для текущего текста. Перегенерация: `node scripts/gen-audio.mjs --week N` (Kokoro, модель в `.tts/`, см. `scripts/tts_kokoro.py`).
 * 🔬 **[Диаграммы рантайма (10 пошаговых схем)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
-* 📖 **[База знаний (все 48 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
+* 📖 **[База знаний (все 54 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[Шпаргалка по рантайму](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[Quiz: ловушки в коде (39 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+* 🧠 **[Quiz: ловушки в коде (43 задачи)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 📚 Содержание модулей (48 карточек + 39 задач)
+## 📚 Содержание модулей (54 карточки + 43 задачи)
 
 ### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
 * Горутина против потока ОС: конкурентность, растущий стек, владение и завершение; без универсальной цены в наносекундах или оценки RSS по числу горутин.
@@ -106,6 +106,15 @@
 * `log/slog`: JSON, `request_id`, `LogValue` против утечки секретов.
 * Quiz q36–q39: `http.Error` без `return`, маршруты и 405, пароль в логе, `errors.As` с целью-значением. Программы выполнены Go 1.24.7 и 1.27.3.
 
+### Модуль 8: Данные — транзакции, идемпотентность, outbox, Kafka (`C49 – C54`)
+* Уровни изоляции PostgreSQL: снимок на запрос в Read Committed, 40001 в Repeatable Read и Serializable, повтор транзакции с BEGIN.
+* Перевод между счетами: `SELECT … FOR UPDATE` по возрастанию ID, дедлок и 40P01, те же правила для мьютексов Go.
+* Идемпотентность платежей: Idempotency-Key, отпечаток запроса, сохранённый ответ, атомарный захват ключа (`INSERT … ON CONFLICT DO NOTHING`), коды 400/422/409 по черновику IETF.
+* Transactional outbox: почему не публиковать после commit, relay, `SKIP LOCKED`, at-least-once.
+* Потребитель Kafka: offset после обработки, дедупликация по ID события, порядок внутри партиции; `ReadMessage` в kafka-go фиксирует offset при чтении.
+* Индексы, `EXPLAIN ANALYZE` и N+1.
+* Quiz q40–q43: «проверить, потом вставить» и молчащий `-race`, встречные переводы и дедлок, публикация после commit, offset до обработки. Программы выполнены Go 1.24.7 и 1.27.3.
+
 ---
 
 ## 🗂 Структура проекта
@@ -119,9 +128,9 @@ golang-interview-prep/
 ├── css/
 │   └── style.css       # Стили, адаптивная сетка и тёмная тема
 ├── data/
-│   ├── cards.js        # База из 48 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
+│   ├── cards.js        # База из 54 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
 │   ├── simulators.js   # Пошаговые состояния для 10 диаграмм и сводной таблицы
-│   ├── quiz.js         # 39 задач на Production Code Review (по 6 вариантов ответа)
+│   ├── quiz.js         # 43 задачи на Production Code Review (по 6 вариантов ответа)
 │   ├── plan.js         # План 13 недель: задачи, критерии готовности, LeetCode, опорные тексты
 │   └── practice.js     # Практикум: контракт, заготовка, тесты, подсказки, эталон (из docs/verification/fixtures/practice)
 └── js/

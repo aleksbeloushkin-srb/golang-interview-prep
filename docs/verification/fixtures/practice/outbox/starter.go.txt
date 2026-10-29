@@ -1,0 +1,152 @@
+// Package outbox: practice task W6-3. Replace each TODO with your solution.
+package outbox
+
+import (
+	"context"
+	"errors"
+	"sync"
+	"time"
+)
+
+var (
+	ErrNotFound          = errors.New("account not found")
+	ErrInvalidAmount     = errors.New("amount must be positive")
+	ErrInsufficientFunds = errors.New("insufficient funds")
+)
+
+// Event is what the relay publishes after a transfer.
+type Event struct {
+	ID     int64 // outbox row ID: consumers deduplicate by it
+	From   int64
+	To     int64
+	Amount int64
+}
+
+type row struct {
+	ev   Event
+	sent bool
+}
+
+// DB is an in-memory database: holding mu is one transaction.
+type DB struct {
+	mu       sync.Mutex
+	balances map[int64]int64
+	outbox   []row // in ID order
+	nextID   int64
+}
+
+func NewDB(balances map[int64]int64) *DB {
+	db := &DB{balances: make(map[int64]int64, len(balances))}
+	for id, b := range balances {
+		db.balances[id] = b
+	}
+	return db
+}
+
+// Transfer moves the money and appends the event to the outbox in one transaction:
+// either both happen or neither does.
+func (db *DB) Transfer(from, to, amount int64) (Event, error) {
+	// TODO: validate (ErrInvalidAmount, ErrNotFound, ErrInsufficientFunds, wrapped with %w),
+	// move the money, assign the next ID and append the event, all while holding db.mu.
+	panic("TODO")
+}
+
+// Balance returns an account's balance.
+func (db *DB) Balance(id int64) int64 {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	return db.balances[id]
+}
+
+// Unsent returns up to limit unsent events in ID order, as a copy.
+func (db *DB) Unsent(limit int) []Event {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	var out []Event
+	for _, r := range db.outbox {
+		if len(out) == limit {
+			break
+		}
+		if !r.sent {
+			out = append(out, r.ev)
+		}
+	}
+	return out
+}
+
+// MarkSent marks one event as published.
+func (db *DB) MarkSent(id int64) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	for i := range db.outbox {
+		if db.outbox[i].ev.ID == id {
+			db.outbox[i].sent = true
+			return
+		}
+	}
+}
+
+// Pending counts events that are not marked sent yet.
+func (db *DB) Pending() int {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	n := 0
+	for _, r := range db.outbox {
+		if !r.sent {
+			n++
+		}
+	}
+	return n
+}
+
+// Publisher sends one event to the broker; key selects the partition.
+type Publisher interface {
+	Publish(ctx context.Context, key string, ev Event) error
+}
+
+// Relay publishes outbox events. It runs in one goroutine owned by the caller.
+type Relay struct {
+	DB       *DB
+	Pub      Publisher
+	Interval time.Duration // pause between polls; 0 means 10 ms
+	Batch    int           // events per poll; 0 means 100
+}
+
+// Run publishes unsent events in ID order until ctx is done, then returns ctx.Err().
+//
+// Contract:
+//   - poll every Interval (0 → 10 ms), up to Batch events per poll (0 → 100);
+//   - publish with the sender's account ID as the key;
+//   - mark an event sent only after Publish succeeded; on an error stop the batch,
+//     so that this event goes first on the next poll (order of first delivery = ID order);
+//   - never hold the database lock while Publish runs;
+//   - return promptly after ctx is cancelled and publish nothing afterwards.
+func (r *Relay) Run(ctx context.Context) error {
+	// TODO
+	panic("TODO")
+}
+
+// Consumer applies each event at most once, by event ID.
+type Consumer struct {
+	mu   sync.Mutex
+	seen map[int64]bool
+	sent map[int64]int64 // money sent per account, according to the applied events
+}
+
+func NewConsumer() *Consumer {
+	return &Consumer{seen: make(map[int64]bool), sent: make(map[int64]int64)}
+}
+
+// Handle applies ev unless an event with the same ID was applied before.
+// A duplicate is not an error: the consumer just acknowledges it again.
+func (c *Consumer) Handle(ev Event) error {
+	// TODO: apply the event once per ID; it may arrive many times, also concurrently.
+	panic("TODO")
+}
+
+// Sent returns how much an account sent according to the applied events.
+func (c *Consumer) Sent(account int64) int64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.sent[account]
+}

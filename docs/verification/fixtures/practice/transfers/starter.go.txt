@@ -1,0 +1,64 @@
+// Package transfers: practice task W6-1. Replace each TODO with your solution.
+package transfers
+
+import (
+	"errors"
+	"maps"
+	"slices"
+	"sync"
+)
+
+var (
+	ErrNotFound          = errors.New("account not found")
+	ErrSameAccount       = errors.New("same account")
+	ErrInvalidAmount     = errors.New("amount must be positive")
+	ErrInsufficientFunds = errors.New("insufficient funds")
+)
+
+type account struct {
+	mu      sync.Mutex
+	balance int64
+}
+
+// Ledger holds the accounts created by New; the set of accounts never changes afterwards,
+// so the map itself needs no lock.
+type Ledger struct {
+	accounts map[int64]*account
+	ids      []int64 // ascending
+}
+
+// New creates a ledger with the given opening balances.
+func New(balances map[int64]int64) *Ledger {
+	l := &Ledger{accounts: make(map[int64]*account, len(balances))}
+	for id, b := range balances {
+		l.accounts[id] = &account{balance: b}
+	}
+	l.ids = slices.Sorted(maps.Keys(l.accounts))
+	return l
+}
+
+// Transfer moves amount from one account to another as one step.
+//
+// Contract:
+//   - amount <= 0 → ErrInvalidAmount; from == to → ErrSameAccount;
+//   - an unknown account → an error that errors.Is matches with ErrNotFound;
+//   - not enough money → an error matching ErrInsufficientFunds, balances unchanged;
+//   - transfers in opposite directions at the same time must not deadlock;
+//   - the sum of all balances never changes and no balance goes below zero.
+func (l *Ledger) Transfer(from, to, amount int64) error {
+	// TODO
+	panic("TODO")
+}
+
+// Balance returns the current balance of one account (ErrNotFound for an unknown ID).
+func (l *Ledger) Balance(id int64) (int64, error) {
+	// TODO
+	panic("TODO")
+}
+
+// Total returns the sum of all balances as one consistent snapshot:
+// it must never see a transfer half done.
+func (l *Ledger) Total() int64 {
+	// TODO
+	panic("TODO")
+}

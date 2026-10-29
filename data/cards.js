@@ -3381,5 +3381,417 @@ const CARDS = [
       "followUpEN": "Why is logging an error and returning it at every layer a problem?",
       "followUpRU": "Почему плохо и логировать, и возвращать ошибку на каждом уровне?"
     }
+  },
+  {
+    "id": "c49",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "What do PostgreSQL isolation levels guarantee, and which one do you use for a transfer?",
+    "qRU": "Что гарантируют уровни изоляции PostgreSQL и какой выбрать для перевода?",
+    "shortEN": "Read Committed, the default, gives each statement its own snapshot, so two reads in one transaction can differ. Repeatable Read gives the whole transaction one snapshot and fails with SQLSTATE 40001 when it would change a row that another transaction changed and committed; Serializable also catches anomalies such as write skew, with 40001 too. For a transfer, Read Committed with row locks or a guarded UPDATE is enough; at the stricter levels, retry the whole transaction on 40001.",
+    "anchorsEN": [
+      "Read Committed (default): a snapshot per statement",
+      "Repeatable Read: one snapshot; concurrent update → 40001",
+      "Serializable: also write skew → 40001",
+      "stricter level → retry the whole transaction"
+    ],
+    "jvmEN": "The levels belong to the database, so they are the same as with JDBC: Connection.setTransactionIsolation there, sql.TxOptions{Isolation: …} in db.BeginTx here. What Spring's @Transactional(isolation = …) plus a retry annotation does for you, Go code does explicitly: a loop that reruns the transaction function on 40001.",
+    "shortRU": "Read Committed — уровень по умолчанию: у каждого запроса свой снимок, поэтому два чтения в одной транзакции могут дать разное. Repeatable Read даёт всей транзакции один снимок и падает с SQLSTATE 40001, если она пытается изменить строку, которую другая транзакция изменила и зафиксировала; Serializable ловит ещё и аномалии вроде write skew, тоже с 40001. Для перевода хватает Read Committed с блокировкой строк или UPDATE с условием; на строгих уровнях всю транзакцию повторяют при 40001.",
+    "jvmRU": "Уровни принадлежат базе, поэтому они те же, что с JDBC: там Connection.setTransactionIsolation, здесь sql.TxOptions{Isolation: …} в db.BeginTx. То, что в Spring делают @Transactional(isolation = …) и аннотация повтора, в Go пишут явно: цикл, который перезапускает функцию транзакции при 40001.",
+    "detailsEN": [
+      "PostgreSQL implements three distinct levels: Read Uncommitted behaves like Read Committed, so there are no dirty reads at any level. Its Repeatable Read is snapshot isolation and also prevents phantom reads.",
+      "In Read Committed, an UPDATE or SELECT … FOR UPDATE that finds a row changed by a concurrent transaction waits for it; if that transaction commits, it re-checks its WHERE clause against the new version of the row. So UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1 never overdraws, and RowsAffected = 0 means insufficient funds.",
+      "Lost update: read the balance into Go, compute, then write SET balance = $newValue. Two concurrent transactions both read 100 and both write 80, and one withdrawal disappears. Fix it by computing in SQL, locking with FOR UPDATE, or using Repeatable Read, which turns the second write into a 40001 error.",
+      "Write skew: two transactions each read a condition that holds, such as “two doctors are on call”, and each changes a different row, so that together they break it. Repeatable Read allows this; Serializable detects it and fails one of them.",
+      "Retry from BEGIN, not a single statement: the snapshot and every read must be redone. Limit the attempts and add backoff. Deadlocks (40P01) are retryable too. With pgx the error is *pgconn.PgError, and its SQLState method returns the code."
+    ],
+    "detailsRU": [
+      "В PostgreSQL реализовано три разных уровня: Read Uncommitted ведёт себя как Read Committed, поэтому «грязного» чтения нет ни на каком уровне. Его Repeatable Read — это snapshot isolation, и фантомного чтения он тоже не допускает.",
+      "В Read Committed запрос UPDATE или SELECT … FOR UPDATE, найдя строку, изменённую конкурентной транзакцией, ждёт её; если та зафиксировалась, он заново проверяет своё условие WHERE на новой версии строки. Поэтому UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1 никогда не уведёт баланс в минус, а RowsAffected = 0 означает нехватку средств.",
+      "Потерянное обновление: прочитать баланс в Go, посчитать и записать SET balance = $newValue. Две конкурентные транзакции обе читают 100 и обе пишут 80 — одно списание пропадает. Исправление: считать в SQL, блокировать через FOR UPDATE или взять Repeatable Read, при котором вторая запись получит ошибку 40001.",
+      "Write skew: две транзакции читают условие, которое выполняется, например «дежурят два врача», и каждая меняет свою строку, так что вместе они его нарушают. Repeatable Read это пропускает; Serializable обнаруживает и роняет одну из них.",
+      "Повторяют с BEGIN, а не один запрос: снимок и все чтения нужно сделать заново. Число попыток ограничивают и добавляют паузу. Дедлоки (40P01) тоже можно повторять. В pgx ошибка — *pgconn.PgError, а её метод SQLState возвращает код."
+    ],
+    "practicalRU": "Неделя 6, понедельник: перевод в одной транзакции. Пара к c50: там порядок блокировок, здесь — что видит транзакция и когда её повторять.",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver\n// (for PostgreSQL: github.com/jackc/pgx/v5/stdlib).\npackage store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"errors\"\n\t\"time\"\n)\n\n// sqlState is implemented by driver errors such as *pgconn.PgError.\ntype sqlState interface{ SQLState() string }\n\n// retryable: serialization failure (40001) or deadlock (40P01).\nfunc retryable(err error) bool {\n\tvar e sqlState\n\treturn errors.As(err, &e) && (e.SQLState() == \"40001\" || e.SQLState() == \"40P01\")\n}\n\n// InTx runs fn in one transaction and reruns it from BEGIN on a retryable error.\nfunc InTx(ctx context.Context, db *sql.DB, iso sql.IsolationLevel, fn func(*sql.Tx) error) error {\n\tfor attempt := 1; ; attempt++ {\n\t\terr := func() error {\n\t\t\ttx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: iso})\n\t\t\tif err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\tdefer tx.Rollback() // no-op after Commit\n\t\t\tif err := fn(tx); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\treturn tx.Commit()\n\t\t}()\n\t\tif err == nil || !retryable(err) || attempt == 3 {\n\t\t\treturn err\n\t\t}\n\t\tselect {\n\t\tcase <-time.After(time.Duration(attempt) * 20 * time.Millisecond):\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\t}\n\t}\n}",
+    "versionNote": "Поведение уровней и коды ошибок — документация PostgreSQL 17, глава 13 «Concurrency Control». sql.TxOptions — Go 1.8. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3); для запуска нужен драйвер.",
+    "sources": [
+      {
+        "title": "PostgreSQL: Transaction Isolation",
+        "url": "https://www.postgresql.org/docs/current/transaction-iso.html"
+      },
+      {
+        "title": "PostgreSQL: Serialization Failure Handling",
+        "url": "https://www.postgresql.org/docs/current/mvcc-serialization-failure-handling.html"
+      },
+      {
+        "title": "database/sql: TxOptions",
+        "url": "https://pkg.go.dev/database/sql#TxOptions"
+      }
+    ],
+    "practice": {
+      "kind": "Найди потерянное обновление",
+      "promptEN": "Two requests withdraw 20 from a balance of 100 at the same time. Each runs SELECT balance, subtracts in Go and writes UPDATE … SET balance = $1, in Read Committed. What balance can you end up with, and what are two ways to fix it?",
+      "promptRU": "Два запроса одновременно списывают 20 с баланса 100. Каждый делает SELECT balance, вычитает в Go и пишет UPDATE … SET balance = $1, уровень Read Committed. Какой баланс может получиться и как это исправить двумя способами?",
+      "pointsEN": [
+        "Both read 100 and both write 80: one withdrawal is lost.",
+        "Fix 1: compute in SQL with a guard: SET balance = balance - 20 WHERE id = $1 AND balance >= 20, then check RowsAffected.",
+        "Fix 2: SELECT … FOR UPDATE before reading, or Repeatable Read with a retry on 40001."
+      ],
+      "pointsRU": [
+        "Оба читают 100 и оба пишут 80: одно списание потеряно.",
+        "Способ 1: считать в SQL с условием: SET balance = balance - 20 WHERE id = $1 AND balance >= 20, затем проверить RowsAffected.",
+        "Способ 2: SELECT … FOR UPDATE перед чтением или Repeatable Read с повтором при 40001."
+      ],
+      "followUpEN": "Why does the guarded UPDATE not overdraw even in Read Committed?",
+      "followUpRU": "Почему UPDATE с условием не уводит баланс в минус даже в Read Committed?"
+    }
+  },
+  {
+    "id": "c50",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "How do you transfer money between two accounts safely under concurrency, without deadlocks?",
+    "qRU": "Как безопасно перевести деньги между двумя счетами при конкурентных запросах и без дедлоков?",
+    "shortEN": "Use one transaction and lock both rows in a stable order, by ascending account ID with SELECT … FOR UPDATE, then check the balance and update both rows. Locking in request order deadlocks: A→B holds A and waits for B while B→A holds B and waits for A; PostgreSQL detects the cycle and aborts one transaction with SQLSTATE 40P01. A stable order removes the cycle; still retry 40P01, and keep the transaction short.",
+    "anchorsEN": [
+      "one transaction; FOR UPDATE on both rows",
+      "lock by ascending ID, not request order",
+      "request order → cycle → 40P01",
+      "check the balance under the lock; keep it short"
+    ],
+    "jvmEN": "It is the same rule as ordering synchronized blocks or ReentrantLocks by a stable key in Java, and JPA's PESSIMISTIC_WRITE issues the same SELECT … FOR UPDATE. Go has no @Transactional: the function begins, commits and rolls back the transaction itself.",
+    "shortRU": "Нужна одна транзакция и блокировка обеих строк в постоянном порядке — по возрастанию ID счёта через SELECT … FOR UPDATE, затем проверка баланса и обновление обеих строк. Блокировка в порядке запроса даёт дедлок: A→B держит A и ждёт B, а B→A держит B и ждёт A; PostgreSQL находит цикл и прерывает одну транзакцию с SQLSTATE 40P01. Постоянный порядок убирает цикл; 40P01 всё равно повторяют, а транзакцию держат короткой.",
+    "jvmRU": "Это то же правило, что упорядочивать блоки synchronized или ReentrantLock по постоянному ключу в Java, а PESSIMISTIC_WRITE в JPA выполняет тот же SELECT … FOR UPDATE. @Transactional в Go нет: функция сама начинает, фиксирует и откатывает транзакцию.",
+    "detailsEN": [
+      "Without explicit locks: run the debit as a guarded UPDATE … WHERE id = $1 AND balance >= $2 and check RowsAffected, then the credit. Each UPDATE locks its row, so run the two updates in ascending ID order as well.",
+      "Hold locks briefly: no HTTP calls or Kafka sends inside the transaction, because row locks last until COMMIT. The event goes to an outbox table in the same transaction (c52).",
+      "In a double-entry ledger the same transaction inserts two entries, a debit and a credit, so the sum of all entries stays zero; a cached balance column is updated in that transaction too.",
+      "PostgreSQL waits deadlock_timeout (1 s by default) before checking for a deadlock, so a cycle costs at least that long before one transaction is aborted. Which one is aborted is not predictable.",
+      "The same rule holds for Go mutexes: lock per-account mutexes in ID order, and reject from == to up front, because sync.Mutex is not reentrant. The Go runtime reports a deadlock only when every goroutine is blocked; in a server with other live goroutines the two requests just hang."
+    ],
+    "detailsRU": [
+      "Без явных блокировок: списание — UPDATE с условием … WHERE id = $1 AND balance >= $2 и проверка RowsAffected, затем зачисление. Каждый UPDATE блокирует свою строку, поэтому и эти два обновления выполняют по возрастанию ID.",
+      "Блокировки держат недолго: никаких HTTP-вызовов и отправок в Kafka внутри транзакции, потому что блокировки строк живут до COMMIT. Событие пишут в таблицу outbox в той же транзакции (c52).",
+      "В бухгалтерии двойной записи та же транзакция вставляет две проводки, дебет и кредит, и сумма всех проводок остаётся нулевой; кэшированный столбец баланса обновляют в той же транзакции.",
+      "PostgreSQL ждёт deadlock_timeout (по умолчанию 1 с), прежде чем искать дедлок, поэтому цикл стоит минимум столько, пока одну транзакцию не прервут. Какую именно — предсказать нельзя.",
+      "Для мьютексов Go правило то же: мьютексы счетов берут по возрастанию ID, а from == to отклоняют сразу, потому что sync.Mutex не реентерабелен. Рантайм Go сообщает о дедлоке, только когда заблокированы все горутины; в сервере с другими живыми горутинами два запроса просто зависнут."
+    ],
+    "practicalRU": "Неделя 6: перевод в одной транзакции и конкурентный тест на 100 переводов. Практикум W6-1 — тот же порядок блокировок на мьютексах; q41 — дедлок при порядке запроса.",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver.\npackage store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"errors\"\n)\n\nvar (\n\tErrSameAccount       = errors.New(\"same account\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\nfunc Transfer(ctx context.Context, db *sql.DB, from, to, amount int64) error {\n\tif from == to {\n\t\treturn ErrSameAccount\n\t}\n\ttx, err := db.BeginTx(ctx, nil) // Read Committed\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\n\t// Lock both rows in ascending ID order, whatever the direction of the transfer.\n\tbalance := map[int64]int64{}\n\tfor _, id := range []int64{min(from, to), max(from, to)} {\n\t\tvar b int64\n\t\tif err := tx.QueryRowContext(ctx, `SELECT balance FROM accounts WHERE id = $1 FOR UPDATE`, id).Scan(&b); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tbalance[id] = b\n\t}\n\tif balance[from] < amount {\n\t\treturn ErrInsufficientFunds\n\t}\n\tif _, err := tx.ExecContext(ctx, `UPDATE accounts SET balance = balance - $1 WHERE id = $2`, amount, from); err != nil {\n\t\treturn err\n\t}\n\tif _, err := tx.ExecContext(ctx, `UPDATE accounts SET balance = balance + $1 WHERE id = $2`, amount, to); err != nil {\n\t\treturn err\n\t}\n\treturn tx.Commit() // a 40P01 here or above is retried by the caller (see c49)\n}",
+    "versionNote": "Дедлоки, deadlock_timeout и 40P01 — документация PostgreSQL 17 (разделы Deadlocks и Lock Management). min и max — встроенные функции Go 1.21. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3).",
+    "sources": [
+      {
+        "title": "PostgreSQL: Explicit Locking — Deadlocks",
+        "url": "https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-DEADLOCKS"
+      },
+      {
+        "title": "PostgreSQL: SELECT — The Locking Clause",
+        "url": "https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE"
+      },
+      {
+        "title": "PostgreSQL: deadlock_timeout",
+        "url": "https://www.postgresql.org/docs/current/runtime-config-locks.html"
+      }
+    ],
+    "practice": {
+      "kind": "Найди цикл",
+      "promptEN": "Transfer locks the source account first, then the destination. Requests A→B and B→A arrive together. What happens in PostgreSQL, and what happens to the same code with two sync.Mutex in Go?",
+      "promptRU": "Transfer блокирует сначала счёт-источник, потом получателя. Одновременно приходят A→B и B→A. Что произойдёт в PostgreSQL и что — с тем же кодом на двух sync.Mutex в Go?",
+      "pointsEN": [
+        "Each holds one lock and waits for the other: a cycle.",
+        "PostgreSQL checks after deadlock_timeout and aborts one transaction with 40P01; the other completes.",
+        "In Go both goroutines block forever, and the runtime reports it only if no goroutine can run. Fix: lock in ascending ID order."
+      ],
+      "pointsRU": [
+        "Каждый держит одну блокировку и ждёт другую: цикл.",
+        "PostgreSQL проверяет через deadlock_timeout и прерывает одну транзакцию с 40P01; вторая завершается.",
+        "В Go обе горутины блокируются навсегда, и рантайм сообщит об этом, только если ни одна горутина не может работать. Исправление: блокировать по возрастанию ID."
+      ],
+      "followUpEN": "Why keep retrying 40P01 after you have fixed the lock order?",
+      "followUpRU": "Зачем повторять при 40P01, если порядок блокировок уже исправлен?"
+    }
+  },
+  {
+    "id": "c51",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "How do you make a payment API idempotent?",
+    "qRU": "Как сделать платёжный API идемпотентным?",
+    "shortEN": "The client sends an Idempotency-Key, and the server stores it with a fingerprint of the request and the response it returned. A repeat with the same key and payload gets the stored response without moving money again; the same key with a different payload is rejected with 422. Claim the key atomically, with INSERT … ON CONFLICT DO NOTHING on a UNIQUE column in the same transaction as the transfer, never by checking first and inserting later.",
+    "anchorsEN": [
+      "Idempotency-Key + request fingerprint + stored response",
+      "same key, same payload → the stored response",
+      "same key, other payload → 422",
+      "claim atomically: UNIQUE + ON CONFLICT, same tx"
+    ],
+    "jvmEN": "No framework gives you this in either world: in Spring you would write the same filter or aspect over a table with a unique constraint. The guarantee comes from the database constraint, not from a synchronized block, because several instances of the service run at once.",
+    "shortRU": "Клиент присылает Idempotency-Key, а сервер хранит его вместе с отпечатком запроса и ответом, который вернул. Повтор с тем же ключом и тем же телом получает сохранённый ответ, и деньги второй раз не двигаются; тот же ключ с другим телом отклоняется с 422. Ключ занимают атомарно — INSERT … ON CONFLICT DO NOTHING по столбцу с UNIQUE в той же транзакции, что и перевод, — и никогда не «сначала проверить, потом вставить».",
+    "jvmRU": "Ни один фреймворк не даёт этого готовым ни там, ни здесь: в Spring пишут такой же фильтр или аспект над таблицей с уникальным ограничением. Гарантию даёт ограничение в базе, а не блок synchronized, потому что одновременно работают несколько экземпляров сервиса.",
+    "detailsEN": [
+      "Two identical requests at the same moment: the second INSERT waits on the unique index until the first transaction ends. After a commit it sees the conflict and returns the stored response; after a rollback it claims the key itself. If the key is committed separately before the work, as a “processing” row, a concurrent repeat gets 409 instead.",
+      "Check-then-insert is the classic bug: both requests SELECT, find nothing and both transfer. No data race is involved, so -race stays silent: it is a race condition in the sense of c2 (q40).",
+      "Store business outcomes such as “insufficient funds” as the response, so a repeat gets the same answer. Do not store infrastructure failures: roll back, which releases the key, and let the client retry.",
+      "Scope keys per client and expire them, for example after 24 hours. The status codes follow the IETF Idempotency-Key draft: missing key 400, reused key with a different payload 422, a repeat while the original is still processing 409.",
+      "Every side effect of the request belongs in that transaction: the ledger entries, the stored response and the outbox event (c52). Otherwise a retry can repeat one effect and not the other."
+    ],
+    "detailsRU": [
+      "Два одинаковых запроса в один момент: второй INSERT ждёт на уникальном индексе, пока не закончится первая транзакция. После commit он видит конфликт и возвращает сохранённый ответ; после rollback занимает ключ сам. Если ключ фиксируют отдельно до работы, строкой «в обработке», конкурентный повтор получает 409.",
+      "«Проверить, потом вставить» — классическая ошибка: оба запроса делают SELECT, ничего не находят и оба переводят. Гонки данных тут нет, поэтому -race молчит: это логическая гонка в смысле c2 (q40).",
+      "Бизнес-исходы вроде «недостаточно средств» сохраняют как ответ, чтобы повтор получил тот же ответ. Сбои инфраструктуры не сохраняют: откат освобождает ключ, и клиент повторит.",
+      "Ключи ограничивают клиентом и удаляют по сроку, например через 24 часа. Коды — по черновику IETF Idempotency-Key: нет ключа — 400, ключ повторно с другим телом — 422, повтор, пока исходный запрос ещё выполняется, — 409.",
+      "Все побочные эффекты запроса — в этой транзакции: проводки, сохранённый ответ и событие в outbox (c52). Иначе повтор может повторить один эффект и не повторить другой."
+    ],
+    "practicalRU": "Неделя 6, вторник: таблица ключей с UNIQUE и сохранённым ответом. Практикум W6-2 — то же в памяти и в HTTP-обработчике; q40 — окно «проверить, потом вставить».",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver.\npackage store\n\nimport (\n\t\"bytes\"\n\t\"context\"\n\t\"database/sql\"\n\t\"errors\"\n)\n\nvar ErrKeyReused = errors.New(\"idempotency key reused with a different request\") // → 422\n\n// Once claims key in the transaction that does the work. A concurrent request with the\n// same key blocks on the unique index until this transaction commits or rolls back.\n// do returns the response to store; an error rolls back and releases the key.\nfunc Once(ctx context.Context, db *sql.DB, key string, fingerprint []byte,\n\tdo func(*sql.Tx) (status int, body []byte, err error)) (int, []byte, error) {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn 0, nil, err\n\t}\n\tdefer tx.Rollback()\n\n\tres, err := tx.ExecContext(ctx,\n\t\t`INSERT INTO idempotency_keys (key, fingerprint) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`, key, fingerprint)\n\tif err != nil {\n\t\treturn 0, nil, err\n\t}\n\tif n, err := res.RowsAffected(); err != nil {\n\t\treturn 0, nil, err\n\t} else if n == 0 { // seen before: replay or reject\n\t\tvar stored []byte\n\t\tvar status int\n\t\tvar body []byte\n\t\terr := tx.QueryRowContext(ctx,\n\t\t\t`SELECT fingerprint, status, body FROM idempotency_keys WHERE key = $1`, key).Scan(&stored, &status, &body)\n\t\tif err != nil {\n\t\t\treturn 0, nil, err\n\t\t}\n\t\tif !bytes.Equal(stored, fingerprint) {\n\t\t\treturn 0, nil, ErrKeyReused\n\t\t}\n\t\treturn status, body, nil\n\t}\n\n\tstatus, body, err := do(tx)\n\tif err != nil {\n\t\treturn 0, nil, err\n\t}\n\tif _, err := tx.ExecContext(ctx,\n\t\t`UPDATE idempotency_keys SET status = $2, body = $3 WHERE key = $1`, key, status, body); err != nil {\n\t\treturn 0, nil, err\n\t}\n\treturn status, body, tx.Commit()\n}",
+    "versionNote": "Idempotency-Key — черновик IETF (draft-ietf-httpapi-idempotency-key-header, ещё не RFC). ON CONFLICT — PostgreSQL 9.5+. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3).",
+    "sources": [
+      {
+        "title": "IETF draft: The Idempotency-Key HTTP Header Field",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+      },
+      {
+        "title": "PostgreSQL: INSERT — ON CONFLICT",
+        "url": "https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT"
+      }
+    ],
+    "practice": {
+      "kind": "Закрой окно",
+      "promptEN": "A handler runs SELECT 1 FROM idempotency_keys WHERE key = $1; if there is no row, it transfers and then inserts the key. A mobile client retries after a timeout while the first request is still running. What happens?",
+      "promptRU": "Обработчик делает SELECT 1 FROM idempotency_keys WHERE key = $1; если строки нет, переводит деньги и потом вставляет ключ. Мобильный клиент повторяет запрос по таймауту, пока первый ещё выполняется. Что произойдёт?",
+      "pointsEN": [
+        "Both SELECTs find nothing, so both transfer: a double charge.",
+        "-race does not help: there is no data race, only a race condition between two requests.",
+        "Fix: INSERT … ON CONFLICT DO NOTHING on a UNIQUE key inside the transfer transaction, then check RowsAffected."
+      ],
+      "pointsRU": [
+        "Оба SELECT ничего не находят, и оба запроса переводят: двойное списание.",
+        "-race не поможет: гонки данных нет, есть логическая гонка двух запросов.",
+        "Исправление: INSERT … ON CONFLICT DO NOTHING по ключу с UNIQUE внутри транзакции перевода и проверка RowsAffected."
+      ],
+      "followUpEN": "Which response does the retry get if the first request ended with insufficient funds?",
+      "followUpRU": "Какой ответ получит повтор, если первый запрос закончился нехваткой средств?"
+    }
+  },
+  {
+    "id": "c52",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "What is a transactional outbox, and why not publish to Kafka right after commit?",
+    "qRU": "Что такое transactional outbox и почему не публиковать в Kafka сразу после commit?",
+    "shortEN": "Publishing after commit is a dual write: if the process dies between the commit and the send, the transfer stays and the event is lost. Sending before commit is no better, because it can announce a transfer that then rolls back. The outbox writes the event as a row in the same transaction, so both happen or neither does. A relay then publishes unsent rows and marks them sent; that is at-least-once, so consumers deduplicate by event ID.",
+    "anchorsEN": [
+      "publish after commit = dual write → lost event",
+      "event row in the same transaction",
+      "relay: unsent → publish → mark sent",
+      "at-least-once → dedupe by event ID"
+    ],
+    "jvmEN": "The pattern is the same as in Spring projects, which often use Debezium or Spring Modulith's event publication registry for it. @TransactionalEventListener(phase = AFTER_COMMIT) is exactly the dual write the outbox avoids: the listener runs after the commit, and its send can still be lost.",
+    "shortRU": "Публикация после commit — это двойная запись: если процесс упадёт между commit и отправкой, перевод останется, а событие потеряется. Отправлять до commit не лучше: можно объявить перевод, который потом откатится. Outbox записывает событие строкой в той же транзакции, поэтому случается либо всё, либо ничего. Затем relay публикует неотправленные строки и помечает их отправленными; это at-least-once, поэтому потребители отсеивают дубликаты по ID события.",
+    "jvmRU": "Паттерн тот же, что в проектах на Spring, где для него часто берут Debezium или реестр публикации событий Spring Modulith. @TransactionalEventListener(phase = AFTER_COMMIT) — ровно та двойная запись, которой outbox избегает: слушатель работает после commit, и его отправка всё равно может потеряться.",
+    "detailsEN": [
+      "If the relay crashes after the send and before marking the row, it publishes the row again. Kafka's idempotent producer does not help here: it removes duplicates of one send retried by the same producer, and the relay's second send is a new record.",
+      "Several relays can share the table with SELECT … ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED: each takes rows the others have not locked. Then events of one account can leave out of order; when that order matters, run one relay or split the relays by account, and send with the account ID as the Kafka key.",
+      "Instead of polling, change data capture such as Debezium reads the outbox inserts from the PostgreSQL write-ahead log.",
+      "In Go the relay is one goroutine owned by main: it stops on ctx cancellation, backs off after errors, and shutdown waits for it (c12, c22). Delete or archive sent rows, or the table keeps growing.",
+      "The outbox row ID is a natural event ID: put it in a message header, so consumers can skip duplicates (c53)."
+    ],
+    "detailsRU": [
+      "Если relay упадёт после отправки и до пометки строки, он опубликует её снова. Идемпотентный продюсер Kafka тут не поможет: он убирает дубликаты одной отправки, которую повторил тот же продюсер, а вторая отправка relay — новая запись.",
+      "Несколько relay могут делить таблицу через SELECT … ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED: каждый берёт строки, которые не заблокировали другие. Тогда события одного счёта могут уйти не по порядку; если порядок важен, оставляют один relay или делят relay по счетам и отправляют с ID счёта в качестве ключа Kafka.",
+      "Вместо опроса таблицы change data capture, например Debezium, читает вставки в outbox из журнала предзаписи PostgreSQL.",
+      "В Go relay — одна горутина, которой владеет main: она останавливается по отмене ctx, после ошибок делает паузу, а при остановке сервиса её дожидаются (c12, c22). Отправленные строки удаляют или архивируют, иначе таблица растёт без конца.",
+      "ID строки outbox — готовый ID события: его кладут в заголовок сообщения, чтобы потребители отсеивали дубликаты (c53)."
+    ],
+    "practicalRU": "Неделя 6, среда: outbox и relay-воркер. Практикум W6-3 — relay с ненадёжным брокером и идемпотентный потребитель; q42 — что теряется при публикации после commit.",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver.\npackage outbox\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"strconv\"\n\t\"time\"\n)\n\n// In the transfer transaction, next to the balance updates:\n//\n//\t_, err = tx.ExecContext(ctx,\n//\t\t`INSERT INTO outbox (account_id, type, payload) VALUES ($1, 'TransferCompleted', $2)`, from, payload)\n\ntype Publish func(ctx context.Context, key string, eventID int64, payload []byte) error\n\n// Relay runs in one goroutine owned by main and returns when ctx is cancelled.\nfunc Relay(ctx context.Context, db *sql.DB, publish Publish) error {\n\ttick := time.NewTicker(500 * time.Millisecond)\n\tdefer tick.Stop()\n\tfor {\n\t\t_ = relayBatch(ctx, db, publish) // on error the same rows are retried on the next tick\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tcase <-tick.C:\n\t\t}\n\t}\n}\n\nfunc relayBatch(ctx context.Context, db *sql.DB, publish Publish) error {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\trows, err := tx.QueryContext(ctx, `SELECT id, account_id, payload FROM outbox\n\t\tWHERE sent_at IS NULL ORDER BY id LIMIT 100 FOR UPDATE SKIP LOCKED`)\n\tif err != nil {\n\t\treturn err\n\t}\n\ttype event struct {\n\t\tid, account int64\n\t\tpayload     []byte\n\t}\n\tvar batch []event\n\tfor rows.Next() {\n\t\tvar e event\n\t\tif err := rows.Scan(&e.id, &e.account, &e.payload); err != nil {\n\t\t\trows.Close()\n\t\t\treturn err\n\t\t}\n\t\tbatch = append(batch, e)\n\t}\n\tif err := rows.Close(); err != nil {\n\t\treturn err\n\t}\n\tif err := rows.Err(); err != nil {\n\t\treturn err\n\t}\n\tfor _, e := range batch {\n\t\t// The account ID is the Kafka key: one account's events stay in one partition, in order.\n\t\tif err := publish(ctx, strconv.FormatInt(e.account, 10), e.id, e.payload); err != nil {\n\t\t\treturn err // stop here to keep the order; already published rows are sent again later\n\t\t}\n\t\tif _, err := tx.ExecContext(ctx, `UPDATE outbox SET sent_at = now() WHERE id = $1`, e.id); err != nil {\n\t\t\treturn err\n\t\t}\n\t}\n\treturn tx.Commit()\n}",
+    "versionNote": "SKIP LOCKED — PostgreSQL 9.5+; гарантии доставки Kafka — раздел Message Delivery Semantics документации Kafka. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3).",
+    "sources": [
+      {
+        "title": "microservices.io: Transactional outbox",
+        "url": "https://microservices.io/patterns/data/transactional-outbox.html"
+      },
+      {
+        "title": "PostgreSQL: SELECT — The Locking Clause (SKIP LOCKED)",
+        "url": "https://www.postgresql.org/docs/current/sql-select.html#SQL-FOR-UPDATE-SHARE"
+      },
+      {
+        "title": "Apache Kafka: Message Delivery Semantics",
+        "url": "https://kafka.apache.org/documentation/#semantics"
+      }
+    ],
+    "practice": {
+      "kind": "Найди потерю",
+      "promptEN": "A handler commits the transfer and then calls producer.Send. The pod is killed right after COMMIT. What do the database and the consumers see, and what do you change?",
+      "promptRU": "Обработчик фиксирует перевод, а потом вызывает producer.Send. Под убивают сразу после COMMIT. Что видят база и потребители и что ты изменишь?",
+      "pointsEN": [
+        "The transfer is committed and the event is never sent: consumers never learn about it.",
+        "Returning an error so that the client retries would move the money twice.",
+        "Write the event to an outbox table in the same transaction; a relay publishes it at least once."
+      ],
+      "pointsRU": [
+        "Перевод зафиксирован, событие не отправлено: потребители о нём так и не узнают.",
+        "Вернуть ошибку, чтобы клиент повторил, — значит перевести деньги дважды.",
+        "Записать событие в таблицу outbox в той же транзакции; relay опубликует его хотя бы один раз."
+      ],
+      "followUpEN": "Why can the relay publish an event twice, and who must handle that?",
+      "followUpRU": "Почему relay может опубликовать событие дважды и кто должен с этим справиться?"
+    }
+  },
+  {
+    "id": "c53",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "What delivery guarantee does a Kafka consumer give, and how do you handle duplicates and ordering?",
+    "qRU": "Какую гарантию доставки даёт потребитель Kafka и как быть с дубликатами и порядком?",
+    "shortEN": "At-least-once, if you commit the offset after processing: a crash or a rebalance between the two replays the messages since the last commit, while committing before processing loses them instead. So make processing idempotent: store each event ID in the same database transaction as its effect, and skip IDs you have already seen. Order holds only within a partition: messages with the same key go to the same partition, and each partition is read by one consumer of the group at a time.",
+    "anchorsEN": [
+      "commit after processing → at-least-once",
+      "commit before → at-most-once: loss",
+      "dedupe: event ID + effect in one tx",
+      "order per partition; same key → same partition"
+    ],
+    "jvmEN": "The semantics are Kafka's own and match what you know from the Java consumer, but Go clients differ in defaults. kafka-go's ReadMessage commits the offset when it returns the message, before you process it; use FetchMessage and CommitMessages instead. librdkafka, behind confluent-kafka-go, enables the idempotent producer only with enable.idempotence=true, while the Java producer enables it by default.",
+    "shortRU": "At-least-once — если фиксировать offset после обработки: падение или ребалансировка между ними повторит сообщения с последнего commit, а фиксация до обработки вместо этого теряет их. Поэтому обработку делают идемпотентной: ID каждого события сохраняют в той же транзакции базы, что и его результат, и пропускают уже виденные ID. Порядок есть только внутри партиции: сообщения с одним ключом попадают в одну партицию, а каждую партицию в группе одновременно читает один потребитель.",
+    "jvmRU": "Семантика — самой Kafka и совпадает с тем, что знаешь по потребителю на Java, но у клиентов Go другие значения по умолчанию. ReadMessage в kafka-go фиксирует offset, когда возвращает сообщение, — до обработки; вместо него берут FetchMessage и CommitMessages. librdkafka, на которой построен confluent-kafka-go, включает идемпотентного продюсера только с enable.idempotence=true, а продюсер на Java — по умолчанию.",
+    "detailsEN": [
+      "A consumer group splits a topic's partitions among its members; with more consumers than partitions, some stay idle. When a member joins, leaves or stops responding, the group rebalances, partitions move with their last committed offset, and uncommitted messages are delivered again.",
+      "The default partitioner hashes the key, so one account's events stay in one partition and in order, as long as the number of partitions does not change. Messages without a key are spread across partitions and lose their relative order.",
+      "Retries: on a transient error, retry with backoff while holding the partition, which keeps the order; after N attempts, send the message to a dead-letter topic with the error, so one poison message does not stop the partition.",
+      "The idempotent producer removes duplicates caused by its own retries. Kafka transactions with read_committed consumers give exactly-once from topic to topic; when the effect lands in your database, exactly-once in practice means an idempotent consumer.",
+      "Auto-commit can commit messages that were fetched but not yet processed, depending on the client. For payments, commit explicitly after the database transaction with the effect has committed."
+    ],
+    "detailsRU": [
+      "Группа потребителей делит партиции топика между участниками; если потребителей больше, чем партиций, часть простаивает. Когда участник входит, выходит или перестаёт отвечать, группа ребалансируется, партиции переходят к другим вместе с последним зафиксированным offset, и незафиксированные сообщения доставляются снова.",
+      "Стандартный partitioner хеширует ключ, поэтому события одного счёта остаются в одной партиции и по порядку, пока не меняется число партиций. Сообщения без ключа расходятся по партициям и теряют взаимный порядок.",
+      "Повторы: при временной ошибке повторяют с паузой, не отпуская партицию, — так сохраняется порядок; после N попыток сообщение с описанием ошибки отправляют в dead-letter-топик, чтобы одно «ядовитое» сообщение не остановило партицию.",
+      "Идемпотентный продюсер убирает дубликаты от собственных повторов. Транзакции Kafka с потребителями read_committed дают exactly-once из топика в топик; когда результат пишется в твою базу, exactly-once на практике означает идемпотентного потребителя.",
+      "Автокоммит, в зависимости от клиента, может зафиксировать сообщения, которые уже получены, но ещё не обработаны. Для платежей offset фиксируют явно — после того как зафиксирована транзакция базы с результатом."
+    ],
+    "practicalRU": "Неделя 6, четверг: потребитель с идемпотентной обработкой. Практикум W6-3 — потребитель отсеивает дубликаты от relay; q43 — offset зафиксирован до обработки.",
+    "code": "// Fragment: compiles with database/sql alone; running it needs a driver.\npackage consumer\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\n// Handle applies one event at most once: the event ID and its effect commit together.\n// The consumer loop commits the Kafka offset only after Handle returns nil\n// (kafka-go: FetchMessage → Handle → CommitMessages; not ReadMessage, which commits on read).\nfunc Handle(ctx context.Context, db *sql.DB, eventID int64, apply func(*sql.Tx) error) error {\n\ttx, err := db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\tres, err := tx.ExecContext(ctx,\n\t\t`INSERT INTO processed_events (event_id) VALUES ($1) ON CONFLICT DO NOTHING`, eventID)\n\tif err != nil {\n\t\treturn err\n\t}\n\tn, err := res.RowsAffected()\n\tif err != nil {\n\t\treturn err\n\t}\n\tif n == 0 {\n\t\treturn nil // a duplicate: the effect is already there, commit the offset and move on\n\t}\n\tif err := apply(tx); err != nil {\n\t\treturn err\n\t}\n\treturn tx.Commit()\n}",
+    "versionNote": "Семантика доставки — документация Apache Kafka (Message Delivery Semantics); enable.idempotence по умолчанию — ProducerConfig клиента Java и CONFIGURATION.md librdkafka; поведение ReadMessage — README и reader.go segmentio/kafka-go. Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3).",
+    "sources": [
+      {
+        "title": "Apache Kafka: Message Delivery Semantics",
+        "url": "https://kafka.apache.org/documentation/#semantics"
+      },
+      {
+        "title": "Apache Kafka: producer config enable.idempotence",
+        "url": "https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence"
+      },
+      {
+        "title": "segmentio/kafka-go: Explicit Commits",
+        "url": "https://github.com/segmentio/kafka-go#explicit-commits"
+      },
+      {
+        "title": "librdkafka: configuration properties",
+        "url": "https://github.com/confluentinc/librdkafka/blob/master/CONFIGURATION.md"
+      }
+    ],
+    "practice": {
+      "kind": "Раздели гарантии",
+      "promptEN": "A consumer built on kafka-go calls ReadMessage and then writes the payment to PostgreSQL. The pod restarts in the middle of the write. Is the payment lost, duplicated, or neither, and what do you change?",
+      "promptRU": "Потребитель на kafka-go вызывает ReadMessage и потом пишет платёж в PostgreSQL. Под перезапускается посреди записи. Платёж потерян, задвоен или ни то ни другое — и что ты изменишь?",
+      "pointsEN": [
+        "ReadMessage already committed the offset, so after the restart that message is skipped: the payment is lost (at-most-once).",
+        "Switch to FetchMessage, apply the effect, then CommitMessages: at-least-once.",
+        "Duplicates become possible, so store the event ID with the effect in one transaction."
+      ],
+      "pointsRU": [
+        "ReadMessage уже зафиксировал offset, поэтому после перезапуска это сообщение пропущено: платёж потерян (at-most-once).",
+        "Перейти на FetchMessage, применить результат, потом CommitMessages: at-least-once.",
+        "Появляются дубликаты, поэтому ID события сохраняют вместе с результатом в одной транзакции."
+      ],
+      "followUpEN": "Why does the message key matter for this consumer?",
+      "followUpRU": "Почему для этого потребителя важен ключ сообщения?"
+    }
+  },
+  {
+    "id": "c54",
+    "mod": "m8",
+    "modName": "8. Data Consistency: Transactions, Idempotency, Outbox, Kafka",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you find and fix a slow query: indexes, EXPLAIN ANALYZE and N+1?",
+    "qRU": "Как найти и исправить медленный запрос: индексы, EXPLAIN ANALYZE и N+1?",
+    "shortEN": "Run EXPLAIN ANALYZE on the real query: it executes the query and shows the plan with actual times and row counts, so a Seq Scan that reads a large table to return a few rows points to a missing index. For one account's history, newest first, a B-tree index on (account_id, created_at) serves the filter and the order; its leading column must be in the WHERE clause. N+1, one query per row of a list, becomes a join or one query with = ANY($1).",
+    "anchorsEN": [
+      "EXPLAIN ANALYZE: real plan, real times",
+      "Seq Scan for a few rows → missing index",
+      "(account_id, created_at): leading column in WHERE",
+      "N+1 → JOIN or = ANY($1)"
+    ],
+    "jvmEN": "N+1 is the same problem as lazy loading in Hibernate, where touching a collection in a loop fires one query per entity; in Go it is easier to see, because each query is an explicit call inside the loop. The fix is the same: a join, a batch query, or an explicit fetch.",
+    "shortRU": "Запусти EXPLAIN ANALYZE на настоящем запросе: он выполняет запрос и показывает план с фактическим временем и числом строк, поэтому Seq Scan, который читает большую таблицу ради нескольких строк, указывает на недостающий индекс. Для истории одного счёта, от новых к старым, B-tree-индекс по (account_id, created_at) обслуживает и фильтр, и порядок; его первый столбец должен быть в WHERE. N+1 — запрос на каждую строку списка — заменяют на JOIN или один запрос с = ANY($1).",
+    "jvmRU": "N+1 — та же проблема, что ленивая загрузка в Hibernate, где обращение к коллекции в цикле даёт по запросу на сущность; в Go её проще заметить, потому что каждый запрос — явный вызов внутри цикла. Исправление то же: JOIN, пакетный запрос или явная выборка.",
+    "detailsEN": [
+      "EXPLAIN alone shows estimates; EXPLAIN ANALYZE runs the statement, so wrap an UPDATE or DELETE in BEGIN … ROLLBACK. Compare estimated and actual rows: a large gap usually means stale statistics, which ANALYZE refreshes.",
+      "A multicolumn B-tree index is most efficient when the conditions constrain its leading columns. For WHERE account_id = $1 ORDER BY created_at DESC LIMIT 50, the index (account_id, created_at) is scanned backward and returns rows already in order, without a Sort node.",
+      "Every index slows down inserts and updates and takes space, so index the queries you actually run. For deep pages, filter by the last value seen (created_at < $2) instead of OFFSET: the rows skipped by OFFSET are still computed inside the server.",
+      "In Go, N+1 is a loop that calls QueryRowContext per item: latency grows with N, and every call takes a pool connection. With pgx, a []int64 argument binds to a bigint[] parameter, so WHERE id = ANY($1) loads all rows in one round trip.",
+      "Count queries per request in logs or traces to catch N+1 before production; a test with 100 items makes it obvious."
+    ],
+    "detailsRU": [
+      "EXPLAIN без ANALYZE показывает оценки; EXPLAIN ANALYZE выполняет запрос, поэтому UPDATE или DELETE оборачивают в BEGIN … ROLLBACK. Сравни оценку и фактическое число строк: большой разрыв обычно означает устаревшую статистику, её обновляет ANALYZE.",
+      "Составной B-tree-индекс эффективнее всего, когда условия ограничивают его первые столбцы. Для WHERE account_id = $1 ORDER BY created_at DESC LIMIT 50 индекс (account_id, created_at) читается в обратном порядке и отдаёт строки уже отсортированными, без узла Sort.",
+      "Каждый индекс замедляет вставки и обновления и занимает место, поэтому индексируют запросы, которые реально выполняются. Для дальних страниц фильтруют по последнему увиденному значению (created_at < $2) вместо OFFSET: строки, пропущенные OFFSET, сервер всё равно вычисляет.",
+      "В Go N+1 — цикл, который вызывает QueryRowContext на каждый элемент: задержка растёт с N, и каждый вызов занимает соединение пула. В pgx аргумент []int64 передаётся как параметр bigint[], поэтому WHERE id = ANY($1) загружает все строки за один запрос.",
+      "Считай запросы на один HTTP-запрос в логах или трассах, чтобы поймать N+1 до продакшена; тест на 100 элементов делает его очевидным."
+    ],
+    "practicalRU": "Неделя 6, суббота: индексы и EXPLAIN ANALYZE на истории переводов счёта, поиск N+1.",
+    "code": "// Fragment: compiles with database/sql alone; = ANY($1) with a []int64 needs pgx (stdlib).\npackage store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\n// History of one account, newest first. Served by:\n//\n//\tCREATE INDEX transfers_account_created ON transfers (account_id, created_at);\n//\tEXPLAIN ANALYZE SELECT ... -- expect an Index Scan Backward, no Sort, no Seq Scan\n\n// Names loads owner names for many accounts in one round trip instead of N.\nfunc Names(ctx context.Context, db *sql.DB, ids []int64) (map[int64]string, error) {\n\trows, err := db.QueryContext(ctx, `SELECT account_id, name FROM owners WHERE account_id = ANY($1)`, ids)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer rows.Close()\n\tnames := make(map[int64]string, len(ids))\n\tfor rows.Next() {\n\t\tvar id int64\n\t\tvar name string\n\t\tif err := rows.Scan(&id, &name); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tnames[id] = name\n\t}\n\treturn names, rows.Err()\n}",
+    "versionNote": "EXPLAIN, составные индексы, ORDER BY по индексу и OFFSET — документация PostgreSQL 17 (Using EXPLAIN, Multicolumn Indexes, Indexes and ORDER BY, LIMIT and OFFSET). Передача []int64 без обёртки — pgx v5 stdlib (CheckNamedValue пропускает любые значения). Фрагмент компилируется (go vet на Go 1.24.7 и 1.27.3).",
+    "sources": [
+      {
+        "title": "PostgreSQL: Using EXPLAIN",
+        "url": "https://www.postgresql.org/docs/current/using-explain.html"
+      },
+      {
+        "title": "PostgreSQL: Multicolumn Indexes",
+        "url": "https://www.postgresql.org/docs/current/indexes-multicolumn.html"
+      },
+      {
+        "title": "PostgreSQL: Indexes and ORDER BY",
+        "url": "https://www.postgresql.org/docs/current/indexes-ordering.html"
+      },
+      {
+        "title": "PostgreSQL: LIMIT and OFFSET",
+        "url": "https://www.postgresql.org/docs/current/queries-limit.html"
+      }
+    ],
+    "practice": {
+      "kind": "Посчитай запросы",
+      "promptEN": "A handler loads 50 transfers, then calls QueryRowContext for each to get the counterparty's name. The pool has 10 connections. How many round trips does one request make, and what is the fix?",
+      "promptRU": "Обработчик загружает 50 переводов, а потом на каждый вызывает QueryRowContext за именем контрагента. В пуле 10 соединений. Сколько обращений к базе делает один запрос и как это исправить?",
+      "pointsEN": [
+        "51 round trips: 1 for the list and 50 for the names.",
+        "Under load, requests compete for 10 connections, so latency grows with traffic as well as with N.",
+        "One query: JOIN the names, or a second query with WHERE id = ANY($1) and a map in Go."
+      ],
+      "pointsRU": [
+        "51 обращение: 1 за списком и 50 за именами.",
+        "Под нагрузкой запросы делят 10 соединений, поэтому задержка растёт и с трафиком, и с N.",
+        "Один запрос: JOIN с именами или второй запрос с WHERE id = ANY($1) и map в Go."
+      ],
+      "followUpEN": "What does EXPLAIN ANALYZE show for the history query before and after adding the index?",
+      "followUpRU": "Что покажет EXPLAIN ANALYZE для запроса истории до и после добавления индекса?"
+    }
   }
 ];

@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-29b",
+  revision: "2026-10-29c",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -370,35 +370,35 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
+            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", links: ["c49", "c50", "p-transfers"], refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
             { id: "w6-mon-2", text: "LeetCode 973. K Closest Points to Origin + проговор", lc: 973 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", talk: "idem" },
-            { id: "w6-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»" }
+            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", links: ["c51", "p-idempotency"], talk: "idem" },
+            { id: "w6-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»", links: ["q40", "p-idempotency", "c2"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", talk: "outbox" },
-            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["c12", "c22"] },
+            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox"], talk: "outbox" },
+            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22"] },
             { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w6-thu-1", text: "Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу", refs: [{ t: "Apache Kafka documentation", u: "https://kafka.apache.org/documentation/" }] },
+            { id: "w6-thu-1", text: "Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу", links: ["c53", "q43", "p-outbox"], refs: [{ t: "Apache Kafka documentation", u: "https://kafka.apache.org/documentation/" }] },
             { id: "w6-thu-2", text: "Docker Compose: добавить Kafka" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race" },
-            { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", talk: "outbox" },
+            { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race", links: ["p-transfers", "q41", "c50"] },
+            { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", links: ["c51", "c52"], talk: "outbox" },
             { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 },
-            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] }
+            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", links: ["c54"], refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] }
           ]
         }
       ],
@@ -415,8 +415,8 @@ const PLAN = {
         "Какой уровень изоляции выбран для перевода и почему?"
       ],
       gaps: [
-        "Нет материалов по транзакциям, изоляции, идемпотентности и outbox — это ядро финтех-собесов.",
-        "Нет раздела про Kafka для Go-разработчика (партиции, группы, ретраи, DLQ)."
+        "Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W6-3.",
+        "Практикум недели работает в памяти; PostgreSQL и Kafka в Docker Compose проверяются только в своём проекте."
       ]
     },
 
@@ -1123,13 +1123,56 @@ const PLAN = {
     "w5-thu-1": { accept: "JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения. c48 — ответ до раскрытия; q38 — до вариантов." },
     "w5-thu-2": { accept: "docker compose up поднимает сервис после healthcheck БД." },
     "w5-sat-1": { accept: "Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится." },
-    "w5-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." }
+    "w5-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." },
+
+    "w6-mon-1": { accept: "Перевод — одна транзакция: обе строки блокируются SELECT … FOR UPDATE по возрастанию ID, баланс проверяется под блокировкой, 40001 и 40P01 повторяются с BEGIN. c49 и c50 — ответ до раскрытия; W6-1 проходит go test -race." },
+    "w6-tue-1": { accept: "Таблица idempotency_keys: ключ с UNIQUE, отпечаток запроса, сохранённые статус и тело; повтор возвращает сохранённый ответ, другой payload с тем же ключом — 422. c51 — ответ до раскрытия; W6-2 проходит go test -race." },
+    "w6-tue-2": { accept: "Тест: два одинаковых запроса одновременно — один перевод. Ключ занимается INSERT … ON CONFLICT DO NOTHING в транзакции перевода; объяснено, почему -race молчит при «проверить, потом вставить». q40 — до вариантов." },
+    "w6-wed-1": { accept: "Событие пишется в outbox в той же транзакции, что и перевод; при откате нет ни перевода, ни события. c52 — ответ до раскрытия; q42 — до вариантов." },
+    "w6-wed-2": { accept: "Relay — одна горутина с владельцем: останавливается по ctx, после ошибки повторяет то же событие, отправленным помечает только после подтверждения; при остановке сервиса её дожидаются. W6-3 проходит go test -race." },
+    "w6-thu-1": { accept: "Потребитель фиксирует offset после обработки; ID события и результат — в одной транзакции; дубликат не меняет данные (тест); ключ сообщения — ID счёта. c53 — ответ до раскрытия; q43 — до вариантов." },
+    "w6-thu-2": { accept: "docker compose up поднимает Kafka и сервис; relay публикует событие перевода, потребитель его читает." },
+    "w6-sat-1": { accept: "100 параллельных переводов: сумма балансов неизменна, отрицательных балансов нет, -race чистый, встречные переводы не дают дедлока. q41 — до вариантов." },
+    "w6-sat-2": { accept: "Две записи по 2 минуты по-английски: идемпотентность (ключ, отпечаток, атомарный захват) и outbox (двойная запись, at-least-once, дедупликация)." },
+    "w6-sat-4": { accept: "Для запроса истории счёта — EXPLAIN ANALYZE до и после составного индекса (account_id, created_at); найден и убран N+1. c54 — ответ до раскрытия." }
   },
 
-  // ─────────────── ОБРАЗЦЫ ОТВЕТОВ НА АНГЛИЙСКОМ (НЕДЕЛИ 1–3) ───────────────
+  // ─────────────── ОБРАЗЦЫ ОТВЕТОВ НА АНГЛИЙСКОМ (НЕДЕЛИ 1–3, 5–6) ───────────────
   // hook — одна строка для запоминания; en — короткий ответ для интервью.
   // Открывать после своей попытки вслух; сверять смысл, а не заучивать дословно.
   modelAnswers: {
+    "w6-mon-1": {
+      hook: "Read Committed + FOR UPDATE in ID order; retry 40001 and 40P01 from BEGIN.",
+      en: "PostgreSQL defaults to Read Committed, where each statement sees its own snapshot. For a transfer I open one transaction, lock both account rows with SELECT FOR UPDATE in ascending ID order, check the balance under the lock and update both rows. A stable lock order means opposite transfers cannot deadlock. Repeatable Read or Serializable would also work, but then I must retry the whole transaction on serialization failures, SQLSTATE 40001; deadlocks, 40P01, are retried too."
+    },
+    "w6-tue-1": {
+      hook: "Key + request fingerprint + stored response; same key, other body → 422.",
+      en: "The client sends an Idempotency-Key. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
+    },
+    "w6-tue-2": {
+      hook: "Claim the key atomically: INSERT … ON CONFLICT DO NOTHING in the transfer's transaction.",
+      en: "Check-then-insert fails under concurrency: both requests check, find nothing and both transfer. There is no data race, so the race detector stays silent. I claim the key with INSERT ON CONFLICT DO NOTHING on a unique column, in the same transaction as the transfer. A concurrent duplicate blocks on the unique index until the first transaction ends; then it sees the conflict and returns the stored response, or claims the key if the first one rolled back."
+    },
+    "w6-wed-1": {
+      hook: "Event row in the same transaction; a relay publishes; at-least-once.",
+      en: "Publishing after commit is a dual write: if the process dies between the commit and the send, the event is lost, and sending first can announce a transfer that then rolls back. So I insert the event into an outbox table in the same transaction as the transfer: either both are committed or neither is. A relay publishes the rows later, so delivery is at-least-once, and consumers must deduplicate."
+    },
+    "w6-wed-2": {
+      hook: "One owned goroutine: poll, publish in order, mark after the ack, stop on ctx.",
+      en: "The relay is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles."
+    },
+    "w6-thu-1": {
+      hook: "Commit the offset after the effect; dedupe by event ID; order per partition.",
+      en: "My consumer is at-least-once: it commits the offset only after the effect is committed in the database. A crash or a rebalance in between replays messages, so the handler stores the event ID in the same transaction as the effect and skips IDs it has seen. Ordering is per partition: events are keyed by account ID, so one account's events stay in one partition, and within a group each partition is read by one consumer at a time."
+    },
+    "w6-sat-1": {
+      hook: "Per-account locks in ID order; check under the lock; 100 goroutines under -race.",
+      en: "Each account has its own lock, and a transfer takes both locks in ascending ID order, so opposite transfers cannot deadlock. The balance is checked under the locks, so two transfers cannot spend the same money. The test starts a hundred goroutines doing random transfers under the race detector, checks that the total never changes and that no balance goes negative, and fails by timeout if something hangs."
+    },
+    "w6-sat-4": {
+      hook: "EXPLAIN ANALYZE; composite index (account_id, created_at); N+1 → one query.",
+      en: "I run EXPLAIN ANALYZE on the real query: it shows the plan with actual times and row counts. For an account's history, newest first, a sequential scan over all transfers points to a missing index, so I add a B-tree index on account_id and created_at, and the plan becomes an index scan without a sort. N+1 is one query per row of a list; I replace it with a join or one query with id = ANY of an array."
+    },
     "w5-tue-1": {
       hook: "One goroutine per connection; r.Context() ends when the client leaves or the handler returns; four timeouts, zero means none.",
       en: "net/http serves each connection in its own goroutine and runs the handler there; Go 1.22 patterns match method and path, give 405 with Allow, and r.PathValue reads the id. I pass r.Context() to every downstream call, because it is cancelled when the client disconnects and after the handler returns. On http.Server I set ReadHeaderTimeout and IdleTimeout, usually ReadTimeout and WriteTimeout, since zero means no limit. Tests go through httptest against the real handler."

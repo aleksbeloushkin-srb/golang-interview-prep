@@ -1444,5 +1444,140 @@ func WriteReport(path string, payload []byte) (err error) {
       "c46",
       "c39"
     ]
+  },
+  {
+    "id": "q40",
+    "title": "Задача 40: проверить ключ, потом списать",
+    "ru": "Клиент повторил запрос по таймауту: два одинаковых запроса с одним ключом идемпотентности пришли одновременно. Что напечатает программа и что скажет go run -race?",
+    "en": "The client retried after a timeout: two identical requests with the same idempotency key arrive at once. What does the program print, and what does go run -race report?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\n// Keys remembers idempotency keys; every method takes the lock.\ntype Keys struct {\n\tmu   sync.Mutex\n\tseen map[string]bool\n}\n\nfunc (k *Keys) Seen(key string) bool {\n\tk.mu.Lock()\n\tdefer k.mu.Unlock()\n\treturn k.seen[key]\n}\n\nfunc (k *Keys) Mark(key string) {\n\tk.mu.Lock()\n\tdefer k.mu.Unlock()\n\tk.seen[key] = true\n}\n\nfunc main() {\n\tkeys := &Keys{seen: map[string]bool{}}\n\tbalance, charges := 100, 0\n\tvar mu sync.Mutex\n\tvar checked sync.WaitGroup // both requests passed the check: the window is open\n\tchecked.Add(2)\n\tvar wg sync.WaitGroup\n\tfor range 2 { // the client retried after a timeout: same key, same request\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tif keys.Seen(\"order-42\") {\n\t\t\t\treturn\n\t\t\t}\n\t\t\tchecked.Done()\n\t\t\tchecked.Wait()\n\t\t\tmu.Lock()\n\t\t\tbalance -= 30\n\t\t\tcharges++\n\t\t\tmu.Unlock()\n\t\t\tkeys.Mark(\"order-42\")\n\t\t}()\n\t}\n\twg.Wait()\n\tfmt.Println(\"charges:\", charges, \"balance:\", balance)\n}",
+    "options": [
+      "charges: 1 balance: 70 — второй запрос видит ключ и выходит.",
+      "charges: 2 balance: 40, и -race молчит: гонки данных нет, есть логическая гонка.",
+      "charges: 2 balance: 40, и -race сообщает DATA RACE на map seen.",
+      "Дедлок: checked.Wait() ждёт вечно.",
+      "Результат случайный: 1 или 2 списания, -race находит гонку на balance.",
+      "Ошибка компиляции: range по числу."
+    ],
+    "correct": 1,
+    "explanationRU": "Каждый метод Keys берёт мьютекс, поэтому гонки данных нет и -race молчит. Но «проверить» (Seen) и «отметить» (Mark) — две отдельные критические секции, и между ними окно: оба запроса проходят проверку, и деньги списываются дважды. WaitGroup checked лишь делает это окно гарантированным; в сервере оно возникает при любом повторе, пока первый запрос ещё работает. Исправление — занять ключ атомарно: проверка и отметка в одной критической секции (Claim), а в базе — INSERT … ON CONFLICT DO NOTHING по UNIQUE-ключу в транзакции перевода. Тогда программа печатает charges: 1 balance: 70.",
+    "speechEN": "It charges twice and the race detector stays silent. Every method takes the lock, so there is no data race, but checking the key and marking it are two separate critical sections, and both requests pass the check before either marks it. That is a race condition. Claim the key atomically: check and mark under one lock, or in the database insert the key with on conflict do nothing in the same transaction as the transfer.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\n// Keys remembers idempotency keys; Claim checks and marks in one critical section.\ntype Keys struct {\n\tmu   sync.Mutex\n\tseen map[string]bool\n}\n\n// Claim reports whether the key was new and marks it, atomically.\nfunc (k *Keys) Claim(key string) bool {\n\tk.mu.Lock()\n\tdefer k.mu.Unlock()\n\tif k.seen[key] {\n\t\treturn false\n\t}\n\tk.seen[key] = true\n\treturn true\n}\n\nfunc main() {\n\tkeys := &Keys{seen: map[string]bool{}}\n\tbalance, charges := 100, 0\n\tvar mu sync.Mutex\n\tvar wg sync.WaitGroup\n\tfor range 2 { // the client retried after a timeout: same key, same request\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tif !keys.Claim(\"order-42\") {\n\t\t\t\treturn // a repeat: answer with the stored response\n\t\t\t}\n\t\t\tmu.Lock()\n\t\t\tbalance -= 30\n\t\t\tcharges++\n\t\t\tmu.Unlock()\n\t\t}()\n\t}\n\twg.Wait()\n\tfmt.Println(\"charges:\", charges, \"balance:\", balance)\n}",
+    "versionNote": "range по целому числу — Go 1.22. Программа выполнена с -race на Go 1.24.7 и 1.27.3: charges: 2 balance: 40 без отчёта о гонке; исправленная — charges: 1 balance: 70.",
+    "sources": [
+      {
+        "title": "IETF draft: The Idempotency-Key HTTP Header Field",
+        "url": "https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/"
+      },
+      {
+        "title": "PostgreSQL: INSERT — ON CONFLICT",
+        "url": "https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT"
+      }
+    ],
+    "cardIds": [
+      "c51",
+      "c2"
+    ]
+  },
+  {
+    "id": "q41",
+    "title": "Задача 41: встречные переводы",
+    "ru": "Два перевода идут одновременно: A→B и B→A. Что произойдёт при go run? И что изменится, если запустить с -race?",
+    "en": "Two transfers run at once: A→B and B→A. What happens with go run? What changes when you run it with -race?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tID      int\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc transfer(from, to *Account, amount int, locked *sync.WaitGroup) {\n\tfrom.mu.Lock()\n\tdefer from.mu.Unlock()\n\tlocked.Done()\n\tlocked.Wait() // both transfers hold their first lock: the bad interleaving, made certain\n\tto.mu.Lock()\n\tdefer to.mu.Unlock()\n\tfrom.balance -= amount\n\tto.balance += amount\n}\n\nfunc main() {\n\ta := &Account{ID: 1, balance: 100}\n\tb := &Account{ID: 2, balance: 100}\n\tvar locked, wg sync.WaitGroup\n\tlocked.Add(2)\n\twg.Add(2)\n\tgo func() { defer wg.Done(); transfer(a, b, 10, &locked) }()\n\tgo func() { defer wg.Done(); transfer(b, a, 20, &locked) }()\n\twg.Wait()\n\tfmt.Println(a.balance, b.balance)\n}",
+    "options": [
+      "Напечатает 110 90: мьютексы просто сериализуют переводы.",
+      "Напечатает 90 110.",
+      "go run: fatal error: all goroutines are asleep - deadlock!; с -race в наших запусках программа зависала без сообщения.",
+      "Паника: unlock of unlocked mutex.",
+      "Go сам прерывает одну горутину, как PostgreSQL прерывает транзакцию с 40P01.",
+      "-race сообщает DATA RACE на balance."
+    ],
+    "correct": 2,
+    "explanationRU": "Каждый перевод сначала берёт мьютекс своего счёта-источника: первый держит A и ждёт B, второй держит B и ждёт A — цикл. WaitGroup locked только делает это чередование гарантированным. Рантайм Go распознаёт дедлок, лишь когда спят все горутины; здесь main ждёт в wg.Wait(), поэтому go run падает с «all goroutines are asleep». В наших запусках с -race (Go 1.24.7 и 1.27.3) программа не падала, а зависала, а в сервере с живыми горутинами завис бы только этот запрос. PostgreSQL в той же ситуации через deadlock_timeout прерывает одну транзакцию с 40P01. Исправление — брать блокировки в постоянном порядке, по возрастанию ID; тогда программа печатает 110 90.",
+    "speechEN": "It deadlocks. Each transfer locks its source account first, so one holds A and waits for B while the other holds B and waits for A. Go reports this only because every goroutine is asleep; under the race detector the program just hung in our runs, and in a server it would hang silently. PostgreSQL would abort one transaction with 40P01. The fix is to lock accounts in a stable order, by ascending ID, whatever the direction of the transfer.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tID      int\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc transfer(from, to *Account, amount int) {\n\t// Lock in ascending ID order, whatever the direction of the transfer.\n\tfirst, second := from, to\n\tif to.ID < from.ID {\n\t\tfirst, second = to, from\n\t}\n\tfirst.mu.Lock()\n\tdefer first.mu.Unlock()\n\tsecond.mu.Lock()\n\tdefer second.mu.Unlock()\n\tfrom.balance -= amount\n\tto.balance += amount\n}\n\nfunc main() {\n\ta := &Account{ID: 1, balance: 100}\n\tb := &Account{ID: 2, balance: 100}\n\tvar wg sync.WaitGroup\n\twg.Add(2)\n\tgo func() { defer wg.Done(); transfer(a, b, 10) }()\n\tgo func() { defer wg.Done(); transfer(b, a, 20) }()\n\twg.Wait()\n\tfmt.Println(a.balance, b.balance)\n}",
+    "versionNote": "Go 1.24.7 и 1.27.3: без -race — fatal error: all goroutines are asleep - deadlock!, с -race — зависание до таймаута (проверено с timeout 10 с); исправленная программа печатает 110 90.",
+    "sources": [
+      {
+        "title": "PostgreSQL: Explicit Locking — Deadlocks",
+        "url": "https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-DEADLOCKS"
+      },
+      {
+        "title": "sync: Mutex",
+        "url": "https://pkg.go.dev/sync#Mutex"
+      }
+    ],
+    "cardIds": [
+      "c50",
+      "c21"
+    ]
+  },
+  {
+    "id": "q42",
+    "title": "Задача 42: публикация после commit",
+    "ru": "Обработчик фиксирует перевод, потом публикует событие; первая отправка в Kafka упала по таймауту, клиент повторяет запрос. Что напечатает программа?",
+    "en": "The handler commits the transfer, then publishes the event; the first send to Kafka times out, and the client retries. What does the program print?",
+    "code": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\ntype DB struct{ balance, transfers int }\n\n// CommitTransfer is the committed database transaction.\nfunc (db *DB) CommitTransfer(amount int) {\n\tdb.balance -= amount\n\tdb.transfers++\n}\n\ntype Broker struct {\n\tevents []string\n\tfail   int // how many sends time out\n}\n\nfunc (b *Broker) Publish(event string) error {\n\tif b.fail > 0 {\n\t\tb.fail--\n\t\treturn errors.New(\"kafka: timeout\")\n\t}\n\tb.events = append(b.events, event)\n\treturn nil\n}\n\n// handle commits the transfer, then publishes the event: two separate writes.\nfunc handle(db *DB, b *Broker, amount int) error {\n\tdb.CommitTransfer(amount)\n\tif err := b.Publish(fmt.Sprintf(\"TransferCompleted %d\", amount)); err != nil {\n\t\treturn fmt.Errorf(\"publish: %w\", err) // → 500, and the client retries\n\t}\n\treturn nil\n}\n\nfunc main() {\n\tdb := &DB{balance: 100}\n\tb := &Broker{fail: 1}\n\tfor range 3 { // the client retries until it gets a success\n\t\tif handle(db, b, 20) == nil {\n\t\t\tbreak\n\t\t}\n\t}\n\tfmt.Println(\"balance:\", db.balance, \"transfers:\", db.transfers, \"events:\", len(b.events))\n}",
+    "options": [
+      "balance: 80 transfers: 1 events: 1",
+      "balance: 60 transfers: 2 events: 1",
+      "balance: 60 transfers: 2 events: 2",
+      "balance: 80 transfers: 1 events: 0",
+      "balance: 40 transfers: 3 events: 1",
+      "balance: 100 transfers: 0 events: 0 — ошибка откатывает перевод."
+    ],
+    "correct": 1,
+    "explanationRU": "Commit и отправка — две независимые записи (dual write). Первая попытка зафиксировала перевод, отправка упала, клиент получил ошибку и повторил — второй перевод зафиксирован и опубликован. Итог: деньги списаны дважды, а событий одно. Если бы процесс упал сразу после commit, событие потерялось бы совсем. Исправление — outbox: событие пишется в той же транзакции, что и перевод, запрос отвечает успехом после commit, а relay публикует событие с повторами (at-least-once). Повтор клиента дополнительно закрывает ключ идемпотентности (c51). Исправленная программа печатает balance: 80 transfers: 1 events: 1.",
+    "speechEN": "Balance 60, two transfers, one event. Committing and publishing are two separate writes: the first attempt committed the money and failed to send, so the client retried and the money moved again. If the process had crashed after the commit, the event would be lost instead. Write the event to an outbox table in the same transaction, answer after the commit, and let a relay publish it with retries.",
+    "correctedCode": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n)\n\ntype DB struct {\n\tbalance, transfers int\n\toutbox             []string // unsent events\n}\n\n// CommitTransfer is one database transaction: the money and the event together.\nfunc (db *DB) CommitTransfer(amount int) {\n\tdb.balance -= amount\n\tdb.transfers++\n\tdb.outbox = append(db.outbox, fmt.Sprintf(\"TransferCompleted %d\", amount))\n}\n\ntype Broker struct {\n\tevents []string\n\tfail   int // how many sends time out\n}\n\nfunc (b *Broker) Publish(event string) error {\n\tif b.fail > 0 {\n\t\tb.fail--\n\t\treturn errors.New(\"kafka: timeout\")\n\t}\n\tb.events = append(b.events, event)\n\treturn nil\n}\n\n// handle answers as soon as the transaction commits; Kafka is not on the request path.\nfunc handle(db *DB, amount int) error {\n\tdb.CommitTransfer(amount)\n\treturn nil\n}\n\n// relay publishes unsent events and retries until the broker accepts them.\nfunc relay(db *DB, b *Broker) {\n\tfor len(db.outbox) > 0 {\n\t\tif b.Publish(db.outbox[0]) != nil {\n\t\t\tcontinue // a real relay waits before the next attempt\n\t\t}\n\t\tdb.outbox = db.outbox[1:]\n\t}\n}\n\nfunc main() {\n\tdb := &DB{balance: 100}\n\tb := &Broker{fail: 1}\n\tfor range 3 {\n\t\tif handle(db, 20) == nil {\n\t\t\tbreak\n\t\t}\n\t}\n\trelay(db, b)\n\tfmt.Println(\"balance:\", db.balance, \"transfers:\", db.transfers, \"events:\", len(b.events))\n}",
+    "versionNote": "Программа и исправленный вариант выполнены на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "microservices.io: Transactional outbox",
+        "url": "https://microservices.io/patterns/data/transactional-outbox.html"
+      },
+      {
+        "title": "Apache Kafka: Message Delivery Semantics",
+        "url": "https://kafka.apache.org/documentation/#semantics"
+      }
+    ],
+    "cardIds": [
+      "c52",
+      "c51"
+    ]
+  },
+  {
+    "id": "q43",
+    "title": "Задача 43: offset зафиксирован до обработки",
+    "ru": "Потребитель фиксирует offset при чтении, а под убивают посреди обработки pay-3. После перезапуска он продолжает с зафиксированного offset. Что напечатает программа?",
+    "en": "The consumer commits the offset when it reads a message, and the pod is killed while processing pay-3. After the restart it continues from the committed offset. What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\n// One partition and the offset our consumer group has committed.\nvar partition = []string{\"pay-1\", \"pay-2\", \"pay-3\", \"pay-4\", \"pay-5\"}\nvar committed int\n\nvar crashed bool\n\n// process stores the payment; the pod is killed in the middle of pay-3, once.\nfunc process(msg string, done *[]string) bool {\n\tif msg == \"pay-3\" && !crashed {\n\t\tcrashed = true\n\t\treturn false // the effect was not stored\n\t}\n\t*done = append(*done, msg)\n\treturn true\n}\n\n// consume starts from the committed offset, like a restarted consumer.\nfunc consume(done *[]string) {\n\tfor off := committed; off < len(partition); off++ {\n\t\tcommitted = off + 1 // committed on read, like kafka-go's ReadMessage in a group\n\t\tif !process(partition[off], done) {\n\t\t\treturn // the process dies here\n\t\t}\n\t}\n}\n\nfunc main() {\n\tvar done []string\n\tconsume(&done) // the first run crashes on pay-3\n\tconsume(&done) // after the restart\n\tfmt.Println(done)\n}",
+    "options": [
+      "[pay-1 pay-2 pay-3 pay-4 pay-5]",
+      "[pay-1 pay-2 pay-4 pay-5]",
+      "[pay-1 pay-2 pay-3 pay-3 pay-4 pay-5]",
+      "[pay-1 pay-2]",
+      "[pay-1 pay-2 pay-1 pay-2 pay-3 pay-4 pay-5]",
+      "Паника: индекс вне диапазона."
+    ],
+    "correct": 1,
+    "explanationRU": "Offset pay-3 зафиксирован до того, как платёж сохранён, поэтому после перезапуска потребитель начинает с pay-4: pay-3 потерян, это at-most-once. Так ведёт себя ReadMessage в kafka-go при группе потребителей и автокоммит, который фиксирует полученное, но не обработанное. Исправление — фиксировать offset после того, как результат сохранён (FetchMessage → обработка → CommitMessages): тогда это at-least-once, программа печатает все пять платежей, а падение между записью и commit даст дубликат, который отсеивают по ID события в той же транзакции (c53).",
+    "speechEN": "pay-3 is lost: the offset was committed when the message was read, before the payment was stored, so the restarted consumer starts at pay-4. That is at-most-once. kafka-go's ReadMessage behaves like this in a consumer group. Commit after the effect is stored, with FetchMessage and CommitMessages: that gives at-least-once, and duplicates are handled by storing the event ID with the effect.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\n// One partition and the offset our consumer group has committed.\nvar partition = []string{\"pay-1\", \"pay-2\", \"pay-3\", \"pay-4\", \"pay-5\"}\nvar committed int\n\nvar crashed bool\n\n// process stores the payment; the pod is killed in the middle of pay-3, once.\nfunc process(msg string, done *[]string) bool {\n\tif msg == \"pay-3\" && !crashed {\n\t\tcrashed = true\n\t\treturn false // the effect was not stored\n\t}\n\t*done = append(*done, msg)\n\treturn true\n}\n\n// consume commits only after the effect is stored (kafka-go: FetchMessage, then CommitMessages).\nfunc consume(done *[]string) {\n\tfor off := committed; off < len(partition); off++ {\n\t\tif !process(partition[off], done) {\n\t\t\treturn // the process dies here; the offset still points at pay-3\n\t\t}\n\t\tcommitted = off + 1\n\t}\n}\n\nfunc main() {\n\tvar done []string\n\tconsume(&done)\n\tconsume(&done)\n\tfmt.Println(done)\n}",
+    "versionNote": "Программа и исправленный вариант выполнены на Go 1.24.7 и 1.27.3. Поведение ReadMessage — README и reader.go segmentio/kafka-go.",
+    "sources": [
+      {
+        "title": "Apache Kafka: Message Delivery Semantics",
+        "url": "https://kafka.apache.org/documentation/#semantics"
+      },
+      {
+        "title": "segmentio/kafka-go: Explicit Commits",
+        "url": "https://github.com/segmentio/kafka-go#explicit-commits"
+      }
+    ],
+    "cardIds": [
+      "c53"
+    ]
   }
 ];
