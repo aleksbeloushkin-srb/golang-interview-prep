@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Go Interview Prep — runtime, concurrency, idioms, practice</title>
-  <link rel="stylesheet" href="css/style.css?v=64" />
+  <link rel="stylesheet" href="css/style.css?v=65" />
 </head>
 <body>
 
@@ -26,6 +26,12 @@
       <div id="account" class="account"></div>
     </div>
   </header>
+  <!-- Вне шапки: backdrop-filter шапки сделал бы её точкой отсчёта для position: fixed -->
+  <div id="update-banner" class="update-banner hidden" role="status">
+    <span>Новая версия сайта.</span>
+    <button type="button" class="btn btn-sm btn-primary" id="update-reload">Обновить</button>
+    <button type="button" class="btn btn-sm" id="update-later">Позже</button>
+  </div>
 
   <main class="container">
     <div id="sync-choice" class="sync-choice hidden" role="region" aria-label="Какой прогресс оставить"></div>
@@ -128,9 +134,9 @@
 
         <div class="card-controls" id="card-controls">
           <div class="btn-group card-navigation">
-            <button type="button" class="btn" onclick="prevCard()" aria-label="Назад">← <span class="nav-label">Назад</span></button>
+            <button type="button" class="btn" onclick="prevCard()" aria-label="Назад"><span>← <span class="nav-label">Назад</span></span></button>
             <button type="button" class="btn btn-primary" onclick="toggleAnswer()" id="reveal-btn" aria-controls="card-answer-box" aria-expanded="false">Показать ответ</button>
-            <button type="button" class="btn" onclick="nextCard()" aria-label="Далее"><span class="nav-label">Далее</span> →</button>
+            <button type="button" class="btn" onclick="nextCard()" aria-label="Далее"><span><span class="nav-label">Далее</span> →</span></button>
           </div>
           <p class="grade-criteria" id="grade-criteria">Сверь: назвал главное · объяснил механизм · сохранил ограничение</p>
           <div class="btn-group card-grades" role="group" aria-label="Как ты ответил">
@@ -233,17 +239,17 @@
     </div>
   </dialog>
 
-  <script src="data/cards.js?v=64"></script>
-  <script src="data/simulators.js?v=64"></script>
-  <script src="data/quiz.js?v=64"></script>
-  <script src="data/plan.js?v=64"></script>
-  <script src="data/practice.js?v=64"></script>
-  <script src="data/audio.js?v=64"></script>
-  <script src="js/config.js?v=64"></script>
-  <script src="js/auth.js?v=64"></script>
-  <script src="js/audio.js?v=64"></script>
-  <script src="js/app.js?v=64"></script>
-  <script src="js/plan-view.js?v=64"></script>
-  <script src="js/practice-view.js?v=64"></script>
+  <script src="data/cards.js?v=65"></script>
+  <script src="data/simulators.js?v=65"></script>
+  <script src="data/quiz.js?v=65"></script>
+  <script src="data/plan.js?v=65"></script>
+  <script src="data/practice.js?v=65"></script>
+  <script src="data/audio.js?v=65"></script>
+  <script src="js/config.js?v=65"></script>
+  <script src="js/auth.js?v=65"></script>
+  <script src="js/audio.js?v=65"></script>
+  <script src="js/app.js?v=65"></script>
+  <script src="js/plan-view.js?v=65"></script>
+  <script src="js/practice-view.js?v=65"></script>
 </body>
 </html>
