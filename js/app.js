@@ -453,11 +453,12 @@ function renderSimStep(simIdx, stepIdx) {
    Данные: board = [{ caption?, lanes: [{ kind, title, tag?, state?, slots: [{ label, items, queue? }], note? }],
    hl?: [id], list?: { title, items, ordered? } }]. Элемент: "G1" или { g: "G1", flag: "..." }.
    Изменения выделяются рамкой и словом «изменилось», не только цветом. */
+// Части фишки разделены пробелами: во flex-контейнере их не видно, а читалка не склеит «G1runnable».
 function boardChipHtml(item, hl, hlLabel, hlQuiet) {
   const g = typeof item === "string" ? item : item.g;
   const flag = typeof item === "string" ? "" : item.flag;
   const changed = hl.includes(g) || (typeof item === "object" && item.hl === true);
-  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? `<span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed && !hlQuiet ? `<span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}${changed && hlQuiet ? `<span class="visually-hidden">выделено</span>` : ""}</li>`;
+  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? ` <span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed && !hlQuiet ? ` <span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}${changed && hlQuiet ? ` <span class="visually-hidden">выделено</span>` : ""}</li>`;
 }
 
 function boardLaneHtml(lane, hl, hlLabel, hlQuiet) {
@@ -704,11 +705,12 @@ function handleRoute() {
     sec.classList.toggle("hidden", sec.id !== `view-${activeRoute}`);
   });
 
-  document.querySelectorAll(".nav-tabs .tab-btn").forEach(link => {
+  document.querySelectorAll(".nav-tabs [data-route], .bottom-nav [data-route], .more-sheet [data-route]").forEach(link => {
     link.classList.toggle("active", link.dataset.route === activeRoute);
     if (link.dataset.route === activeRoute) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
+  markMoreTab(activeRoute);
 
   if (activeRoute === "cards" && param) {
     state.filter = "all";
@@ -744,18 +746,10 @@ function syncDynamicCounters() {
   const senCnt = CARDS.filter(c => c.level === "senior").length;
   const deepCnt = CARDS.filter(c => c.level === "deep").length;
 
-  const tabCards = document.querySelector('.tab-btn[data-route="cards"]');
-  if (tabCards) tabCards.textContent = `1. Карточки (${total})`;
-
-  const tabSims = document.querySelector('.tab-btn[data-route="simulators"]');
-  if (tabSims && typeof SIMULATORS !== "undefined") {
-    tabSims.textContent = `2. Диаграммы (${SIMULATORS.length})`;
-  }
-
-  const tabQuiz = document.querySelector('.tab-btn[data-route="quiz"]');
-  if (tabQuiz && typeof QUIZ_QUESTIONS !== "undefined") {
-    tabQuiz.textContent = `5. 🧠 Code Traps Quiz (${QUIZ_QUESTIONS.length})`;
-  }
+  const setCount = (name, n) => document.querySelectorAll(`[data-count="${name}"]`).forEach(el => { el.textContent = n; });
+  setCount("cards", total);
+  if (typeof SIMULATORS !== "undefined") setCount("simulators", SIMULATORS.length);
+  if (typeof QUIZ_QUESTIONS !== "undefined") setCount("quiz", QUIZ_QUESTIONS.length);
 
   const btnAllMod = document.querySelector('#module-filter-row .chip[data-filter="all"]');
   if (btnAllMod) btnAllMod.textContent = `Все (${total})`;
@@ -789,6 +783,54 @@ window.addEventListener("keydown", e => {
   if (e.key === "2") markCard("review");
 });
 
+/* --- НИЖНЯЯ ПАНЕЛЬ НА ТЕЛЕФОНЕ: четыре частых раздела и шторка «Ещё» --- */
+const MORE_ROUTES = { practice: "Практикум", wiki: "База знаний", cheatsheet: "Шпаргалка" };
+
+// Раздел из шторки открыт — «Ещё» подсвечена, а читалка слышит, какой раздел сейчас.
+function markMoreTab(route) {
+  const more = document.getElementById("more-open");
+  if (!more) return;
+  more.classList.toggle("active", route in MORE_ROUTES);
+  more.setAttribute("aria-label", route in MORE_ROUTES ? `Ещё разделы, открыт: ${MORE_ROUTES[route]}` : "Ещё разделы");
+  const sheet = document.getElementById("more-sheet");
+  if (sheet && sheet.open) sheet.close(); // переход (в том числе «Назад») закрывает шторку
+}
+
+// Поле ввода получает фокус → на телефоне выезжает клавиатура; панель прячется, чтобы не закрывать ввод.
+function isTypingTarget(el) {
+  if (!el) return false;
+  if (el.tagName === "TEXTAREA" || el.isContentEditable) return true;
+  return el.tagName === "INPUT" && !["checkbox", "radio", "button", "submit", "reset", "file", "range", "color"].includes(el.type);
+}
+
+function initBottomNav() {
+  const sheet = document.getElementById("more-sheet");
+  const open = document.getElementById("more-open");
+  if (!sheet || !open) return;
+  open.addEventListener("click", () => {
+    sheet.showModal();
+    open.setAttribute("aria-expanded", "true");
+  });
+  sheet.addEventListener("close", () => open.setAttribute("aria-expanded", "false"));
+  sheet.querySelector(".more-close").addEventListener("click", () => sheet.close());
+  // Касание затемнённого фона попадает в сам dialog: содержимое лежит во внутреннем блоке.
+  sheet.addEventListener("click", event => { if (event.target === sheet) sheet.close(); });
+  sheet.querySelectorAll("a").forEach(link => link.addEventListener("click", () => sheet.close()));
+  // Повторное касание открытого раздела — к началу страницы, как в мобильных приложениях.
+  document.querySelectorAll(".bottom-nav a.bottom-tab").forEach(link => {
+    link.addEventListener("click", event => {
+      if (link.getAttribute("href") !== window.location.hash) return;
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  });
+  document.addEventListener("focusin", event => document.body.classList.toggle("keyboard-open", isTypingTarget(event.target)));
+  document.addEventListener("focusout", () => {
+    // Фокус ещё не перешёл на новый элемент: проверяем после текущего события.
+    setTimeout(() => document.body.classList.toggle("keyboard-open", isTypingTarget(document.activeElement)), 0);
+  });
+}
+
 window.addEventListener("hashchange", handleRoute);
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -800,5 +842,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initWikiAndCheatsheet();
   initQuiz();
   initQuizMode();
+  initBottomNav();
   handleRoute();
 });

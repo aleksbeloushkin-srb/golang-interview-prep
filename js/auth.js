@@ -253,7 +253,26 @@ async function syncStart() {
     authSetStatus("Прогресс совпадает с сервером.", "ok");
     return;
   }
+  // Новое устройство: своих отметок нет — спрашивать нечего, берём серверные.
+  if (!Object.keys(local).length) {
+    syncTakeServer(server);
+    return;
+  }
   syncAskWhich(server);
+}
+
+// Записать серверный прогресс в этот браузер и перезагрузить страницу: так его подхватят все разделы.
+function syncTakeServer(server) {
+  try {
+    Object.keys(syncSnapshot() || {}).forEach(k => localStorage.removeItem(k));
+    Object.entries(server.progress).forEach(([k, v]) => localStorage.setItem(k, v));
+    if (!syncSame(syncSnapshot(), server.progress)) throw new Error("не записалось");
+  } catch {
+    authSetStatus("Не удалось записать прогресс в этот браузер.", "warn");
+    return;
+  }
+  authSession(AUTH_RESUME_KEY, "1"); // после перезагрузки вход восстановится сам
+  window.location.reload();
 }
 
 async function syncPushReport(snapshot, version, done) {
@@ -277,18 +296,7 @@ function syncAskWhich(server) {
   const when = server.updatedAt ? new Date(server.updatedAt).toLocaleString("ru-RU") : "раньше";
   panel.replaceChildren(
     authEl("p", { text: `На сервере сохранён другой прогресс (${when}). Какой оставить?` }),
-    authButton("Взять с сервера", () => {
-      try {
-        Object.keys(syncSnapshot() || {}).forEach(k => localStorage.removeItem(k));
-        Object.entries(server.progress).forEach(([k, v]) => localStorage.setItem(k, v));
-      } catch {
-        authSetStatus("Не удалось записать прогресс в этот браузер.", "warn");
-        return;
-      }
-      // Перезагрузка подхватит прогресс во всех разделах; вход восстановится сам.
-      authSession(AUTH_RESUME_KEY, "1");
-      window.location.reload();
-    }),
+    authButton("Взять с сервера", () => syncTakeServer(server)),
     authButton("Оставить этот браузер", async () => {
       panel.classList.add("hidden");
       await syncPushReport(syncSnapshot() || {}, server.version, "Прогресс этого браузера сохранён на сервере.");

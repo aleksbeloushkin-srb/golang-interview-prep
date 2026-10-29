@@ -16,14 +16,16 @@
 
 ## 🔗 Быстрые ссылки (Live Demo)
 
-* 🔐 **Вход через Google** (кнопка в шапке): прогресс карточек, плана и практикума сохраняется на сервере и одинаков на всех устройствах; в практикуме — «Проверить на сервере» (`go test -race` в AWS, по тестам: что прошло, что нет). Без входа всё работает на localStorage, как раньше. Бэкенд — [golang-interview-prep-api](https://github.com/aleksbeloushkin-srb/golang-interview-prep-api).
+На телефоне разделы — в нижней панели: План, Карточки, Диаграммы, Quiz и «Ещё» (Практикум, База знаний, Шпаргалка). На компьютере — вкладки в шапке в том же порядке.
+
+* 🔐 **Вход через Google** (кнопка в шапке): прогресс карточек, плана и практикума сохраняется на сервере и одинаков на всех устройствах; в практикуме — «Проверить на сервере» (`go test -race` в AWS, по тестам: что прошло, что нет). Без входа сайт открыт только на чтение: материалы, quiz и заготовки доступны, отметки не сохраняются. Бэкенд — [golang-interview-prep-api](https://github.com/aleksbeloushkin-srb/golang-interview-prep-api).
 * 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–5, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
 * 🛠 **[Практикум (20 задач недель 1–5)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof; неделя 5: HTTP API счетов на ServeMux и ошибки домена → HTTP-коды: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
-* 🗂 **[1. Тренажёр карточек (48 Q&A Flashcards)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 7 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
-* 🔬 **[2. Интерактивные диаграммы рантайма (10 пошаговых симуляторов)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
-* 📖 **[3. Полная база знаний (Wiki — все 48 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
-* 📊 **[4. Сводная таблица-шпаргалка (Cheat Sheet)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[5. Code Traps & Production Code Review Quiz (39 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+* 🗂 **[Карточки (48 вопросов и ответов)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 7 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`).
+* 🔬 **[Диаграммы рантайма (10 пошаговых схем)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
+* 📖 **[База знаний (все 48 тем на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
+* 📊 **[Шпаргалка по рантайму](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
+* 🧠 **[Quiz: ловушки в коде (39 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 

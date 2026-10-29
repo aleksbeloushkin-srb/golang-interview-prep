@@ -896,3 +896,57 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .practice-check-tests { list-style: none; padding-left: 0; }
 .practice-check-tests li { margin: 4px 0; overflow-wrap: anywhere; }
 .signin-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 8px; background: rgba(56, 189, 248, 0.1); overflow-wrap: anywhere; }
+
+/* --- Разделы: счётчик во вкладке; нижняя панель и шторка «Ещё» на телефоне --- */
+.tab-btn { display: inline-flex; align-items: center; gap: 6px; }
+.tab-count { padding: 0 7px; border-radius: 999px; background: var(--surface-hover); color: var(--muted); font-size: 0.75rem; font-weight: 700; line-height: 1.5; }
+.tab-count:empty { display: none; }
+.tab-btn.active .tab-count { background: rgba(56, 189, 248, 0.2); color: var(--text); }
+#practice-title:focus { outline: none; } /* фокус ставится программно для читалки, рамка не нужна */
+.bottom-nav { display: none; }
+.nav-icon { width: 24px; height: 24px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 640px) {
+  :root { --bottom-nav-h: 58px; }
+  html { scroll-padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px); }
+  body { padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px); }
+  header { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+  .header-inner { grid-template-areas: "brand account"; }
+  .nav-tabs { display: none; }
+  .bottom-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); background: rgba(15, 23, 42, 0.97); border-top: 1px solid var(--border); backdrop-filter: blur(10px); }
+  .bottom-tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: var(--bottom-nav-h); padding: 6px 2px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.7rem; font-weight: 600; line-height: 1.1; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .bottom-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bottom-tab.active { color: var(--accent); }
+  .bottom-tab.active::before { content: ""; position: absolute; top: 0; left: 24%; right: 24%; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+  .bottom-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 12px; }
+  /* Кнопки карточки стоят над панелью, а не под ней */
+  .card-controls { bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px)); padding-bottom: 12px; }
+  body.keyboard-open { padding-bottom: 16px; }
+  body.keyboard-open .bottom-nav { display: none; }
+  body.keyboard-open .card-controls { bottom: 0; }
+}
+.more-sheet { width: 100%; max-width: 640px; max-height: 85vh; margin: auto auto 0; padding: 0; border: 1px solid var(--border); border-bottom: 0; border-radius: 16px 16px 0 0; background: var(--surface); color: var(--text); }
+.more-sheet::backdrop { background: rgba(2, 6, 23, 0.65); }
+.more-sheet-body { padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.more-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0 10px; }
+.more-sheet-head h2 { font-size: 1rem; }
+.more-close { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: 1.1rem; cursor: pointer; }
+.more-close:hover { color: var(--text); background: var(--surface-hover); }
+.more-list { list-style: none; display: grid; gap: 8px; }
+.more-item { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); text-decoration: none; }
+.more-item .nav-icon { color: var(--accent); }
+.more-item strong { display: block; font-size: 0.95rem; }
+.more-item small { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
+.more-item.active { border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
+.more-item:focus-visible, .more-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  .more-sheet[open] { animation: sheet-up 0.18s ease-out; }
+}
+@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* viewport-fit=cover: на iPhone в альбомной ориентации текст не уходит под вырез экрана */
+header { padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.container { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+@media (max-width: 640px) {
+  header { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+  .container { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+}
+@media (max-width: 340px) { .bottom-tab { padding-left: 0; padding-right: 0; font-size: 0.66rem; } }

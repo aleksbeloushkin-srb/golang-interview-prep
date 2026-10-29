@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Go Interview Prep — runtime, concurrency, idioms, practice</title>
-  <link rel="stylesheet" href="css/style.css?v=53" />
+  <link rel="stylesheet" href="css/style.css?v=54" />
 </head>
 <body>
 
@@ -15,13 +15,13 @@
         <span>Go Interview Prep</span>
       </a>
       <nav class="nav-tabs" aria-label="Разделы сайта">
-        <a href="#/plan" class="tab-btn" data-route="plan">План 13 недель</a>
+        <a href="#/plan" class="tab-btn" data-route="plan">План</a>
+        <a href="#/cards" class="tab-btn active" data-route="cards">Карточки <span class="tab-count" data-count="cards"></span></a>
+        <a href="#/simulators" class="tab-btn" data-route="simulators">Диаграммы <span class="tab-count" data-count="simulators"></span></a>
+        <a href="#/quiz" class="tab-btn" data-route="quiz">Quiz <span class="tab-count" data-count="quiz"></span></a>
         <a href="#/practice" class="tab-btn" data-route="practice">Практикум</a>
-        <a href="#/cards" class="tab-btn active" data-route="cards">1. Карточки</a>
-        <a href="#/simulators" class="tab-btn" data-route="simulators">2. Диаграммы</a>
-        <a href="#/wiki" class="tab-btn" data-route="wiki">3. База знаний (Wiki)</a>
-        <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">4. Шпаргалка</a>
-        <a href="#/quiz" class="tab-btn" data-route="quiz" style="color: var(--amber); border-color: rgba(245, 158, 11, 0.4);">5. 🧠 Code Traps Quiz</a>
+        <a href="#/wiki" class="tab-btn" data-route="wiki">База знаний</a>
+        <a href="#/cheatsheet" class="tab-btn" data-route="cheatsheet">Шпаргалка</a>
       </nav>
       <div id="account" class="account"></div>
     </div>
@@ -169,7 +169,7 @@
 
     <!-- РАЗДЕЛ 4: ШПАРГАЛКА -->
     <section id="view-cheatsheet" class="route-view hidden">
-      <h2 style="margin-bottom: 16px;">Сводная шпаргалка по рантайму Go (от А до Я с быстрыми переходами)</h2>
+      <h2 style="margin-bottom: 16px;">Шпаргалка по рантайму Go</h2>
       <div class="table-wrap">
         <table class="cheat-table">
           <thead>
@@ -188,7 +188,7 @@
     <!-- РАЗДЕЛ 5: 🧠 CODE TRAPS QUIZ (Собеседования с задачками) -->
     <section id="view-quiz" class="route-view hidden">
       <div class="section-top">
-        <h2>🧠 Go Code Traps & Interview Quiz (Задачи с подвохом)</h2>
+        <h2>Quiz: ловушки в коде</h2>
         <span class="muted-text">Хитрые сниппеты кода, которые дают на Senior Go-собеседованиях</span>
       </div>
       <div class="quiz-mode">
@@ -200,15 +200,37 @@
 
   </main>
 
-  <script src="data/cards.js?v=53"></script>
-  <script src="data/simulators.js?v=53"></script>
-  <script src="data/quiz.js?v=53"></script>
-  <script src="data/plan.js?v=53"></script>
-  <script src="data/practice.js?v=53"></script>
-  <script src="js/config.js?v=53"></script>
-  <script src="js/auth.js?v=53"></script>
-  <script src="js/app.js?v=53"></script>
-  <script src="js/plan-view.js?v=53"></script>
-  <script src="js/practice-view.js?v=53"></script>
+  <!-- Телефон (до 640 px): разделы внизу, под большим пальцем; редкие — в шторке «Ещё» -->
+  <nav class="bottom-nav" aria-label="Разделы сайта">
+    <a href="#/plan" class="bottom-tab" data-route="plan"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>План</span></a>
+    <a href="#/cards" class="bottom-tab" data-route="cards"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg><span>Карточки</span></a>
+    <a href="#/simulators" class="bottom-tab" data-route="simulators"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M8.5 6h7M7.2 8.3l3.6 7.4M16.8 8.3l-3.6 7.4"/></svg><span>Диаграммы</span></a>
+    <a href="#/quiz" class="bottom-tab" data-route="quiz"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.9 2.6c-.8.4-1.2 1-1.2 1.8v.5"/><path stroke-width="2.6" d="M12 17.3h.01"/></svg><span>Quiz</span></a>
+    <button type="button" class="bottom-tab" id="more-open" aria-haspopup="dialog" aria-controls="more-sheet" aria-expanded="false" aria-label="Ещё разделы"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path stroke-width="3.2" d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>Ещё</span></button>
+  </nav>
+  <dialog id="more-sheet" class="more-sheet" aria-labelledby="more-title">
+    <div class="more-sheet-body">
+      <div class="more-sheet-head">
+        <h2 id="more-title">Ещё разделы</h2>
+        <button type="button" class="more-close" aria-label="Закрыть">✕</button>
+      </div>
+      <ul class="more-list">
+        <li><a href="#/practice" class="more-item" data-route="practice"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg><span><strong>Практикум</strong><small>Задачи с тестами — удобнее на компьютере</small></span></a></li>
+        <li><a href="#/wiki" class="more-item" data-route="wiki"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4.5h11a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h11M9 8.5h5"/></svg><span><strong>База знаний</strong><small>Все темы карточек одним списком</small></span></a></li>
+        <li><a href="#/cheatsheet" class="more-item" data-route="cheatsheet"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M3.5 14.5h17M10 4.5v15"/></svg><span><strong>Шпаргалка</strong><small>Таблица «как работает» по рантайму</small></span></a></li>
+      </ul>
+    </div>
+  </dialog>
+
+  <script src="data/cards.js?v=54"></script>
+  <script src="data/simulators.js?v=54"></script>
+  <script src="data/quiz.js?v=54"></script>
+  <script src="data/plan.js?v=54"></script>
+  <script src="data/practice.js?v=54"></script>
+  <script src="js/config.js?v=54"></script>
+  <script src="js/auth.js?v=54"></script>
+  <script src="js/app.js?v=54"></script>
+  <script src="js/plan-view.js?v=54"></script>
+  <script src="js/practice-view.js?v=54"></script>
 </body>
 </html>
