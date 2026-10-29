@@ -266,7 +266,8 @@ function planModelBlock(task) {
   return planEl("details", { className: "translated-answer plan-model" }, [
     planEl("summary", { text: "Model answer (EN) — открыть после своей попытки" }),
     planEl("p", { lang: "en", className: "plan-model-hook" }, [planEl("strong", { text: "Remember: " }), model.hook]),
-    planEl("p", { lang: "en", text: model.en })
+    planEl("p", { lang: "en", text: model.en }),
+    typeof ttsControlsNode === "function" ? ttsControlsNode(`plan:${task.id}`, model.en) : null
   ]);
 }
 

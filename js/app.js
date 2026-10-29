@@ -88,6 +88,14 @@ function cardAnchorsHtml(card) {
     : "Перескажи ответ по этим словам вслух, потом открой ответ и сверь.");
 }
 
+// L — послушать короткий ответ (только когда он открыт и для него есть запись).
+function listenCard() {
+  const list = getFilteredCards();
+  if (!list.length || !state.revealed || typeof ttsEntry !== "function") return;
+  const card = list[state.index];
+  if (ttsEntry(`card:${card.id}:short`, card.shortEN)) ttsToggle(`card:${card.id}:short`);
+}
+
 function showAnchors() {
   const list = getFilteredCards();
   if (!list.length) return;
@@ -107,6 +115,7 @@ function jvmHtml(card) {
   return `<details class="jvm-box">
     <summary>Если спросят про Java и Kotlin</summary>
     <p lang="en">${escapeHtml(card.jvmEN)}</p>
+    ${typeof ttsControlsHtml === "function" ? ttsControlsHtml(`card:${card.id}:jvm`, card.jvmEN) : ""}
     ${card.jvmRU ? `<details class="translated-answer"><summary>По-русски</summary><p lang="ru">${escapeHtml(card.jvmRU)}</p></details>` : ""}
   </details>`;
 }
@@ -265,6 +274,9 @@ function renderCard() {
   document.getElementById("card-q-en").textContent = card.qEN;
   document.getElementById("card-q-ru").textContent = card.qRU;
   renderShortAnswer(document.getElementById("card-short-en"), card.shortEN);
+  // Озвучка: запись другой карточки останавливается, кнопка — только если есть запись этого текста.
+  if (typeof ttsState !== "undefined" && ttsState.key && !ttsState.key.startsWith(`card:${card.id}:`)) ttsStop();
+  document.getElementById("card-short-tts").innerHTML = typeof ttsControlsHtml === "function" ? ttsControlsHtml(`card:${card.id}:short`, card.shortEN) : "";
   document.getElementById("card-anchors").innerHTML = cardAnchorsHtml(card);
   document.getElementById("card-jvm").innerHTML = jvmHtml(card);
   // Новая карточка — подробности снова свёрнуты: на экране только ответ и опоры.
@@ -666,7 +678,7 @@ function initWikiAndCheatsheet() {
         </button>
         <div class="accordion-body" id="wiki-${c.id}">
           <p class="muted-text" style="margin-bottom:10px;">${escapeHtml(c.qRU)}</p>
-          <div class="short-answer" lang="en"><strong lang="ru">Коротко по-английски:</strong> ${escapeHtml(c.shortEN)}</div>
+          <div class="short-answer" lang="en"><strong lang="ru">Коротко по-английски:</strong> ${escapeHtml(c.shortEN)} ${typeof ttsControlsHtml === "function" ? ttsControlsHtml(`card:${c.id}:short`, c.shortEN) : ""}</div>
           ${anchorsHtml(c)}
           ${jvmHtml(c)}
           ${russianExplanationHtml(c)}
@@ -926,6 +938,7 @@ window.addEventListener("keydown", e => {
   if (e.code === "ArrowRight") nextCard();
   if (e.code === "ArrowLeft") prevCard();
   if (e.key === "h" || e.key === "H" || e.key === "р" || e.key === "Р") showAnchors();
+  if (e.key === "l" || e.key === "L" || e.key === "д" || e.key === "Д") listenCard();
   if (e.key === "1") gradeCard("self");
   if (e.key === "2") gradeCard("anchors");
   if (e.key === "3") gradeCard("none");

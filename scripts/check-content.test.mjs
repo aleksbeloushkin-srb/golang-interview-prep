@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio } from './check-content.mjs';
+import { toSpeech, textHash } from './speech-text.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 
@@ -136,4 +137,26 @@ test('markdown: Liquid hazards are reported outside raw blocks only', () => {
     { name: 'd.md', text: 'plain text with { braces }' },
   ];
   assert.deepEqual(liquidHazards(files), ['a.md:3', 'c.md:1']);
+});
+
+test('speech text reads Go code the way people say it', () => {
+  assert.equal(toSpeech('Wrap with fmt.Errorf and %w.'), 'Wrap with F-M-T dot Error-f and percent w.');
+  assert.equal(toSpeech('a sentinel like io.EOF, errors.Join (Go 1.20) combines'), 'a sentinel like I-O dot E-O-F, errors dot Join, Go one 20, combines');
+  assert.equal(toSpeech('Go rewrites c.Set() to (&c).Set() when'), 'Go rewrites c dot Set to address of c dot Set when');
+  assert.equal(toSpeech('returns a nil *MyError, err != nil'), 'returns a nil pointer to My Error, err not equal to nil');
+  assert.equal(toSpeech('0, false, "", nil; -5 is "-0.05 EUR"'), '0, false, empty string, nil; minus 5 is minus 0.05 euros');
+  assert.equal(toSpeech('like Kotlin’s T?: any pointer'), "like Kotlin's nullable T: any pointer");
+  assert.equal(toSpeech('First sentence. Second one.'), 'First sentence. Second one.');
+});
+
+test('audio manifest: files must exist, stale entries are counted, unknown keys rejected', () => {
+  const manifest = { voices: { michael: {}, heart: {} }, items: {
+    'card:c1:short': { hash: textHash('A'), michael: 'audio/en/a-michael-1.mp3', heart: 'audio/en/a-heart-1.mp3' },
+    'card:c2:short': { hash: textHash('old'), michael: 'audio/en/b-michael-1.mp3', heart: 'audio/en/b-heart-1.mp3' },
+    'card:c9:short': { hash: textHash('X'), michael: 'audio/en/c-michael-1.mp3', heart: 'audio/en/missing.mp3' }
+  } };
+  const files = new Set(['audio/en/a-michael-1.mp3', 'audio/en/a-heart-1.mp3', 'audio/en/b-michael-1.mp3', 'audio/en/b-heart-1.mp3', 'audio/en/c-michael-1.mp3']);
+  const r = validateAudio(manifest, { 'card:c1:short': 'A', 'card:c2:short': 'new' }, f => files.has(f));
+  assert.equal(r.stale, 1);
+  assert.deepEqual(r.errors, ['audio card:c9:short: missing audio/en/missing.mp3', 'audio card:c9:short: no such text']);
 });

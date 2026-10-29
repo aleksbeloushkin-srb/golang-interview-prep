@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { createContext, runInContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { textHash } from './speech-text.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const dataFiles = ['data/cards.js', 'data/quiz.js', 'data/simulators.js'];
@@ -266,6 +267,38 @@ export function validateContent(data) {
   return errors;
 }
 
+// data/audio.js: каждая запись ссылается на существующий mp3 в audio/en/; устаревшие (текст изменился) считаются отдельно —
+// страница их не показывает, но их стоит перегенерировать.
+export function validateAudio(manifest, texts, fileExists) {
+  const errors = [];
+  let stale = 0;
+  const voices = Object.keys(manifest?.voices || {});
+  if (!voices.length) errors.push('audio: no voices');
+  for (const [key, entry] of Object.entries(manifest?.items || {})) {
+    if (!/^[0-9a-f]{8}$/.test(entry?.hash || '')) errors.push(`audio ${key}: bad hash`);
+    for (const voice of voices) {
+      const file = entry?.[voice];
+      if (typeof file !== 'string' || !/^audio\/en\/[\w.-]+\.mp3$/.test(file)) errors.push(`audio ${key}: bad ${voice} file`);
+      else if (!fileExists(file)) errors.push(`audio ${key}: missing ${file}`);
+    }
+    if (!Object.hasOwn(texts, key)) errors.push(`audio ${key}: no such text`);
+    else if (textHash(texts[key]) !== entry.hash) stale++;
+  }
+  return { errors, stale, items: Object.keys(manifest?.items || {}).length };
+}
+
+// Тексты, которые можно озвучить: ключ — как в data/audio.js.
+export function speakableTexts(data, plan, practice) {
+  const out = {};
+  for (const card of data.cards) {
+    out[`card:${card.id}:short`] = card.shortEN;
+    if (card.jvmEN) out[`card:${card.id}:jvm`] = card.jvmEN;
+  }
+  for (const [id, model] of Object.entries(plan?.modelAnswers || {})) if (model?.en) out[`plan:${id}`] = model.en;
+  for (const task of practice || []) if (task.talkEN) out[`practice:${task.id}:talk`] = task.talkEN;
+  return out;
+}
+
 export function changedContent(before, after) {
   const result = {};
   for (const group of ['cards', 'quiz', 'simulators']) {
@@ -288,7 +321,7 @@ function main() {
   const read = file => readFileSync(resolve(root, file), 'utf8');
   const hasPlan = existsSync(resolve(root, planFile));
   const hasPractice = existsSync(resolve(root, practiceFile));
-  const scripts = [...dataFiles, 'js/app.js', ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : [])];
+  const scripts = [...dataFiles, 'js/app.js', ...(existsSync(resolve(root, 'data/audio.js')) ? ['data/audio.js', 'js/audio.js'] : []), ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : [])];
   for (const file of scripts) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
   const data = loadContent(read);
   const errors = validateContent(data);
@@ -299,6 +332,14 @@ function main() {
   const markdown = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
   const hazards = liquidHazards(markdown.map(name => ({ name, text: read(name) })));
   if (hazards.length) errors.push(`markdown: Liquid syntax outside {% raw %} breaks GitHub Pages: ${hazards.join(', ')}`);
+  let audio = null;
+  if (existsSync(resolve(root, 'data/audio.js'))) {
+    const context = createContext({});
+    runInContext(read('data/audio.js'), context, { filename: 'data/audio.js', timeout: 1000 });
+    const manifest = JSON.parse(runInContext('JSON.stringify(AUDIO)', context, { timeout: 1000 }));
+    audio = validateAudio(manifest, speakableTexts(data, plan, practice), file => existsSync(resolve(root, file)));
+    errors.push(...audio.errors);
+  }
   let base = null, changes = null;
   if (args.length) {
     const git = argv => execFileSync('git', argv, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
@@ -321,7 +362,7 @@ function main() {
       if (changes.practiceRemoved.length) errors.push(`practice: stable IDs removed: ${changes.practiceRemoved.join(', ')}`);
     }
   }
-  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), ...(plan ? { planWeeks: plan.weeks.length, planTasks: planTaskIds(plan).length, planAcceptance: Object.keys(plan.acceptance || {}).length } : {}), ...(practice ? { practiceTasks: practice.length } : {}) }, changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
+  console.log(JSON.stringify({ ok: errors.length === 0, base, counts: { ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value.length])), ...(plan ? { planWeeks: plan.weeks.length, planTasks: planTaskIds(plan).length, planAcceptance: Object.keys(plan.acceptance || {}).length } : {}), ...(practice ? { practiceTasks: practice.length } : {}), ...(audio ? { audioItems: audio.items, audioStale: audio.stale } : {}) }, changes, errors, durationMs: Math.round(performance.now() - started), scope: 'Syntax and structural checks only; not Go correctness, translation equivalence, UI or automatic review completion.' }, null, 2));
   if (errors.length) process.exitCode = 1;
 }
 

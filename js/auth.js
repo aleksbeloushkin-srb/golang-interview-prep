@@ -13,7 +13,8 @@ const AUTH_HINT_KEY = "go_prep_signed_in_v1";
 const AUTH_TRIED_KEY = "go_prep_auth_tried_v1";
 const SYNC_PREFIX = "go_prep_";
 // Не синхронизируем служебные ключи входа и черновики практикума (они в sessionStorage).
-const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY]);
+// Голос озвучки — настройка этого устройства, а не прогресс: не синхронизируется.
+const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY, "go_prep_tts_voice_v1"]);
 const SYNC_INTERVAL_MS = 5000;
 
 const authState = {
