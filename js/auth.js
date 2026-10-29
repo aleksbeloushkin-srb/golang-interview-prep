@@ -192,9 +192,12 @@ function siteNeedSignIn(what) {
   const box = document.getElementById("signin-notice");
   if (!box) return;
   const button = authButton("Войти через Google", () => authSignIn());
-  box.replaceChildren(authEl("span", { text: `Без входа сайт работает только на чтение. ${what || "Чтобы отмечать прогресс"}, войди через Google.` }), button);
+  const close = authEl("button", { type: "button", className: "signin-notice-close", "aria-label": "Закрыть подсказку", text: "✕" });
+  close.addEventListener("click", () => box.classList.add("hidden"));
+  box.replaceChildren(authEl("span", { text: `Без входа сайт работает только на чтение. ${what || "Чтобы отмечать прогресс"}, войди через Google.` }), button, close);
   box.classList.remove("hidden");
-  button.focus();
+  // Подсказка всплывает поверх страницы: место, где нажали, остаётся на экране.
+  button.focus({ preventScroll: true });
 }
 
 // --- Синхронизация прогресса: все ключи go_prep_* из localStorage одним объектом.

@@ -11,28 +11,27 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is a goroutine, and how does it differ from an OS thread?",
     "qRU": "Что такое горутина и чем она отличается от потока ОС?",
-    "shortEN": "A goroutine is a function running concurrently, scheduled by the Go runtime instead of the OS. The runtime multiplexes many goroutines onto a few OS threads (M:N), and switching between them needs no system call. A goroutine starts with a 2 KiB stack that grows on demand, while a thread usually reserves megabytes. The go statement returns nothing, no ID and no handle, so every goroutine needs an owner and a way to finish.",
+    "shortEN": "A goroutine is a function running concurrently, scheduled by the Go runtime rather than by the OS. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner and a way to finish.",
     "anchorsEN": [
-      "go f() → no ID, no handle",
-      "M:N: many Gs on a few threads",
-      "2 KiB stack → grows on demand",
-      "user-space switch, no syscall"
+      "the runtime schedules, not the OS",
+      "many Gs on few threads; ≥ 2 KiB stack grows",
+      "go returns nothing → owner + exit"
     ],
     "jvmEN": "Unlike a Java platform thread, a goroutine is not an OS thread and there is no Thread object to join or interrupt. Like a Java virtual thread, it blocks like ordinary code; unlike a Kotlin coroutine, it needs no suspend functions; and unlike both, the runtime can preempt it in the middle of a loop.",
     "detailsEN": [
       "Concurrency does not require simultaneous execution. GOMAXPROCS limits how many OS threads can execute user Go code at once; it is not the total number of goroutines or threads.",
       "A new goroutine gets the minimum stack, 2 KiB on Linux/amd64; a reused one may start larger, sized from the average stack use the GC observed. A goroutine also has a descriptor (runtime.g) and can keep heap objects alive, so count × 2 KiB is not a memory estimate.",
-      "A thread’s reserved stack, its committed memory and RSS are different numbers. Switch costs depend on the machine and the workload: measure them instead of quoting nanoseconds.",
+      "A thread’s reserved stack, its committed memory and RSS are different numbers. Switching goroutines happens in user space, without a system call. Switch costs depend on the machine and the workload: measure them instead of quoting nanoseconds.",
       "The go statement returns nothing: no ID, no handle, no result. Wait for completion with a WaitGroup, an errgroup or a channel, and give each goroutine an owner and a way to finish. The runtime numbers goroutines internally (the number shows in stack traces), but the language deliberately does not expose it. Returning from main does not wait for other goroutines."
     ],
     "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
-    "shortRU": "Горутина — это функция, которая выполняется конкурентно и которую планирует рантайм Go, а не ОС. Рантайм распределяет много горутин по нескольким потокам ОС (M:N), и переключение между ними не требует системного вызова. Горутина стартует со стеком 2 КиБ, который растёт по мере надобности, а поток обычно резервирует мегабайты. Оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и путь завершения.",
+    "shortRU": "Горутина — это функция, которая выполняется конкурентно и которую планирует рантайм Go, а не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и способ завершиться.",
     "jvmRU": "В отличие от платформенного потока Java, горутина — не поток ОС, и у неё нет объекта Thread, который можно join или interrupt. Как виртуальный поток Java, она блокируется как обычный код; в отличие от корутины Kotlin, ей не нужны suspend-функции; а в отличие от обоих, рантайм может вытеснить её посреди цикла.",
     "detailsRU": [
       "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
       "Новая горутина получает минимальный стек — 2 КиБ на Linux/amd64; переиспользованная может начать с большего, по среднему использованию стека, которое видел GC. Кроме того, у горутины есть дескриптор (runtime.g), а её ссылки удерживают объекты кучи, поэтому число горутин × 2 КиБ — не оценка памяти.",
-      "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Цена переключения зависит от машины и нагрузки: её измеряют, а не заучивают в наносекундах.",
+      "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Переключение горутин идёт в пространстве пользователя, без системного вызова. Цена переключения зависит от машины и нагрузки: её измеряют, а не заучивают в наносекундах.",
       "Оператор go ничего не возвращает: ни ID, ни дескриптора, ни результата. Дождаться горутину можно через WaitGroup, errgroup или канал; у каждой горутины должен быть владелец и путь завершения. Внутренний номер у горутины есть (виден в трассах стека), но язык намеренно его не отдаёт. Возврат из main не ждёт остальные горутины."
     ],
     "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
@@ -83,15 +82,14 @@ const CARDS = [
     "simId": null,
     "qEN": "Can a program have a race condition without a data race?",
     "qRU": "Может ли в программе быть логическая гонка без гонки данных?",
-    "shortEN": "Yes: a program can be free of data races and still have a race condition. A data race is unsynchronized access to the same memory with at least one write; a race condition is a logic bug that depends on timing. If each read and write is locked separately, “check the balance, then withdraw” can still let two withdrawals pass. The fix is one lock around both the check and the action.",
+    "shortEN": "Yes: a race condition is a timing-dependent logic bug, and it can exist even when every memory access is synchronized. A data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. If the balance check and the withdrawal each take the lock separately, two withdrawals can both pass the check, so the check and the withdrawal must run in one critical section.",
     "anchorsEN": [
-      "data race = no sync + one write",
       "race condition = timing-dependent logic",
-      "check-then-act → one critical section",
-      "-race finds data races, not logic bugs"
+      "data race = no sync + a write; -race finds it",
+      "check-then-act → one critical section"
     ],
     "jvmEN": "Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with AtomicLong.",
-    "shortRU": "Да: в программе может не быть гонок данных и всё же быть логическая гонка. Гонка данных — несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; логическая гонка — ошибка, зависящая от порядка событий. Если каждое чтение и запись защищены отдельно, «проверить баланс, потом списать» всё равно может пропустить два списания. Исправление — одна блокировка и на проверку, и на действие.",
+    "shortRU": "Да: логическая гонка — ошибка, зависящая от порядка событий, и она бывает, даже когда каждый доступ к памяти синхронизирован. Гонка данных — понятие уже: несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; её может обнаружить -race. Если проверка баланса и списание берут блокировку по отдельности, два списания могут оба пройти проверку, поэтому проверка и списание должны выполняться в одной критической секции.",
     "jvmRU": "Так же, как в Java: synchronized-геттеры и сеттеры делают безопасным каждый вызов, но не пару «проверить и изменить». Нужна одна блокировка на оба шага или цикл compare-and-set, как с AtomicLong.",
     "detailsEN": [
       "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
@@ -147,28 +145,27 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What happens when Go starts a goroutine?",
     "qRU": "Что происходит при запуске горутины?",
-    "shortEN": "go f(x) evaluates f and x in the calling goroutine, and the call itself runs in a new goroutine. On the system stack g0, newproc reuses a dead G or allocates one with a 2 KiB stack, points g.sched at f and pushes goexit as a fake return address. Then it puts the G into runnext of the current P and wakes an idle P: the goroutine is runnable, not yet running.",
+    "shortEN": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine. On the system stack, newproc reuses a dead G or allocates one with a 2 KiB stack, saves where it should start, and puts it into runnext of the current P. That makes it runnable, not running: when it runs is up to the scheduler, so the caller must synchronize to wait for it.",
     "anchorsEN": [
       "arguments evaluated in the caller",
-      "newproc on g0 → reuse or 2 KiB",
-      "g.sched → f; goexit on the stack",
-      "runnext + wakep → runnable ≠ running"
+      "newproc on g0 → G + 2 KiB → runnext",
+      "runnable ≠ running → synchronize"
     ],
     "jvmEN": "Unlike new Thread(r).start() in Java, there is no object to keep: go returns nothing. The arguments are copied at the go statement, but a closure, unlike a Java lambda that captures effectively final values, captures the variables themselves.",
     "detailsEN": [
       "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations. A newly created G gets the minimum stack (2 KiB on Linux); since Go 1.19 a reused G can instead get a starting size based on average stack usage recalculated at each GC (GODEBUG adaptivestackstart, on by default).",
       "The runtime initializes the saved SP and PC, keeps the closure in g.sched.ctxt and, on amd64, pushes goexit onto the new stack as the return address. These are data for a future execution, not the CPU registers of an already running goroutine.",
-      "newproc requests runnext placement with runqput(..., true), but runtime conditions can choose an ordinary queue. A scheduler later transitions the G from runnable to running. The language promises neither immediate execution nor FIFO launch order.",
+      "newproc requests runnext placement with runqput(..., true), but runtime conditions can choose an ordinary queue. newproc then calls wakep, so an idle P may pick the goroutine up by stealing. A scheduler later transitions the G from runnable to running. The language promises neither immediate execution nor FIFO launch order.",
       "The runtime has internal goroutine IDs, but the language exposes no goroutine handle, public current-ID API or operation to kill another goroutine. Use explicit request IDs, cancellation and completion signals; do not parse stack dumps as an identity API."
     ],
     "practicalRU": "Передавай значения явно, если работнику нужен снимок состояния. Замыкание, которое позже читает изменяемое общее состояние, имеет другую семантику и может создать гонку.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
-    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет новая горутина. На системном стеке g0 newproc берёт завершившуюся G или создаёт новую со стеком 2 КиБ, направляет g.sched на f и кладёт goexit как поддельный адрес возврата. Затем ставит G в runnext текущего P и будит простаивающий P: горутина готова к запуску, но ещё не выполняется.",
+    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет в новой. На системном стеке newproc берёт завершившуюся G или создаёт новую со стеком 2 КиБ, сохраняет, откуда ей стартовать, и ставит её в runnext текущего P. Так она становится готовой к запуску, но не выполняется: когда её запустить, решает планировщик, поэтому чтобы её дождаться, нужна синхронизация.",
     "jvmRU": "В отличие от new Thread(r).start() в Java, хранить нечего: go ничего не возвращает. Аргументы копируются в момент оператора go, а замыкание, в отличие от лямбды Java с effectively final значениями, захватывает сами переменные.",
     "detailsRU": [
       "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart, включён по умолчанию).",
       "Рантайм инициализирует сохранённые SP и PC, кладёт замыкание в g.sched.ctxt, а на amd64 записывает goexit на новый стек как адрес возврата. Это данные будущего исполнения, а не регистры CPU уже работающей горутины.",
-      "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
+      "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Затем newproc вызывает wakep, и простаивающий P может забрать горутину перехватом. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
       "У рантайма есть внутренние ID горутин, но язык не предоставляет дескриптор горутины, публичный API текущего ID или операцию убийства другой горутины. Используй явные ID запросов, отмену и сигналы завершения; разбор stack dump не заменяет API идентификации."
     ],
     "versionNote": "Порядок вычисления go — гарантия языка во всех рассматриваемых версиях. newproc1/gfget/runnext — Go 1.26.1; сигнатуры внутренних функций не являются API. В Go 1.17 нет современной startingStackSize-политики.",
@@ -219,11 +216,10 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "Where is a goroutine stack allocated, and what does StackInuse measure?",
     "qRU": "Где выделяется стек горутины и что измеряет StackInuse?",
-    "shortEN": "A goroutine stack lives in memory the runtime takes from its heap pages, but a separate stack allocator manages it, not mallocgc and the GC sweep. Small stacks come from per-P stack caches and per-size free lists; large ones get their own spans; when a stack grows, the runtime copies it to a bigger block, so it can move. MemStats.StackInuse counts bytes in those stack spans, not the bytes your local variables use right now.",
+    "shortEN": "A goroutine stack lives in memory the runtime takes from its heap pages, but a separate stack allocator manages it, not mallocgc and the GC sweep. Small stacks come from per-P caches and free lists, large ones get their own spans, and a growing stack is copied to a bigger block, so it can move. MemStats.StackInuse therefore counts stack spans, not the bytes your locals use right now.",
     "anchorsEN": [
       "stackalloc, not mallocgc",
-      "per-P stack cache → free lists → own span",
-      "grows by copying, can move",
+      "per-P cache → free lists → own span; can move",
       "StackInuse = stack spans, not locals"
     ],
     "jvmEN": "In Java a platform thread’s stack is native memory with a fixed maximum set by -Xss, and it never moves. A goroutine stack starts tiny, grows and moves, which is why a Go program can afford hundreds of thousands of goroutines.",
@@ -235,7 +231,7 @@ const CARDS = [
     ],
     "practicalRU": "Сравнивай динамику на характерной нагрузке, а в профиле горутин ищи владельцев и места ожидания. Разность двух снимков нельзя называть универсальной ценой одной горутины.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\tvar stats runtime.MemStats\n\truntime.ReadMemStats(&stats)\n\t// Values depend on the process and workload; these are not RSS or live frames.\n\tfmt.Println(\"stack spans:\", stats.StackInuse, \"bytes\")\n\tfmt.Println(\"goroutines:\", runtime.NumGoroutine())\n}",
-    "shortRU": "Стек горутины лежит в памяти, которую рантайм берёт из страниц кучи, но управляет им отдельный аллокатор стеков, а не mallocgc и sweep сборщика. Малые стеки берутся из кешей стеков на P и списков свободных стеков по размерам, большие получают свои спаны; при росте рантайм копирует стек в больший блок, поэтому стек может переехать. MemStats.StackInuse считает байты в этих спанах стеков, а не то, сколько сейчас занимают локальные переменные.",
+    "shortRU": "Стек горутины лежит в памяти, которую рантайм берёт из страниц кучи, но управляет им отдельный аллокатор стеков, а не mallocgc и sweep сборщика. Малые стеки берутся из кешей на P и списков свободных стеков, большие получают свои спаны, а растущий стек копируется в больший блок, поэтому может переехать. Поэтому MemStats.StackInuse считает спаны стеков, а не байты, которые сейчас занимают локальные переменные.",
     "jvmRU": "В Java стек платформенного потока — нативная память с фиксированным максимумом из -Xss, и он никогда не переезжает. Стек горутины начинается маленьким, растёт и переезжает — поэтому программа на Go может позволить себе сотни тысяч горутин.",
     "detailsRU": [
       "Небольшие стеки берутся из кешей P и списков свободных стеков по размерам; более крупные получают отдельные спаны. Фраза «стек лежит в куче» скрывает отличие от выделения обычного объекта через mallocgc.",
@@ -283,12 +279,11 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "How does a goroutine stack grow, and why do pointers remain valid?",
     "qRU": "Как растёт стек горутины и почему указатели остаются корректными?",
-    "shortEN": "When a function’s frame does not fit, its prologue calls morestack, and newstack allocates a stack twice as big, copies the frames and fixes the pointers into the old stack using the compiler’s stack maps. Pointers stay valid because user heap objects and globals never point into a stack; besides the frames, the runtime fixes only its own records, such as channel wait records and defer records. Beyond 1 GB on 64-bit systems, the program dies with a fatal stack overflow.",
+    "shortEN": "When the stack pointer would pass the stack guard, the function prologue calls morestack; the runtime allocates a stack at least twice as big and copies the frames into it. Pointers stay valid because the compiler’s stack maps let the runtime fix every pointer into the old stack, and user heap objects never point into a stack. Growth stops at 1 GB on 64-bit systems: beyond that the program dies with a fatal stack overflow.",
     "anchorsEN": [
-      "prologue: SP vs stackguard0",
-      "morestack → newstack → copy ×2",
-      "stack maps fix the frames",
-      "+ runtime records: sudog, defer, panic"
+      "prologue: SP vs guard → morestack",
+      "copy to ≥ 2×; stack maps fix the pointers",
+      "1 GB limit → fatal overflow"
     ],
     "jvmEN": "A Java platform thread stack cannot grow past -Xss: deep recursion ends with StackOverflowError, 1 MiB by default on 64-bit Linux. In Go the same recursion keeps working, because the stack doubles by copying, until the 1 GB limit, and then the program dies instead of throwing an error you can catch.",
     "detailsEN": [
@@ -299,7 +294,7 @@ const CARDS = [
     ],
     "practicalRU": "Используй обычные указатели и ограничивай глубину рекурсии. Если в профиле заметно копирование стеков, сначала изучи глубину вызовов и крупные кадры; worker pool не является универсальным лечением роста стека.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc descend(depth int, value *int) int {\n\tvar frame [1024]byte\n\tframe[0] = byte(depth)\n\tif depth == 0 {\n\t\t*value = 42\n\t\treturn 0\n\t}\n\tsum := descend(depth-1, value)\n\treturn sum + int(frame[0]) // Keep frame data live across the call.\n}\n\nfunc main() {\n\tvalue := 0\n\tsum := descend(64, &value)\n\tfmt.Println(value, sum) // 42 2080; not a measurement of stack addresses.\n}",
-    "shortRU": "Когда кадр функции не помещается, её пролог вызывает morestack, а newstack выделяет стек вдвое больше, копирует кадры и исправляет указатели на старый стек по картам стека от компилятора. Указатели остаются верными, потому что объекты кучи из пользовательского кода и глобальные переменные никогда не указывают в стек; кроме кадров рантайм исправляет лишь свои записи — например, записи ожидания каналов и записи defer. За пределом 1 ГБ на 64-битных системах программа погибает с фатальной ошибкой stack overflow.",
+    "shortRU": "Когда указатель стека вот-вот перейдёт границу guard, пролог функции вызывает morestack; рантайм выделяет стек минимум вдвое больше и копирует в него кадры. Указатели остаются корректными, потому что карты стека от компилятора позволяют рантайму исправить каждый указатель на старый стек, а объекты кучи из пользовательского кода никогда не указывают в стек. Рост останавливается на 1 ГБ на 64-битных системах: дальше программа падает с фатальной ошибкой stack overflow.",
     "jvmRU": "Стек платформенного потока Java не растёт дальше -Xss: глубокая рекурсия заканчивается StackOverflowError, по умолчанию на 1 МиБ на 64-битном Linux. В Go та же рекурсия продолжает работать — стек удваивается копированием — до предела в 1 ГБ, а потом программа погибает, а не бросает ошибку, которую можно поймать.",
     "detailsRU": [
       "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
@@ -347,15 +342,14 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What must the runtime restore to resume a goroutine?",
     "qRU": "Что runtime восстанавливает, чтобы продолжить выполнение горутины?",
-    "shortEN": "Three things: which goroutine is current, where its stack is, and where to continue. On amd64 gogo writes the G into thread-local storage and R14, restores RSP and BP, and jumps to the saved PC; these values plus the closure context are kept in g.sched, a gobuf. Switching goes through g0, the system stack of each thread: mcall saves the running goroutine and calls the scheduler on g0, and gogo loads the next one.",
+    "shortEN": "Mainly three things: which goroutine is current, where its stack is, and where to continue. They are saved in g.sched, and on amd64 gogo puts the G into R14, restores RSP and jumps to the saved PC. Every switch goes through g0, the thread’s system stack: mcall saves the running goroutine and calls the scheduler there, and gogo loads the next one.",
     "anchorsEN": [
-      "who: R14 = current G",
-      "which stack: RSP",
-      "where to continue: saved PC → JMP",
-      "g.sched; mcall → g0 → gogo"
+      "who R14 · stack RSP · where PC",
+      "saved in g.sched",
+      "mcall → g0 → gogo"
     ],
     "jvmEN": "A Java platform thread switch is done by the kernel; a goroutine switch is a user-space jump that saves a few values in g.sched, with no system call. That is why blocking a goroutine on a channel is cheap.",
-    "shortRU": "Три вещи: какая горутина текущая, где её стек и откуда продолжить. На amd64 gogo записывает G в локальное хранилище потока и в R14, восстанавливает RSP и BP и прыгает на сохранённый PC; эти значения вместе с контекстом замыкания хранятся в g.sched (структура gobuf). Переключение идёт через g0 — системный стек каждого потока: mcall сохраняет текущую горутину и вызывает планировщик на g0, а gogo загружает следующую.",
+    "shortRU": "В основном три вещи: какая горутина текущая, где её стек и откуда продолжить. Они хранятся в g.sched, а на amd64 gogo кладёт G в R14, восстанавливает RSP и прыгает на сохранённый PC. Каждое переключение идёт через g0 — системный стек потока: mcall сохраняет текущую горутину и вызывает там планировщик, а gogo загружает следующую.",
     "jvmRU": "Переключение платформенных потоков Java делает ядро; переключение горутин — прыжок в пространстве пользователя, который сохраняет несколько значений в g.sched, без системного вызова. Поэтому заблокировать горутину на канале дёшево.",
     "detailsEN": [
       "A register is a small CPU storage location used during execution. RSP is an address, not the stack itself; R14 is a pointer to Go runtime metadata, not the whole goroutine. RIP changes as instructions and control transfers execute.",
@@ -417,12 +411,11 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How do G, M and P relate to GOMAXPROCS?",
     "qRU": "Как G, M и P связаны с GOMAXPROCS?",
-    "shortEN": "GOMAXPROCS is the number of Ps, and a P is the right to run Go code. A goroutine (G) runs on an OS thread (M) only while that thread holds a P, so at most GOMAXPROCS goroutines execute Go code at the same moment. Threads can outnumber Ps, for example when they are blocked in system calls or cgo. Since Go 1.25 the default on Linux also respects the container’s CPU limit.",
+    "shortEN": "GOMAXPROCS is the number of Ps, and a P is the right to run Go code. A thread (M) runs goroutines (G) only while it holds a P, so at most GOMAXPROCS goroutines execute Go code at the same moment. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
     "anchorsEN": [
-      "G goroutine · M thread · P right to run Go",
       "GOMAXPROCS = number of Ps",
-      "threads > Ps: syscalls, cgo",
-      "Go 1.25+: container CPU limit"
+      "M runs Gs only while holding a P",
+      "threads > Ps: a long-blocked M loses its P"
     ],
     "jvmEN": "Unlike a Java thread-pool size, GOMAXPROCS limits neither the number of goroutines nor the number of threads; it limits parallel Go execution. It is closer to the parallelism of the ForkJoinPool that carries Java virtual threads.",
     "detailsEN": [
@@ -433,7 +426,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни со стандартной настройки рантайма, наблюдай throttling и задержки и подбирай значение на реальной нагрузке. Число 2 или количество CPU хоста не является универсальным рецептом для контейнера.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\t// A non-positive argument queries the setting without changing it.\n\tfmt.Println(\"parallel Go execution limit:\", runtime.GOMAXPROCS(0))\n\t// This is not the number of threads or an external-service concurrency limit.\n}",
-    "shortRU": "GOMAXPROCS — это число P, а P — право исполнять Go-код. Горутина (G) работает на потоке ОС (M), только пока этот поток держит P, поэтому одновременно Go-код исполняют не больше GOMAXPROCS горутин. Потоков может быть больше, чем P: например, когда они заблокированы в системных вызовах или в cgo. С Go 1.25 значение по умолчанию на Linux учитывает и лимит CPU контейнера.",
+    "shortRU": "GOMAXPROCS — это число P, а P — право исполнять Go-код. Поток (M) исполняет горутины (G), только пока держит P, поэтому одновременно Go-код исполняют не больше GOMAXPROCS горутин. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
     "jvmRU": "В отличие от размера пула потоков в Java, GOMAXPROCS не ограничивает ни число горутин, ни число потоков — только параллельное исполнение Go-кода. Это ближе к параллелизму ForkJoinPool, на котором работают виртуальные потоки Java.",
     "detailsRU": [
       "P — объект рантайма, а не физический CPU или навсегда закреплённое ядро. ОС распределяет M по доступным CPU. В выражении «планирование M:N» буквы M и N обозначают количества, а не имена типов рантайма.",
@@ -485,12 +478,11 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How does Go preempt a CPU-bound goroutine?",
     "qRU": "Как Go вытесняет горутину, занятую вычислениями?",
-    "shortEN": "The sysmon thread notices a goroutine that has run for about 10 ms and asks it to yield. Cooperatively, it sets the goroutine’s stack guard, so the next function call that checks the stack enters the scheduler. Asynchronously, since Go 1.14, it sends SIGURG to the thread, and the handler makes the goroutine call asyncPreempt if it is at a safe point, so even a tight loop without calls can be preempted.",
+    "shortEN": "The runtime asks it to yield: the sysmon thread notices a goroutine that has run for about 10 ms and requests preemption. Since Go 1.14 that works even in a tight loop without function calls, because on Unix sysmon sends SIGURG and the handler makes the goroutine call asyncPreempt at a safe point. It is only a request: the switch waits for a safe point, and it neither releases locks nor cancels work.",
     "anchorsEN": [
-      "sysmon: running ≥ ~10 ms",
-      "stack guard → next call → scheduler",
+      "sysmon: running ~10 ms → request",
       "SIGURG → asyncPreempt (Go 1.14+)",
-      "switch only at a safe point"
+      "only at a safe point; locks stay"
     ],
     "jvmEN": "Java virtual threads are not time-sliced: a CPU-bound virtual thread keeps its carrier thread until it blocks. Go preempts goroutines, so one busy loop cannot starve the others on its P.",
     "detailsEN": [
@@ -501,7 +493,7 @@ const CARDS = [
     ],
     "practicalRU": "В длительном вычислении проверяй ctx.Done на подходящей границе работы. Справедливость планировщика и скорость реакции вашего протокола отмены — разные вопросы.",
     "code": "package main\n\nimport (\n\t\"context\"\n\t\"fmt\"\n)\n\nfunc sum(ctx context.Context, n int) (int, error) {\n\ttotal := 0\n\tfor i := 0; i < n; i++ {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn 0, ctx.Err()\n\t\tdefault:\n\t\t}\n\t\ttotal += i\n\t}\n\treturn total, nil\n}\n\nfunc main() {\n\tctx, cancel := context.WithCancel(context.Background())\n\tcancel()\n\t_, err := sum(ctx, 100)\n\tfmt.Println(err) // context canceled; the application checks the signal.\n}",
-    "shortRU": "Поток sysmon замечает горутину, которая работает около 10 мс, и просит её уступить. Кооперативно: ставит ей границу стека так, что следующий вызов функции с проверкой стека уходит в планировщик. Асинхронно, с Go 1.14: шлёт потоку SIGURG, и обработчик заставляет горутину вызвать asyncPreempt, если она в безопасной точке, поэтому вытеснить можно даже плотный цикл без вызовов.",
+    "shortRU": "Рантайм просит её уступить: поток sysmon замечает горутину, которая работает уже около 10 мс, и запрашивает вытеснение. С Go 1.14 это работает даже в плотном цикле без вызовов функций: на Unix sysmon шлёт SIGURG, и обработчик заставляет горутину вызвать asyncPreempt в безопасной точке. Это только запрос: переключение ждёт безопасной точки и не отпускает блокировки и не отменяет работу.",
     "jvmRU": "Виртуальные потоки Java не вытесняются по времени: виртуальный поток, занятый вычислениями, держит поток-носитель, пока не заблокируется. Go вытесняет горутины, поэтому один занятый цикл не оставит без процессора остальные на своём P.",
     "detailsRU": [
       "sysmon/retake использует порог 10 мс при наблюдении неизменного тика планировщика. Это не строгий квант CPU, не гарантия задержки и не утверждение, что sysmon просыпается ровно каждые 10 мс. Горутины runnext могут разделять один тик.",
@@ -553,12 +545,11 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How does the scheduler find work and steal from another P?",
     "qRU": "Как планировщик находит работу и забирает её у другого P?",
-    "shortEN": "The scheduler looks for work roughly in this order: the P’s runnext and local queue, the global queue, the network poller, then stealing from other Ps. Every 61st tick it first takes one goroutine from the global queue, so global work does not starve. A thief takes half of the victim’s local queue from the head, and a P whose queue is empty takes a batch of up to 128 from the global queue.",
+    "shortEN": "Roughly in this order: the P’s runnext and local queue, the global queue, the network poller, and only then other Ps. Two rules keep it balanced: every 61st tick a P takes one goroutine from the global queue first, so global work does not starve, and a thief takes half of the victim’s local queue from the head. Only runnable goroutines move; a running one is never stolen.",
     "anchorsEN": [
-      "runnext → runq → global → netpoll → steal",
-      "every 61st tick: 1 G from global",
-      "steal half, from the head",
-      "global batch ≤ 128, fair share"
+      "runnext → local → global → netpoll → steal",
+      "every 61st tick: one G from global",
+      "steal half, from the head"
     ],
     "jvmEN": "Like Java’s ForkJoinPool, each P has its own queue and idle workers steal. Unlike ForkJoinPool, which by default takes its own tasks LIFO, a P runs its local queue FIFO, and only the one-slot runnext acts as a LIFO shortcut.",
     "detailsEN": [
@@ -569,7 +560,7 @@ const CARDS = [
     ],
     "practicalRU": "Используй schedtrace для общего снимка и execution trace для временной картины. Один снимок неравных очередей сам по себе не доказывает проблему cgo, безопасной точки или планировщика.",
     "code": "// Source-level model, NOT executable Go and NOT a scheduling guarantee.\n// Assumptions: no concurrent queue changes; ordinary queue, head at left.\n// Before: victim [A B C D E], thief []\n// Grab:   n=5 -> n-n/2=3 -> [A B C]\n// After:  victim [D E], thief [A B], returned for execution: C\n// runnext, timers, concurrent retries and other scheduler work are omitted.",
-    "shortRU": "Планировщик ищет работу примерно в таком порядке: runnext и локальная очередь своего P, глобальная очередь, netpoller, затем перехват у других P. На каждом 61-м тике он сначала берёт одну горутину из глобальной очереди, чтобы глобальная работа не голодала. При перехвате забирается половина локальной очереди жертвы с головы, а P с пустой очередью берёт из глобальной пачку до 128 горутин.",
+    "shortRU": "Примерно в таком порядке: runnext и локальная очередь своего P, глобальная очередь, netpoller и только потом другие P. Равновесие держат два правила: на каждом 61-м тике P сначала берёт одну горутину из глобальной очереди, чтобы глобальная работа не голодала, а при перехвате забирается половина локальной очереди жертвы с головы. Перемещаются только готовые горутины; исполняющуюся не перехватить.",
     "jvmRU": "Как в ForkJoinPool в Java, у каждого P своя очередь, а свободные воркеры перехватывают работу. В отличие от ForkJoinPool, который по умолчанию берёт свои задачи по LIFO, P исполняет локальную очередь по FIFO, и только слот runnext работает как LIFO-ярлык.",
     "detailsRU": [
       "В Go 1.26.1 findRunnable обрабатывает специальную работу, например координацию GC и таймеры, до части обычного выбора очередей. Упрощённая последовательность «общая, локальная, сеть, кража» не является полным контрактом приоритетов.",
@@ -621,12 +612,11 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How do network polling, blocking syscalls and cgo affect G, M and P?",
     "qRU": "Как ожидание сети, блокирующий syscall и cgo влияют на G, M и P?",
-    "shortEN": "Network waits free the thread, while blocking system calls and cgo hold it, so the runtime moves the P to another thread. A read that would block parks the goroutine in the netpoller, and no thread waits per socket. During a long system call or cgo call, sysmon soon takes the P away and, if there is work, gives it to another thread. When the call returns, the goroutine needs a P again and waits as runnable if none is free.",
+    "shortEN": "Network waits free the thread, while blocking system calls and cgo hold it. A read that would block parks the goroutine in the netpoller, so no thread waits per socket; during a long system call or cgo call, sysmon takes the thread’s P and, if there is work, gives it to another thread. So Go code keeps running, but a program can end up with many more threads than GOMAXPROCS.",
     "anchorsEN": [
       "network wait → netpoller, thread free",
-      "syscall / cgo → thread stays busy",
-      "sysmon hands the P to another M",
-      "return needs a P again"
+      "syscall / cgo → sysmon moves the P",
+      "threads can exceed GOMAXPROCS"
     ],
     "jvmEN": "This is the same idea as a Java virtual thread unmounting on blocking I/O. But where a virtual thread pins its carrier during a native call, Go detaches the P from the blocked thread, so the other goroutines keep running.",
     "detailsEN": [
@@ -638,7 +628,7 @@ const CARDS = [
     ],
     "practicalRU": "Пример ограничивает вызовы, допущенные через один общий лимитер. Отмена может остановить ожидание допуска; после старта сам callback должен поддерживать отмену. Контекст не прерывает произвольный C-код принудительно.",
     "code": "package admission\n\nimport \"context\"\n\n// Share one Limit across callers. It bounds admitted work, not OS threads.\ntype Limit chan struct{}\n\nfunc (limit Limit) Do(ctx context.Context, work func(context.Context) error) error {\n\tif err := ctx.Err(); err != nil {\n\t\treturn err\n\t}\n\tselect {\n\tcase limit <- struct{}{}:\n\t\tdefer func() { <-limit }()\n\tcase <-ctx.Done():\n\t\treturn ctx.Err()\n\t}\n\tif err := ctx.Err(); err != nil {\n\t\treturn err\n\t}\n\t// Cancellation can race with this call; work must also cooperate.\n\treturn work(ctx)\n}\n\n// Construct with make(Limit, 32); keep it shared and never close it.",
-    "shortRU": "Ожидание сети освобождает поток, а блокирующие системные вызовы и cgo его держат, поэтому рантайм передаёт P другому потоку. Чтение, которое заблокировалось бы, паркует горутину в netpoller, и отдельного потока на сокет нет. Во время долгого системного вызова или вызова cgo sysmon вскоре забирает P и, если есть работа, отдаёт его другому потоку. Когда вызов возвращается, горутине снова нужен P; если свободного нет, она ждёт как готовая к запуску.",
+    "shortRU": "Ожидание сети освобождает поток, а блокирующие системные вызовы и cgo его держат. Чтение, которое заблокировалось бы, паркует горутину в netpoller, поэтому отдельного потока на сокет нет; во время долгого системного вызова или вызова cgo sysmon забирает P этого потока и, если есть работа, отдаёт его другому потоку. Поэтому Go-код продолжает работать, но потоков у программы может стать намного больше, чем GOMAXPROCS.",
     "jvmRU": "Та же идея, что у виртуального потока Java, который отсоединяется от носителя на блокирующем вводе-выводе. Но там, где виртуальный поток в нативном вызове закрепляет за собой поток-носитель (pinning), Go отцепляет P от заблокированного потока, и остальные горутины продолжают работать.",
     "detailsRU": [
       "В стандартном Unix-пути поллируемого сокета чтение, которое заблокировалось бы, ожидает через netpoller рантайма. Отдельный заблокированный поток на каждый ожидающий сокет не нужен. Это не обещание для каждой реализации net.Conn, каждого файла или каждой платформы.",
@@ -699,12 +689,11 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is P.runnext, and how does it interact with fairness?",
     "qRU": "Что такое P.runnext и как он связан со справедливостью?",
-    "shortEN": "runnext is a one-slot “run me next” spot in front of each P’s local queue. When a goroutine wakes another, for example by sending to it on a channel, or starts one with go, that goroutine goes into runnext and runs next instead of waiting in a queue of up to 256; the previous occupant moves to the tail. It inherits the current time slice, so the pair shares one 10 ms slice, and sysmon preempts it like a single long-running goroutine.",
+    "shortEN": "runnext is a one-slot spot in front of each P’s local queue for the preferred next candidate. A goroutine that another one wakes, for example with a channel send, or starts with go, goes there instead of the tail of the queue, which cuts latency for send-and-wait pairs; it is a preference, not a guarantee of who runs next. It inherits the current time slice, so sysmon can preempt such a pair like one long-running goroutine.",
     "anchorsEN": [
-      "one slot in front of the runq",
-      "woken or new G runs next, old one → tail",
-      "lower latency for send-and-wait pairs",
-      "shared 10 ms slice → sysmon preempts"
+      "one slot: preferred next candidate",
+      "woken or new G → runnext; lower latency",
+      "shares the time slice → sysmon preempts"
     ],
     "detailsEN": [
       "With next=true, runqput can replace the current slot using CAS and move the previous occupant to the ordinary queue; queue overflow has its own path. Calling this a one-element LIFO stack hides the displacement into another queue.",
@@ -714,7 +703,7 @@ const CARDS = [
     ],
     "practicalRU": "Объясняй через «один предпочтительный кандидат, остальные остаются в очереди». Не оправдывай передачу данных без синхронизации предполагаемым порядком runnext.",
     "code": "// Source-level model, NOT executable Go. No concurrent queue changes.\n// Before: runnext=A, ordinary queue=[X Y]\n// runqput(P, B, true), assuming runnext is enabled and the queue has room:\n// After:  runnext=B, ordinary queue=[X Y A]\n// runqget(P) can return B with inheritTime=true.\n// This is a local queue rule, not an application execution-order guarantee.",
-    "shortRU": "runnext — слот на одну горутину «запусти меня следующей» перед локальной очередью каждого P. Когда горутина будит другую, например отправкой в канал, или запускает новую через go, та попадает в runnext и запускается следующей, а не ждёт в очереди, где может быть до 256 горутин; прежняя горутина из слота уходит в хвост. Она наследует текущий квант, поэтому пара делит один квант в 10 мс, и sysmon вытесняет её, как одну долго работающую горутину.",
+    "shortRU": "runnext — слот на одну горутину перед локальной очередью каждого P для предпочтительного следующего кандидата. Горутина, которую будит другая, например отправкой в канал, или запускает через go, попадает туда, а не в хвост очереди, — это снижает задержку для пар «отправил — ждёт»; это предпочтение, а не гарантия, кто запустится следующим. Она наследует текущий квант, поэтому sysmon может вытеснить такую пару как одну долго работающую горутину.",
     "detailsRU": [
       "При next=true runqput может заменить содержимое слота через CAS и перенести прежнего кандидата в обычную очередь; при переполнении есть отдельный путь. Название «LIFO-стек из одного элемента» скрывает перенос в другую очередь.",
       "runqget проверяет runnext раньше обычной локальной очереди и возвращает inheritTime=true для этого пути. execute тогда не увеличивает schedtick. Локальный приоритет не отменяет остальную работу планировщика и не гарантирует немедленный запуск после go или операции с каналом.",
@@ -757,15 +746,14 @@ const CARDS = [
     "simId": null,
     "qEN": "How would you find and prevent a goroutine leak?",
     "qRU": "Как найти утечку горутин и обеспечить их завершение?",
-    "shortEN": "I find a leak by watching which stack group keeps growing in the goroutine profile, and prevent it by giving every goroutine an owner and a stop signal. A goroutine leaks when it outlives its work and can never finish, usually blocked on a channel, a lock or I/O without a timeout. /debug/pprof/goroutine?debug=1 groups identical stacks with counts, and in tests go.uber.org/goleak fails the test if goroutines are left behind.",
+    "shortEN": "I find a leak by watching which stack group keeps growing in the goroutine profile, and prevent it by giving every goroutine an owner and a stop signal. A leaked goroutine has outlived its work and can never finish, usually because it is blocked on a channel, a lock or I/O without a timeout. In tests, go.uber.org/goleak fails the test if goroutines are left behind.",
     "anchorsEN": [
-      "leak = outlives its work, can’t finish",
-      "stuck on send, receive, lock, I/O",
-      "goroutine profile: a growing group",
-      "owner + stop signal + bound"
+      "a growing stack group in the goroutine profile",
+      "stuck on a channel, lock or I/O",
+      "owner + stop signal; goleak in tests"
     ],
     "jvmEN": "In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have IDs in dumps but no names and no public ID API, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.",
-    "shortRU": "Утечку я нахожу по группе стеков, которая всё растёт в профиле горутин, а предотвращаю тем, что у каждой горутины есть владелец и сигнал остановки. Горутина утекает, когда переживает свою работу и уже не может завершиться — обычно заблокирована на канале, блокировке или вводе-выводе без таймаута. /debug/pprof/goroutine?debug=1 группирует одинаковые стеки со счётчиками, а в тестах go.uber.org/goleak роняет тест, если остались горутины.",
+    "shortRU": "Утечку я нахожу по группе стеков, которая всё растёт в профиле горутин, а предотвращаю тем, что у каждой горутины есть владелец и сигнал остановки. Утёкшая горутина пережила свою работу и уже не может завершиться — обычно потому, что заблокирована на канале, блокировке или вводе-выводе без таймаута. В тестах go.uber.org/goleak роняет тест, если остались горутины.",
     "jvmRU": "В Java зависший платформенный поток виден в дампе потоков под своим именем. У горутин в дампах есть номера, но нет имён и публичного API для ID, поэтому утечку находят, группируя одинаковые стеки или по меткам pprof, и следят, какая группа растёт.",
     "detailsEN": [
       "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
@@ -829,15 +817,14 @@ const CARDS = [
     "levelLabel": "🟢 Base (Entry/Mid)",
     "qEN": "What does a channel buffer change, and what does it not change?",
     "qRU": "Что меняет буфер канала, а что остаётся прежним?",
-    "shortEN": "A buffer lets the sender go ahead without a receiver for up to cap values: an unbuffered send waits until a receiver takes the value, while a buffered send completes as soon as there is a free slot. It does not change two things: a full buffer still blocks the sender, so a slow consumer still slows the producer, and a send copies only the value, so a pointer or a slice still shares its data.",
+    "shortEN": "A buffer lets the sender go ahead without a receiver for up to cap values; an unbuffered send waits until a receiver takes the value. It does not remove backpressure: a full buffer still blocks the sender, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
     "anchorsEN": [
-      "unbuffered = rendezvous",
-      "buffered = up to cap without a receiver",
+      "buffer = up to cap without a receiver",
       "full buffer still blocks → backpressure",
       "copies the value, not what it points to"
     ],
     "jvmEN": "An unbuffered channel is like Java’s SynchronousQueue and a buffered one like an ArrayBlockingQueue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.",
-    "shortRU": "Буфер позволяет отправителю идти дальше без получателя — до cap значений: небуферизованная отправка ждёт, пока получатель заберёт значение, а буферизованная завершается, как только есть свободная ячейка. Двух вещей он не меняет: полный буфер всё так же блокирует отправителя, поэтому медленный потребитель по-прежнему тормозит производителя, а отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные.",
+    "shortRU": "Буфер позволяет отправителю идти дальше без получателя — до cap значений; небуферизованная отправка ждёт, пока получатель заберёт значение. Обратного давления он не убирает: полный буфер всё так же блокирует отправителя, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
     "jvmRU": "Небуферизованный канал похож на SynchronousQueue в Java, буферизованный — на ArrayBlockingQueue с put и take. Чего у очередей Java нет — это close, чтобы сообщить о конце потока, и select, чтобы ждать сразу на нескольких каналах.",
     "detailsEN": [
       "For an open channel, a waiting receiver can take a value directly, even if the channel has buffer capacity. Otherwise, a sender uses a free buffer slot or waits. With select and default, an operation that cannot proceed can be skipped instead of waiting.",
@@ -900,15 +887,14 @@ const CARDS = [
     "simId": null,
     "qEN": "How do nil, open, and closed channels behave?",
     "qRU": "Чем отличаются операции с nil-каналом, открытым и закрытым каналом?",
-    "shortEN": "A nil channel blocks forever, an open channel waits for a partner or for buffer space, and a closed channel never blocks a receive. A closed channel first returns the remaining buffered values, then the zero value with ok=false. Three things panic: a send on a closed channel, closing it twice, and closing nil. In select, a nil case is never chosen, which is how you switch a case off.",
+    "shortEN": "A nil channel blocks forever, an open one blocks until a partner or the buffer lets the operation complete, and a closed one never blocks a receive. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.",
     "anchorsEN": [
-      "nil: blocks forever, close panics",
-      "open: waits for a partner or space",
+      "nil blocks · open waits · closed never blocks a receive",
       "closed: drain, then zero with ok=false",
-      "send on closed / close twice → panic"
+      "send on closed · close twice · close nil → panic"
     ],
     "jvmEN": "A Java BlockingQueue has no closed state, so the end of a stream is signalled with a poison pill or an interrupt. In Go, close is that signal, and a range loop over the channel stops by itself.",
-    "shortRU": "nil-канал блокирует навсегда, открытый ждёт партнёра или места в буфере, а закрытый никогда не блокирует чтение. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false. Паникуют три вещи: отправка в закрытый канал, повторный close и close nil-канала. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
+    "shortRU": "nil-канал блокирует навсегда, открытый блокирует, пока операцию не позволит партнёр или буфер, а закрытый никогда не блокирует чтение. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false, а отправка в него, повторный close или close nil-канала паникуют. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
     "jvmRU": "У BlockingQueue в Java нет закрытого состояния, поэтому конец потока сообщают «ядовитым» элементом или прерыванием. В Go этот сигнал — close, и цикл range по каналу останавливается сам.",
     "detailsEN": [
       "For an open unbuffered channel, send and receive rendezvous. For an open buffered channel, send waits when it is full and receive waits when it is empty. A nil-channel case cannot proceed in select, so another case or default can still run.",
@@ -967,11 +953,10 @@ const CARDS = [
     "simId": null,
     "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
-    "shortEN": "Use a channel to hand over ownership of data or to signal an event, and a mutex to protect shared state with an invariant. Channels fit pipelines, worker pools and shutdown signals; a mutex fits a cache or a balance, where the check and the update must happen together under one lock. A send copies only the value, so after sending a pointer the sender must stop touching that data.",
+    "shortEN": "Use a channel to hand over ownership of data or to signal an event, and a mutex to protect shared state with an invariant. With a mutex, the check and the update must happen under one lock, as with a balance or a cache entry. With a channel, a send copies only the value, so after sending a pointer the sender must stop touching that data.",
     "anchorsEN": [
       "channel = hand off ownership, signal",
-      "mutex = protect an invariant",
-      "check + update under one lock",
+      "mutex = invariant: check + update under one lock",
       "a sent pointer still shares data"
     ],
     "jvmEN": "Java makes the same split: synchronized or ReentrantLock for shared state, a BlockingQueue for handoff. The differences are that sync.Mutex is not reentrant, and channels add close and select, which BlockingQueue lacks.",
@@ -983,7 +968,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
-    "shortRU": "Канал — чтобы передать владение данными или сообщить о событии, мьютекс — чтобы защитить общее состояние с инвариантом. Каналы подходят для конвейеров, пулов воркеров и сигналов остановки; мьютекс — для кеша или баланса, где проверка и изменение должны идти вместе под одной блокировкой. Отправка копирует только значение, поэтому, отправив указатель, отправитель не должен больше трогать эти данные.",
+    "shortRU": "Канал — чтобы передать владение данными или сообщить о событии, мьютекс — чтобы защитить общее состояние с инвариантом. С мьютексом проверка и изменение должны идти под одной блокировкой, как с балансом или записью в кеше. С каналом отправка копирует только значение, поэтому, отправив указатель, отправитель не должен больше трогать эти данные.",
     "jvmRU": "В Java то же разделение: synchronized или ReentrantLock для общего состояния, BlockingQueue для передачи. Разница в том, что sync.Mutex не реентерабелен, а у каналов есть close и select, которых нет у BlockingQueue.",
     "detailsRU": [
       "Отправка в канал копирует значение. Указатель или срез всё ещё может ссылаться на общую изменяемую память. В протоколе передачи владения отправитель прекращает обращаться к ней после передачи либо обе стороны синхронизируют доступ. Компилятор этот протокол не обеспечивает.",
@@ -1038,15 +1023,14 @@ const CARDS = [
     "levelLabel": "🟡 Senior (Runtime)",
     "qEN": "Why does a channel wait queue contain sudog records instead of just goroutines?",
     "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
-    "shortEN": "Because one goroutine can wait on several channels at once: in a blocked select it has one sudog in the wait queue of every channel. A sudog records one waiting operation: the goroutine, the channel, and where the value comes from or goes to, so the partner can copy it directly. When one case wins, the losing sudogs are dequeued, and all of them go back to a per-P cache.",
+    "shortEN": "Because one goroutine can wait on several channels at once, and each wait needs its own record. A sudog holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; a blocked select puts one sudog into the queue of every channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.",
     "anchorsEN": [
-      "one goroutine, many waits → sudog",
-      "sudog: g + channel + elem pointer",
-      "hchan: lock, ring buffer, recvq, sendq",
+      "one goroutine, many waits",
+      "sudog = g + channel + value pointer",
       "select: one sudog per case"
     ],
     "jvmEN": "A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.",
-    "shortRU": "Потому что одна горутина может ждать сразу на нескольких каналах: в заблокированном select у неё по sudog в очереди ожидания каждого канала. sudog описывает одну ждущую операцию: горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую. Когда одна ветка выигрывает, проигравшие sudog убираются из очередей, и все они возвращаются в кеш на P.",
+    "shortRU": "Потому что одна горутина может ждать сразу на нескольких каналах, и каждому ожиданию нужна своя запись. sudog хранит горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую; заблокированный select кладёт по sudog в очередь каждого канала. Когда одна ветка выигрывает, остальные убираются из очередей, и все sudog возвращаются в кеш на P.",
     "jvmRU": "Поток Java, заблокированный на блокировке или очереди, ждёт в одном месте. Go нужна отдельная запись на каждое ожидание, потому что select позволяет одной горутине стоять сразу в нескольких очередях каналов.",
     "detailsEN": [
       "hchan contains buffer capacity and occupancy, send/receive indices, wait queues, closed state, type information and an internal runtime lock. The lock implementation depends on the platform; it is not a universal synonym for futex.",
@@ -1101,15 +1085,14 @@ const CARDS = [
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "qEN": "How does a channel safely hand a value to a waiting receiver?",
     "qRU": "Как канал безопасно передаёт значение ожидающему получателю?",
-    "shortEN": "Under the channel lock, the sender takes the receiver’s sudog from recvq and copies the value straight into the receiver’s destination, usually on its stack, with sendDirect, bypassing the buffer. Then it unlocks and calls goready, which puts the receiver into runnext: runnable, not yet running. It is safe because the receiver parked with activeStackChans set: whoever moves its stack must first take the same channel locks, so the copy and a stack move cannot overlap.",
+    "shortEN": "The sender copies the value straight into the waiting receiver, bypassing the buffer, while it holds the channel lock. It takes the receiver’s sudog from recvq, copies with sendDirect into the receiver’s destination, usually on its stack, then unlocks and calls goready, which makes the receiver runnable. It is safe because a parked receiver has activeStackChans set, so anyone moving its stack must first take the same channel locks.",
     "anchorsEN": [
-      "lock → take the sudog from recvq",
-      "sendDirect: copy into the receiver’s destination",
-      "unlock → goready → runnext",
-      "activeStackChans: a stack move takes the chan locks"
+      "copy straight to the receiver, under the lock",
+      "sendDirect → unlock → goready",
+      "activeStackChans: a stack move takes the locks"
     ],
     "jvmEN": "Java’s SynchronousQueue hands over an object reference through the heap. A Go channel copies the value itself, even a whole struct, straight into the receiver’s variable.",
-    "shortRU": "Под блокировкой канала отправитель забирает sudog получателя из recvq и через sendDirect копирует значение прямо в место назначения получателя, обычно на его стеке, минуя буфер. Затем отпускает блокировку и вызывает goready, которая ставит получателя в runnext: готов к запуску, но ещё не выполняется. Это безопасно, потому что получатель запарковался с флагом activeStackChans: кто переносит его стек, должен сначала взять те же блокировки каналов, поэтому копирование и перенос стека не пересекаются.",
+    "shortRU": "Отправитель копирует значение прямо ждущему получателю, минуя буфер, пока держит блокировку канала. Он забирает sudog получателя из recvq, через sendDirect копирует значение в место назначения получателя, обычно на его стеке, затем отпускает блокировку и вызывает goready, которая делает получателя готовым к запуску. Это безопасно, потому что у запаркованного получателя стоит флаг activeStackChans: кто переносит его стек, должен сначала взять те же блокировки каналов.",
     "jvmRU": "SynchronousQueue в Java передаёт ссылку на объект через кучу. Канал Go копирует само значение — даже целую структуру — прямо в переменную получателя.",
     "detailsEN": [
       "For an open channel, chansend first checks for a waiting receiver under the lock. It can bypass the buffer and copy to the receive destination with sendDirect. The source may be on the stack or heap; a discarded receive needs no destination copy.",
@@ -1172,15 +1155,14 @@ const CARDS = [
     "simId": "sim4",
     "qEN": "How does select choose a case, and can cancellation take priority?",
     "qRU": "Как select выбирает готовую ветку и можно ли дать отмене приоритет?",
-    "shortEN": "select runs one ready case, chosen at random among the ready ones, so the order in the source gives no priority. A default case runs only when nothing is ready, so a select with default never blocks, and a nil channel case is never ready. To prefer cancellation, check ctx.Err(), or do a non-blocking select on ctx.Done(), before the main select: that narrows the window, but it is not a strict priority.",
+    "shortEN": "select runs one ready case, chosen at random among the ready ones, so the order in the source gives no priority. A default case runs only when nothing is ready, and a nil channel case is never ready. To prefer cancellation, check ctx.Err(), or do a non-blocking select on ctx.Done(), before the main select: that narrows the window but is still not a strict priority.",
     "anchorsEN": [
       "random among ready → no priority",
-      "default → never blocks",
-      "nil channel case = switched off",
+      "default only if nothing is ready",
       "check ctx first: narrower, not strict"
     ],
     "jvmEN": "Java has no direct equivalent: the closest are CompletableFuture.anyOf or a NIO Selector for sockets. In Go select works on any channels, including timers and ctx.Done().",
-    "shortRU": "select выполняет одну готовую ветку, выбранную случайно среди готовых, поэтому порядок в исходнике приоритета не даёт. default выполняется, только когда не готово ничего, поэтому select с default никогда не блокирует, а ветка с nil-каналом никогда не готова. Чтобы отдать предпочтение отмене, проверь ctx.Err() или сделай неблокирующий select по ctx.Done() до основного select: это сужает окно, но строгого приоритета не даёт.",
+    "shortRU": "select выполняет одну готовую ветку, выбранную случайно среди готовых, поэтому порядок в исходнике приоритета не даёт. default выполняется, только когда не готово ничего, а ветка с nil-каналом никогда не готова. Чтобы отдать предпочтение отмене, проверь ctx.Err() или сделай неблокирующий select по ctx.Done() до основного select: это сужает окно, но строгим приоритетом всё равно не становится.",
     "jvmRU": "Прямого аналога в Java нет: ближе всего CompletableFuture.anyOf или Selector из NIO для сокетов. В Go select работает с любыми каналами, включая таймеры и ctx.Done().",
     "detailsEN": [
       "Channel operands and send values are evaluated once, in source order, before choosing a case. Receive-assignment destinations are evaluated only if that receive is selected, after the communication. Even a nil-channel case can have operand side effects.",
@@ -1234,14 +1216,13 @@ const CARDS = [
     "simId": "sim4",
     "qEN": "Does every select call selectgo, and how does the general path work?",
     "qRU": "Каждый ли select вызывает selectgo и как устроен общий путь?",
-    "shortEN": "No: the compiler rewrites simple selects, and only two or more channel cases call runtime.selectgo. select {} blocks forever, a select with only default just runs it, one case becomes a plain channel operation, and one case plus default becomes selectnbsend or selectnbrecv. selectgo locks the channels in address order, polls them in random order and, if nothing is ready, parks on all of them until a winner’s CAS on selectDone wakes it.",
+    "shortEN": "No: the compiler rewrites simple selects, and only two or more channel cases call runtime.selectgo. An empty select blocks forever, one case becomes a plain channel operation, and one case plus default becomes a non-blocking attempt. selectgo locks the channels in address order, polls them in random order and, if nothing is ready and there is no default, parks on all of them until one operation wins a CAS on selectDone.",
     "anchorsEN": [
-      "select {} → block; 1 case → plain op",
-      "1 case + default → selectnb*",
-      "≥ 2 → selectgo: lock by address, random poll",
-      "park on all; CAS on selectDone wins"
+      "simple forms rewritten; ≥ 2 cases → selectgo",
+      "lock by address, poll in random order",
+      "no default → park on all; a CAS on selectDone wins"
     ],
-    "shortRU": "Нет: компилятор переписывает простые select, и только две и больше ветки с каналами вызывают runtime.selectgo. select {} блокирует навсегда, select только с default просто выполняет его, одна ветка становится обычной операцией с каналом, а одна ветка плюс default — selectnbsend или selectnbrecv. selectgo блокирует каналы в порядке адресов, опрашивает их в случайном порядке и, если ничего не готово, паркуется на всех, пока победитель CAS по selectDone его не разбудит.",
+    "shortRU": "Нет: компилятор переписывает простые select, и только две и больше ветки с каналами вызывают runtime.selectgo. Пустой select блокирует навсегда, одна ветка становится обычной операцией с каналом, а одна ветка плюс default — неблокирующей попыткой. selectgo блокирует каналы в порядке адресов, опрашивает их в случайном порядке и, если ничего не готово и default нет, паркуется на всех, пока одна операция не выиграет CAS по selectDone.",
     "detailsEN": [
       "With one operation plus default, selectnbsend returns whether the send was selected; selectnbrecv returns both selected and received (the Go ok value). A closed, drained receive has selected=true and received=false. With multiple operations plus default, selectgo still runs, with block=false: it polls but does not register waiters or park when nothing is ready.",
       "sellock locks each distinct channel in address order. Pass 1 polls for ready operations. If none is ready and blocking is allowed, pass 2 enqueues sudogs while those same locks are still held.",
@@ -1312,15 +1293,14 @@ const CARDS = [
     "simId": "sim5",
     "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
-    "shortEN": "Compare-and-swap stores a new value only if the current one still equals the expected value, doing the compare and the store as one atomic step, and reports whether it succeeded. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won. With CAS exactly one wins, and the loser sees false and retries or gives up. It covers one variable, so a multi-field invariant still needs a mutex.",
+    "shortEN": "Compare-and-swap stores a new value only if the current one still equals the expected value, as one atomic step, and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.",
     "anchorsEN": [
-      "store only if still equal",
-      "compare + store = one atomic step",
-      "true / false → who won",
-      "one variable; several fields → mutex"
+      "store only if still equal, atomically",
+      "Load + Store gap → both win; CAS → one wins",
+      "one variable; several fields → usually a mutex"
     ],
     "jvmEN": "This is AtomicInteger.compareAndSet in Java and atomic.Int32.CompareAndSwap in Go. Go atomics are always sequentially consistent, like Java volatile; Go has no weaker modes such as lazySet or getAcquire.",
-    "shortRU": "Compare-and-swap записывает новое значение, только если текущее всё ещё равно ожидаемому, — сравнение и запись одним атомарным шагом — и сообщает, удалось ли. Отдельные Load и Store оставляют щель: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла. С CAS побеждает ровно одна, а проигравшая видит false и повторяет или сдаётся. CAS охватывает одну переменную, поэтому инварианту из нескольких полей всё равно нужен мьютекс.",
+    "shortRU": "Compare-and-swap записывает новое значение, только если текущее всё ещё равно ожидаемому, — одним атомарным шагом — и сообщает, удалось ли. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна, другая видит false. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
     "jvmRU": "Это AtomicInteger.compareAndSet в Java и atomic.Int32.CompareAndSwap в Go. Атомики Go всегда последовательно согласованы, как volatile в Java; более слабых режимов вроде lazySet или getAcquire в Go нет.",
     "detailsEN": [
       "Think of three inputs: the location, expected old value and proposed new value. If state starts at 0 and two goroutines each try CAS(0, 1), only one can succeed as long as nothing resets state. A failure does not wait or retry by itself.",
@@ -1383,12 +1363,11 @@ const CARDS = [
     "simId": null,
     "qEN": "How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
     "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
-    "shortEN": "Lock is one CAS on the fast path, then a brief spin, then sleep on a semaphore; 1 ms is the threshold for switching modes, not a timeout. Unlock wakes one waiter, but in normal mode it competes with newcomers that are already running, and often loses. If a woken waiter loses again after waiting more than 1 ms, it switches the mutex to starvation mode, and Unlock then hands ownership directly to the waiter at the front.",
+    "shortEN": "Lock tries one CAS, may spin briefly, then sleeps on a semaphore; 1 ms is the threshold for switching modes, not a timeout. In normal mode Unlock wakes one waiter, which then competes with newcomers that are already running and often loses. If a woken waiter loses again after waiting more than 1 ms, the mutex switches to starvation mode, and Unlock hands ownership directly to the waiter at the front.",
     "anchorsEN": [
-      "fast path: one CAS 0 → locked",
-      "spin briefly, then sleep on sema",
-      "normal mode: woken waiter competes",
-      "woken, lost, waited > 1 ms → starvation"
+      "CAS → maybe spin → sleep on a semaphore",
+      "normal: woken waiter competes with newcomers",
+      "waited > 1 ms and lost → direct handoff"
     ],
     "jvmEN": "Unlike ReentrantLock, sync.Mutex is not reentrant: locking it twice in one goroutine deadlocks, and it has no owner, so another goroutine may unlock it. Normal mode behaves like a non-fair ReentrantLock, and starvation mode like a fair one.",
     "detailsEN": [
@@ -1400,7 +1379,7 @@ const CARDS = [
     ],
     "practicalRU": "Ищи конкуренцию через mutex- и block-профили, затем сокращай критические секции или меняй владение. SetMutexProfileFraction(5) задаёт в среднем одно из пяти событий конкуренции за mutex, а не каждый пятый Lock. Профиль показывает конкуренцию, но не доказывает, что сбой вызван starvation mode.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tmu.Lock()\n\tfmt.Println(mu.TryLock()) // false: already locked\n\tmu.Unlock()\n\tif mu.TryLock() {\n\t\tfmt.Println(\"acquired\")\n\t\tmu.Unlock()\n\t}\n}",
-    "shortRU": "Lock — один CAS на быстром пути, затем короткий спин, затем сон на семафоре; 1 мс — порог смены режима, а не таймаут. Unlock будит одного ждущего, но в нормальном режиме он соревнуется с уже работающими новичками и часто проигрывает. Если разбуженный ждущий снова проиграл, прождав больше 1 мс, он переводит мьютекс в режим голодания, и тогда Unlock передаёт владение прямо ждущему в голове очереди.",
+    "shortRU": "Lock пробует один CAS, может недолго покрутиться в спин-цикле, потом засыпает на семафоре; 1 мс — порог смены режима, а не таймаут. В нормальном режиме Unlock будит одного ждущего, и тот соревнуется с уже работающими новичками и часто проигрывает. Если разбуженный ждущий снова проиграл, прождав больше 1 мс, мьютекс переходит в режим голодания, и Unlock передаёт владение прямо первому в очереди.",
     "jvmRU": "В отличие от ReentrantLock, sync.Mutex не реентерабелен: повторный Lock в той же горутине — deadlock, и владельца у него нет, поэтому отпустить его может другая горутина. Нормальный режим ведёт себя как нечестный ReentrantLock, режим голодания — как честный.",
     "detailsRU": [
       "Нулевое значение готово к работе. После первого использования Mutex нельзя копировать. Unlock синхронизируется с последующим успешным Lock; неуспешный TryLock не создаёт синхронизации и не разрешает читать защищённые поля.",
@@ -1463,12 +1442,11 @@ const CARDS = [
     "simId": null,
     "qEN": "WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?",
     "qRU": "WaitGroup, Once и Context: кто ждёт, публикует инициализацию и просит отмену?",
-    "shortEN": "WaitGroup waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values down to the work. They do not replace each other: WaitGroup does not cancel, Context does not wait, and Once does not retry a failed initialization. A typical handler uses all three: Once for a shared client, the request’s Context, and a WaitGroup or errgroup for its workers.",
+    "shortEN": "WaitGroup waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values to the work. They do not replace each other: WaitGroup does not cancel, Context does not wait, and Once does not retry a failed initialization. A handler often uses all three.",
     "anchorsEN": [
-      "WaitGroup: wait for N to finish",
-      "Once: run once, others wait",
-      "Context: cancel, deadline, values",
-      "none replaces another"
+      "WaitGroup waits · Once initializes · Context cancels",
+      "none replaces another",
+      "Once does not retry"
     ],
     "jvmEN": "WaitGroup is like a reusable CountDownLatch whose count you can raise with Add; Once is like a lazy holder or double-checked initialization; Context is like an explicit, passed-along version of thread interruption with a deadline. Go passes Context as the first argument instead of keeping it in a ThreadLocal.",
     "detailsEN": [
@@ -1481,7 +1459,7 @@ const CARDS = [
     ],
     "practicalRU": "Задай три вопроса: кто регистрирует задачу и ждёт её, кто публикует инициализированное состояние, кто отменяет? Фоновая работа требует решения о жизненном цикле. Таймаут и отдельная горутина не заменяют надёжную очередь.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar wg sync.WaitGroup\n\tvar once sync.Once\n\tvar base int\n\tresults := make([]int, 2)\n\tfor i := range results {\n\t\twg.Go(func() {\n\t\t\tonce.Do(func() { base = 42 })\n\t\t\tresults[i] = base\n\t\t})\n\t}\n\twg.Wait()\n\tfmt.Println(results) // [42 42]\n}",
-    "shortRU": "WaitGroup ждёт завершения посчитанной группы горутин, Once выполняет инициализацию ровно один раз, пока остальные вызывающие ждут, а Context несёт отмену, дедлайны и значения запроса до самой работы. Друг друга они не заменяют: WaitGroup не отменяет, Context не ждёт, Once не повторяет неудавшуюся инициализацию. Обычный обработчик использует все три: Once — для общего клиента, Context — из запроса, WaitGroup или errgroup — для своих воркеров.",
+    "shortRU": "WaitGroup ждёт завершения посчитанной группы горутин, Once выполняет инициализацию ровно один раз, пока остальные ждут, а Context несёт отмену, дедлайны и значения запроса до самой работы. Друг друга они не заменяют: WaitGroup не отменяет, Context не ждёт, Once не повторяет неудавшуюся инициализацию. Обработчик часто использует все три.",
     "jvmRU": "WaitGroup похож на CountDownLatch, который можно переиспользовать и счётчик которого увеличивают через Add; Once — на ленивый holder или double-checked инициализацию; Context — на явную, передаваемую по цепочке версию прерывания потока с дедлайном. Go передаёт Context первым аргументом, а не хранит его в ThreadLocal.",
     "detailsRU": [
       "WaitGroup: зарегистрируй первую задачу до того, как Wait сможет увидеть нулевой счётчик. С Add/Done обычно вызывай Add до запуска горутины. После первого использования нельзя копировать; новую группу задач начинай только после возврата всех предыдущих Wait. Wait делает завершённую работу видимой ожидающему, но не защищает записи workers друг от друга.",
@@ -1552,12 +1530,11 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do stack and heap allocation differ, and how do you compare their cost?",
     "qRU": "Чем отличаются выделения на стеке и в куче и как сравнивать их стоимость?",
-    "shortEN": "A stack allocation is part of the function’s frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator, mallocgc; every heap byte brings the next GC cycle closer, and each cycle costs more the more data stays live. The compiler chooses through escape analysis. To compare, measure: -benchmem shows allocations per operation, -gcflags=-m shows what escapes, and -m=2 shows why.",
+    "shortEN": "A stack allocation is part of the function’s frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator and brings the next GC cycle closer; each cycle costs more the more data stays live. Escape analysis decides at compile time what may stay on the stack, so measure: -gcflags=-m shows what escapes, and -benchmem counts the allocations that really happen.",
     "anchorsEN": [
-      "stack: part of the frame, gone on return",
-      "heap: allocator + GC cycles sooner",
-      "escape analysis decides",
-      "-benchmem; -m what, -m=2 why"
+      "stack: part of the frame, nearly free",
+      "heap: allocator + GC work",
+      "-gcflags=-m: what escapes; -benchmem: real allocations"
     ],
     "jvmEN": "The JVM has a similar optimisation, escape analysis with scalar replacement in the JIT, but it happens at run time and only after warm-up. In Go the compiler decides at build time, and -gcflags=-m shows the decision.",
     "detailsEN": [
@@ -1568,7 +1545,7 @@ const CARDS = [
     ],
     "practicalRU": "Сначала выбери корректное владение данными, затем сравни эквивалентные вызовы под рабочей версией компилятора. Не добавляй глобальный указатель только ради того, чтобы benchmark «не исчез»: это само меняет время жизни объекта. Сохраняй наблюдаемый результат так, чтобы не навязать лишний escape. Опора: «владение → размещение → измерение».",
     "code": "package example\n\ntype User struct{ ID int }\n\nfunc NewUserValue(id int) User { return User{ID: id} }\nfunc NewUser(id int) *User     { return &User{ID: id} }\n\nfunc ReadID(id int) int { return NewUser(id).ID }\n\n// Compare the optimized ReadID caller, not just NewUser in isolation.",
-    "shortRU": "Выделение на стеке — часть кадра функции: почти бесплатно и исчезает при возврате. Выделение в куче идёт через аллокатор рантайма, mallocgc; каждый байт в куче приближает следующий цикл GC, а каждый цикл тем дороже, чем больше живых данных. Выбирает компилятор через escape analysis. Сравнивают замером: -benchmem показывает выделения на операцию, -gcflags=-m — что убегает, а -m=2 — почему.",
+    "shortRU": "Выделение на стеке — часть кадра функции: почти бесплатно и исчезает при возврате. Выделение в куче идёт через аллокатор рантайма и приближает следующий цикл GC; каждый цикл тем дороже, чем больше живых данных. Escape analysis на этапе компиляции решает, что может остаться на стеке, поэтому меряют: -gcflags=-m показывает, что убегает, а -benchmem считает выделения, которые происходят на самом деле.",
     "jvmRU": "В JVM есть похожая оптимизация — escape analysis со scalar replacement в JIT, но она работает во время выполнения и только после прогрева. В Go решает компилятор при сборке, и -gcflags=-m показывает это решение.",
     "detailsRU": [
       "Язык гарантирует пригодность значения, пока на него есть ссылки, а не место хранения. Кадр стека содержит локальное состояние; стек горутины может расти и перемещаться. Значения могут остаться в регистрах или вообще исчезнуть после оптимизации.",
@@ -1618,12 +1595,12 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How does escape analysis choose storage, and how do you verify a particular allocation?",
     "qRU": "Как escape analysis определяет размещение и как проверить конкретное выделение памяти?",
-    "shortEN": "The compiler checks whether a value can outlive its function or be reached from the heap; if so, the value goes to the heap, otherwise it stays on the stack. Typical reasons: returning a pointer to a local, storing it in a global or a heap object, capturing it in a goroutine’s closure, or a size that is too big or unknown. Inlining often removes an escape, so check with go build -gcflags=-m=2, which prints the reason.",
+    "shortEN": "The compiler keeps a value on the stack unless it might outlive its function, be reachable from the heap, or be too big for the frame. Returning &x, storing it in a global, or sharing it with a goroutine by reference are the usual causes. Since Go 1.25 a non-escaping make([]T, n) with a variable n gets a 32-byte stack buffer and moves to the heap only when larger, so -m can say “does not escape” while -benchmem shows an allocation: check both.",
     "anchorsEN": [
-      "outlives the function → heap",
-      "return &x, global, goroutine closure, big size",
-      "inlining can remove the escape",
-      "-gcflags=-m=2 prints the reason"
+      "stack unless: outlives · reachable from heap · too big",
+      "return &x · global · shared with a goroutine",
+      "Go 1.25: make([]T, n) → 32-byte stack buffer",
+      "verify with -gcflags=-m and -benchmem"
     ],
     "jvmEN": "In Java every object goes to the heap unless the JIT proves otherwise. In Go values live on the stack by default and move to the heap only when the compiler cannot prove that the stack is safe.",
     "detailsEN": [
@@ -1635,7 +1612,7 @@ const CARDS = [
     ],
     "practicalRU": "В примере ReadLocal использует результат сразу, SaveGlobal передаёт адрес функции, которая удерживает его. Sum проверяет диапазон n и реально читает заполненные байты, поэтому пример не сводится к неиспользуемому buf. Проверяй и маленькие, и большие размеры: «не убегает» у динамического make не означает «никогда не выделяет в куче».",
     "code": "package example\n\nvar Saved *int\n\nfunc makeInt(v int) *int  { return &v }\nfunc retain(p *int)       { Saved = p }\nfunc ReadLocal(v int) int { return *makeInt(v) }\nfunc SaveGlobal(v int)    { retain(&v) }\n\nfunc Sum(n int) (int, bool) {\n\tif n < 0 || n > 1024 {\n\t\treturn 0, false\n\t}\n\tbuf := make([]byte, n)\n\tfor i := range buf {\n\t\tbuf[i] = byte(i)\n\t}\n\tsum := 0\n\tfor _, v := range buf {\n\t\tsum += int(v)\n\t}\n\treturn sum, true\n}",
-    "shortRU": "Компилятор проверяет, может ли значение пережить свою функцию или стать доступным из кучи; если да — значение уходит в кучу, иначе остаётся на стеке. Типичные причины: вернуть указатель на локальную переменную, сохранить его в глобальной переменной или объекте кучи, захватить в замыкании горутины, слишком большой или неизвестный размер. Встраивание часто убирает убегание, поэтому проверяй через go build -gcflags=-m=2 — он печатает причину.",
+    "shortRU": "Компилятор оставляет значение на стеке, если оно не может пережить свою функцию, стать доступным из кучи или оказаться слишком большим для кадра. Обычные причины убегания — вернуть &x, сохранить его в глобальной переменной или передать горутине по ссылке. С Go 1.25 неубегающий make([]T, n) с переменным n получает 32-байтовый буфер на стеке и уходит в кучу, только если нужно больше, поэтому -m может написать «does not escape», а -benchmem покажет выделение: проверяй оба.",
     "jvmRU": "В Java каждый объект попадает в кучу, если JIT не докажет обратное. В Go значения по умолчанию живут на стеке и уходят в кучу, только когда компилятор не может доказать, что стек безопасен.",
     "detailsRU": [
       "Передача указателя вниз совместима со стеком лишь если вызываемая функция не сохраняет его дольше нужного времени жизни. И наоборот, return &x из небольшого помощника не обязательно выделяет память в куче в месте встроенного вызова с локальным использованием. Ниже SaveGlobal намеренно сохраняет указатель.",
@@ -1698,11 +1675,10 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do mcache, mcentral, mheap and scan/noscan fit together?",
     "qRU": "Как связаны mcache, mcentral, mheap и разделение scan/noscan?",
-    "shortEN": "They are the allocator’s levels, from fast to slow. Each P has an mcache with one cached span per size class, separately for scan and noscan, so a small allocation usually takes the next free slot without locks. A full span is replaced from the shared mcentral of that class, mcentral takes pages from mheap, and mheap asks the OS; objects over 32 KiB go straight to mheap. The GC never looks inside noscan objects, though it still frees them.",
+    "shortEN": "They are the allocator’s levels, from fast to slow. Each P has an mcache with a span per size class, separately for scan and noscan, so a small allocation usually takes a free slot without locks; a full span is refilled from the shared mcentral, which takes pages from mheap, and objects over 32 KiB go straight to mheap. The GC never looks inside noscan objects, though it still frees them.",
     "anchorsEN": [
-      "mcache per P: span per class × scan/noscan",
-      "mcentral per class: shared refill",
-      "mheap: 8 KiB pages ← OS; > 32 KiB direct",
+      "mcache per P: lock-free slots",
+      "mcentral refills · mheap pages · > 32 KiB direct",
       "noscan: GC skips the contents"
     ],
     "jvmEN": "This is similar to TLABs in the JVM: each thread allocates from its own buffer without locks. The difference is that the JVM bumps a pointer in a contiguous buffer and compacts later, while Go hands out fixed-size slots from spans and never moves objects.",
@@ -1715,7 +1691,7 @@ const CARDS = [
     ],
     "practicalRU": "Сравни alloc_space, inuse_space и метрики /gc/scan/heap:bytes и /gc/scan/stack:bytes при одинаковой нагрузке. Разделяй объём выделений, удержание и объём сканируемой памяти. Массив байтов может почти не добавлять pointer scanning и одновременно удерживать много RAM. Нельзя считать разные размеры/схемы хранения честным сравнением только по паузе одного GC. Опора: «размер ячейки → откуда берётся span → есть ли внутри ссылки».",
     "code": "package example\n\ntype Blob [64]byte // The payload has no pointers.\n\ntype Holder struct {\n\tBytes []byte // The descriptor points to a backing array.\n\tText  string // The descriptor points to string bytes.\n}\n\n// A []Holder backing array contains pointers.\n// A []Blob backing array does not; neither is exempt from GC.",
-    "shortRU": "Это уровни аллокатора — от быстрого к медленному. У каждого P есть mcache с одним спаном на каждый класс размера, отдельно для scan и noscan, поэтому малое выделение обычно берёт следующую свободную ячейку без блокировок. Заполненный спан заменяется из общего mcentral этого класса, mcentral берёт страницы у mheap, а mheap просит память у ОС; объекты больше 32 КиБ идут сразу в mheap. Внутрь noscan-объектов GC не заглядывает, хотя освобождает их.",
+    "shortRU": "Это уровни аллокатора — от быстрого к медленному. У каждого P есть mcache со спаном на каждый класс размера, отдельно для scan и noscan, поэтому малое выделение обычно берёт свободную ячейку без блокировок; заполненный спан пополняется из общего mcentral, который берёт страницы у mheap, а объекты больше 32 КиБ идут сразу в mheap. Внутрь noscan-объектов GC не заглядывает, хотя освобождает их.",
     "jvmRU": "Это похоже на TLAB в JVM: каждый поток выделяет из своего буфера без блокировок. Разница в том, что JVM сдвигает указатель в непрерывном буфере и потом уплотняет, а Go раздаёт ячейки фиксированного размера из спанов и никогда не перемещает объекты.",
     "detailsRU": [
       "Страница кучи рантайма — 8 KiB, независимо от размера страницы ОС. mspan описывает непрерывную область из одной или нескольких страниц. Span небольших объектов содержит ячейки одинакового размера; классы округляют запрос вверх, поэтому размер объекта и span — разные величины.",
@@ -1782,12 +1758,11 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How does Go's GC decide what to keep, and what happens during a collection?",
     "qRU": "Как GC в Go решает, что сохранить, и из каких этапов состоит сборка?",
-    "shortEN": "It keeps everything reachable from the roots, mainly goroutine stacks and globals, and frees the rest; since it traces instead of counting references, unreachable cycles are freed too. A cycle has a short stop-the-world pause that turns on the write barrier, concurrent marking, a second short pause, and background sweeping. Grey objects are found but not yet scanned, black ones are done, and what stays white is garbage. The collector neither moves objects nor has generations.",
+    "shortEN": "It keeps everything reachable from the roots, mainly goroutine stacks and globals, and frees the rest, including unreachable cycles. Marking runs concurrently with the program between two short stop-the-world pauses: grey objects are found but not yet scanned, black ones are done, and whatever stays white is freed by sweeping, in the background and on allocation. The collector neither moves objects nor has generations, so there is no compaction.",
     "anchorsEN": [
-      "reachable from roots: stacks, globals",
-      "STW → concurrent mark → STW → sweep",
-      "white / grey / black",
-      "non-moving, non-generational"
+      "reachable from the roots stays",
+      "concurrent mark between two short STW pauses",
+      "white is freed; non-moving, non-generational"
     ],
     "jvmEN": "Unlike G1, HotSpot’s default collector, Go’s GC has no young generation, and unlike any HotSpot collector it never moves objects, so there is no compaction. The trade-off is that Go relies on escape analysis to keep short-lived values off the heap in the first place.",
     "detailsEN": [
@@ -1799,7 +1774,7 @@ const CARDS = [
     ],
     "practicalRU": "На интервью начни с «GC сохраняет достижимое», затем назови фазы. В примере глобальный root удерживает цикл из двух узлов: после GC чтение даёт 42. После удаления последнего пути от корней цикл можно собрать, но точный момент освобождения и падение RSS не обещаем. Для удержания памяти ищи путь от корня: глобальный кеш, живую горутину, срез. Опора: «нашли → просмотрели → освободили»; отдельно объясни, почему кольцо ссылок само себя не удерживает.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\nvar root *Node\n\nfunc makeCycle() {\n\ta, b := &Node{Value: 7}, &Node{Value: 42}\n\ta.Next, b.Next = b, a\n\troot = a\n}\n\nfunc main() {\n\tmakeCycle()\n\truntime.GC()\n\tfmt.Println(root.Next.Value) // 42: reachable through a global\n\troot = nil\n\truntime.GC() // The cycle is now collectible; no RSS promise.\n}",
-    "shortRU": "Он оставляет всё, что достижимо от корней — в основном стеков горутин и глобальных переменных, — и освобождает остальное; раз он трассирует, а не считает ссылки, недостижимые циклы тоже освобождаются. Цикл: короткая пауза stop-the-world включает барьер записи, конкурентная разметка, вторая короткая пауза и фоновый sweep. Серые объекты найдены, но не просмотрены, чёрные просмотрены, а оставшиеся белыми — мусор. Объекты сборщик не перемещает и на поколения не делит.",
+    "shortRU": "Он оставляет всё, что достижимо от корней (в основном от стеков горутин и глобальных переменных), и освобождает остальное, включая недостижимые циклы. Разметка идёт конкурентно с программой между двумя короткими паузами stop-the-world: серые объекты найдены, но не просканированы, чёрные просканированы, а то, что осталось белым, освобождается при sweep — в фоне и при выделении памяти. Сборщик не перемещает объекты и не делит их на поколения, поэтому уплотнения нет.",
     "jvmRU": "В отличие от G1, сборщика HotSpot по умолчанию, у GC Go нет молодого поколения, а в отличие от любого сборщика HotSpot он никогда не перемещает объекты, поэтому уплотнения нет. Цена — Go полагается на escape analysis, чтобы короткоживущие значения вообще не попадали в кучу.",
     "detailsRU": [
       "Корни включают живые указатели в стеках горутин, глобальных переменных и структурах runtime вне кучи. Достижимый объект удерживается, даже если приложению он уже не нужен. Цикл без пути от корней можно собрать: это обход графа, а не подсчёт ссылок.",
@@ -1858,30 +1833,29 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?",
     "qRU": "Как фазы GC, mark assist, GOGC и GOMEMLIMIT влияют на память и задержки?",
-    "shortEN": "GOGC and GOMEMLIMIT trade memory for GC CPU, and latency comes mostly from mark assists, where goroutines that allocate during marking do GC work themselves. GOGC sets how much the heap may grow between cycles: at 100, the goal is the live heap plus (live heap + roots), roughly double. GOMEMLIMIT is a soft limit: near it the GC runs more often, but it is no OOM guard, because live data cannot be collected and GC CPU is capped at about 50%, so memory may overshoot.",
+    "shortEN": "GOGC and GOMEMLIMIT trade memory for GC CPU, and latency comes mostly from mark assists, when goroutines that allocate during marking do GC work themselves. GOGC sets how far the heap may grow between cycles, at 100 roughly to double the live heap. GOMEMLIMIT is a soft limit: near it the GC runs more often, but it does not prevent OOM, because live data cannot be collected.",
     "anchorsEN": [
-      "GOGC: growth per cycle (100 ≈ ×2)",
-      "goal = live + (live + roots) × GOGC/100",
-      "GOMEMLIMIT: soft; GC ≤ ~50% CPU",
-      "latency: assists more than pauses"
+      "memory ↔ GC CPU; latency from assists",
+      "GOGC = growth per cycle (100 ≈ ×2)",
+      "GOMEMLIMIT: soft, no OOM guard"
     ],
     "jvmEN": "Go has no -Xmx: by default the heap simply grows as needed, and GOMEMLIMIT acts as a soft version of it. There is no catchable OutOfMemoryError either: when memory really runs out, the runtime aborts or the OS kills the process.",
     "detailsEN": [
       "A useful four-stage model is mark setup during STW, concurrent marking, mark termination during STW, then concurrent sweeping. Sweep termination precedes setup. Sweeping reclaims dead slots; returning pages to the OS is separate scavenger work. No fixed pause duration is guaranteed.",
       "Mark assists make allocating goroutines contribute tracing work according to allocation debt. This can add request latency. In Go 1.26.1 the background marking target is about 25% of GOMAXPROCS CPU capacity during marking, not a cap on all GC CPU usage.",
       "For estimates, heap goal = live heap + (live heap + roots) × GOGC / 100. With 100 MiB live and 20 MiB roots, GOGC=100 gives 220 MiB, not 200 MiB. The trigger is earlier than the goal; minimums, pacing and the memory limit affect the actual target.",
-      "GOMEMLIMIT accounts for runtime memory as MemStats.Sys − MemStats.HeapReleased. This includes more than the heap but excludes C allocations, manually mmap-ed memory and the executable. It is neither process RSS nor a container limit. The runtime adjusts GC and memory release; it may exceed the budget to preserve progress.",
+      "GOMEMLIMIT accounts for runtime memory as MemStats.Sys − MemStats.HeapReleased. This includes more than the heap but excludes C allocations, manually mmap-ed memory and the executable. It is neither process RSS nor a container limit. The runtime adjusts GC and memory release; it may exceed the budget to preserve progress: when the limit is tight, the GC CPU limiter caps GC at about 50% of CPU instead of letting the program stall.",
       "If reachable data cannot fit, collecting more often cannot remove it. Leave measured headroom for memory outside Go and workload spikes. Even with GOGC=off, a finite memory limit can drive GC. A lower limit can increase collection work rather than solve a leak."
     ],
     "practicalRU": "Сначала сравни память runtime, RSS/память контейнера, живую кучу, скорость аллокаций и GC CPU. Затем найди удержание данных и горячие выделения через профили и trace. Для контейнера 4 GiB значение 3600 MiB может быть лишь стартовой гипотезой после оценки резерва; оно не гарантирует отсутствие OOM. Снижай ненужные выделения и ограничивай кеши/конкурентность. sync.Pool рассматривай только для измеренного переиспользования: он не задаёт предел памяти и не гарантирует сохранение объектов. Опора для памяти: «цель — когда начать — что учитывает бюджет».",
     "code": "// Conceptual estimates, not executable Go or an exact pacer trace.\nheapGoal ≈ liveHeap + (liveHeap + roots) * GOGC / 100\n100 MiB + (100 MiB + 20 MiB) * 100 / 100 = 220 MiB\n// Marking starts before the goal; the limit may lower the goal.\nruntimeMemory = MemStats.Sys - MemStats.HeapReleased\n// runtimeMemory != process RSS != container memory usage",
-    "shortRU": "GOGC и GOMEMLIMIT меняют память на CPU для GC, а задержки в основном дают mark assist — горутины, которые выделяют память во время разметки, сами делают работу GC. GOGC задаёт, насколько куча может вырасти между циклами: при 100 цель — «живая куча + (живая куча + корни)», то есть примерно вдвое. GOMEMLIMIT — мягкий лимит: рядом с ним GC работает чаще, но от OOM он не защищает: живые данные не собрать, а CPU для GC ограничен примерно 50%, поэтому память может выйти за лимит.",
+    "shortRU": "GOGC и GOMEMLIMIT меняют память на CPU для GC, а задержки в основном дают mark assist — когда горутины, выделяющие память во время разметки, сами делают работу GC. GOGC задаёт, насколько куча может вырасти между циклами: при 100 — примерно вдвое от живой кучи. GOMEMLIMIT — мягкий лимит: рядом с ним GC работает чаще, но от OOM он не защищает, потому что живые данные не собрать.",
     "jvmRU": "В Go нет -Xmx: по умолчанию куча просто растёт по мере надобности, а GOMEMLIMIT — его мягкий вариант. Нет и OutOfMemoryError, который можно поймать: когда память действительно кончается, рантайм аварийно завершается или процесс убивает ОС.",
     "detailsRU": [
       "Полезная модель из четырёх этапов: подготовка разметки в STW, конкурентная разметка, завершение разметки в STW и конкурентная очистка. Перед подготовкой завершается предыдущая очистка. Sweep освобождает мёртвые ячейки; возврат страниц ОС — отдельная работа scavenger. Фиксированная длительность паузы не гарантируется.",
       "Mark assist заставляет выделяющую память горутину выполнить часть обхода соразмерно долгу за аллокации. Это может увеличить задержку запроса. В Go 1.26.1 цель фоновой разметки — около 25% CPU-мощности GOMAXPROCS во время marking, а не предел всех затрат GC.",
       "Для оценки: цель кучи = живая куча + (живая куча + корни) × GOGC / 100. При 100 MiB живых данных, 20 MiB корней и GOGC=100 получится 220 MiB, а не 200 MiB. Запуск происходит раньше достижения цели; минимумы, pacer и лимит памяти влияют на фактическую цель.",
-      "GOMEMLIMIT учитывает память runtime как MemStats.Sys − MemStats.HeapReleased. Это больше, чем одна куча, но сюда не входят C-аллокации, ручной mmap и исполняемый файл. Это не RSS процесса и не лимит контейнера. Runtime регулирует GC и возврат памяти, но может превысить бюджет ради продолжения работы.",
+      "GOMEMLIMIT учитывает память runtime как MemStats.Sys − MemStats.HeapReleased. Это больше, чем одна куча, но сюда не входят C-аллокации, ручной mmap и исполняемый файл. Это не RSS процесса и не лимит контейнера. Runtime регулирует GC и возврат памяти, но может превысить бюджет ради продолжения работы: при тесном лимите ограничитель CPU для GC держит его примерно на 50% CPU, а не даёт программе встать.",
       "Если достижимые данные не помещаются, более частый GC не сможет их удалить. Нужен измеренный запас для памяти вне Go и всплесков нагрузки. Даже при GOGC=off конечный лимит памяти может запускать GC. Снижение лимита способно увеличить работу сборщика вместо устранения утечки."
     ],
     "versionNote": "Go 1.17: в формуле ещё нет учёта корней, GOMEMLIMIT отсутствует. Корни включены с 1.18, мягкий лимит — с 1.19. В 1.25 Green Tea экспериментальный; в 1.26 включён по умолчанию и меняет организацию marking/scanning, но не превращает GOMEMLIMIT в жёсткий предел. Детали pacer проверены по Go 1.26.1; формула — учебная оценка, не точная трасса runtime.",
@@ -1942,12 +1916,11 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "What does Go's hybrid write barrier protect, and which pointer writes need it?",
     "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
-    "shortEN": "It protects concurrent marking: while the GC marks, the program keeps changing pointers, and the barrier stops it from hiding a reachable object. Go’s hybrid barrier shades the old target of a pointer write and, while the current stack is grey, the new one. Thanks to that, writes to a goroutine’s own stack need no barrier, and each stack is scanned only once, with no rescan at the end. It is not a lock and does not fix data races.",
+    "shortEN": "It keeps concurrent marking correct: while the GC marks, the program keeps changing pointers, and the barrier stops it from hiding a reachable object. Go’s hybrid barrier shades the old target of a pointer write and, while the current stack is grey, the new one too. Thanks to that, writes to a goroutine’s own stack need no barrier, and each stack is scanned once, with no rescan at the end.",
     "anchorsEN": [
-      "shade(*slot): old target (Yuasa)",
-      "shade(ptr) while stack grey (Dijkstra)",
-      "new objects born black",
-      "stack scanned once → no STW rescan"
+      "stops the program hiding a reachable object",
+      "shade the old target + the new while the stack is grey",
+      "own stack: no barrier, scanned once"
     ],
     "jvmEN": "Java’s G1 uses a snapshot-at-the-beginning barrier, which matches only the deletion half of Go’s; it needs no insertion half because it scans thread stacks in a stop-the-world pause, while Go scans stacks concurrently. G1 also needs card marking because it is generational and moves objects; Go’s collector does neither.",
     "detailsEN": [
@@ -1959,7 +1932,7 @@ const CARDS = [
     ],
     "practicalRU": "Проговори по схеме: «A уже прошли, B ещё нет; переносим B → C в A → C; C нельзя потерять». В Go-коде барьер вставляет компилятор — вручную вызывать runtime не нужно. Пример требует разных ненулевых a и b и исключительного доступа к обоим узлам. Для совместного доступа нужна своя синхронизация. sync.Pool используй после измерений: Get не обязан вернуть прежний объект, содержимое может исчезнуть в любой момент; ускорение в 5–10 раз и переиспользование на том же P не гарантируются.",
     "code": "package example\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\n// Move requires distinct, non-nil nodes and exclusive access.\nfunc Move(a, b *Node) {\n\ta.Next = b.Next\n\tb.Next = nil // Deleting a pointer can also need a GC barrier.\n}\n\n// Compiler-generated barriers protect GC, not concurrent callers.\n// White/grey/black states are a teaching model, not observable here.",
-    "shortRU": "Он защищает конкурентную разметку: пока GC размечает, программа меняет указатели, и барьер не даёт ей спрятать достижимый объект. Гибридный барьер Go красит старую цель записи указателя и, пока стек текущей горутины серый, новую. Благодаря этому записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце. Это не блокировка, и data race он не исправляет.",
+    "shortRU": "Он сохраняет корректность конкурентной разметки: пока GC размечает, программа меняет указатели, и барьер не даёт ей спрятать достижимый объект. Гибридный барьер Go красит старую цель записи указателя и, пока стек текущей горутины серый, ещё и новую. Благодаря этому записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце.",
     "jvmRU": "G1 в Java использует барьер snapshot-at-the-beginning — он совпадает только с deletion-половиной барьера Go; insertion-половина G1 не нужна, потому что стеки потоков он сканирует в паузе stop-the-world, а Go сканирует стеки конкурентно. Ещё G1 нужен card marking, потому что он поколенческий и перемещает объекты; сборщик Go не делает ни того, ни другого.",
     "detailsRU": [
       "Представь: A уже просмотрен, B ещё нет, а B ссылается на неотмеченный C. Если перенести эту связь из B в A, простой конкурентный обход может пропустить C. Барьер учитывает изменения указателей и защищает C, даже если сборщик уже прошёл A, но ещё не дошёл до B.",
@@ -2025,12 +1998,11 @@ const CARDS = [
     "simId": null,
     "qEN": "What do a slice and a string refer to, and when does append allocate a new backing array?",
     "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
-    "shortEN": "A slice is a small header, a pointer, a length and a capacity, that views an underlying array; a string is a pointer and a length over immutable bytes. Copying either one copies only the header, so two slices can share elements. append writes in place while len < cap and allocates a new, bigger array when capacity runs out: about double for small slices, moving towards 1.25× for large ones.",
+    "shortEN": "A slice is a header, a pointer, a length and a capacity, over a shared array, and a string is a pointer and a length over immutable bytes. Copying either copies only the header, so two slices can share elements. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
     "anchorsEN": [
       "slice = ptr + len + cap; string = ptr + len",
       "copy = new header, shared array",
-      "len < cap → in place, else new array",
-      "growth: ×2 small → ×1.25 large"
+      "result fits in cap → in place, else new array"
     ],
     "jvmEN": "A slice combines ArrayList-style growth with subList- or ByteBuffer-style views over a shared array: two slices can share one array, and append may or may not create a new one, so always use the slice that append returns. Go strings are immutable bytes, usually UTF-8, not UTF-16 as Java’s String API.",
     "detailsEN": [
@@ -2041,7 +2013,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
-    "shortRU": "Срез — небольшой заголовок из указателя, длины и ёмкости, который смотрит на массив; строка — указатель и длина над неизменяемыми байтами. Копирование любого из них копирует только заголовок, поэтому два среза могут делить элементы. append пишет на месте, пока len < cap, а когда ёмкость кончается, выделяет новый, больший массив: примерно вдвое для малых срезов и ближе к 1,25 раза для больших.",
+    "shortRU": "Срез — заголовок из указателя, длины и ёмкости над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Копирование любого из них копирует только заголовок, поэтому два среза могут делить элементы. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
     "jvmRU": "Срез сочетает рост как у ArrayList с представлениями над общим массивом, как subList или ByteBuffer: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не UTF-16, как в API строк Java.",
     "detailsRU": [
       "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
@@ -2098,12 +2070,11 @@ const CARDS = [
     "simId": "sim7",
     "qEN": "How did classic Go maps use buckets and incremental growth before Swiss Tables?",
     "qRU": "Как классические map до Swiss Tables использовали бакеты и постепенное расширение?",
-    "shortEN": "Before Go 1.24 a map was an array of 2^B buckets, each holding eight keys and values plus eight tophash bytes, with overflow buckets chained when a bucket filled up. The low bits of the hash chose the bucket, and the top byte filtered candidates before the keys were compared. When the average load passed 6.5 per bucket, the map doubled, and the copying, called evacuation, was spread over later writes instead of done at once.",
+    "shortEN": "Before Go 1.24 a map was an array of 2^B buckets of eight slots, with overflow buckets chained when a bucket filled up. The low bits of the hash chose the bucket, and a one-byte tophash filtered candidates before the keys were compared. Past an average load of 6.5 per bucket the map doubled, and the copying, called evacuation, was spread over later writes.",
     "anchorsEN": [
-      "2^B buckets × 8 slots + overflow chain",
-      "low bits → bucket; tophash → filter",
-      "load > 6.5 → double",
-      "evacuation spread over writes"
+      "2^B buckets × 8 slots + overflow",
+      "low bits → bucket; tophash filters",
+      "load > 6.5 → double; gradual evacuation"
     ],
     "jvmEN": "Java’s HashMap also uses buckets, but each bucket is a linked list that becomes a tree once it passes eight entries and the table has at least 64 buckets, and resizing copies everything at once. Go’s old map kept eight entries per bucket inline and grew incrementally.",
     "detailsEN": [
@@ -2114,7 +2085,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: загрузка → больше бакетов; overflow → возможно прежний размер. Отделяй историческую реализацию от контракта языка. На обычном интервью сначала объясни обновление значения map, затем детали эвакуации.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\n\nfunc main() {\n\tm := map[string]Counter{\"go\": {N: 1}}\n\tv := m[\"go\"]\n\tv.N++\n\tfmt.Println(m[\"go\"].N)\n\tm[\"go\"] = v\n\tfmt.Println(m[\"go\"].N)\n}",
-    "shortRU": "До Go 1.24 map была массивом из 2^B бакетов, в каждом — восемь ключей и значений и восемь байтов tophash; когда бакет заполнялся, к нему цеплялись overflow-бакеты. Младшие биты хеша выбирали бакет, а старший байт отсеивал кандидатов до сравнения ключей. Когда средняя загрузка превышала 6,5 на бакет, map удваивалась, а копирование — эвакуация — растягивалось на последующие записи, а не делалось сразу.",
+    "shortRU": "До Go 1.24 map была массивом из 2^B бакетов по восемь слотов, и когда бакет заполнялся, к нему цеплялись overflow-бакеты. Младшие биты хеша выбирали бакет, а однобайтовый tophash отсеивал кандидатов до сравнения ключей. При средней загрузке больше 6,5 на бакет map удваивалась, а копирование — эвакуация — растягивалось на последующие записи.",
     "jvmRU": "HashMap в Java тоже использует бакеты, но каждый бакет — связный список, который превращается в дерево, когда в нём больше восьми записей и в таблице не меньше 64 бакетов, а при расширении всё копируется сразу. Старая map в Go хранила восемь записей прямо в бакете и росла постепенно.",
     "detailsRU": [
       "В реализации Go 1.17 младшие биты хеша выбирают один из 2^B основных бакетов. В каждом — восемь байтов tophash, сгруппированные ключи и значения и ссылка overflow. Занятые tophash кодируют старший байт хеша с поправкой на зарезервированные состояния; после совпадения всё равно сравниваются ключи.",
@@ -2168,12 +2139,12 @@ const CARDS = [
     "simId": "sim7",
     "qEN": "How do Swiss Tables find a key and grow a Go map?",
     "qRU": "Как Swiss Tables находят ключ и расширяют map в Go?",
-    "shortEN": "It hashes the key, uses H1, the high bits, to pick a starting group, and H2, the low 7 bits, to filter slots: each group has eight slots and eight control bytes holding H2 fingerprints. A lookup compares H2 with all eight control bytes at once, checks only the matching keys, and stops at a group with an empty slot. Growth is per table: a table doubles up to 1024 slots and then splits.",
+    "shortEN": "A map hashes the key; a large map first picks a table from its directory by the top bits. In the table, H1, the high bits, picks a starting group and H2, the low 7 bits, is a fingerprint: a lookup compares H2 with a group’s eight control bytes at once, checks only the matching keys and stops at a group with an empty slot. A table doubles up to 1024 slots, then splits.",
     "anchorsEN": [
-      "group = 8 slots + 8 control bytes",
+      "top bits → a table in the directory",
       "H1 → group, H2 → fingerprint",
-      "match 8 bytes at once, compare candidates",
-      "table doubles to 1024, then splits"
+      "match 8 control bytes at once; an empty slot ends the search",
+      "a table doubles to 1024, then splits"
     ],
     "jvmEN": "Unlike Java’s HashMap with chained buckets, Swiss Tables use open addressing: there are no linked nodes, entries live in flat groups, so a lookup touches fewer cache lines. Growth also rehashes one table, not the whole map.",
     "detailsEN": [
@@ -2185,7 +2156,7 @@ const CARDS = [
     ],
     "practicalRU": "Цепочка для воспроизведения: отпечаток → сравнить ключ → остановиться или продолжить. Проговори её и объясни, почему совпадения H2 недостаточно и чем deleted отличается от empty. В sim7 есть разбор условной группы.",
     "code": "// Teaching trace, not executable Go or actual hashes.\n// Search key: \"go\", chosen H2: 0x2A\n// slot:    0      1       2       3      4      5      6      7\n// ctrl:   2A     19      2A      80     11     80     80     80\n// key:   \"rust\" \"c\"     \"go\"   empty  \"js\"  empty  empty  empty\n// 1. Fingerprints select candidate slots 0 and 2.\n// 2. \"rust\" != \"go\"; \"go\" == \"go\": return slot 2's value.\n// 3. Only if no candidate key matched would empty stop this search.",
-    "shortRU": "Он хеширует ключ, по H1 — старшим битам — выбирает стартовую группу, а по H2 — младшим 7 битам — отсеивает слоты: в каждой группе восемь слотов и восемь управляющих байтов с отпечатками H2. Поиск сравнивает H2 со всеми восемью управляющими байтами сразу, проверяет только совпавшие ключи и останавливается на группе с пустым слотом. Рост идёт по таблицам: таблица удваивается до 1024 слотов, а потом делится.",
+    "shortRU": "Map хеширует ключ; большая map сначала выбирает таблицу из своего каталога по старшим битам. В таблице H1 — старшие биты — выбирает стартовую группу, а H2 — младшие 7 бит — служит отпечатком: поиск сравнивает H2 с восемью управляющими байтами группы сразу, проверяет только совпавшие ключи и останавливается на группе с пустым слотом. Таблица удваивается до 1024 слотов, а потом делится.",
     "jvmRU": "В отличие от HashMap в Java с цепочками в бакетах, Swiss Tables используют открытую адресацию: связанных узлов нет, записи лежат в плоских группах, поэтому поиск задевает меньше строк кеша. И при росте перехешируется одна таблица, а не вся map.",
     "detailsRU": [
       "В группе восемь управляющих байтов и восемь слотов ключ/значение. H2 — младшие семь бит хеша, H1 — оставшиеся биты для пробирования. Для 64-битного хеша это разбиение 57/7, но не правило для всех платформ. Занятый байт хранит H2, 0x80 означает empty, 0xFE — deleted. Ключи и значения не обязаны помещаться в одну кеш-линию.",
@@ -2247,12 +2218,11 @@ const CARDS = [
     "simId": "sim7",
     "qEN": "What do delete and clear release, and what can you rely on during map iteration?",
     "qRU": "Что освобождают delete и clear и на что можно рассчитывать при обходе map?",
-    "shortEN": "delete removes one entry and clear removes them all, so whatever they reference can be collected, but neither shrinks the map’s table: that memory stays until the whole map is dropped. To give it back after a spike, copy the live entries into a new map. Iteration order is unspecified and starts at a random place; an entry deleted before it is reached is not visited, and one added during iteration may or may not be.",
+    "shortEN": "delete and clear remove entries, so whatever they referenced can be collected, but neither shrinks the map’s table. That memory stays until the whole map is dropped, so after a spike you copy the live entries into a new map. Iteration order is unspecified and starts at a random place; an entry added during the loop may or may not be visited.",
     "anchorsEN": [
       "delete / clear free entries, not the table",
       "rebuild the map to shrink it",
-      "order unspecified, random start",
-      "added during range: maybe visited"
+      "order unspecified; added during range: maybe"
     ],
     "jvmEN": "Like Java’s HashMap, a Go map never shrinks its table on remove or clear. Unlike HashMap, changing a map from the same goroutine while ranging over it is allowed, with no ConcurrentModificationException; a write from another goroutine during iteration, however, is a fatal error that recover cannot catch.",
     "detailsEN": [
@@ -2263,7 +2233,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: delete убирает запись; clear очищает общую map; присваивание меняет одну переменную. Перед выводом об утечке спроси, кто ещё держит ссылку. Отработай различие на примере и сравни с удержанием массива в q4.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tm := map[string]int{\"go\": 1}\n\talias := m\n\tm = make(map[string]int)\n\tfmt.Println(len(m), len(alias))\n\tclear(alias)\n\tfmt.Println(len(m), len(alias))\n}",
-    "shortRU": "delete удаляет одну запись, clear — все, поэтому всё, на что они ссылались, можно собрать, но ни то ни другое не уменьшает таблицу map: эта память остаётся, пока не отпустят всю map. Чтобы вернуть её после всплеска, скопируй живые записи в новую map. Порядок обхода не задан и начинается со случайного места; запись, удалённая до того, как до неё дошли, не встретится, а добавленная во время обхода — может встретиться, а может нет.",
+    "shortRU": "delete и clear удаляют записи, поэтому всё, на что они ссылались, можно собрать, но таблицу map ни то ни другое не уменьшает. Эта память остаётся, пока не отпустят всю map, поэтому после всплеска живые записи копируют в новую map. Порядок обхода не задан и начинается со случайного места; запись, добавленная во время цикла, может встретиться, а может нет.",
     "jvmRU": "Как HashMap в Java, map в Go не уменьшает таблицу при удалении или clear. В отличие от HashMap, менять map из той же горутины во время range можно, без ConcurrentModificationException; а вот запись из другой горутины во время обхода — фатальная ошибка, которую recover не перехватит.",
     "detailsRU": [
       "Разделяй три уровня: записи, хранилище таблицы и RSS процесса. В Go 1.25/1.26 delete и clear могут убрать ссылки на данные, сохранив вместимость таблицы. Данные доступны для GC, только если их не удерживают другие ссылки; сборка и возврат памяти ОС — отдельные события.",
@@ -2321,12 +2291,11 @@ const CARDS = [
     "simId": null,
     "qEN": "What does an interface value contain, and why can a typed nil make an interface non-nil?",
     "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
-    "shortEN": "An interface value is two words: a type word, which is an itab for interfaces with methods, and a data word. It equals nil only when both are nil. So if a function returns a nil *MyError as error, the interface holds the type *MyError and a nil pointer, and err != nil is true. Return a literal nil for the no-error case, not a typed nil pointer.",
+    "shortEN": "An interface value is two words, a type word and a data word, and it is nil only when both are nil. So if a function returns a nil *MyError as error, the interface holds the type *MyError and a nil pointer, and err != nil is true. Return a literal nil when there is no error, not a typed nil pointer.",
     "anchorsEN": [
-      "interface = (type / itab, data)",
+      "interface = type word + data word",
       "nil only if both are nil",
-      "typed nil *T → non-nil interface",
-      "return plain nil for success"
+      "typed nil → non-nil error; return plain nil"
     ],
     "jvmEN": "Java has no such trap: a reference is either null or points to an object. In Go an interface carries its dynamic type separately from the value, so “a nil pointer of type T” and “no value at all” are different.",
     "detailsEN": [
@@ -2338,7 +2307,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: «какой тип внутри → какое значение → что именно сравниваем». При успехе функции, возвращающей error, возвращай nil явно. Для производительности сначала измерь конкретный вызов, а не размер заголовка.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar p *int\n\tvar x any = p\n\tfmt.Println(x == nil, p == nil)\n\tv, ok := x.(*int)\n\tfmt.Println(ok, v == nil)\n}",
-    "shortRU": "Значение интерфейса — два слова: слово типа (для интерфейсов с методами — itab) и слово данных. Оно равно nil, только когда nil оба. Поэтому если функция возвращает nil *MyError как error, интерфейс хранит тип *MyError и nil-указатель, и err != nil истинно. Для случая «ошибки нет» возвращай литерал nil, а не типизированный nil-указатель.",
+    "shortRU": "Значение интерфейса — два слова, слово типа и слово данных, и оно равно nil, только когда nil оба. Поэтому если функция возвращает nil *MyError как error, интерфейс хранит тип *MyError и nil-указатель, и err != nil истинно. Когда ошибки нет, возвращай литерал nil, а не типизированный nil-указатель.",
     "jvmRU": "В Java такой ловушки нет: ссылка либо null, либо указывает на объект. В Go интерфейс хранит динамический тип отдельно от значения, поэтому «nil-указатель типа T» и «никакого значения» — разные вещи.",
     "detailsRU": [
       "При присваивании в базовый интерфейс, используемый как тип значения, конкретный тип должен реализовать его методы. Утверждение x.(T) проверяет сохранённый динамический тип; форма comma-ok сообщает о неуспехе без panic. Успешное утверждение типа при этом может вернуть nil-указатель.",
@@ -2389,10 +2358,9 @@ const CARDS = [
     "simId": null,
     "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
-    "shortEN": "*T has more methods than T: the method set of T has the value-receiver methods (plus promoted ones), and the method set of *T has both value- and pointer-receiver methods. That decides which interfaces a type satisfies: if Set has a pointer receiver, *Counter implements Setter and Counter does not. c.Set() still works on an addressable operand because Go rewrites it to (&c).Set(); a map element or a function result is not addressable, so there it fails.",
+    "shortEN": "Method sets decide which interfaces a type implements, while c.Set() is only call shorthand for addressable values. For a defined type T, the method set of T has only value-receiver methods and the method set of *T has both kinds: if Set has a pointer receiver, *Counter implements Setter and Counter does not. Go rewrites c.Set() to (&c).Set() when c is addressable, so it fails on a map element or a function result.",
     "anchorsEN": [
-      "T: value-receiver methods",
-      "*T: value + pointer methods",
+      "T: value methods; *T: both",
       "interfaces use method sets",
       "c.Set() = (&c).Set() only if addressable"
     ],
@@ -2405,7 +2373,7 @@ const CARDS = [
     ],
     "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
-    "shortRU": "У *T методов больше, чем у T: набор методов T — это методы с получателем-значением (плюс продвинутые), а набор методов *T — и со значением, и с указателем. От этого зависит, какие интерфейсы тип реализует: если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет. c.Set() всё же работает на адресуемом операнде, потому что Go переписывает его в (&c).Set(); элемент map или результат функции не адресуемы, и там это не сработает.",
+    "shortRU": "Наборы методов решают, какие интерфейсы реализует тип, а c.Set() — лишь сокращённая запись вызова для адресуемых значений. Для определённого типа T набор методов T — только методы с получателем-значением, а набор *T — оба вида: если у Set получатель-указатель, Setter реализует *Counter, а Counter — нет. Go переписывает c.Set() в (&c).Set(), когда c адресуемо, поэтому на элементе map или результате функции это не сработает.",
     "jvmRU": "В Java получателей-значений нет: каждый метод видит объект через ссылку. В Go выбор между значением и указателем в получателе решает и то, может ли метод менять получателя, и то, какие интерфейсы реализует тип.",
     "detailsRU": [
       "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
@@ -2447,11 +2415,10 @@ const CARDS = [
     "simId": null,
     "qEN": "When do deferred calls run, and where can recover stop a panic?",
     "qRU": "Когда выполняются отложенные вызовы и где recover может остановить panic?",
-    "shortEN": "defer evaluates the function and its arguments right away and runs the call when the surrounding function returns or panics, in last-in, first-out order. Deferred calls run after the return values are set, so a deferred closure can still change a named result. recover stops a panic only when called directly in a deferred function of the panicking goroutine: you cannot recover another goroutine’s panic, and an unrecovered panic in any goroutine crashes the program.",
+    "shortEN": "Deferred calls run when the surrounding function returns or panics, in last-in, first-out order, and their arguments are evaluated at the defer statement. They run after the results are set, so a deferred closure can still change a named result. recover stops a panic only when called directly in a deferred function of the panicking goroutine, and an unrecovered panic in any goroutine crashes the program.",
     "anchorsEN": [
-      "args evaluated at defer, call at exit",
-      "LIFO, after results are set",
-      "named result can still change",
+      "run at exit, LIFO; args evaluated at defer",
+      "after results are set → named result can change",
       "recover: directly in defer, same goroutine"
     ],
     "jvmEN": "defer is like finally or try-with-resources, but it is per function, not per block, so a defer inside a loop runs only when the function returns. recover is like catch, but it works only in a deferred function and only for its own goroutine; an uncaught panic in any goroutine kills the whole process.",
@@ -2464,7 +2431,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: «сейчас сохранить аргументы → при return присвоить результат → выполнить defer в обратном порядке → вернуть результат». Сначала объясни эту цепочку без регистров; машинный код проверяй только для конкретной сборки.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc f() (n int) {\n\tn = 1\n\tdefer fmt.Println(\"arg\", n)\n\tdefer func() {\n\t\tn++\n\t\tfmt.Println(\"closure\", n)\n\t}()\n\treturn 2\n}\n\nfunc main() { fmt.Println(\"result\", f()) }",
-    "shortRU": "defer сразу вычисляет функцию и её аргументы, а вызов выполняет, когда окружающая функция возвращается или паникует, в порядке «последний пришёл — первый ушёл». Отложенные вызовы идут после того, как заданы результаты, поэтому отложенное замыкание ещё может изменить именованный результат. recover останавливает панику, только если вызван напрямую в отложенной функции той горутины, которая паникует: панику чужой горутины не перехватить, а непойманная паника в любой горутине роняет программу.",
+    "shortRU": "Отложенные вызовы выполняются, когда окружающая функция возвращается или паникует, в порядке «последний пришёл — первый ушёл», а их аргументы вычисляются в момент defer. Они идут после того, как заданы результаты, поэтому отложенное замыкание ещё может изменить именованный результат. recover останавливает панику, только если вызван напрямую в отложенной функции паникующей горутины, а непойманная паника в любой горутине роняет программу.",
     "jvmRU": "defer похож на finally или try-with-resources, но действует на функцию, а не на блок, поэтому defer внутри цикла выполнится только при выходе из функции. recover похож на catch, но работает только в отложенной функции и только для своей горутины; непойманная паника в любой горутине убивает весь процесс.",
     "detailsRU": [
       "Передача x аргументом отложенного вызова сохраняет его текущее значение. Отложенное замыкание может вместо этого позже читать или менять внешнюю переменную. Именованные результаты — переменные, поэтому замыкание может изменить результат после вычисления и присваивания выражений return.",
@@ -2522,11 +2489,10 @@ const CARDS = [
     "simId": null,
     "qEN": "When should you use weak pointers, unique handles and runtime cleanups?",
     "qRU": "Когда нужны weak-указатели, unique handles и runtime cleanups?",
-    "shortEN": "weak.Pointer lets you look at an object without keeping it alive, for caches; unique.Make returns one canonical handle per distinct value, so equal values compare as cheaply as pointers; runtime.AddCleanup runs a function some time after an object becomes unreachable. They came in Go 1.23 and 1.24 and solve different problems. None of them replaces an explicit Close: a cleanup may run late or never, for example at exit.",
+    "shortEN": "Use weak.Pointer to observe an object without keeping it alive, unique.Make to get one canonical handle per distinct value, and runtime.AddCleanup to run a function some time after an object becomes unreachable. They serve different needs: weak caches, cheap equality of repeated values, and a fallback for cleanup. None replaces an explicit Close, because a cleanup may run late or never.",
     "anchorsEN": [
-      "weak.Pointer: observe, don’t keep alive",
-      "unique.Make: one handle per value",
-      "AddCleanup: after unreachable, maybe never",
+      "weak: observe · unique: one handle · cleanup: after unreachable",
+      "caches, cheap equality, fallback",
       "explicit Close still required"
     ],
     "jvmEN": "These map onto Java’s WeakReference, String.intern generalised to any comparable value, and Cleaner. As with Cleaner, a Go cleanup is a safety net, not a substitute for closing resources.",
@@ -2539,7 +2505,7 @@ const CARDS = [
     ],
     "practicalRU": "Три вопроса: «наблюдать без удержания?» → weak; «сравнивать повторяющиеся значения?» → unique; «запасное освобождение после потери владельца?» → cleanup. Не строй тест на предположении, что один runtime.GC() обязательно вызовет callback.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"unique\"\n\t\"weak\"\n)\n\nfunc main() {\n\tobj := &struct{ Value int }{Value: 42}\n\tw := weak.Make(obj)\n\tgot := w.Value()\n\tfmt.Println(got == obj)\n\truntime.KeepAlive(obj)\n\ta := unique.Make(\"go\")\n\tb := unique.Make(string([]byte{'g', 'o'}))\n\tfmt.Println(a == b)\n}",
-    "shortRU": "weak.Pointer позволяет смотреть на объект, не удерживая его, — для кешей; unique.Make возвращает один канонический дескриптор на каждое различное значение, поэтому равные значения сравниваются так же дёшево, как указатели; runtime.AddCleanup запускает функцию через какое-то время после того, как объект стал недостижим. Они появились в Go 1.23 и 1.24 и решают разные задачи. Ни один не заменяет явный Close: очистка может выполниться поздно или никогда, например при выходе.",
+    "shortRU": "weak.Pointer — чтобы смотреть на объект, не удерживая его, unique.Make — чтобы получить один канонический дескриптор на каждое различное значение, runtime.AddCleanup — чтобы запустить функцию через какое-то время после того, как объект стал недостижим. Задачи у них разные: слабые кеши, дешёвое сравнение повторяющихся значений и страховка для очистки. Ни один не заменяет явный Close, потому что очистка может выполниться поздно или никогда.",
     "jvmRU": "Это аналоги WeakReference, String.intern для любого сравнимого значения и Cleaner из Java. Как и Cleaner, очистка в Go — страховка, а не замена закрытию ресурсов.",
     "detailsRU": [
       "После недостижимости объекта weak.Pointer.Value может вернуть nil; гарантии, что это когда-нибудь произойдёт, нет. Прочитай Value один раз и держи полученный сильный указатель, пока используешь объект. runtime.KeepAlive продлевает достижимость до последней нужной операции, но не является блокировкой.",
@@ -2602,12 +2568,11 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "How do push iterators differ from iter.Pull, and when must you call stop?",
     "qRU": "Чем push-итераторы отличаются от iter.Pull и когда нужно вызывать stop?",
-    "shortEN": "A push iterator, iter.Seq, is a function that calls yield for each value; range over it passes the loop body as yield, and when the loop breaks, yield returns false and the iterator must stop. iter.Pull turns it into a pair of functions, next and stop, for when you need values one at a time, for example to merge two sequences. If you quit before next reports the end, call stop, usually with defer; otherwise the iterator never finishes and its goroutine and resources leak.",
+    "shortEN": "A push iterator, iter.Seq, calls yield for each value; range passes the loop body as yield, and when the loop breaks, yield returns false and the iterator must stop. iter.Pull turns it into next and stop, for when you need values one at a time, for example to merge two sequences. If you quit before next reports the end, call stop, usually with defer, or the iterator’s goroutine leaks.",
     "anchorsEN": [
-      "iter.Seq: the iterator calls yield",
-      "break → yield returns false → stop",
+      "iter.Seq calls yield; false → stop",
       "iter.Pull → next, stop",
-      "no stop() → iterator goroutine leaks"
+      "quit early → defer stop()"
     ],
     "jvmEN": "A push iterator is like Iterable.forEach with a way to break out, and iter.Pull gives you a Java-style Iterator, with hasNext and next folded into one next. stop plays the role of closing a Stream that holds resources.",
     "detailsEN": [
@@ -2618,7 +2583,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: push → «получаю через yield»; pull → «запрашиваю next»; ранний выход → stop. На интервью сначала объясни владение завершением, затем внутренний coro. Схема sim1 даёт общий контекст горутин, а не точную трассу iter.Pull.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"iter\"\n)\n\nfunc Backward(s []int) iter.Seq[int] {\n\treturn func(yield func(int) bool) {\n\t\tfor i := len(s) - 1; i >= 0; i-- {\n\t\t\tif !yield(s[i]) {\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc main() {\n\tnext, stop := iter.Pull(Backward([]int{1, 2, 3}))\n\tdefer stop()\n\tv, ok := next()\n\tfmt.Println(v, ok)\n\tstop()\n\tv, ok = next()\n\tfmt.Println(v, ok)\n}",
-    "shortRU": "Push-итератор, iter.Seq, — функция, которая вызывает yield для каждого значения; range по нему передаёт тело цикла как yield, а когда цикл прерывается, yield возвращает false, и итератор должен остановиться. iter.Pull превращает его в пару функций next и stop — когда значения нужны по одному, например чтобы слить две последовательности. Если бросаешь раньше, чем next сообщит о конце, вызови stop, обычно через defer; иначе итератор так и не завершится, и его горутина и ресурсы утекут.",
+    "shortRU": "Push-итератор, iter.Seq, вызывает yield для каждого значения; range передаёт тело цикла как yield, а когда цикл прерывается, yield возвращает false, и итератор должен остановиться. iter.Pull превращает его в next и stop — когда значения нужны по одному, например чтобы слить две последовательности. Если бросаешь раньше, чем next сообщит о конце, вызови stop, обычно через defer, иначе горутина итератора утечёт.",
     "jvmRU": "Push-итератор похож на Iterable.forEach с возможностью выйти, а iter.Pull даёт Iterator в стиле Java, где hasNext и next слиты в одну next. stop играет роль закрытия Stream, который держит ресурсы.",
     "detailsRU": [
       "iter.Seq[V] — это func(yield func(V) bool). Цикл range по функции передаёт своё тело как yield; break приводит к false из yield. Итератор должен вернуться, а не вызывать yield снова. Push-форма сама по себе не обещает нулевых аллокаций или создания новой горутины.",
@@ -2672,12 +2637,12 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?",
     "qRU": "Что именно гарантируют GOMAXPROCS с учётом контейнера, synctest и FlightRecorder?",
-    "shortEN": "Each guarantees less than it seems. Since Go 1.25, with a go 1.25 module, GOMAXPROCS defaults to the smallest of the CPU count, the affinity mask and the rounded-up cgroup CPU limit, and follows changes unless set explicitly. synctest’s fake time jumps to the next timer only when every goroutine in the bubble is durably blocked, on channels, timers or WaitGroups but not mutexes or I/O. FlightRecorder keeps a rolling window of recent trace, not exact history.",
+    "shortEN": "GOMAXPROCS follows the container’s CPU limit, synctest gives tests fake time, and FlightRecorder keeps the last seconds of trace in memory, each with conditions. With go 1.25 or later in go.mod, on Linux GOMAXPROCS is the CPU count lowered to the CPU limit rounded up, but the limit alone never pushes it below 2, and an explicit setting stops updates. synctest’s time moves only when every goroutine in the bubble is durably blocked, not on mutexes or I/O.",
     "anchorsEN": [
-      "GOMAXPROCS = min(CPUs, affinity, ⌈quota⌉)",
-      "an explicit setting disables updates",
-      "synctest: time jumps when all durably blocked",
-      "FlightRecorder: rolling trace, save on demand"
+      "GOMAXPROCS: min(CPUs, ⌈limit⌉); the limit alone never below 2",
+      "an explicit setting stops updates",
+      "synctest: time moves when all durably blocked",
+      "FlightRecorder: a rolling window"
     ],
     "jvmEN": "The JVM has been container-aware since Java 10, and Java Flight Recorder is the closest analogue to FlightRecorder. For synctest, the closest analogue for a Kotlin developer is runTest from kotlinx-coroutines-test, whose virtual time skips delays; in plain Java you inject a fake Clock.",
     "detailsEN": [
@@ -2689,7 +2654,7 @@ const CARDS = [
     ],
     "practicalRU": "Не учи три API одной фразой. Спроси отдельно: «кто выбирает параллелизм?», «почему движется тестовое время?», «какую историю успели записать?». Пример проверяет дедлайн искусственным временем; это не ожидание реальной секунды.",
     "code": "package apis\n\nimport (\n\t\"context\"\n\t\"testing\"\n\t\"testing/synctest\"\n\t\"time\"\n)\n\nfunc TestDeadline(t *testing.T) {\n\tsynctest.Test(t, func(t *testing.T) {\n\t\tctx, cancel := context.WithTimeout(context.Background(), time.Second)\n\t\tdefer cancel()\n\t\tif ctx.Err() != nil {\n\t\t\tt.Fatal(\"deadline fired early\")\n\t\t}\n\t\ttime.Sleep(time.Second)\n\t\tsynctest.Wait()\n\t\tif ctx.Err() != context.DeadlineExceeded {\n\t\t\tt.Fatalf(\"got %v\", ctx.Err())\n\t\t}\n\t})\n}",
-    "shortRU": "Каждый гарантирует меньше, чем кажется. С Go 1.25 и модулем go 1.25 GOMAXPROCS по умолчанию — наименьшее из числа CPU, маски affinity и округлённого вверх лимита CPU cgroup, и следует за изменениями, если не задан явно. Поддельное время synctest прыгает к ближайшему таймеру, только когда все горутины пузыря прочно заблокированы — на каналах, таймерах или WaitGroup, но не на мьютексах и вводе-выводе. FlightRecorder держит скользящее окно недавней трассы, а не точную историю.",
+    "shortRU": "GOMAXPROCS следует за лимитом CPU контейнера, synctest даёт тестам поддельное время, а FlightRecorder держит в памяти трассу последних секунд — и у каждого есть условия. Если в go.mod указано go 1.25 или новее, на Linux GOMAXPROCS — число CPU, уменьшенное до округлённого вверх лимита CPU, но сам лимит никогда не опускает его ниже 2, а явная настройка отключает обновления. Время synctest идёт, только когда все горутины пузыря устойчиво заблокированы, — не на мьютексах и вводе-выводе.",
     "jvmRU": "JVM учитывает контейнер с Java 10, а ближайший аналог FlightRecorder — Java Flight Recorder. Для synctest ближе всего для разработчика на Kotlin runTest из kotlinx-coroutines-test: его виртуальное время пропускает задержки; в чистой Java подставляют поддельный Clock.",
     "detailsRU": [
       "GOMAXPROCS по умолчанию учитывает логические CPU, affinity процесса и, в Linux, cgroup CPU bandwidth quota. Квота — CPU limit, а не CPU request и не число потоков ОС. Дробная квота округляется вверх; рантайм обычно сохраняет минимум 2, кроме случая, когда число CPU или доступность по affinity меньше 2. Начальные значения и автообновления зависят от GODEBUG и языковой версии главного модуля.",
@@ -2821,7 +2786,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What is the zero value of each kind of type, and which nil values are safe to use?",
     "qRU": "Какое нулевое значение у каждого вида типов и какими nil-значениями можно безопасно пользоваться?",
-    "shortEN": "Every variable starts at its type's zero value: 0, false, \"\", nil for pointers, slices, maps, channels, functions and interfaces, and a struct of zero fields. A nil slice behaves like an empty one for len, range and append; a nil map can be read, but writing to it panics; a nil channel blocks forever. Good Go types make the zero value useful, like sync.Mutex and strings.Builder.",
+    "shortEN": "A variable that is not explicitly initialized starts at its type's zero value: 0, false, \"\", nil for pointers, slices, maps, channels, functions and interfaces, and arrays and structs made of zero values. A nil slice behaves like an empty one for len, range and append; a nil map can be read, but writing to it panics; a nil channel blocks forever. Good Go types make the zero value useful, like sync.Mutex and strings.Builder.",
     "anchorsEN": [
       "every type has a zero value",
       "nil slice = empty for len, range, append",
@@ -2829,7 +2794,7 @@ const CARDS = [
       "nil channel blocks; make zero useful"
     ],
     "jvmEN": "In Java a reference field starts as null; in Go many types are usable at their zero value: an empty string instead of null, a ready Mutex or Builder. But writing to a nil map or dereferencing a nil pointer still panics, and Go has no compile-time null safety like Kotlin’s T?: any pointer, slice, map, channel, function or interface may be nil.",
-    "shortRU": "Любая переменная начинается с нулевого значения своего типа: 0, false, \"\", nil у указателей, срезов, map, каналов, функций и интерфейсов, структура из нулевых полей. Nil-срез ведёт себя как пустой для len, range и append; nil map можно читать, но запись вызывает panic; nil-канал блокирует навсегда. Хорошие типы в Go делают нулевое значение полезным, как sync.Mutex и strings.Builder.",
+    "shortRU": "Переменная без явной инициализации получает нулевое значение своего типа: 0, false, \"\", nil у указателей, срезов, map, каналов, функций и интерфейсов, а массивы и структуры — из нулевых значений. Nil-срез ведёт себя как пустой для len, range и append; nil map можно читать, но запись вызывает панику; nil-канал блокирует навсегда. Хорошие типы в Go делают нулевое значение полезным, как sync.Mutex и strings.Builder.",
     "jvmRU": "В Java поле-ссылка начинается с null; в Go многие типы пригодны в нулевом значении: пустая строка вместо null, готовые Mutex или Builder. Но запись в nil map или разыменование nil-указателя всё равно паникуют, а проверки null на этапе компиляции, как у T? в Kotlin, в Go нет: nil может быть любой указатель, срез, map, канал, функция или интерфейс.",
     "detailsEN": [
       "Reading is safe for nil collections: len and range work on nil slices and maps, and indexing a nil map returns the zero value. Writing differs: append to a nil slice allocates, but assignment to a nil map panics with \"assignment to entry in nil map\". Create a map with make or a literal before writing.",
@@ -2891,7 +2856,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What do len, indexing and range return for a Go string, and when do you need []rune?",
     "qRU": "Что возвращают len, индекс и range для строки Go и когда нужен []rune?",
-    "shortEN": "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes, s[i] is a byte, and range over a string decodes UTF-8, giving each rune with its starting byte index. Convert to []rune when you need characters by position, and build strings in a loop with strings.Builder.",
+    "shortEN": "len(s) and s[i] work on bytes, while range decodes UTF-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually UTF-8. Convert to []rune when you need code points by position, and build strings in a loop with strings.Builder.",
     "anchorsEN": [
       "string = immutable bytes, usually UTF-8",
       "len = bytes; s[i] = a byte",
@@ -2899,7 +2864,7 @@ const CARDS = [
       "[]rune by position; Builder in loops"
     ],
     "jvmEN": "Java’s String API works in UTF-16: length() counts UTF-16 code units and charAt returns a char. A Go string is bytes: len counts bytes, and code points come from range, []rune or the unicode/utf8 package.",
-    "shortRU": "Строка — неизменяемая последовательность байтов, обычно в UTF-8. len(s) считает байты, s[i] — байт, а range по строке декодирует UTF-8 и выдаёт руну с индексом её первого байта. []rune нужен, когда символы требуются по позиции; строку в цикле собирай через strings.Builder.",
+    "shortRU": "len(s) и s[i] работают с байтами, а range декодирует UTF-8 и выдаёт руну — кодовую точку Unicode — с индексом её первого байта. Так происходит потому, что строка — неизменяемая последовательность байтов, обычно в UTF-8. []rune нужен, когда кодовые точки требуются по позиции; строку в цикле собирай через strings.Builder.",
     "jvmRU": "API строк Java работает в UTF-16: length() считает кодовые единицы UTF-16, а charAt возвращает char. Строка Go — это байты: len считает байты, а кодовые точки дают range, []rune или пакет unicode/utf8.",
     "detailsEN": [
       "\"héllo, 世界\" has 9 runes but 14 bytes: é takes 2 bytes and each of 世 and 界 takes 3. utf8.RuneCountInString counts runes without allocating; []rune(s) allocates a new slice.",
@@ -3166,15 +3131,15 @@ const CARDS = [
     "simId": "sim10",
     "qEN": "What happens to a request inside net/http, and which deadlines should a Go HTTP server set?",
     "qRU": "Что происходит с запросом внутри net/http и какие дедлайны должен задавать HTTP-сервер на Go?",
-    "shortEN": "The server accepts a connection and serves it in its own goroutine; for each request the mux picks a handler by method and path, and the handler runs in that goroutine. r.Context() is cancelled when the client disconnects or when ServeHTTP returns, so pass it to every database or HTTP call. Set ReadHeaderTimeout and IdleTimeout on http.Server, and usually ReadTimeout and WriteTimeout too; the zero value means no limit.",
+    "shortEN": "The server serves each connection in its own goroutine, and the mux picks a handler by method and path. With HTTP/1.x the handler runs in the connection’s goroutine; with HTTP/2 each request gets its own. r.Context() is cancelled when the client disconnects or ServeHTTP returns, so pass it to every database or HTTP call. Set ReadHeaderTimeout, ReadTimeout, WriteTimeout and IdleTimeout explicitly: with all of them zero, the server never times out a slow client.",
     "anchorsEN": [
-      "a goroutine per HTTP/1 connection",
-      "mux: method + path → handler",
+      "a goroutine per connection (HTTP/2: per request)",
+      "mux by method + path",
       "pass r.Context() downstream",
-      "set timeouts; zero = no limit"
+      "set the four timeouts; all zero = none"
     ],
     "jvmEN": "It resembles a servlet container that runs each request on a thread, but Go uses a goroutine per HTTP/1 connection, or per stream in HTTP/2. Cancellation is explicit through r.Context(), whereas a servlet usually notices a disconnect only when a write throws IOException.",
-    "shortRU": "Сервер принимает соединение и обслуживает его в отдельной горутине; для каждого запроса mux выбирает handler по методу и пути, и handler выполняется в этой горутине. r.Context() отменяется, когда клиент отключился или ServeHTTP вернулся, поэтому его передают в каждый запрос к базе или другому сервису. В http.Server задают ReadHeaderTimeout и IdleTimeout, обычно также ReadTimeout и WriteTimeout; нулевое значение — без ограничения.",
+    "shortRU": "Сервер обслуживает каждое соединение в своей горутине, а mux выбирает handler по методу и пути. В HTTP/1.x handler выполняется в горутине соединения, в HTTP/2 каждый запрос получает свою. r.Context() отменяется, когда клиент отключился или ServeHTTP вернулся, поэтому его передают в каждый запрос к базе или другому сервису. ReadHeaderTimeout, ReadTimeout, WriteTimeout и IdleTimeout задают явно: если все они нулевые, сервер никогда не оборвёт медленного клиента.",
     "jvmRU": "Похоже на контейнер сервлетов, где каждый запрос выполняется в потоке, но Go использует горутину на соединение HTTP/1 или на stream в HTTP/2. Отмена явная — через r.Context(), а сервлет обычно узнаёт об отключении клиента, только когда запись бросает IOException.",
     "detailsEN": [
       "One goroutine per connection, not per request: with keep-alive, one connection carries requests one after another (HTTP/1.1), and the same goroutine serves them. A panic in a handler is recovered by the server for that connection only; a panic in a goroutine the handler starts crashes the process.",
@@ -3232,7 +3197,7 @@ const CARDS = [
     "simId": null,
     "qEN": "How do you turn domain errors into HTTP status codes without leaking internals?",
     "qRU": "Как превращать ошибки домена в HTTP-коды, не выдавая наружу внутренние детали?",
-    "shortEN": "Keep HTTP out of the domain: the ledger package returns sentinels and typed errors, and one function at the HTTP boundary maps them with errors.Is and errors.As — validation to 400 with the field, not found to 404, a business rule such as insufficient funds to 409 or 422. Everything else is 500 with a generic body, and the real error goes to the log, once.",
+    "shortEN": "Keep HTTP out of the domain: the ledger package returns sentinels and typed errors, and one function at the HTTP boundary maps them with errors.Is and errors.As. Validation becomes 400 with the field, not found 404, and a business rule such as insufficient funds 409 or 422. Everything else is 500 with a generic body, and the real error goes to the log, once.",
     "anchorsEN": [
       "domain returns sentinels and typed errors",
       "one mapping function at the HTTP edge",
@@ -3240,7 +3205,7 @@ const CARDS = [
       "500: generic body, log once"
     ],
     "jvmEN": "It is the same idea as a Spring @ControllerAdvice that maps exception types to status codes. In Go it is one explicit function, often called from an adapter around handlers of type func(w, r) error, so no handler can forget it; it checks the error with errors.Is and errors.As.",
-    "shortRU": "HTTP не должен проникать в домен: пакет ledger возвращает sentinel-ошибки и ошибки-типы, а одна функция на границе HTTP переводит их через errors.Is и errors.As — валидация в 400 с полем, «не найдено» в 404, бизнес-правило вроде нехватки средств в 409 или 422. Всё остальное — 500 с общим текстом, а настоящая ошибка — в лог, один раз.",
+    "shortRU": "HTTP не должен проникать в домен: пакет ledger возвращает sentinel-ошибки и типизированные ошибки, а одна функция на границе HTTP переводит их через errors.Is и errors.As. Валидация становится 400 с полем, «не найдено» — 404, бизнес-правило вроде нехватки средств — 409 или 422. Всё остальное — 500 с общим текстом, а настоящая ошибка — в лог, один раз.",
     "jvmRU": "Та же идея, что @ControllerAdvice в Spring, который сопоставляет типам исключений коды статуса. В Go это одна явная функция, которую часто вызывает адаптер вокруг обработчиков вида func(w, r) error, чтобы ни один обработчик её не забыл; ошибку она проверяет через errors.Is и errors.As.",
     "detailsEN": [
       "Why one function: every handler answers the same error the same way, and adding a new domain error touches one place. Handlers end with writeError(w, err) and return.",
@@ -3298,15 +3263,15 @@ const CARDS = [
     "simId": null,
     "qEN": "What is *sql.DB, and how do you keep connections and transactions from leaking?",
     "qRU": "Что такое *sql.DB и как не допустить утечки соединений и транзакций?",
-    "shortEN": "*sql.DB is a pool of connections, safe for concurrent use: open it once at startup and set limits. Every Rows holds a connection until it is closed, so defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: begin it with the request context, defer tx.Rollback(), run every statement on tx, and Commit at the end.",
+    "shortEN": "*sql.DB is a pool of connections, safe for concurrent use: open it once at startup and set limits. Pass the request context to every query with QueryContext and ExecContext. A Rows holds a connection until it is closed, so after checking the query error, defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: BeginTx(ctx), check the error, defer tx.Rollback(), run every statement on tx, then Commit.",
     "anchorsEN": [
       "*sql.DB = a pool: open once, set limits",
+      "ctx into every query: QueryContext, ExecContext",
       "defer rows.Close(); check rows.Err()",
-      "tx: defer Rollback, statements on tx, Commit",
-      "request context into every query"
+      "tx: BeginTx(ctx), defer Rollback, Commit"
     ],
     "jvmEN": "*sql.DB is the pooled DataSource, like HikariCP behind JDBC, not a single Connection. Without try-with-resources, Go relies on defer rows.Close() and defer tx.Rollback(); defer runs at function exit, not at the end of a block, so inside a loop move the body into a helper function.",
-    "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Каждый Rows держит соединение, пока его не закроют, поэтому defer rows.Close() — сразу после запроса, а rows.Err() — после цикла. Транзакция занимает одно соединение: начать её с контекстом запроса, сделать defer tx.Rollback(), выполнять все запросы через tx и в конце Commit.",
+    "shortRU": "*sql.DB — пул соединений, безопасный для одновременного использования: открыть один раз при старте и задать лимиты. Контекст HTTP-запроса передают в каждое обращение к базе через QueryContext и ExecContext. Rows держит соединение, пока его не закроют, поэтому после проверки ошибки запроса — defer rows.Close(), а после цикла — rows.Err(). Транзакция занимает одно соединение: BeginTx(ctx), проверить ошибку, defer tx.Rollback(), все запросы через tx, в конце Commit.",
     "jvmRU": "*sql.DB — это пул, DataSource вроде HikariCP за JDBC, а не один Connection. Без try-with-resources Go полагается на defer rows.Close() и defer tx.Rollback(); defer срабатывает при выходе из функции, а не в конце блока, поэтому тело цикла выносят во вспомогательную функцию.",
     "detailsEN": [
       "Limits: SetMaxOpenConns caps connections, so a request waits for a free one instead of overloading the database; SetMaxIdleConns keeps some open for reuse; SetConnMaxLifetime and SetConnMaxIdleTime retire old connections. Without a cap, a traffic spike opens as many connections as there are goroutines.",
