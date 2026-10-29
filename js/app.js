@@ -1056,7 +1056,57 @@ function initBottomNav() {
 
 window.addEventListener("hashchange", handleRoute);
 
+/* --- НОВАЯ ВЕРСИЯ САЙТА --- */
+// Вкладка может неделями висеть со старой копией: ссылки #/… страницу не перезагружают.
+// Номер выпуска — ?v= у скриптов в index.html. При возврате на вкладку (не чаще раза в 5 минут)
+// сверяем его с index.html на сервере и, если он другой, предлагаем обновить. Сами не перезагружаем:
+// можно потерять недописанный ответ.
+const SITE_VERSION = (() => {
+  const script = document.querySelector('script[src*="js/app.js"]');
+  const m = script && /[?&]v=(\d+)/.exec(script.getAttribute("src"));
+  return m ? m[1] : null;
+})();
+const VERSION_CHECK_MS = 5 * 60 * 1000;
+let versionCheckedAt = 0;
+let versionDismissed = null; // «Позже» — до следующего выпуска не напоминаем
+
+async function checkSiteVersion(force) {
+  if (!SITE_VERSION || !window.fetch || window.location.protocol === "file:") return;
+  if (!force && Date.now() - versionCheckedAt < VERSION_CHECK_MS) return;
+  versionCheckedAt = Date.now();
+  try {
+    const res = await fetch(`./?vcheck=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const m = /js\/app\.js\?v=(\d+)/.exec(await res.text());
+    if (m && m[1] !== SITE_VERSION && m[1] !== versionDismissed) showUpdateBanner(m[1]);
+  } catch { /* нет сети — проверим при следующем возвращении */ }
+}
+
+function showUpdateBanner(version) {
+  const banner = document.getElementById("update-banner");
+  if (!banner) return;
+  banner.dataset.version = version;
+  banner.classList.remove("hidden");
+}
+
+function initUpdateBanner() {
+  const banner = document.getElementById("update-banner");
+  if (!banner) return;
+  document.getElementById("update-reload").addEventListener("click", () => window.location.reload());
+  document.getElementById("update-later").addEventListener("click", () => {
+    versionDismissed = banner.dataset.version || null;
+    banner.classList.add("hidden");
+  });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkSiteVersion(); });
+  window.addEventListener("focus", () => checkSiteVersion());
+  // Страница из кеша «Назад/Вперёд» браузера — проверить сразу.
+  window.addEventListener("pageshow", event => { if (event.persisted) checkSiteVersion(true); });
+  setInterval(() => { if (document.visibilityState === "visible") checkSiteVersion(); }, 15 * 60 * 1000);
+  setTimeout(() => checkSiteVersion(true), 3000); // index.html мог прийти из кеша браузера
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initUpdateBanner();
   showStorageMessage();
   syncDynamicCounters();
   updateProgressBar();

@@ -597,6 +597,14 @@ button, input, summary { font: inherit; }
 .search-input { font-size: 1rem; max-width: 100%; min-height: 44px; }
 .recall-prompt { color: var(--muted); font-size: 0.9rem; margin-bottom: 12px; }
 .storage-notice { padding: 12px; border: 1px solid var(--amber); border-radius: 8px; margin-bottom: 12px; }
+/* Новая версия на сервере: строка в липкой шапке, видна с любого места страницы */
+.update-banner { position: fixed; right: 16px; bottom: 16px; z-index: 70; max-width: calc(100% - 32px); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--surface); box-shadow: 0 6px 20px rgba(2, 6, 23, 0.5); font-size: 0.9rem; }
+.update-banner.hidden { display: none; }
+@media (max-width: 640px) {
+  /* Телефон: у верхнего края — внизу уже нижняя панель и кнопки карточки */
+  .update-banner { top: max(8px, env(safe-area-inset-top, 0px)); bottom: auto; left: 8px; right: 8px; max-width: none; flex-wrap: nowrap; }
+  .update-banner span { flex: 1; min-width: 0; }
+}
 .flashcard-stage { scroll-margin-top: 140px; }
 .answer-box { scroll-margin-top: 140px; }
 .flashcard-stage > div, .sim-grid > *, .accordion-header > * { min-width: 0; }
@@ -1012,5 +1020,4 @@ p + .tts { margin-top: 6px; }
   .kbd { display: none; }
 }
 .card-grades.hidden, .grade-criteria.hidden { display: none; }
-/* «← Назад», «Далее →»: стрелка и подпись — отдельные элементы inline-flex, пробел между ними схлопывается */
-.card-navigation .btn { gap: 0.35em; }
+/* «← Назад», «Далее →»: стрелка и подпись в одной обёртке <span> — один элемент inline-flex, обычный пробел и перенос по нему */
