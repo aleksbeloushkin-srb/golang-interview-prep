@@ -1090,6 +1090,8 @@ function showUpdateBanner(version) {
 }
 
 function initUpdateBanner() {
+  const label = document.getElementById("site-version");
+  if (label && SITE_VERSION) label.textContent = `Версия сайта ${SITE_VERSION}`;
   const banner = document.getElementById("update-banner");
   if (!banner) return;
   document.getElementById("update-reload").addEventListener("click", () => window.location.reload());
