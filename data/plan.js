@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-29d",
+  revision: "2026-10-29e",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -1183,7 +1183,7 @@ const PLAN = {
     },
     "w5-wed-2": {
       hook: "*sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.",
-      en: "*sql.DB is a connection pool, opened once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so I defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
+      en: "sql.Open returns a *sql.DB, a connection pool: I open it once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so after checking the query error I defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
     },
     "w5-thu-1": {
       hook: "One JSON logger, request_id via With in middleware, LogValue for secrets, log errors once.",
@@ -1195,7 +1195,7 @@ const PLAN = {
     },
     "w1-tue-1": {
       hook: "A closure captures the variable, not a copy of its value.",
-      en: "A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so closures created in the loop no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations."
+      en: "If closures created in a loop all print the same final value, they share one variable: a closure refers to the variable itself, not a copy, so a later change is visible inside it. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations."
     },
     "w1-tue-3": {
       hook: "Money is integer minor units plus a currency, never float64.",
@@ -1203,11 +1203,11 @@ const PLAN = {
     },
     "w1-wed-1": {
       hook: "A type switch branches on the dynamic type inside an interface.",
-      en: "A type switch inspects the dynamic type stored in an interface value and runs the matching case, with the variable already converted to that type. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
+      en: "switch v := x.(type) runs the first case whose type matches the dynamic type stored in the interface x; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
     },
     "w1-wed-2": {
       hook: "Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.",
-      en: "An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
+      en: "Returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
     },
     "w1-wed-3": {
       hook: "Wrap with %w; Is compares, As extracts.",
@@ -1230,13 +1230,13 @@ const PLAN = {
       en: "var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
     },
     "w1-sat-2": {
-      hook: "Every type has a zero value; nil slices are usable, nil map writes panic, nil channels block.",
-      en: "Every type has a zero value: 0, \"\", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
+      hook: "var x T is ready: 0, \"\", false or nil; nil map writes panic, nil channels block.",
+      en: "var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
     },
 
     "w2-mon-1": {
       hook: "A slice is pointer, len, cap over a shared array.",
-      en: "A slice is a descriptor with a pointer, a length and a capacity over an underlying array. Re-slicing shares that array, so a write through one slice is visible through the other. append writes in place while capacity allows and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a, so a later append cannot overwrite the original; copy or slices.Clone gives an independent slice."
+      en: "s[1:3] copies no elements: a slice is a descriptor with a pointer, a length and a capacity over an underlying array, and re-slicing shares that array, so a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
     },
     "w2-mon-2": {
       hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
@@ -1248,7 +1248,7 @@ const PLAN = {
     },
     "w2-tue-3": {
       hook: "len counts bytes; range decodes runes.",
-      en: "A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character."
+      en: "len(\"héllo\") is 6, not 5, because a string is an immutable sequence of bytes, usually UTF-8, and é takes two of them. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by code point."
     },
     "w2-tue-4": {
       hook: "Removing in place changes the caller's array; copy first for independence.",
@@ -1264,7 +1264,7 @@ const PLAN = {
     },
     "w2-thu-1": {
       hook: "Module = versioned set of packages; internal/ limits importers.",
-      en: "A module is a versioned collection of packages defined by go.mod; a package is one directory compiled together. Code under internal/ can be imported only by packages rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
+      en: "go.mod declares the module path, such as module example.com/shop, and that module is a versioned collection of packages; a package is one directory compiled together. Code under internal/ can be imported only by packages in the tree rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
     },
     "w2-thu-2": {
       hook: "Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.",
@@ -1277,7 +1277,7 @@ const PLAN = {
 
     "w3-mon-1": {
       hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
-      en: "A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
+      en: "go f() starts f in a new goroutine: a function running concurrently, scheduled by the Go runtime onto OS threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
     },
     "w3-tue-1": {
       hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
@@ -1301,11 +1301,11 @@ const PLAN = {
     },
     "w3-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex.",
-      en: "Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as moving money between two accounts so the total stays constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
+      en: "atomic.AddInt64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
     },
     "w3-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
-      en: "A pipeline is a series of stages connected by channels; each stage receives from upstream, processes and sends downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
+      en: "In gen → square → print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream over a channel, processes the value and sends it downstream; that chain is a pipeline. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
     },
     "w3-thu-3": {
       hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",
