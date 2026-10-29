@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 )
@@ -71,7 +72,9 @@ func TransferHandler(l Ledger, log *slog.Logger) http.HandlerFunc {
 			To     string `json:"to"`
 			Amount int64  `json:"amount"`
 		}
-		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&in); err != nil {
+		dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
+		// One JSON object and nothing after it: "{...} garbage" or a second object is a bad request.
+		if err := dec.Decode(&in); err != nil || dec.Decode(&struct{}{}) != io.EOF {
 			Write(w, log, &ValidationError{Field: "body", Reason: "must be JSON like {\"from\", \"to\", \"amount\"}"})
 			return
 		}

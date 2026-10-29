@@ -33,6 +33,7 @@ let state = {
   index: 0,
   revealed: false,
   anchorsFor: null, // id карточки, для которой открыты опоры; на другой карточке они снова скрыты
+  shownCard: null, // карточка на экране: другая карточка — новая попытка, опоры снова скрыты
   progress: loadProgress()
 };
 
@@ -262,6 +263,9 @@ function renderCard() {
     document.querySelector("#card-controls .card-grades").classList.add("hidden");
     document.getElementById("grade-criteria").classList.add("hidden");
     document.getElementById("grade-signin").classList.add("hidden");
+    state.shownCard = null;
+    syncCardUrl(null);
+    fitCardControls();
     return;
   }
 
@@ -269,6 +273,12 @@ function renderCard() {
   if (state.index < 0) state.index = list.length - 1;
 
   const card = list[state.index];
+  // Другая карточка (в том числе возврат к прежней) — новая попытка без подсказки.
+  // Закрытие ответа на той же карточке опоры не прячет.
+  if (state.shownCard !== card.id) {
+    state.shownCard = card.id;
+    state.anchorsFor = null;
+  }
   document.getElementById("card-module").textContent = card.modName;
 
   const lvl = card.level || "senior";
@@ -331,7 +341,44 @@ function renderCard() {
   document.getElementById("grade-criteria").classList.toggle("hidden", !state.revealed);
 
   ansBox.classList.toggle("visible", state.revealed);
+  syncCardUrl(card.id);
+  fitCardControls();
 }
+
+// Адрес следует за карточкой: ссылка из адресной строки и перезагрузка открывают ту же карточку.
+// «Далее» и «Назад» заменяют адрес, а не добавляют запись в историю: кнопка «Назад» браузера
+// возвращает в предыдущий раздел, а не листает карточки по одной.
+let routeReady = false; // до первого handleRoute адрес не трогаем: в нём может быть карточка из ссылки
+
+function syncCardUrl(id) {
+  if (!routeReady) return;
+  const hash = window.location.hash;
+  if (hash && !/^#\/cards(\/|$)/.test(hash)) return; // открыт другой раздел
+  const want = id ? `#/cards/${id}` : "#/cards";
+  if (hash !== want) history.replaceState(history.state, "", want);
+}
+
+// Телефон: панель кнопок прилипает к низу экрана. Если вся панель заняла бы больше 30 % высоты
+// (крупный текст, низкий экран, открытые оценки), у края остаётся только строка «Назад · Ответ · Далее»,
+// а критерии и оценки идут в потоке сразу после ответа.
+function fitCardControls() {
+  const controls = document.getElementById("card-controls");
+  if (!controls) return;
+  controls.classList.remove("controls-compact");
+  const nav = document.querySelector(".bottom-nav");
+  const navHeight = nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
+  // Высота нижней панели с крупным текстом больше расчётной: отступы берут фактическую.
+  if (navHeight) document.documentElement.style.setProperty("--bottom-nav-space", `${navHeight}px`);
+  const room = window.innerHeight - navHeight;
+  if (getComputedStyle(controls).position !== "sticky") return; // широкий экран: панель и так в потоке
+  controls.classList.toggle("controls-compact", controls.getBoundingClientRect().height > room * 0.3);
+}
+
+let fitFrame = 0;
+window.addEventListener("resize", () => {
+  cancelAnimationFrame(fitFrame);
+  fitFrame = requestAnimationFrame(fitCardControls);
+});
 
 function toggleAnswer() {
   const list = getFilteredCards();
@@ -858,6 +905,7 @@ function checkQuizAnswer(qId, selectedIdx, correctIdx) {
 
 /* --- HASH ROUTER (НАВИГАЦИЯ И ПРЯМЫЕ ССЫЛКИ) --- */
 function handleRoute() {
+  routeReady = true;
   const hash = window.location.hash || "#/cards";
   const parts = hash.replace(/^#\//, "").split("/");
   const route = parts[0] || "cards";
@@ -877,18 +925,23 @@ function handleRoute() {
   });
   markMoreTab(activeRoute);
 
-  if (activeRoute === "cards" && param) {
-    state.filter = "all";
-    state.level = "all";
-    state.search = "";
-    document.getElementById("search-input").value = "";
-    const idx = CARDS.findIndex(c => c.id === param);
-    if (idx !== -1) {
-      state.index = idx;
-      state.revealed = false;
-      renderCard();
-      window.scrollTo({ top: 0, behavior: "auto" });
+  if (activeRoute === "cards" && param && CARDS.some(c => c.id === param)) {
+    // Карточка из текущей подборки открывается в ней; иначе подборка сбрасывается на все карточки.
+    let idx = getFilteredCards().findIndex(c => c.id === param);
+    if (idx === -1) {
+      state.filter = "all";
+      state.level = "all";
+      state.search = "";
+      document.getElementById("search-input").value = "";
+      idx = CARDS.findIndex(c => c.id === param);
     }
+    state.index = idx;
+    state.revealed = false;
+    state.anchorsFor = null; // переход по ссылке — новая попытка
+    renderCard();
+    window.scrollTo({ top: 0, behavior: "auto" });
+  } else if (activeRoute === "cards") {
+    renderCard(); // #/cards без номера: показать текущую карточку и вернуть её номер в адрес
   }
 
   if (activeRoute === "simulators" && param) {
@@ -987,7 +1040,9 @@ function initBottomNav() {
   // Повторное касание открытого раздела — к началу страницы, как в мобильных приложениях.
   document.querySelectorAll(".bottom-nav a.bottom-tab").forEach(link => {
     link.addEventListener("click", event => {
-      if (link.getAttribute("href") !== window.location.hash) return;
+      const href = link.getAttribute("href");
+      const hash = window.location.hash;
+      if (hash !== href && !hash.startsWith(href + "/")) return; // #/cards/c5 — тот же раздел, что #/cards
       event.preventDefault();
       window.scrollTo({ top: 0, behavior: "auto" });
     });

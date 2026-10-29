@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"sync"
 )
@@ -101,7 +102,9 @@ func Handler(store *Store, ledger Transferer) http.Handler {
 		var req transferRequest
 		dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&req); err != nil {
+		// One JSON object and nothing after it: "{...} garbage" or a second object is invalid too.
+		// Checked before Do, so a bad request neither runs the transfer nor uses up the key.
+		if err := dec.Decode(&req); err != nil || dec.Decode(&struct{}{}) != io.EOF {
 			write(w, jsonResponse(http.StatusBadRequest, map[string]string{"error": "invalid JSON body"}))
 			return
 		}

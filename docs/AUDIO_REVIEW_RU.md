@@ -15,16 +15,16 @@
 |---|---|---|---|---|---|---|---|---|---|
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 26.0 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 26.2 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
-| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 34.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
-| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 35.3 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
+| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 37.7 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
+| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 38.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
 | [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 26.7 | «directly», «panicking goroutine» |  |  |  |  |  |  |
 | [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 27.8 | «directly», «panicking goroutine» |  |  |  |  |  |  |
 | [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 26.0 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
 | [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 26.5 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
-| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 43.0 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
-| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 43.5 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
-| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 40.8 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
-| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 41.5 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
+| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 34.9 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
+| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 34.9 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
+| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.5 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
+| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 43.5 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 25.7 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Heart | 26.0 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 35.8 | `for i := range` против `for i = range` |  |  |  |  |  |  |
@@ -72,9 +72,9 @@
 
 > If a function returns a nil pointer to My Error as error, the caller gets a non-nil error: err is not nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds pointer to My Error and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.
 
-**card:c34:short** (хеш текста `5169dc8b`)
+**card:c34:short** (хеш текста `01681213`)
 
-> If Set has a pointer receiver, c dot Set compiles on a Counter variable, but var s Setter equals c does not. The call works because Go rewrites it as: take the address of c, then call Set, which needs an addressable value: an element of map of K to Counter or a function result of type Counter cannot do it, while a pointer to Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, the method set of pointer to Counter has both.
+> If Set has a pointer receiver, you can call it on a Counter variable but cannot store that variable in a Setter: c dot Set compiles, var s Setter equals c does not. The call works because Go rewrites it as: take the address of c, then call Set, which needs an addressable value: an element of map of K to Counter or a function result of type Counter cannot do it, while a pointer to Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, the method set of pointer to Counter has both.
 
 **card:c35:short** (хеш текста `0169abc5`)
 
@@ -84,13 +84,13 @@
 
 > Unlike Java exceptions, Go errors are ordinary return values: no stack unwinding, no checked exceptions and, by default, no stack trace. Wrapping with percent w is like passing a cause to an exception's constructor, errors dot Is and errors dot As are like walking the get-Cause chain with equals or instance-of, and errors dot Join is roughly Java's add-Suppressed.
 
-**card:c39:short** (хеш текста `2680f6c5`)
+**card:c39:short** (хеш текста `75da9750`)
 
-> An error starts at a low-level call, for example a query that returns Err Not Found, and each layer passes it up with context: F-M-T dot Error-f, load user 7: percent w, err, keeps the original inside. errors dot Is, of err and Err Not Found, asks: is this exact value anywhere in the chain?, and sentinels like I-O dot E-O-F are checked the same way. errors dot As, of err and address of qe, asks: is there a pointer to Query Error in the chain? and stores it in qe, so you can read its fields. errors dot Join, Go one 20, combines several errors, and Is and As still search each of them.
+> An error usually starts low, for example a query that returns Err Not Found, and each layer wraps it with percent w, which adds context and keeps the cause. errors dot Is checks whether the error matches a sentinel such as Err Not Found, including through wrapping. errors dot As finds the first error of a given type, such as pointer to Query Error, and stores it so you can read its fields. errors dot Join, Go one 20, combines several errors into a tree that Is and As can search.
 
-**card:c40:short** (хеш текста `d6992e43`)
+**card:c40:short** (хеш текста `d6e6c66a`)
 
-> var n int is zero, var s string is the empty string, var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; every array element and struct field is zeroed. A nil slice works like an empty one for len, range and append; reading a nil map returns the zero value, but assigning to it, m of k equals v, panics; sending to or receiving from a nil channel blocks forever, and close panics. Good types make the zero value useful: var mu sync dot Mutex and var b strings dot Builder are ready to use.
+> var n int gives you zero, and every type has such a zero value: the empty string for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: assigning to a nil map, m of k equals v, panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync dot Mutex and strings dot Builder work without any setup.
 
 **plan:w1-mon-1** (хеш текста `44168530`)
 
