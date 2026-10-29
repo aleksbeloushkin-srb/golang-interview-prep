@@ -1183,7 +1183,7 @@ const PLAN = {
     },
     "w5-wed-2": {
       hook: "*sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.",
-      en: "sql.Open returns a *sql.DB, a connection pool: I open it once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so after checking the query error I defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
+      en: "*sql.DB is a connection pool, not one connection: I get it once from sql.Open, with limits on open and idle connections. Every Rows holds a connection until it is closed, so after checking the query error I defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
     },
     "w5-thu-1": {
       hook: "One JSON logger, request_id via With in middleware, LogValue for secrets, log errors once.",
@@ -1191,7 +1191,7 @@ const PLAN = {
     },
     "w1-mon-1": {
       hook: "var x T gives the zero value; := declares and infers; defer runs LIFO.",
-      en: "var x T declares a variable with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs."
+      en: "Go has two ways to declare a variable: var x T declares one with its zero value and also works at package level. x := expr is a short declaration inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs."
     },
     "w1-tue-1": {
       hook: "A closure captures the variable, not a copy of its value.",
@@ -1203,7 +1203,7 @@ const PLAN = {
     },
     "w1-wed-1": {
       hook: "A type switch branches on the dynamic type inside an interface.",
-      en: "switch v := x.(type) runs the first case whose type matches the dynamic type stored in the interface x; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
+      en: "A type switch branches on the dynamic type stored in an interface: switch v := x.(type) runs the first case whose type matches it; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form."
     },
     "w1-wed-2": {
       hook: "Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.",
@@ -1227,16 +1227,16 @@ const PLAN = {
     },
     "w1-sat-1": {
       hook: "Service lacks pointer-receiver methods in its method set; &Service{} has them.",
-      en: "var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
+      en: "It comes down to method sets: var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
     },
     "w1-sat-2": {
       hook: "var x T is ready: 0, \"\", false or nil; nil map writes panic, nil channels block.",
-      en: "var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
+      en: "Every declared variable starts at its zero value: var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
     },
 
     "w2-mon-1": {
       hook: "A slice is pointer, len, cap over a shared array.",
-      en: "s[1:3] copies no elements: a slice is a descriptor with a pointer, a length and a capacity over an underlying array, and re-slicing shares that array, so a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
+      en: "A slice is a view, not a copy: s[1:3] copies no elements, because a slice is a descriptor with a pointer, a length and a capacity over an underlying array, and re-slicing shares that array, so a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
     },
     "w2-mon-2": {
       hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
@@ -1248,11 +1248,11 @@ const PLAN = {
     },
     "w2-tue-3": {
       hook: "len counts bytes; range decodes runes.",
-      en: "len(\"héllo\") is 6, not 5, because a string is an immutable sequence of bytes, usually UTF-8, and é takes two of them. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by code point."
+      en: "Strings are bytes, not characters: len(\"héllo\") is 6, not 5, because a string is an immutable sequence of bytes, usually UTF-8, and é takes two of them. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by code point."
     },
     "w2-tue-4": {
       hook: "Removing in place changes the caller's array; copy first for independence.",
-      en: "append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller's slice sees the change. slices.Delete also modifies the array and, since Go 1.22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices.Clone or build a new slice."
+      en: "Removing in place changes the caller's data: append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller's slice sees the change. slices.Delete also modifies the array and, since Go 1.22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices.Clone or build a new slice."
     },
     "w2-wed-1": {
       hook: "Set[T comparable] because map keys must be comparable.",
@@ -1264,7 +1264,7 @@ const PLAN = {
     },
     "w2-thu-1": {
       hook: "Module = versioned set of packages; internal/ limits importers.",
-      en: "go.mod declares the module path, such as module example.com/shop, and that module is a versioned collection of packages; a package is one directory compiled together. Code under internal/ can be imported only by packages in the tree rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
+      en: "A module is the unit of versioning and a package the unit of compilation: go.mod declares the module path, such as module example.com/shop, and a package is one directory compiled together. Code under internal/ can be imported only by packages in the tree rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
     },
     "w2-thu-2": {
       hook: "Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.",
@@ -1277,7 +1277,7 @@ const PLAN = {
 
     "w3-mon-1": {
       hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
-      en: "go f() starts f in a new goroutine: a function running concurrently, scheduled by the Go runtime onto OS threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
+      en: "A goroutine is a function running concurrently under the Go runtime: go f() starts one, scheduled onto OS threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
     },
     "w3-tue-1": {
       hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
@@ -1301,11 +1301,11 @@ const PLAN = {
     },
     "w3-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex.",
-      en: "atomic.AddInt64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
+      en: "Atomics protect one variable, not an invariant: atomic.AddInt64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
     },
     "w3-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
-      en: "In gen → square → print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream over a channel, processes the value and sends it downstream; that chain is a pipeline. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
+      en: "A pipeline is a chain of stages linked by channels: in gen → square → print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
     },
     "w3-thu-3": {
       hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",

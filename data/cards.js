@@ -11,7 +11,7 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is a goroutine, and how does it differ from an OS thread?",
     "qRU": "Что такое горутина и чем она отличается от потока ОС?",
-    "shortEN": "go f() starts f in a new goroutine: a function running concurrently, scheduled by the Go runtime rather than by the OS. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner and a way to finish.",
+    "shortEN": "A goroutine is a function running concurrently under the Go runtime: go f() starts one, and the runtime, not the OS, schedules it. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner and a way to finish.",
     "anchorsEN": [
       "go f(): the runtime schedules it, not the OS",
       "many Gs on few threads; ≥ 2 KiB stack grows",
@@ -26,7 +26,7 @@ const CARDS = [
     ],
     "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
-    "shortRU": "go f() запускает f в новой горутине — функции, которая выполняется конкурентно и которую планирует рантайм Go, а не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и способ завершиться.",
+    "shortRU": "Горутина — это функция, которая выполняется конкурентно под управлением рантайма Go: её запускает go f(), а планирует рантайм, не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и способ завершиться.",
     "jvmRU": "В отличие от платформенного потока Java, горутина — не поток ОС, и у неё нет объекта Thread, который можно join или interrupt. Как виртуальный поток Java, она блокируется как обычный код; в отличие от корутины Kotlin, ей не нужны suspend-функции; а в отличие от обоих, рантайм может вытеснить её посреди цикла.",
     "detailsRU": [
       "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
@@ -146,7 +146,7 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What happens when Go starts a goroutine?",
     "qRU": "Что происходит при запуске горутины?",
-    "shortEN": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine. On the system stack, newproc reuses a dead G or allocates one with the minimum stack, 2 KiB on Linux, saves where it should start, and normally puts it into runnext of the current P. That makes it runnable, not running: when it runs is up to the scheduler, so the caller must synchronize to wait for it.",
+    "shortEN": "The go statement only schedules the call: go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine. On the system stack, newproc reuses a dead G or allocates one with the minimum stack, 2 KiB on Linux, saves where it should start, and normally puts it into runnext of the current P. That makes it runnable, not running: when it runs is up to the scheduler, so the caller must synchronize to wait for it.",
     "anchorsEN": [
       "arguments evaluated in the caller",
       "newproc on g0 → G + 2 KiB (Linux) → runnext",
@@ -161,7 +161,7 @@ const CARDS = [
     ],
     "practicalRU": "Передавай значения явно, если работнику нужен снимок состояния. Замыкание, которое позже читает изменяемое общее состояние, имеет другую семантику и может создать гонку.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
-    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет в новой. На системном стеке newproc берёт завершившуюся G или создаёт новую с минимальным стеком (2 КиБ в Linux), сохраняет, откуда ей стартовать, и обычно ставит её в runnext текущего P. Так она становится готовой к запуску, но не выполняется: когда её запустить, решает планировщик, поэтому чтобы её дождаться, нужна синхронизация.",
+    "shortRU": "Оператор go только планирует вызов: go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет в новой. На системном стеке newproc берёт завершившуюся G или создаёт новую с минимальным стеком (2 КиБ в Linux), сохраняет, откуда ей стартовать, и обычно ставит её в runnext текущего P. Так она становится готовой к запуску, но не выполняется: когда её запустить, решает планировщик, поэтому чтобы её дождаться, нужна синхронизация.",
     "jvmRU": "В отличие от new Thread(r).start() в Java, хранить нечего: go ничего не возвращает. Аргументы копируются в момент оператора go, а замыкание, в отличие от лямбды Java с effectively final значениями, захватывает сами переменные.",
     "detailsRU": [
       "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart, включён по умолчанию).",
@@ -412,7 +412,7 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How do G, M and P relate to GOMAXPROCS?",
     "qRU": "Как G, M и P связаны с GOMAXPROCS?",
-    "shortEN": "With GOMAXPROCS=4, at most four goroutines execute Go code at the same moment: GOMAXPROCS is the number of Ps, and a P is the right to run Go code. A thread (M) runs goroutines (G) only while it holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
+    "shortEN": "GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4, at most four goroutines run Go code at the same moment, because GOMAXPROCS is the number of Ps, and a P is the right to run Go code. A thread (M) runs goroutines (G) only while it holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
     "anchorsEN": [
       "GOMAXPROCS=4 → at most 4 Gs run Go code at once",
       "GOMAXPROCS = number of Ps; M runs Gs only with a P",
@@ -427,7 +427,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни со стандартной настройки рантайма, наблюдай throttling и задержки и подбирай значение на реальной нагрузке. Число 2 или количество CPU хоста не является универсальным рецептом для контейнера.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\t// A non-positive argument queries the setting without changing it.\n\tfmt.Println(\"parallel Go execution limit:\", runtime.GOMAXPROCS(0))\n\t// This is not the number of threads or an external-service concurrency limit.\n}",
-    "shortRU": "При GOMAXPROCS=4 Go-код одновременно исполняют не больше четырёх горутин: GOMAXPROCS — это число P, а P — право исполнять Go-код. Поток (M) исполняет горутины (G), только пока держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
+    "shortRU": "GOMAXPROCS ограничивает параллельное исполнение Go-кода: при GOMAXPROCS=4 его одновременно исполняют не больше четырёх горутин, потому что GOMAXPROCS — это число P, а P — право исполнять Go-код. Поток (M) исполняет горутины (G), только пока держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
     "jvmRU": "В отличие от размера пула потоков в Java, GOMAXPROCS не ограничивает ни число горутин, ни число потоков — только параллельное исполнение Go-кода. Это ближе к параллелизму ForkJoinPool, на котором работают виртуальные потоки Java.",
     "detailsRU": [
       "P — объект рантайма, а не физический CPU или навсегда закреплённое ядро. ОС распределяет M по доступным CPU. В выражении «планирование M:N» буквы M и N обозначают количества, а не имена типов рантайма.",
@@ -1294,14 +1294,14 @@ const CARDS = [
     "simId": "sim5",
     "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
-    "shortEN": "atomic.CompareAndSwapInt64(&x, old, new) stores new only if x still equals old, as one atomic step, and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.",
+    "shortEN": "Compare-and-swap is a conditional write done as one atomic step: atomic.CompareAndSwapInt64(&x, old, new) stores new only if x still equals old and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.",
     "anchorsEN": [
       "CompareAndSwap(&x, old, new): store only if still old",
       "Load + Store gap → both win; CAS → one wins",
       "one variable; several fields → usually a mutex"
     ],
     "jvmEN": "This is AtomicInteger.compareAndSet in Java and atomic.Int32.CompareAndSwap in Go. Go atomics are always sequentially consistent, like Java volatile; Go has no weaker modes such as lazySet or getAcquire.",
-    "shortRU": "atomic.CompareAndSwapInt64(&x, old, new) записывает new, только если x всё ещё равно old, — одним атомарным шагом — и сообщает, удалось ли. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна, другая видит false. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
+    "shortRU": "Compare-and-swap — условная запись одним атомарным шагом: atomic.CompareAndSwapInt64(&x, old, new) записывает new, только если x всё ещё равно old, и сообщает, удалось ли. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна, другая видит false. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
     "jvmRU": "Это AtomicInteger.compareAndSet в Java и atomic.Int32.CompareAndSwap в Go. Атомики Go всегда последовательно согласованы, как volatile в Java; более слабых режимов вроде lazySet или getAcquire в Go нет.",
     "detailsEN": [
       "Think of three inputs: the location, expected old value and proposed new value. If state starts at 0 and two goroutines each try CAS(0, 1), only one can succeed as long as nothing resets state. A failure does not wait or retry by itself.",
@@ -1999,7 +1999,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What do a slice and a string refer to, and when does append allocate a new backing array?",
     "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
-    "shortEN": "s[1:3] copies no elements: it is a new slice header over the same array. A slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
+    "shortEN": "A slice is a view, not a copy: s[1:3] copies no elements, it is a new slice header over the same array. Under the hood a slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
     "anchorsEN": [
       "s[1:3]: new header, same array, no copy",
       "slice = ptr + len + cap; string = ptr + len",
@@ -2014,7 +2014,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
-    "shortRU": "s[1:3] не копирует элементы: это новый заголовок среза над тем же массивом. Срез — указатель, длина и ёмкость над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Поэтому два среза могут делить элементы, и изменение через один видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
+    "shortRU": "Срез — это окно в массив, а не копия: s[1:3] не копирует элементы, это новый заголовок среза над тем же массивом. Внутри срез — указатель, длина и ёмкость над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Поэтому два среза могут делить элементы, и изменение через один видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
     "jvmRU": "Срез сочетает рост как у ArrayList с представлениями над общим массивом, как subList или ByteBuffer: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не UTF-16, как в API строк Java.",
     "detailsRU": [
       "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
@@ -2292,7 +2292,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What does an interface value contain, and why can a typed nil make an interface non-nil?",
     "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
-    "shortEN": "If a function returns a nil *MyError as error, the caller gets a non-nil error: err != nil is true, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds *MyError and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.",
+    "shortEN": "A typed nil inside an interface is not nil. If a function returns a nil *MyError as error, the caller sees err != nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds *MyError and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.",
     "anchorsEN": [
       "return a nil *MyError as error → err != nil",
       "interface = type word + data word",
@@ -2309,7 +2309,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: «какой тип внутри → какое значение → что именно сравниваем». При успехе функции, возвращающей error, возвращай nil явно. Для производительности сначала измерь конкретный вызов, а не размер заголовка.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar p *int\n\tvar x any = p\n\tfmt.Println(x == nil, p == nil)\n\tv, ok := x.(*int)\n\tfmt.Println(ok, v == nil)\n}",
-    "shortRU": "Если функция возвращает nil *MyError как error, вызывающий получает ненулевую ошибку: err != nil истинно, и успех выглядит как сбой. Значение интерфейса — два слова, слово типа и слово данных, и оно равно nil, только когда nil оба; здесь в слове типа лежит *MyError, и nil только слово данных. Поэтому, когда ошибки нет, возвращай литерал nil, а не типизированный nil-указатель.",
+    "shortRU": "Типизированный nil внутри интерфейса — не nil. Если функция возвращает nil *MyError как error, вызывающий видит err != nil, и успех выглядит как сбой. Значение интерфейса — два слова, слово типа и слово данных, и оно равно nil, только когда nil оба; здесь в слове типа лежит *MyError, и nil только слово данных. Поэтому, когда ошибки нет, возвращай литерал nil, а не типизированный nil-указатель.",
     "jvmRU": "В Java такой ловушки нет: ссылка либо null, либо указывает на объект. В Go интерфейс хранит динамический тип отдельно от значения, поэтому «nil-указатель типа T» и «никакого значения» — разные вещи.",
     "detailsRU": [
       "При присваивании в базовый интерфейс, используемый как тип значения, конкретный тип должен реализовать его методы. Утверждение x.(T) проверяет сохранённый динамический тип; форма comma-ok сообщает о неуспехе без panic. Успешное утверждение типа при этом может вернуть nil-указатель.",
@@ -2360,7 +2360,7 @@ const CARDS = [
     "simId": null,
     "qEN": "How do method sets differ from the shorthand used to call pointer methods?",
     "qRU": "Чем набор методов типа отличается от сокращённой записи вызова pointer-метода?",
-    "shortEN": "If Set has a pointer receiver, you can call it on a Counter variable but cannot store that variable in a Setter: c.Set() compiles, var s Setter = c does not. The call works because Go rewrites it to (&c).Set(), which needs an addressable value: an element of map[K]Counter or a function result of type Counter cannot do it, while a *Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, *Counter's has both.",
+    "shortEN": "Calling a method and satisfying an interface follow different rules. If Set has a pointer receiver, you can call it on a Counter variable but cannot store that variable in a Setter: c.Set() compiles, var s Setter = c does not. The call works because Go rewrites it to (&c).Set(), which needs an addressable value: an element of map[K]Counter or a function result of type Counter cannot do it, while a *Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, *Counter's has both.",
     "anchorsEN": [
       "c.Set() compiles, var s Setter = c does not",
       "call: (&c).Set() needs an address",
@@ -2376,7 +2376,7 @@ const CARDS = [
     ],
     "practicalRU": "Два отдельных вопроса: «можно вызвать здесь?» и «реализует ли тип интерфейс?». Не объясняй второй автоматическим взятием адреса из первого. Карту методов восстанови на бумаге: T → value; *T → value + pointer.",
     "code": "package main\n\nimport \"fmt\"\n\ntype Counter struct{ N int }\ntype Setter interface{ Set(int) }\n\nfunc (c *Counter) Set(n int) { c.N = n }\n\nvar _ Setter = (*Counter)(nil)\n\nfunc main() {\n\tc := Counter{N: 1}\n\tc.Set(2)\n\tvar s Setter = &c\n\ts.Set(3)\n\tfmt.Println(c.N)\n}",
-    "shortRU": "Если у Set получатель-указатель, метод можно вызвать на переменной типа Counter, но эту переменную нельзя положить в Setter: c.Set() компилируется, а var s Setter = c — нет. Вызов работает, потому что Go переписывает его в (&c).Set(), а для этого нужно адресуемое значение: элемент map[K]Counter или результат функции типа Counter не подходит, а для *Counter адрес не нужен. Присваивание не проходит, потому что интерфейс проверяет наборы методов: у Counter — только методы с получателем-значением, у *Counter — оба вида.",
+    "shortRU": "Вызов метода и реализация интерфейса подчиняются разным правилам. Если у Set получатель-указатель, метод можно вызвать на переменной типа Counter, но эту переменную нельзя положить в Setter: c.Set() компилируется, а var s Setter = c — нет. Вызов работает, потому что Go переписывает его в (&c).Set(), а для этого нужно адресуемое значение: элемент map[K]Counter или результат функции типа Counter не подходит, а для *Counter адрес не нужен. Присваивание не проходит, потому что интерфейс проверяет наборы методов: у Counter — только методы с получателем-значением, у *Counter — оба вида.",
     "jvmRU": "В Java получателей-значений нет: каждый метод видит объект через ссылку. В Go выбор между значением и указателем в получателе решает и то, может ли метод менять получателя, и то, какие интерфейсы реализует тип.",
     "detailsRU": [
       "Реализация интерфейса проверяется по набору методов, а не по удобству записи вызова. Если Set объявлен у *Counter, интерфейс Setter реализует *Counter, но не Counter. Когда нужны pointer-методы, сохраняй &c; решение стек/куча к этому правилу не относится.",
@@ -2789,7 +2789,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What is the zero value of each kind of type, and which nil values are safe to use?",
     "qRU": "Какое нулевое значение у каждого вида типов и какими nil-значениями можно безопасно пользоваться?",
-    "shortEN": "var n int gives you 0, and every type has such a zero value: \"\" for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: m[k] = v on a nil map panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync.Mutex and strings.Builder work without any setup.",
+    "shortEN": "Every type in Go has a zero value: var n int gives you 0, and you get \"\" for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: m[k] = v on a nil map panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync.Mutex and strings.Builder work without any setup.",
     "anchorsEN": [
       "var n int = 0; \"\", false; pointer, slice, map, chan, func, interface = nil",
       "safe: nil slice (len, range, append), nil map read",
@@ -2798,7 +2798,7 @@ const CARDS = [
       "sync.Mutex, strings.Builder: usable at zero"
     ],
     "jvmEN": "In Java a reference field starts as null; in Go many types are usable at their zero value: an empty string instead of null, a ready Mutex or Builder. But writing to a nil map or dereferencing a nil pointer still panics, and Go has no compile-time null safety like Kotlin’s T?: any pointer, slice, map, channel, function or interface may be nil.",
-    "shortRU": "var n int даёт 0, и такое нулевое значение есть у каждого типа: \"\" у строк, false у bool, nil у указателей, срезов, map, каналов, функций и интерфейсов, а у массивов и структур обнуляются все элементы и поля. Безопасно: nil-срез работает как пустой для len, range и append, а чтение из nil map возвращает нулевое значение. Небезопасно: m[k] = v в nil map паникует, а nil-канал навсегда блокирует отправку и чтение и паникует при close. Хорошие типы делают нулевое значение полезным: sync.Mutex и strings.Builder работают без настройки.",
+    "shortRU": "У каждого типа в Go есть нулевое значение: var n int даёт 0, у строк это \"\", false у bool, nil у указателей, срезов, map, каналов, функций и интерфейсов, а у массивов и структур обнуляются все элементы и поля. Безопасно: nil-срез работает как пустой для len, range и append, а чтение из nil map возвращает нулевое значение. Небезопасно: m[k] = v в nil map паникует, а nil-канал навсегда блокирует отправку и чтение и паникует при close. Хорошие типы делают нулевое значение полезным: sync.Mutex и strings.Builder работают без настройки.",
     "jvmRU": "В Java поле-ссылка начинается с null; в Go многие типы пригодны в нулевом значении: пустая строка вместо null, готовые Mutex или Builder. Но запись в nil map или разыменование nil-указателя всё равно паникуют, а проверки null на этапе компиляции, как у T? в Kotlin, в Go нет: nil может быть любой указатель, срез, map, канал, функция или интерфейс.",
     "detailsEN": [
       "Reading is safe for nil collections: len and range work on nil slices and maps, and indexing a nil map returns the zero value. Writing differs: append to a nil slice allocates, but assignment to a nil map panics with \"assignment to entry in nil map\". Create a map with make or a literal before writing.",
@@ -2860,7 +2860,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What do len, indexing and range return for a Go string, and when do you need []rune?",
     "qRU": "Что возвращают len, индекс и range для строки Go и когда нужен []rune?",
-    "shortEN": "len(s) and s[i] work on bytes, while range decodes UTF-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually UTF-8. Convert to []rune when you need code points by position, and build strings in a loop with strings.Builder.",
+    "shortEN": "A Go string is bytes, not characters: len(s) and s[i] work on bytes, while range decodes UTF-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually UTF-8. Convert to []rune when you need code points by position, and build strings in a loop with strings.Builder.",
     "anchorsEN": [
       "string = immutable bytes, usually UTF-8",
       "len = bytes; s[i] = a byte",
@@ -2868,7 +2868,7 @@ const CARDS = [
       "[]rune by position; Builder in loops"
     ],
     "jvmEN": "Java’s String API works in UTF-16: length() counts UTF-16 code units and charAt returns a char. A Go string is bytes: len counts bytes, and code points come from range, []rune or the unicode/utf8 package.",
-    "shortRU": "len(s) и s[i] работают с байтами, а range декодирует UTF-8 и выдаёт руну — кодовую точку Unicode — с индексом её первого байта. Так происходит потому, что строка — неизменяемая последовательность байтов, обычно в UTF-8. []rune нужен, когда кодовые точки требуются по позиции; строку в цикле собирай через strings.Builder.",
+    "shortRU": "Строка в Go — это байты, а не символы: len(s) и s[i] работают с байтами, а range декодирует UTF-8 и выдаёт руну — кодовую точку Unicode — с индексом её первого байта. Так происходит потому, что строка — неизменяемая последовательность байтов, обычно в UTF-8. []rune нужен, когда кодовые точки требуются по позиции; строку в цикле собирай через strings.Builder.",
     "jvmRU": "API строк Java работает в UTF-16: length() считает кодовые единицы UTF-16, а charAt возвращает char. Строка Go — это байты: len считает байты, а кодовые точки дают range, []rune или пакет unicode/utf8.",
     "detailsEN": [
       "\"héllo, 世界\" has 9 runes but 14 bytes: é takes 2 bytes and each of 世 and 界 takes 3. utf8.RuneCountInString counts runes without allocating; []rune(s) allocates a new slice.",
@@ -3000,7 +3000,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What is the difference between a module and a package, and what does an internal directory enforce?",
     "qRU": "Чем модуль отличается от пакета и что гарантирует каталог internal?",
-    "shortEN": "import \"example.com/shop/ledger\" names a package: one directory of .go files compiled together, whose import path is the module path from go.mod plus the directory. A module is a versioned set of packages with a go.mod that declares the module path, the Go version and the dependencies. A package under internal/ can be imported only by code in the tree rooted at the parent of internal, and the go command enforces it.",
+    "shortEN": "A package is what you import, a module is what you version. import \"example.com/shop/ledger\" names a package: one directory of .go files compiled together, whose import path is the module path from go.mod plus the directory. A module is a versioned set of packages with a go.mod that declares the module path, the Go version and the dependencies. A package under internal/ can be imported only by code in the tree rooted at the parent of internal, and the go command enforces it.",
     "anchorsEN": [
       "import path = module path + directory",
       "package = one directory",
@@ -3008,7 +3008,7 @@ const CARDS = [
       "internal/: only the parent’s tree"
     ],
     "jvmEN": "A module is like a Maven artifact with its own coordinates and versions, and a package is like a Java package but tied to one directory. internal/ is a boundary enforced by the go command, close to a package that a JPMS module does not export.",
-    "shortRU": "import \"example.com/shop/ledger\" называет пакет — один каталог .go-файлов, которые компилируются вместе; его путь импорта — путь модуля из go.mod плюс каталог. Модуль — версионируемый набор пакетов с файлом go.mod, где указаны путь модуля, версия Go и зависимости. Пакет внутри internal/ может импортировать только код из дерева, корень которого — родитель internal; это проверяет команда go.",
+    "shortRU": "Пакет — то, что импортируют, модуль — то, что версионируют. import \"example.com/shop/ledger\" называет пакет — один каталог .go-файлов, которые компилируются вместе; его путь импорта — путь модуля из go.mod плюс каталог. Модуль — версионируемый набор пакетов с файлом go.mod, где указаны путь модуля, версия Go и зависимости. Пакет внутри internal/ может импортировать только код из дерева, корень которого — родитель internal; это проверяет команда go.",
     "jvmRU": "Модуль похож на артефакт Maven со своими координатами и версиями, а пакет — на пакет Java, но привязан к одному каталогу. internal/ — граница, которую проверяет команда go; это близко к пакету, который модуль JPMS не экспортирует.",
     "detailsEN": [
       "go.mod records the module path, the go directive (the minimum language version, which also selects semantics such as per-iteration loop variables), an optional toolchain line (Go 1.21+), and require lines; go.sum stores checksums. go mod tidy adds missing requirements and removes unused ones.",
@@ -3267,7 +3267,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What is *sql.DB, and how do you keep connections and transactions from leaking?",
     "qRU": "Что такое *sql.DB и как не допустить утечки соединений и транзакций?",
-    "shortEN": "sql.Open returns a *sql.DB, a pool of connections safe for concurrent use, not one connection: open it once at startup, share it and set limits. Pass the request context to every query with QueryContext and ExecContext. A Rows holds a connection until it is closed, so after checking the query error, defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: BeginTx(ctx, nil), check the error, defer tx.Rollback(), run every statement on tx, then Commit.",
+    "shortEN": "*sql.DB is a connection pool, not a single connection: get it once from sql.Open at startup, share it, since it is safe for concurrent use, and set limits. Pass the request context to every query with QueryContext and ExecContext. A Rows holds a connection until it is closed, so after checking the query error, defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: BeginTx(ctx, nil), check the error, defer tx.Rollback(), run every statement on tx, then Commit.",
     "anchorsEN": [
       "sql.Open → *sql.DB = a pool: open once, share, set limits",
       "ctx into every query: QueryContext, ExecContext",
@@ -3275,7 +3275,7 @@ const CARDS = [
       "tx: BeginTx(ctx, nil), defer Rollback, Commit"
     ],
     "jvmEN": "*sql.DB is the pooled DataSource, like HikariCP behind JDBC, not a single Connection. Without try-with-resources, Go relies on defer rows.Close() and defer tx.Rollback(); defer runs at function exit, not at the end of a block, so inside a loop move the body into a helper function.",
-    "shortRU": "sql.Open возвращает *sql.DB — пул соединений, безопасный для одновременного использования, а не одно соединение: открыть его один раз при старте, использовать везде и задать лимиты. Контекст запроса передают в каждое обращение к базе через QueryContext и ExecContext. Rows держит соединение, пока его не закроют, поэтому после проверки ошибки запроса — defer rows.Close(), а после цикла — rows.Err(). Транзакция занимает одно соединение: BeginTx(ctx, nil), проверить ошибку, defer tx.Rollback(), все запросы через tx, в конце Commit.",
+    "shortRU": "*sql.DB — это пул соединений, а не одно соединение: его получают один раз через sql.Open при старте, используют везде — он безопасен для одновременного использования — и задают лимиты. Контекст запроса передают в каждое обращение к базе через QueryContext и ExecContext. Rows держит соединение, пока его не закроют, поэтому после проверки ошибки запроса — defer rows.Close(), а после цикла — rows.Err(). Транзакция занимает одно соединение: BeginTx(ctx, nil), проверить ошибку, defer tx.Rollback(), все запросы через tx, в конце Commit.",
     "jvmRU": "*sql.DB — это пул, DataSource вроде HikariCP за JDBC, а не один Connection. Без try-with-resources Go полагается на defer rows.Close() и defer tx.Rollback(); defer срабатывает при выходе из функции, а не в конце блока, поэтому тело цикла выносят во вспомогательную функцию.",
     "detailsEN": [
       "Limits: SetMaxOpenConns caps connections, so a request waits for a free one instead of overloading the database; SetMaxIdleConns keeps some open for reuse; SetConnMaxLifetime and SetConnMaxIdleTime retire old connections. Without a cap, a traffic spike opens as many connections as there are goroutines.",

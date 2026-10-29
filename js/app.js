@@ -293,7 +293,9 @@ function renderCard() {
   renderShortAnswer(document.getElementById("card-short-en"), card.shortEN);
   // Озвучка: запись другой карточки останавливается, кнопка — только если есть запись этого текста.
   if (typeof ttsState !== "undefined" && ttsState.key && !ttsState.key.startsWith(`card:${card.id}:`)) ttsStop();
-  document.getElementById("card-short-tts").innerHTML = typeof ttsControlsHtml === "function" ? ttsControlsHtml(`card:${card.id}:short`, card.shortEN) : "";
+  // Записи есть не у всех карточек: пустое место выглядело бы как поломка — пишем, что записи нет.
+  const ttsHtml = typeof ttsControlsHtml === "function" ? ttsControlsHtml(`card:${card.id}:short`, card.shortEN) : "";
+  document.getElementById("card-short-tts").innerHTML = ttsHtml || `<span class="tts-none" title="Озвучены пока не все карточки">🔇 записи пока нет</span>`;
   document.getElementById("card-anchors").innerHTML = cardAnchorsHtml(card);
   document.getElementById("card-jvm").innerHTML = jvmHtml(card);
   // Новая карточка — подробности снова свёрнуты: на экране только ответ и опоры.

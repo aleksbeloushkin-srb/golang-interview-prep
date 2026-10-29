@@ -998,6 +998,7 @@ p + .tts { margin-top: 6px; }
 .tts .btn { min-height: 36px; padding: 4px 10px; font-size: 0.8rem; }
 .tts-play[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .tts-voice { color: var(--muted); }
+.tts-none { margin-left: 8px; font-size: 0.8rem; color: var(--muted); }
 .tts-status:empty { display: none; }
 .tts-status { flex-basis: 100%; font-size: 0.8rem; color: var(--amber); }
 

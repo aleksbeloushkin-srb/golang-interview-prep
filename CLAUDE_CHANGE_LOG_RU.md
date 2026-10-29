@@ -418,3 +418,16 @@
 | Повод | Пользователь снова видит старую копию без кнопок озвучки на телефоне и компьютере; по внешнему виду не понять, какая версия открыта |
 | Стало | Внизу каждой страницы — «Версия сайта 66» (из `?v=` скрипта `js/app.js`). Нет строки или номер меньше — открыта старая копия, её надо перезагрузить; с v65 сайт сам предлагает обновиться. Service worker у сайта не было ни в одной версии (проверено по истории git) |
 | Проверка | Строка видна над нижней панелью на 320/390 px и на компьютере; плашка 13/13, U2/U5/U6 37/37, навигация 101/101, озвучка 40/40, карточки 24/24. Ресурсы `?v=66` |
+
+## 29 октября 2026 — короткое общее начало перед примером; озвучка выборки пилота; «записи пока нет»; v67
+
+| Поле | Запись |
+|---|---|
+| Статус | PR #69 |
+| Повод | Пользователь: c34 «If Set has a pointer receiver…» начинается с жёсткой конкретики — нужна пара общих слов, потом пример; «проверь всё на это». Кнопки озвучки «пропадали»: озвучены только пять карточек, а на остальных место пустое, и сайт по адресу открывает c1 без записи. Предпочтение сохранено в памяти |
+| Стало — тексты | Первая фраза — короткая общая рамка, сразу за ней конкретный пример. Карточки: c1 «A goroutine is a function running concurrently under the Go runtime: go f() starts one…», c3 «The go statement only schedules the call: …», c7 «GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4 …», c20 «Compare-and-swap is a conditional write done as one atomic step: …», c29 «A slice is a view, not a copy: …», c33 «A typed nil inside an interface is not nil.», c34 «Calling a method and satisfying an interface follow different rules.», c40 «Every type in Go has a zero value: var n int gives you 0 …», c41 «A Go string is bytes, not characters: …», c43 «A package is what you import, a module is what you version.», c47 «*sql.DB is a connection pool, not a single connection: …». RU — так же. Эталоны плана: w1-mon-1, w1-wed-1, w1-sat-1, w1-sat-2, w2-mon-1, w2-tue-3, w2-tue-4, w2-thu-1, w3-mon-1, w3-mon-2, w3-thu-1, w5-wed-2; talk W4-5. Остальные ответы уже начинались с общего утверждения или с прямого «Yes/No» |
+| Стало — озвучка | Озвучены c2, c7, c28, c29, c47 (короткий ответ и Java/Kotlin) — вся выборка пилота из ревью; пересозданы изменённые c33, c34, c40, w1-mon-1, w1-wed-1, w1-sat-1, w1-sat-2. `gen-audio.mjs --cards c2,c7` — отдельные карточки вне недели. Правки чтения: `GOMAXPROCS=4` → «set to four», cgo, `s[1:3]` → «slicing s from one to three», `*sql.DB` в начале фразы, `BeginTx(ctx, nil)`, ArrayList/subList/ByteBuffer. Всего 35 текстов, 70 файлов |
+| Стало — интерфейс | На карточке без записи вместо пустого места — «🔇 записи пока нет» |
+| Длительность (Michael) | c34 — 42,2 с (было 37,6), c40 — 42,8 с, c33 — 27,6 с; новые: c2 — 28,3 с, c7 — 28,2 с, c28 — 32,9 с, c29 — 35,5 с, c47 — 39,8 с. Рамка в начале удлинила c34 на 4–5 с |
+| Проверка | `check-content --base origin/main` ok, audioStale 0, 35 записей, 70 файлов (лишние удалены `--prune`); `node --test` 50/50; Playwright: озвучка 42/42 (в том числе «записи пока нет» на c1), карточки 24/24, U2/U5/U6 37/37, плашка 13/13, номер версии, навигация 101/101, недели 1–2 174/174, практикум 446/446, вход 77/77, критерии 29/29, доски 418/418; smoke без ошибок консоли. Чек-лист `docs/AUDIO_REVIEW_RU.md` пересоздан (70 строк). Ресурсы `?v=67` |
+| Ограничения | Новые записи на слух не проверены |
