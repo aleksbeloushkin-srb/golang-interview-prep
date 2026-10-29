@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-28h",
+  revision: "2026-10-29a",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -147,7 +147,7 @@ const PLAN = {
             { id: "w2-sat-3", text: "LeetCode 739. Daily Temperatures + проговор (записать)", lc: 739, talk: "lc739" },
             { id: "w2-sat-4", text: "Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache", lc: 146, talk: "lc146", optional: true },
             { id: "w2-sat-5", text: "Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией", optional: true, refs: [{ t: "Habr: «Коллеги, вы меня огорчаете»", u: "https://habr.com/ru/articles/521582" }] },
-            { id: "w2-sat-6", text: "Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов»", links: ["q1", "q2", "q3", "q4", "q5", "q6"] }
+            { id: "w2-sat-6", text: "Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов». q1, q2, q3, q6 — те же ловушки, что P9, P6, P5 и P1–P2 из первой задачи дня, но в виде рабочего кода: проверка, что понял, а не запомнил ответ; q4 и q5 — новые", links: ["q1", "q2", "q3", "q4", "q5", "q6"] }
           ]
         }
       ],

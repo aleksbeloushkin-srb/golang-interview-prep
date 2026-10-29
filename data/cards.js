@@ -11,21 +11,29 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is a goroutine, and how does it differ from an OS thread?",
     "qRU": "Что такое горутина и чем она отличается от потока ОС?",
-    "shortEN": "A goroutine is a function executing concurrently with other goroutines. The Go runtime schedules goroutines onto OS threads and manages their growable stacks. Goroutines are relatively cheap, but their memory, work and lifetime still need limits.",
+    "shortEN": "A goroutine is a function running concurrently, scheduled by the Go runtime instead of the OS. The runtime multiplexes many goroutines onto a few OS threads (M:N): a goroutine starts with a 2 KiB stack that grows on demand, while a thread usually reserves megabytes and is scheduled by the kernel. Switching goroutines happens in user space, without a system call, so it is cheaper than switching threads. The go statement returns nothing, no ID and no handle, so every goroutine needs an owner and a clear way to finish.",
+    "anchorsEN": [
+      "go f() → no ID, no handle",
+      "M:N: many Gs on a few threads",
+      "2 KiB stack → grows on demand",
+      "user-space switch, no syscall"
+    ],
+    "jvmEN": "Unlike a Java platform thread, a goroutine is not an OS thread and there is no Thread object to join or interrupt. Like a Java virtual thread, it blocks like ordinary code; unlike a Kotlin coroutine, it needs no suspend functions; and unlike both, the runtime can preempt it in the middle of a loop.",
     "detailsEN": [
       "Concurrency does not require simultaneous execution. GOMAXPROCS limits how many OS threads can execute user Go code at once; it is not the total number of goroutines or threads.",
-      "In the checked runtime, stackMin is 2 KiB, but platform rounding and stack reuse policies matter. A goroutine also needs a descriptor and can retain heap objects. Multiplying its count by 2 KiB is not a process-memory estimate.",
-      "Thread stack reservation, committed memory and RSS are different quantities. Neither goroutine switching time nor an OS-thread stack size is a portable constant; measure the workload instead of memorizing nanoseconds.",
-      "A go statement provides no join handle. Arrange completion with synchronization and give each goroutine an owner and a way to finish. Returning from main does not wait for other goroutines."
+      "A new goroutine gets the minimum stack, 2 KiB on Linux/amd64; a reused one may start larger, sized from the average stack use the GC observed. A goroutine also has a descriptor (runtime.g) and can keep heap objects alive, so count × 2 KiB is not a memory estimate.",
+      "A thread’s reserved stack, its committed memory and RSS are different numbers. Switch costs depend on the machine and the workload: measure them instead of quoting nanoseconds.",
+      "The go statement returns nothing: no ID, no handle, no result. Wait for completion with a WaitGroup, an errgroup or a channel, and give each goroutine an owner and a way to finish. The runtime numbers goroutines internally (the number shows in stack traces), but the language deliberately does not expose it. Returning from main does not wait for other goroutines."
     ],
     "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
-    "shortRU": "Горутина — это функция, которая выполняется конкурентно с другими горутинами. Рантайм Go распределяет их по потокам ОС и управляет растущими стеками. Горутины сравнительно недороги, но их память, работу и время жизни всё равно нужно ограничивать.",
+    "shortRU": "Горутина — это функция, которая выполняется конкурентно и которую планирует рантайм Go, а не ОС. Рантайм распределяет много горутин по нескольким потокам ОС (M:N): горутина стартует со стеком 2 КиБ, который растёт по мере надобности, а поток обычно резервирует мегабайты и планируется ядром. Переключение горутин идёт в пространстве пользователя, без системного вызова, поэтому дешевле переключения потоков. Оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и понятный путь завершения.",
+    "jvmRU": "В отличие от платформенного потока Java, горутина — не поток ОС, и у неё нет объекта Thread, который можно join или interrupt. Как виртуальный поток Java, она блокируется как обычный код; в отличие от корутины Kotlin, ей не нужны suspend-функции; а в отличие от обоих, рантайм может вытеснить её посреди цикла.",
     "detailsRU": [
       "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
-      "В проверенном рантайме stackMin равен 2 КиБ, но важны округление для платформы и политика переиспользования стека. Кроме того, у горутины есть дескриптор, а её ссылки могут удерживать объекты кучи. Число горутин × 2 КиБ не даёт оценку памяти процесса.",
-      "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Время переключения горутин и размер стека потока ОС не являются переносимыми константами; измеряй свою нагрузку вместо заучивания наносекунд.",
-      "Оператор go не возвращает дескриптор для join. Организуй ожидание через синхронизацию и определи владельца и путь завершения каждой горутины. Возврат из main не ждёт остальные горутины."
+      "Новая горутина получает минимальный стек — 2 КиБ на Linux/amd64; переиспользованная может начать с большего, по среднему использованию стека, которое видел GC. Кроме того, у горутины есть дескриптор (runtime.g), а её ссылки удерживают объекты кучи, поэтому число горутин × 2 КиБ — не оценка памяти.",
+      "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Цена переключения зависит от машины и нагрузки: её измеряют, а не заучивают в наносекундах.",
+      "Оператор go ничего не возвращает: ни ID, ни дескриптора, ни результата. Дождаться горутину можно через WaitGroup, errgroup или канал; у каждой горутины должен быть владелец и путь завершения. Внутренний номер у горутины есть (виден в трассах стека), но язык намеренно его не отдаёт. Возврат из main не ждёт остальные горутины."
     ],
     "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
     "sources": [
@@ -44,6 +52,10 @@ const CARDS = [
       {
         "title": "go1.26.1: runtime/debug.go",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+      },
+      {
+        "title": "Go FAQ: Why is there no goroutine ID?",
+        "url": "https://go.dev/doc/faq#no_goroutine_id"
       }
     ],
     "practice": {
@@ -63,33 +75,47 @@ const CARDS = [
     }
   },
   {
-    id: "c2",
-    mod: "m1",
-    modName: "1. Goroutines & Stack",
-    level: "base",
-    levelLabel: "🟢 Base (Entry/Mid)",
-    simId: null,
-    qEN: "Can a program have a race condition without a data race?",
-    qRU: "Может ли в программе быть логическая гонка без гонки данных?",
-    shortEN: "A data race is an unsynchronized conflicting access to shared memory: at least one access writes. A race condition is a timing-dependent logic error. Locking individual reads and writes can remove the data race while leaving a check-then-act operation incorrect.",
-    shortRU: "Гонка данных — это конфликтующий доступ к общей памяти без нужной синхронизации, когда хотя бы одна операция пишет. Логическая гонка — ошибка, зависящая от порядка событий. Можно защитить каждое чтение и запись отдельно, но всё равно неправильно выполнить проверку и действие.",
-    detailsEN: [
+    "id": "c2",
+    "mod": "m1",
+    "modName": "1. Goroutines & Stack",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "Can a program have a race condition without a data race?",
+    "qRU": "Может ли в программе быть логическая гонка без гонки данных?",
+    "shortEN": "Yes: a program can be free of data races and still have a race condition. A data race is two goroutines accessing the same memory without synchronization, with at least one write; a race condition is a logic bug where the result depends on timing. Locking each read and write separately removes the data race but keeps the race condition: check the balance, unlock, then withdraw can let two withdrawals both pass the check. The fix is to make the check and the action one operation under one lock.",
+    "anchorsEN": [
+      "data race = no sync + one write",
+      "race condition = timing-dependent logic",
+      "check-then-act → one critical section",
+      "-race finds data races, not logic bugs"
+    ],
+    "jvmEN": "Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with AtomicLong.",
+    "shortRU": "Да: в программе может не быть гонок данных и всё же быть логическая гонка. Гонка данных — это доступ двух горутин к одной памяти без синхронизации, когда хотя бы один из них пишет; логическая гонка — ошибка, при которой результат зависит от порядка событий. Если защитить каждое чтение и запись отдельно, гонки данных не будет, а логическая останется: «проверил баланс, отпустил блокировку, списал» может пропустить два списания. Исправление — проверка и действие одной операцией под одной блокировкой.",
+    "jvmRU": "Так же, как в Java: synchronized-геттеры и сеттеры делают безопасным каждый вызов, но не пару «проверить и изменить». Нужна одна блокировка на оба шага или цикл compare-and-set, как с AtomicLong.",
+    "detailsEN": [
       "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
       "The race detector observes executed, instrumented paths. A clean go test -race run is useful evidence, not a proof that every possible execution is safe; it does not diagnose all logical races.",
       "An invalid-memory-address panic does not by itself prove a data race. The runtime detects some conflicting map operations, but its map checks are not a substitute for synchronization or the race detector."
     ],
-    detailsRU: [
+    "detailsRU": [
       "Синхронизация должна защищать инвариант, а не только отдельные обращения к полю. Проверка баланса и соответствующее списание должны быть одной операцией; подходящий цикл compare-and-swap — другой возможный вариант.",
       "Детектор гонок наблюдает выполненные инструментированные пути. Успешный go test -race полезен, но не доказывает безопасность всех возможных исполнений и не выявляет все логические гонки.",
       "Panic с invalid memory address сам по себе не доказывает гонку данных. Рантайм обнаруживает некоторые конфликтующие операции с map, но его проверки не заменяют синхронизацию и детектор гонок."
     ],
-    practicalRU: "При ревью спроси: «Какое условие должно оставаться истинным между проверкой и изменением?» Затем проверь, что одна блокировка или другая согласованная операция охватывает весь этот участок. Для теста логической гонки можно явно организовать порядок событий через каналы, не полагаясь на Sleep.",
-    versionNote: "Различие гонки данных и логической гонки применимо к Go 1.17, 1.25 и 1.26. Возможности -race зависят также от платформы и реально выполненных путей.",
-    sources: [
-      {"title": "Go memory model", "url": "https://go.dev/ref/mem"},
-      {"title": "Go race detector", "url": "https://go.dev/doc/articles/race_detector"}
+    "practicalRU": "При ревью спроси: «Какое условие должно оставаться истинным между проверкой и изменением?» Затем проверь, что одна блокировка или другая согласованная операция охватывает весь этот участок. Для теста логической гонки можно явно организовать порядок событий через каналы, не полагаясь на Sleep.",
+    "versionNote": "Различие гонки данных и логической гонки применимо к Go 1.17, 1.25 и 1.26. Возможности -race зависят также от платформы и реально выполненных путей.",
+    "sources": [
+      {
+        "title": "Go memory model",
+        "url": "https://go.dev/ref/mem"
+      },
+      {
+        "title": "Go race detector",
+        "url": "https://go.dev/doc/articles/race_detector"
+      }
     ],
-    practice: {
+    "practice": {
       "kind": "Объясни причину",
       "promptEN": "Two calls to Spend read balance=100 under a mutex, unlock, and each later writes 20 under the same mutex. Both report a successful withdrawal of 80. Is this a data race? What went wrong?",
       "promptRU": "Два вызова Spend читают balance=100 под мьютексом, отпускают его и позже каждый записывает 20 под тем же мьютексом. Оба сообщают об успешном списании 80. Это гонка данных? В чём ошибка?",
@@ -106,13 +132,11 @@ const CARDS = [
       "followUpEN": "How would you force that ordering in a test without Sleep?",
       "followUpRU": "Как организовать именно такой порядок в тесте без Sleep?"
     },
-    code: `// Pseudocode: Get and Set each lock internally.
-// The whole check-and-set is still not atomic.
-if cache.Get(key) == nil {
-    cache.Set(key, value)
-}
-// Design one operation, e.g. LoadOrStore, around the required invariant.`,
-    quizIds: ["q12", "q13"]
+    "code": "// Pseudocode: Get and Set each lock internally.\n// The whole check-and-set is still not atomic.\nif cache.Get(key) == nil {\n    cache.Set(key, value)\n}\n// Design one operation, e.g. LoadOrStore, around the required invariant.",
+    "quizIds": [
+      "q12",
+      "q13"
+    ]
   },
   {
     "id": "c3",
@@ -123,18 +147,26 @@ if cache.Get(key) == nil {
     "simId": "sim1",
     "qEN": "What happens when Go starts a goroutine?",
     "qRU": "Что происходит при запуске горутины?",
-    "shortEN": "A go statement evaluates the function and its arguments in the caller, then runs the call in a new goroutine. In the checked runtime, newproc prepares reusable or new goroutine state, initializes a start context and makes the goroutine runnable. Runnable does not mean running.",
+    "shortEN": "go f(x) evaluates f and x in the calling goroutine, and the call itself runs in a new goroutine. On the system stack g0, newproc takes a dead G from a free list or allocates one with a 2 KiB stack, points g.sched at f’s entry with the closure in g.sched.ctxt, and pushes goexit onto the new stack as a fake return address. Then it puts the G into runnext of the current P and wakes an idle P if there is one. Now it is runnable, not running: the scheduler decides when and where it runs.",
+    "anchorsEN": [
+      "arguments evaluated in the caller",
+      "newproc on g0 → reuse or 2 KiB",
+      "g.sched → f; goexit on the stack",
+      "runnext + wakep → runnable ≠ running"
+    ],
+    "jvmEN": "Unlike new Thread(r).start() in Java, there is no object to keep: go returns nothing. The arguments are copied at the go statement, but a closure, unlike a Java lambda that captures effectively final values, captures the variables themselves.",
     "detailsEN": [
-      "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations. A newly created G gets the minimum stack (2 KiB on Linux); since Go 1.19 a reused G can instead get a starting size based on average stack usage recalculated at each GC (GODEBUG adaptivestackstart in the checked runtime).",
+      "newproc uses the system stack g0. newproc1 obtains a dead G from gfget or creates one; stack allocation or reuse depends on the available G and the current stack policy. Reuse is not a promise of zero allocations. A newly created G gets the minimum stack (2 KiB on Linux); since Go 1.19 a reused G can instead get a starting size based on average stack usage recalculated at each GC (GODEBUG adaptivestackstart, on by default).",
       "The runtime initializes saved SP/PC state and, on the illustrated amd64 path, a return path through goexit. These are data for a future execution, not the CPU registers of an already running goroutine.",
       "newproc requests runnext placement with runqput(..., true), but runtime conditions can choose an ordinary queue. A scheduler later transitions the G from runnable to running. The language promises neither immediate execution nor FIFO launch order.",
       "The runtime has internal goroutine IDs, but the language exposes no goroutine handle, public current-ID API or operation to kill another goroutine. Use explicit request IDs, cancellation and completion signals; do not parse stack dumps as an identity API."
     ],
     "practicalRU": "Передавай значения явно, если работнику нужен снимок состояния. Замыкание, которое позже читает изменяемое общее состояние, имеет другую семантику и может создать гонку.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvalues := make(chan int)\n\tn := 1\n\tgo func(value int) { values <- value }(n)\n\tn = 2\n\tfmt.Println(<-values, n) // 1 2; no timing assumption.\n}",
-    "shortRU": "Оператор go вычисляет функцию и её аргументы в вызывающей горутине, а сам вызов выполняет в новой. В проверенном рантайме newproc подготавливает переиспользуемое или новое состояние горутины, настраивает стартовый контекст и делает её готовой к запуску. Готова — ещё не значит выполняется.",
+    "shortRU": "go f(x) вычисляет f и x в вызывающей горутине, а сам вызов выполняет новая горутина. На системном стеке g0 newproc берёт завершившуюся G из пула или создаёт новую со стеком 2 КиБ, направляет g.sched на вход f с замыканием в g.sched.ctxt и кладёт goexit на новый стек как поддельный адрес возврата. Затем ставит G в runnext текущего P и будит простаивающий P, если такой есть. Теперь она готова к запуску, но не выполняется: когда и где её запустить, решает планировщик.",
+    "jvmRU": "В отличие от new Thread(r).start() в Java, хранить нечего: go ничего не возвращает. Аргументы копируются в момент оператора go, а замыкание, в отличие от лямбды Java с effectively final значениями, захватывает сами переменные.",
     "detailsRU": [
-      "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart в проверенном рантайме).",
+      "newproc использует системный стек g0. newproc1 получает завершённую G через gfget или создаёт новую; выделение либо переиспользование стека зависит от найденной G и текущей политики. Переиспользование не обещает ноль выделений. Новая структура G получает минимальный стек (2 КиБ в Linux); с Go 1.19 переиспользуемая G может получить стартовый размер по среднему использованию стека, которое пересчитывается на каждом GC (GODEBUG adaptivestackstart, включён по умолчанию).",
       "Рантайм инициализирует сохранённые SP/PC и в показанном amd64-пути — возврат через goexit. Это данные будущего исполнения, а не регистры CPU уже работающей горутины.",
       "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
       "У рантайма есть внутренние ID горутин, но язык не предоставляет дескриптор горутины, публичный API текущего ID или операцию убийства другой горутины. Используй явные ID запросов, отмену и сигналы завершения; разбор stack dump не заменяет API идентификации."
@@ -187,18 +219,26 @@ if cache.Get(key) == nil {
     "simId": "sim1",
     "qEN": "Where is a goroutine stack allocated, and what does StackInuse measure?",
     "qRU": "Где выделяется стек горутины и что измеряет StackInuse?",
-    "shortEN": "A goroutine stack is a runtime-managed memory region for active calls. The runtime uses dedicated stack allocation paths and may move the stack when it grows. MemStats.StackInuse reports memory in stack spans, not the number of bytes currently occupied by live local variables.",
+    "shortEN": "A goroutine stack lives in memory the runtime takes from its heap pages, but a separate stack allocator manages it, not mallocgc and the GC sweep. Small stacks come from per-P stack caches and per-size free lists; large ones get their own spans; when a stack grows, the runtime copies it to a bigger block, so it can move. MemStats.StackInuse counts bytes in those stack spans, not the bytes your local variables use right now.",
+    "anchorsEN": [
+      "stackalloc, not mallocgc",
+      "per-P stack cache → free lists → own span",
+      "grows by copying, can move",
+      "StackInuse = stack spans, not locals"
+    ],
+    "jvmEN": "In Java a platform thread’s stack is native memory with a fixed maximum set by -Xss, and it never moves. A goroutine stack starts tiny, grows and moves, which is why a Go program can afford hundreds of thousands of goroutines.",
     "detailsEN": [
-      "On the checked path, small stacks can use per-P caches and stack free lists; larger stacks use dedicated spans. Saying “the stack is in the heap” hides the difference from ordinary heap-object allocation through mallocgc.",
+      "Small stacks come from per-P caches and per-size free lists; larger stacks use dedicated spans. Saying “the stack is in the heap” hides the difference from ordinary heap-object allocation through mallocgc.",
       "On amd64, RSP points into the currently active stack. The saved g.sched.sp is a resume position, while g.stack.lo/hi describe the allocated region. A register contains an address, not the stack itself.",
       "Unused stack spans can return to the heap. Shrinking a stack, freeing a span and returning physical pages to the OS are different events; none promises an immediate matching RSS drop.",
       "StackSys includes stack memory obtained for the runtime, including some OS-thread stacks, but it does not account for every C stack. ReadMemStats gives process-wide runtime counters, not a per-goroutine allocation report."
     ],
     "practicalRU": "Сравнивай динамику на характерной нагрузке, а в профиле горутин ищи владельцев и места ожидания. Разность двух снимков нельзя называть универсальной ценой одной горутины.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\tvar stats runtime.MemStats\n\truntime.ReadMemStats(&stats)\n\t// Values depend on the process and workload; these are not RSS or live frames.\n\tfmt.Println(\"stack spans:\", stats.StackInuse, \"bytes\")\n\tfmt.Println(\"goroutines:\", runtime.NumGoroutine())\n}",
-    "shortRU": "Стек горутины — область памяти под активные вызовы, которой управляет рантайм. У него есть отдельные пути выделения стеков; при росте стек может перемещаться. MemStats.StackInuse показывает память в спанах стеков, а не число байтов, занятых сейчас живыми локальными переменными.",
+    "shortRU": "Стек горутины лежит в памяти, которую рантайм берёт из страниц кучи, но управляет им отдельный аллокатор стеков, а не mallocgc и sweep сборщика. Малые стеки берутся из кешей стеков на P и списков свободных стеков по размерам, большие получают свои спаны; при росте рантайм копирует стек в больший блок, поэтому стек может переехать. MemStats.StackInuse считает байты в этих спанах стеков, а не то, сколько сейчас занимают локальные переменные.",
+    "jvmRU": "В Java стек платформенного потока — нативная память с фиксированным максимумом из -Xss, и он никогда не переезжает. Стек горутины начинается маленьким, растёт и переезжает — поэтому программа на Go может позволить себе сотни тысяч горутин.",
     "detailsRU": [
-      "В проверенном пути небольшие стеки могут использовать кеши P и списки свободных стеков; более крупные получают отдельные спаны. Фраза «стек лежит в куче» скрывает отличие от выделения обычного объекта через mallocgc.",
+      "Небольшие стеки берутся из кешей P и списков свободных стеков по размерам; более крупные получают отдельные спаны. Фраза «стек лежит в куче» скрывает отличие от выделения обычного объекта через mallocgc.",
       "На amd64 RSP указывает внутрь активного стека. Сохранённый g.sched.sp задаёт позицию продолжения, а g.stack.lo/hi описывают выделенную область. В регистре хранится адрес, а не сам стек.",
       "Неиспользуемые спаны стеков могут вернуться в кучу. Уменьшение стека, освобождение спана и возврат физических страниц ОС — разные события; ни одно не обещает немедленного соответствующего падения RSS.",
       "StackSys включает полученную рантаймом память стеков, в том числе некоторые стеки потоков ОС, но не учитывает каждый стек C. ReadMemStats выдаёт общие счётчики рантайма, а не отчёт о выделениях отдельной горутины."
@@ -243,20 +283,28 @@ if cache.Get(key) == nil {
     "simId": "sim1",
     "qEN": "How does a goroutine stack grow, and why do pointers remain valid?",
     "qRU": "Как растёт стек горутины и почему указатели остаются корректными?",
-    "shortEN": "When a stack check detects insufficient space, the runtime can allocate a larger stack, copy active frames and adjust stack pointers using compiler metadata. Ordinary Go pointers remain valid across growth; a stack address is not a permanent numeric identity.",
+    "shortEN": "The function prologue compares the stack pointer with a guard; if the frame does not fit, morestack calls newstack, which allocates a stack twice as big, copies the frames and fixes the pointers into the old stack using the compiler’s stack maps. Pointers stay valid because escape analysis never lets user heap objects or globals point into a stack, so besides the frames the runtime fixes only a few of its own records: wait records of blocked channel operations, defer and panic records, and the closure context. The limit is 1 GB on 64-bit systems; beyond it the program dies with a fatal “stack overflow” that recover cannot catch.",
+    "anchorsEN": [
+      "prologue: SP vs stackguard0",
+      "morestack → newstack → copy ×2",
+      "stack maps fix the frames",
+      "+ runtime records: sudog, defer, panic"
+    ],
+    "jvmEN": "A Java platform thread stack cannot grow past -Xss: deep recursion ends with StackOverflowError, 1 MiB by default on 64-bit Linux. In Go the same recursion keeps working, because the stack doubles by copying, until the 1 GB limit, and then the program dies instead of throwing an error you can catch.",
     "detailsEN": [
       "Stack checks lead through morestack/newstack on the growth path. Not every function has the same prologue: small leaf functions and nosplit code have special rules. A tripped guard can also request preemption, not just allocation.",
       "For normal growth, Go 1.26.1 starts with twice the old size and can double again until the needed frame fits. copystack relocates active frames and uses pointer maps to fix references; channel-related references require coordinated updates too.",
-      "Shrinking is a separate operation at safe points. The checked implementation can halve the stack when usage including a safety allowance is below one quarter, subject to minimum size and safety checks. Returning from a call does not itself guarantee shrinking.",
+      "Shrinking is a separate operation at safe points. The GC can halve a stack when usage including a safety allowance is below one quarter, subject to minimum size and safety checks. Returning from a call does not itself guarantee shrinking.",
       "The default per-goroutine growth limit is 1 GB on 64-bit systems and 250 MB on 32-bit systems; because sizes double, the largest stack under the 64-bit default is 512 MiB; debug.SetMaxStack changes the limit for future growth. Exceeding it crashes the program. A uintptr is an integer, not a GC-tracked pointer you may keep across arbitrary operations."
     ],
     "practicalRU": "Используй обычные указатели и ограничивай глубину рекурсии. Если в профиле заметно копирование стеков, сначала изучи глубину вызовов и крупные кадры; worker pool не является универсальным лечением роста стека.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc descend(depth int, value *int) int {\n\tvar frame [1024]byte\n\tframe[0] = byte(depth)\n\tif depth == 0 {\n\t\t*value = 42\n\t\treturn 0\n\t}\n\tsum := descend(depth-1, value)\n\treturn sum + int(frame[0]) // Keep frame data live across the call.\n}\n\nfunc main() {\n\tvalue := 0\n\tsum := descend(64, &value)\n\tfmt.Println(value, sum) // 42 2080; not a measurement of stack addresses.\n}",
-    "shortRU": "Когда проверка стека обнаруживает нехватку места, рантайм может выделить больший стек, скопировать активные кадры и исправить указатели по метаданным компилятора. Обычные Go-указатели остаются корректными при росте; адрес в стеке не является постоянным числовым идентификатором.",
+    "shortRU": "Пролог функции сравнивает указатель стека с границей; если кадр не помещается, morestack вызывает newstack: тот выделяет стек вдвое больше, копирует кадры и исправляет указатели на старый стек по картам стека от компилятора. Указатели остаются верными, потому что escape analysis не даёт объектам кучи из пользовательского кода и глобальным переменным указывать в стек; кроме кадров рантайм исправляет лишь свои записи: записи ожидания заблокированных операций с каналами, записи defer и panic и контекст замыкания. Предел — 1 ГБ на 64-битных системах; дальше программа погибает с фатальной ошибкой «stack overflow», которую recover не перехватывает.",
+    "jvmRU": "Стек платформенного потока Java не растёт дальше -Xss: глубокая рекурсия заканчивается StackOverflowError, по умолчанию на 1 МиБ на 64-битном Linux. В Go та же рекурсия продолжает работать — стек удваивается копированием — до предела в 1 ГБ, а потом программа погибает, а не бросает ошибку, которую можно поймать.",
     "detailsRU": [
       "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
       "Для обычного роста Go 1.26.1 начинает с удвоенного размера и при необходимости удваивает снова, чтобы вместить нужный кадр. copystack переносит активные кадры и исправляет ссылки по картам указателей; ссылки, связанные с каналами, тоже требуют согласованного обновления.",
-      "Уменьшение — отдельная операция в безопасных точках. Проверенная реализация может уменьшить стек вдвое, если использование с защитным запасом меньше четверти, с учётом минимального размера и проверок безопасности. Сам возврат из вызова не гарантирует уменьшения.",
+      "Уменьшение — отдельная операция в безопасных точках. GC может уменьшить стек вдвое, если использование с защитным запасом меньше четверти, с учётом минимального размера и проверок безопасности. Сам возврат из вызова не гарантирует уменьшения.",
       "Стандартный предел роста одной горутины — 1 ГБ на 64-битных системах и 250 МБ на 32-битных; так как размер удваивается, наибольший стек при 64-битном пределе — 512 МиБ; debug.SetMaxStack меняет предел будущего роста. Превышение аварийно завершает программу. uintptr — целое число, а не отслеживаемый GC указатель, который можно сохранять через произвольные операции."
     ],
     "versionNote": "Копируемые стеки есть в 1.17/1.25/1.26. Конкретные пороги, карты и алгоритм описаны по Go 1.26.1; тест результата не доказывает конкретный момент перемещения стека.",
@@ -299,18 +347,26 @@ if cache.Get(key) == nil {
     "simId": "sim1",
     "qEN": "What must the runtime restore to resume a goroutine?",
     "qRU": "Что runtime восстанавливает, чтобы продолжить выполнение горутины?",
-    "shortEN": "To resume a goroutine, the runtime restores where its stack is and where execution should continue. On amd64, RSP points into the active stack, RIP identifies the instruction position, and Go uses R14 for the current goroutine. These roles are easier to understand before memorizing assembly instructions.",
-    "shortRU": "Чтобы продолжить горутину, runtime восстанавливает положение её стека и место продолжения кода. На amd64 RSP указывает в активный стек, RIP задаёт позицию инструкции, а Go использует R14 для текущей горутины. Сначала полезно понять эти роли, а затем читать ассемблер.",
+    "shortEN": "Three things: which goroutine is current, where its stack is, and where to continue. On amd64 gogo writes the G into thread-local storage and R14, restores RSP and BP, and jumps to the saved PC; these values plus the closure context are kept in g.sched, a gobuf. Switching goes through g0, the system stack of each thread: mcall saves the running goroutine and calls the scheduler on g0, and gogo loads the next one.",
+    "anchorsEN": [
+      "who: R14 = current G",
+      "which stack: RSP",
+      "where to continue: saved PC → JMP",
+      "g.sched; mcall → g0 → gogo"
+    ],
+    "jvmEN": "A Java platform thread switch is done by the kernel; a goroutine switch is a user-space jump that saves a few values in g.sched, with no system call. That is why blocking a goroutine on a channel is cheap.",
+    "shortRU": "Три вещи: какая горутина текущая, где её стек и откуда продолжить. На amd64 gogo записывает G в локальное хранилище потока и в R14, восстанавливает RSP и BP и прыгает на сохранённый PC; эти значения вместе с контекстом замыкания хранятся в g.sched (структура gobuf). Переключение идёт через g0 — системный стек каждого потока: mcall сохраняет текущую горутину и вызывает планировщик на g0, а gogo загружает следующую.",
+    "jvmRU": "Переключение платформенных потоков Java делает ядро; переключение горутин — прыжок в пространстве пользователя, который сохраняет несколько значений в g.sched, без системного вызова. Поэтому заблокировать горутину на канале дёшево.",
     "detailsEN": [
       "A register is a small CPU storage location used during execution. RSP is an address, not the stack itself; R14 is a pointer to Go runtime metadata, not the whole goroutine. RIP changes as instructions and control transfers execute.",
-      "Each M has a g0 used for system-stack work. In the checked amd64 gogo path, the runtime installs the current G, restores SP, BP and closure context, clears selected saved fields, and jumps to the saved PC. It is not a fixed four-instruction operation.",
-      "mcall saves the caller’s continuation and switches to g0 to call a runtime function. g.sched is saved continuation state, not a dump of every CPU register. Switching goroutines is distinct from an OS thread context switch.",
+      "Each M has a g0 used for system-stack work. On amd64, gogo installs the current G, restores SP, BP and closure context, clears selected saved fields, and jumps to the saved PC. It is not a fixed four-instruction operation.",
+      "mcall saves the caller’s continuation and switches to g0 to call a runtime function. g.sched is saved continuation state, not a dump of every CPU register. Switching goroutines is distinct from an OS thread context switch. So few saved values are enough because a voluntary switch happens at a call, where Go’s ABI keeps nothing in callee-saved registers; asynchronous preemption first saves every register on the goroutine’s stack.",
       "Register names and conventions are architecture-dependent. This diagram uses amd64; on arm64 Go uses R28 for the current G. Neither the g0 stack nor every goroutine stack has one universally fixed size."
     ],
     "detailsRU": [
       "Регистр — небольшое хранилище процессора, используемое при выполнении. RSP содержит адрес, а не сам стек; R14 — указатель на данные runtime, а не всю горутину. RIP меняется при выполнении инструкций и переходов.",
-      "У каждого M есть g0 для работы на системном стеке. В проверенном пути gogo для amd64 runtime устанавливает текущую G, восстанавливает SP, BP и контекст замыкания, очищает часть сохранённых полей и переходит к сохранённому PC. Это не операция ровно из четырёх инструкций.",
-      "mcall сохраняет место продолжения вызывающей стороны и переключается на g0 для вызова функции runtime. g.sched — сохранённое состояние продолжения, а не снимок всех регистров CPU. Переключение горутин отличается от переключения потоков ОС.",
+      "У каждого M есть g0 для работы на системном стеке. На amd64 gogo устанавливает текущую G, восстанавливает SP, BP и контекст замыкания, очищает часть сохранённых полей и переходит к сохранённому PC. Это не операция ровно из четырёх инструкций.",
+      "mcall сохраняет место продолжения вызывающей стороны и переключается на g0 для вызова функции runtime. g.sched — сохранённое состояние продолжения, а не снимок всех регистров CPU. Переключение горутин отличается от переключения потоков ОС. Немногих сохранённых значений хватает, потому что добровольное переключение происходит на вызове, где ABI Go ничего не держит в регистрах, сохраняемых вызываемой функцией; при асинхронном вытеснении все регистры сначала сохраняются на стеке горутины.",
       "Имена регистров и соглашения зависят от архитектуры. Эта схема — про amd64; на arm64 Go использует R28 для текущей G. Размер стека g0 и каждой пользовательской горутины не является одной универсальной константой."
     ],
     "practicalRU": "Опора для памяти: «кто выполняется — где стек — откуда продолжить». Для amd64 это R14, RSP и сохранённый PC с переходом в RIP. По одному кадру systemstack или mcall нельзя установить причину сбоя: нужен стек вызовов и контекст.",
@@ -481,20 +537,28 @@ if cache.Get(key) == nil {
     "simId": "sim2",
     "qEN": "How does the scheduler find work and steal from another P?",
     "qRU": "Как планировщик находит работу и забирает её у другого P?",
-    "shortEN": "The scheduler considers several work sources, including local and global queues, network readiness, timers and work on other Ps. A periodic global-queue check helps fairness. Stealing redistributes runnable goroutines; it does not move a goroutine that is currently running.",
+    "shortEN": "The scheduler looks for work in roughly this order: the P’s runnext and local queue, then the global queue, then the network poller, and only then it steals from other Ps. Three numbers to remember: every 61st tick it first takes one goroutine from the global queue, so global work does not starve; a thief takes half of the victim’s local queue, rounded up, from the head; and a P whose local queue is empty takes a batch from the global queue, at most 128, half its queue’s capacity, and a fair share per P. Only runnable goroutines move; a running one is never stolen.",
+    "anchorsEN": [
+      "runnext → runq → global → netpoll → steal",
+      "every 61st tick: 1 G from global",
+      "steal half, from the head",
+      "global batch ≤ 128, fair share"
+    ],
+    "jvmEN": "Like Java’s ForkJoinPool, each P has its own queue and idle workers steal. Unlike ForkJoinPool, which by default takes its own tasks LIFO, a P runs its local queue FIFO, and only the one-slot runnext acts as a LIFO shortcut.",
     "detailsEN": [
       "In Go 1.26.1, findRunnable handles special work such as GC coordination and timers before parts of ordinary queue selection. The simplified sequence “global, local, poll, steal” is not a complete priority contract.",
-      "When schedtick % 61 == 0 and the global queue is observed non-empty, the runtime attempts a fairness check. A tick is not a millisecond or necessarily one goroutine: runnext can inherit the current time slice. The constant 61 is an implementation choice, not a language guarantee.",
-      "The checked runqgrab takes ceil(n/2) entries from the head of a victim’s ordinary local queue, using CAS to claim them. Concurrent changes can cause retries. runqsteal returns one of the batch for execution and queues the rest; stealing runnext is a separate possibility when allowed.",
+      "Every 61st tick (schedtick % 61 == 0), if the global queue is not empty, findRunnable takes exactly one G from it (globrunqget) before the local queue. When the local queue is empty, it takes a batch instead (globrunqgetbatch): at most half the local queue’s capacity (256 / 2 = 128) and at most the global size / GOMAXPROCS + 1; it runs the first and puts the rest into the local queue. A tick is not a millisecond: the runnext path inherits the time slice without incrementing schedtick.",
+      "runqgrab takes ceil(n/2) entries from the head of a victim’s ordinary local queue, using CAS to claim them. Concurrent changes can cause retries. runqsteal returns one of the batch for execution and queues the rest; stealing runnext is a separate possibility when allowed.",
       "For a stable victim queue [A,B,C,D,E], head on the left, the batch is [A,B,C]. runqsteal returns C and queues A,B on the thief; D,E remain on the victim. This is a source-level example under stated assumptions, not a prediction of application output."
     ],
     "practicalRU": "Используй schedtrace для общего снимка и execution trace для временной картины. Один снимок неравных очередей сам по себе не доказывает проблему cgo, безопасной точки или планировщика.",
     "code": "// Source-level model, NOT executable Go and NOT a scheduling guarantee.\n// Assumptions: no concurrent queue changes; ordinary queue, head at left.\n// Before: victim [A B C D E], thief []\n// Grab:   n=5 -> n-n/2=3 -> [A B C]\n// After:  victim [D E], thief [A B], returned for execution: C\n// runnext, timers, concurrent retries and other scheduler work are omitted.",
-    "shortRU": "Планировщик рассматривает несколько источников работы: локальные и общую очереди, готовность сети, таймеры и работу других P. Периодическая проверка общей очереди помогает справедливости. Перехват работы перераспределяет готовые горутины, а не перемещает уже исполняющуюся.",
+    "shortRU": "Планировщик ищет работу примерно в таком порядке: runnext и локальная очередь своего P, потом глобальная очередь, потом netpoller и только потом перехват у других P. Три числа: на каждом 61-м тике он сначала берёт одну горутину из глобальной очереди, чтобы глобальная работа не голодала; при перехвате забирает половину локальной очереди жертвы, с округлением вверх, с головы; а P с пустой локальной очередью берёт из глобальной пачку — не больше 128, то есть половины ёмкости своей очереди, и не больше справедливой доли на P. Перемещаются только готовые горутины; исполняющуюся не перехватить.",
+    "jvmRU": "Как в ForkJoinPool в Java, у каждого P своя очередь, а свободные воркеры перехватывают работу. В отличие от ForkJoinPool, который по умолчанию берёт свои задачи по LIFO, P исполняет локальную очередь по FIFO, и только слот runnext работает как LIFO-ярлык.",
     "detailsRU": [
       "В Go 1.26.1 findRunnable обрабатывает специальную работу, например координацию GC и таймеры, до части обычного выбора очередей. Упрощённая последовательность «общая, локальная, сеть, кража» не является полным контрактом приоритетов.",
-      "При schedtick % 61 == 0 и наблюдаемой непустой общей очереди рантайм пробует проверку справедливости. Тик — не миллисекунда и не обязательно одна горутина: runnext может наследовать текущий квант. Константа 61 — выбор реализации, а не гарантия языка.",
-      "Проверенный runqgrab берёт ceil(n/2) элементов с головы обычной локальной очереди жертвы и закрепляет их через CAS. Конкурентные изменения могут вызвать повтор. runqsteal возвращает один элемент пачки для исполнения, остальные ставит в очередь; перехват runnext — отдельная возможность, когда она разрешена.",
+      "На каждом 61-м тике (schedtick % 61 == 0), если глобальная очередь не пуста, findRunnable берёт из неё ровно одну G (globrunqget) раньше локальной очереди. Когда локальная очередь пуста, берётся пачка (globrunqgetbatch): не больше половины ёмкости локальной очереди (256 / 2 = 128) и не больше «размер глобальной / GOMAXPROCS + 1»; первую G он исполняет, остальные кладёт в локальную очередь. Тик — не миллисекунда: путь через runnext наследует квант и не увеличивает schedtick.",
+      "runqgrab берёт ceil(n/2) элементов с головы обычной локальной очереди жертвы и закрепляет их через CAS. Конкурентные изменения могут вызвать повтор. runqsteal возвращает один элемент пачки для исполнения, остальные ставит в очередь; перехват runnext — отдельная возможность, когда она разрешена.",
       "Для неизменной очереди жертвы [A,B,C,D,E] с головой слева пачка равна [A,B,C]. runqsteal возвращает C, а A,B ставит в очередь забирающего P; D,E остаются у жертвы. Это пример по исходникам при заданных условиях, а не предсказание вывода приложения."
     ],
     "versionNote": "Конкретный путь описан по 1.26.1 и сопоставлен с 1.25.0. В Go 1.17 имя findrunnable было со строчной r, а проверка %61 находилась в schedule. Не переносить расположение функций между версиями механически.",
@@ -1731,7 +1795,14 @@ func Drain(a, b <-chan int, consume func(int)) {
     "simId": "sim6",
     "qEN": "What does Go's hybrid write barrier protect, and which pointer writes need it?",
     "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
-    "shortEN": "The collector scans a graph while the program changes its edges. The hybrid write barrier keeps those changes from hiding reachable objects from the scan. It preserves GC correctness; it does not synchronize application goroutines or make a data race safe.",
+    "shortEN": "It protects concurrent marking: while the GC marks, the program keeps changing pointers, and the barrier makes sure it cannot hide a reachable object. Go’s hybrid barrier shades the old target of a pointer write and, while the current stack is grey, the new one; in practice Go records both. It applies to pointer writes into the heap and globals during marking; thanks to this combination, writes to a goroutine’s own stack need no barrier and each stack is scanned only once, with no rescan at the end. Objects allocated during marking are born black. It keeps the GC correct; it is not a lock and does not fix data races.",
+    "anchorsEN": [
+      "shade(*slot): old target (Yuasa)",
+      "shade(ptr) while stack grey (Dijkstra)",
+      "new objects born black",
+      "stack scanned once → no STW rescan"
+    ],
+    "jvmEN": "Java’s G1 uses a snapshot-at-the-beginning barrier, which matches only the deletion half of Go’s; it needs no insertion half because it scans thread stacks in a stop-the-world pause, while Go scans stacks concurrently. G1 also needs card marking because it is generational and moves objects; Go’s collector does neither.",
     "detailsEN": [
       "Imagine A is already scanned, B is not yet scanned, and B points to an unmarked C. Moving that link from B to A could make a plain concurrent traversal miss C. The barrier records pointer changes so C remains protected even if the collector has passed A and has not reached B.",
       "The hybrid combines deletion shading of the old target with insertion shading of the new target. In the theoretical algorithm, insertion shading is needed while the current stack is grey. The Go 1.26.1 implementation does not test that stack colour for each store: compiler-generated code records relevant old/new pointers in a write-barrier buffer. Safe cases can be eliminated; shading is not necessarily an immediate scan.",
@@ -1741,7 +1812,8 @@ func Drain(a, b <-chan int, consume func(int)) {
     ],
     "practicalRU": "Проговори по схеме: «A уже прошли, B ещё нет; переносим B → C в A → C; C нельзя потерять». В Go-коде барьер вставляет компилятор — вручную вызывать runtime не нужно. Пример требует разных ненулевых a и b и исключительного доступа к обоим узлам. Для совместного доступа нужна своя синхронизация. sync.Pool используй после измерений: Get не обязан вернуть прежний объект, содержимое может исчезнуть в любой момент; ускорение в 5–10 раз и переиспользование на том же P не гарантируются.",
     "code": "package example\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\n// Move requires distinct, non-nil nodes and exclusive access.\nfunc Move(a, b *Node) {\n\ta.Next = b.Next\n\tb.Next = nil // Deleting a pointer can also need a GC barrier.\n}\n\n// Compiler-generated barriers protect GC, not concurrent callers.\n// White/grey/black states are a teaching model, not observable here.",
-    "shortRU": "Сборщик обходит граф, а программа в это время меняет его связи. Гибридный барьер записи не даёт этим изменениям скрыть достижимые объекты от обхода. Он обеспечивает корректность GC, но не синхронизирует горутины приложения и не исправляет data race.",
+    "shortRU": "Он защищает конкурентную разметку: пока GC размечает, программа меняет указатели, и барьер не даёт ей спрятать достижимый объект. Гибридный барьер Go красит старую цель записи указателя и, пока стек текущей горутины серый, новую; на практике Go записывает обе. Он срабатывает на запись указателей в кучу и глобальные переменные во время разметки; благодаря такому сочетанию записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце. Объекты, созданные во время разметки, сразу чёрные. Он сохраняет корректность GC, но это не блокировка и data race он не исправляет.",
+    "jvmRU": "G1 в Java использует барьер snapshot-at-the-beginning — он совпадает только с deletion-половиной барьера Go; insertion-половина G1 не нужна, потому что стеки потоков он сканирует в паузе stop-the-world, а Go сканирует стеки конкурентно. Ещё G1 нужен card marking, потому что он поколенческий и перемещает объекты; сборщик Go не делает ни того, ни другого.",
     "detailsRU": [
       "Представь: A уже просмотрен, B ещё нет, а B ссылается на неотмеченный C. Если перенести эту связь из B в A, простой конкурентный обход может пропустить C. Барьер учитывает изменения указателей и защищает C, даже если сборщик уже прошёл A, но ещё не дошёл до B.",
       "Гибрид сочетает deletion shading старой цели и insertion shading новой. В теоретическом алгоритме новая цель требует shading, пока текущий стек серый. Реализация Go 1.26.1 не проверяет цвет стека при каждой записи: сгенерированный компилятором код заносит нужные старые/новые указатели в буфер барьера. Доказанно безопасные случаи можно исключить; shading не означает немедленный обход объекта.",

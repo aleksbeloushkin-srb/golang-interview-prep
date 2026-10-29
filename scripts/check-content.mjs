@@ -213,6 +213,8 @@ export function validateContent(data) {
     fields(c, ['qEN', 'qRU', 'shortEN', 'mod', 'level'], c.id);
     require(texts(c.detailsEN), `${c.id}: missing detailsEN`);
     if (c.simId != null) link(c.simId, 'simulators', c.id);
+    if (c.anchorsEN !== undefined) require(texts(c.anchorsEN) && c.anchorsEN.length >= 3 && c.anchorsEN.length <= 5, `${c.id}: anchorsEN must list 3–5 anchors`);
+    if (c.jvmEN !== undefined || c.jvmRU !== undefined) require(text(c.jvmEN) && text(c.jvmRU), `${c.id}: incomplete EN/RU Java comparison`);
     if (c.shortRU !== undefined || c.detailsRU !== undefined) {
       require(text(c.shortRU) && texts(c.detailsRU) && c.detailsRU.length === c.detailsEN?.length, `${c.id}: incomplete EN/RU explanation`);
     }

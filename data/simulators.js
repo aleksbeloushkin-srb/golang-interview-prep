@@ -992,8 +992,8 @@ const SIMULATORS = [
     "steps": [
       {
         "title": "1. Несколько источников работы",
-        "desc": "P — ресурсы рантайма, M — поток ОС, G — горутина. В findRunnable есть проверки GC, таймеров и другой служебной работы, поэтому это не простая неизменная очередь приоритетов. При schedtick % 61 == 0 и наблюдаемой непустой GRQ рантайм пробует взять глобальную работу для справедливости. Тик не равен миллисекунде; runnext может его наследовать.",
-        "descEN": "G is a goroutine, M an OS thread and P the resources needed to run user Go code. The scheduler has several work sources and special runtime work. A schedtick % 61 check can favor global work, but it is not a wall-clock interval or a complete priority contract.",
+        "desc": "P — право исполнять Go-код, M — поток ОС, G — горутина. В findRunnable есть проверки GC, таймеров и другой служебной работы, поэтому это не простая неизменная очередь приоритетов. При schedtick % 61 == 0 и непустой GRQ рантайм сначала берёт из неё одну G — для справедливости; пачку из GRQ он берёт, только когда локальная очередь пуста. Тик не равен миллисекунде; runnext может его наследовать.",
+        "descEN": "G is a goroutine, M an OS thread and P the right to run Go code. The scheduler has several work sources and special runtime work. Every 61st schedule tick it first takes one G from the global queue, for fairness; it takes a batch from the global queue only when the local queue is empty. A tick is not a wall-clock interval.",
         "board": [
           {
             "lanes": [
@@ -1092,9 +1092,9 @@ const SIMULATORS = [
               "items": [
                 "Таймеры P1: запустить сработавшие (например, разбудить G после time.Sleep)",
                 "Служебная работа рантайма, например воркер GC",
-                "Раз в 61 тик планировщика — GRQ, если она не пуста (справедливость)",
+                "Раз в 61 тик планировщика — одна G из GRQ, если она не пуста (справедливость)",
                 "runnext, затем runq P1",
-                "GRQ",
+                "GRQ: пачка — не больше половины локальной очереди (128) и доли на P; первая исполняется, остальные в runq",
                 "netpoller без ожидания",
                 "Перехват у других P"
               ]

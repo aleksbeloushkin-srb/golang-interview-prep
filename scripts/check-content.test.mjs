@@ -20,6 +20,8 @@ const failures = [
   ['non-integer correct answer', d => { d.quiz[0].correct = 1.5; }, /correct index/],
   ['missing options', d => { delete d.quiz[0].options; }, /invalid options/],
   ['empty translation', d => { d.cards.find(c => c.shortRU).shortRU = ''; }, /EN\/RU explanation/],
+  ['too few anchors', d => { d.cards[0].anchorsEN = ['one', 'two']; }, /anchorsEN/],
+  ['Java comparison without translation', d => { const c = d.cards.find(x => x.jvmEN); delete c.jvmRU; }, /Java comparison/],
   ['partial practice', d => { delete d.cards.find(c => c.practice).practice.promptRU; }, /promptRU/],
   ['null simulator step', d => { d.simulators[0].steps[0] = null; }, /expected object/],
   ['board without lanes', d => { d.simulators.flatMap(s => s.steps).find(s => s.board).board = [{ lanes: [] }]; }, /expected lanes/],

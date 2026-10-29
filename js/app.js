@@ -54,6 +54,38 @@ function russianExplanationHtml(card) {
   </details>`;
 }
 
+// Первая фраза короткого ответа — сам ответ на вопрос; её выделяем: её говорят первой.
+// Граница — точка, пробел и заглавная буква (числа вроде 1.22 и KiB. внутри фразы не режутся).
+function renderShortAnswer(el, text) {
+  const m = /^(.+?[.!?])\s+(?=[A-ZА-ЯЁ])/.exec(text);
+  el.replaceChildren();
+  if (!m) { el.textContent = text; return; }
+  const first = document.createElement("strong");
+  first.className = "first-sentence";
+  first.textContent = m[1];
+  el.append(first, " " + text.slice(m[0].length));
+}
+
+// Опоры: 3–4 английских слова, по которым ответ пересказывается своими словами.
+function anchorsHtml(card) {
+  if (!card.anchorsEN || !card.anchorsEN.length) return "";
+  return `<div class="card-anchors">
+    <strong>Опоры для пересказа</strong>
+    <ul class="anchor-list" lang="en">${card.anchorsEN.map(a => `<li>${escapeHtml(a)}</li>`).join("")}</ul>
+    <p class="muted-text">Закрой ответ и перескажи его по этим словам вслух за 20 секунд.</p>
+  </div>`;
+}
+
+// Сравнение с Java и Kotlin: опора на то, что уже знаешь, и готовый ответ на «а как в Java?».
+function jvmHtml(card) {
+  if (!card.jvmEN) return "";
+  return `<div class="jvm-box">
+    <strong>Если спросят про Java и Kotlin</strong>
+    <p lang="en">${escapeHtml(card.jvmEN)}</p>
+    ${card.jvmRU ? `<details class="translated-answer"><summary>По-русски</summary><p lang="ru">${escapeHtml(card.jvmRU)}</p></details>` : ""}
+  </div>`;
+}
+
 function referencesHtml(item) {
   const sources = (item.sources || []).filter(source => source.url.startsWith("https://"));
   if (!item.versionNote && !sources.length) return "";
@@ -149,7 +181,7 @@ function getFilteredCards() {
     if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
-      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + (c.practicalRU || "") + " " + c.detailsEN.join(" ") + " " + (c.shortRU || "") + " " + (c.detailsRU || []).join(" ") + " " + c.code).toLowerCase();
+      const hay = (c.qEN + " " + c.qRU + " " + c.shortEN + " " + (c.anchorsEN || []).join(" ") + " " + (c.jvmEN || "") + " " + (c.practicalRU || "") + " " + c.detailsEN.join(" ") + " " + (c.shortRU || "") + " " + (c.detailsRU || []).join(" ") + " " + c.code).toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -207,7 +239,9 @@ function renderCard() {
   document.getElementById("card-counter").textContent = `Карточка ${state.index + 1} из ${list.length} (${card.id.toUpperCase()})`;
   document.getElementById("card-q-en").textContent = card.qEN;
   document.getElementById("card-q-ru").textContent = card.qRU;
-  document.getElementById("card-short-en").textContent = card.shortEN;
+  renderShortAnswer(document.getElementById("card-short-en"), card.shortEN);
+  document.getElementById("card-anchors").innerHTML = anchorsHtml(card);
+  document.getElementById("card-jvm").innerHTML = jvmHtml(card);
   document.getElementById("card-translation").innerHTML = russianExplanationHtml(card);
   document.getElementById("card-references").innerHTML = referencesHtml(card);
   document.getElementById("card-practice").innerHTML = practiceHtml(card);
@@ -525,6 +559,8 @@ function initWikiAndCheatsheet() {
         <div class="accordion-body" id="wiki-${c.id}">
           <p class="muted-text" style="margin-bottom:10px;">${escapeHtml(c.qRU)}</p>
           <div class="short-answer" lang="en"><strong lang="ru">Коротко по-английски:</strong> ${escapeHtml(c.shortEN)}</div>
+          ${anchorsHtml(c)}
+          ${jvmHtml(c)}
           ${russianExplanationHtml(c)}
           <strong>Как это работает (EN):</strong>
           <ul class="details-list">${c.detailsEN.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
@@ -783,8 +819,8 @@ window.addEventListener("keydown", e => {
   if (e.key === "2") markCard("review");
 });
 
-/* --- НИЖНЯЯ ПАНЕЛЬ НА ТЕЛЕФОНЕ: четыре частых раздела и шторка «Ещё» --- */
-const MORE_ROUTES = { practice: "Практикум", wiki: "База знаний", cheatsheet: "Шпаргалка" };
+/* --- НИЖНЯЯ ПАНЕЛЬ НА ТЕЛЕФОНЕ: три главных раздела и шторка «Ещё» --- */
+const MORE_ROUTES = { quiz: "Quiz", practice: "Практикум", wiki: "База знаний", cheatsheet: "Шпаргалка" };
 
 // Раздел из шторки открыт — «Ещё» подсвечена, а читалка слышит, какой раздел сейчас.
 function markMoreTab(route) {

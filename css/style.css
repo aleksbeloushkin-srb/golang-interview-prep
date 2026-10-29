@@ -912,7 +912,7 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
   header { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
   .header-inner { grid-template-areas: "brand account"; }
   .nav-tabs { display: none; }
-  .bottom-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); background: rgba(15, 23, 42, 0.97); border-top: 1px solid var(--border); backdrop-filter: blur(10px); }
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); background: rgba(15, 23, 42, 0.97); border-top: 1px solid var(--border); backdrop-filter: blur(10px); }
   .bottom-tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: var(--bottom-nav-h); padding: 6px 2px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.7rem; font-weight: 600; line-height: 1.1; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .bottom-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bottom-tab.active { color: var(--accent); }
@@ -950,3 +950,12 @@ header { padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right:
   .container { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
 }
 @media (max-width: 340px) { .bottom-tab { padding-left: 0; padding-right: 0; font-size: 0.66rem; } }
+
+/* Карточка: опоры для пересказа и сравнение с Java/Kotlin */
+.card-anchors { margin: 12px 0; }
+.anchor-list { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 4px; padding: 0; }
+.anchor-list li { padding: 3px 10px; border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 999px; background: rgba(56, 189, 248, 0.08); font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.82rem; overflow-wrap: anywhere; }
+.card-anchors .muted-text { font-size: 0.82rem; }
+.jvm-box { margin: 12px 0; padding: 12px 14px; border-left: 3px solid #a855f7; background: rgba(168, 85, 247, 0.07); border-radius: 6px; overflow-wrap: anywhere; }
+.jvm-box p { margin-top: 4px; }
+.short-answer .first-sentence { color: var(--text); font-weight: 700; }
