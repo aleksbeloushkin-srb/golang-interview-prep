@@ -74,5 +74,6 @@ export function toSpeech(text) {
   s = s.replace(/\b([A-Za-z_]\w*)\.(?=[A-Za-z_])/g, "$1 dot ");
   s = s.replace(/[A-Za-z_][A-Za-z0-9_]*/g, speakWord);
   s = s.replace(/\s*\(\s*/g, ", ").replace(/\s*\)/g, ",").replace(/,\s*([,.;:])/g, "$1").replace(/,,+/g, ",");
+  s = s.replace(/\?\./g, "?"); // "…?". после снятых кавычек
   return s.replace(/\s{2,}/g, " ").trim();
 }

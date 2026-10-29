@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29d.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29e.
 
 ## Фазы
 
@@ -1320,7 +1320,7 @@ The domain returns sentinel and typed errors and doesn't import net/http. One fu
 
 *Remember:* *sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.
 
-*sql.DB is a connection pool, opened once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so I defer rows.Close() right after the query and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db.
+sql.Open returns a *sql.DB, a connection pool: I open it once, with limits on open and idle connections. Every Rows holds a connection until it is closed, so after checking the query error I defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db.
 
 </details>
 
@@ -1350,7 +1350,7 @@ var x T declares a variable with its zero value and also works at package level.
 
 *Remember:* A closure captures the variable, not a copy of its value.
 
-A closure refers to the variable itself, so a later change to that variable is visible inside the closure. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so closures created in the loop no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations.
+If closures created in a loop all print the same final value, they share one variable: a closure refers to the variable itself, not a copy, so a later change is visible inside it. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations.
 
 </details>
 
@@ -1370,7 +1370,7 @@ I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. f
 
 *Remember:* A type switch branches on the dynamic type inside an interface.
 
-A type switch inspects the dynamic type stored in an interface value and runs the matching case, with the variable already converted to that type. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form.
+switch v := x.(type) runs the first case whose type matches the dynamic type stored in the interface x; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the fmt interface with String() string; fmt uses it for %v and %s, which is how a type controls its printed form.
 
 </details>
 
@@ -1380,7 +1380,7 @@ A type switch inspects the dynamic type stored in an interface value and runs th
 
 *Remember:* Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.
 
-An interface value holds a dynamic type and a value, and it is nil only when both are nil. Returning a nil *MyErr as error therefore gives a non-nil error. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on an addressable Service variable is only shorthand for (&v).Notify(); a map element or a function result of type Service cannot be called that way, while a *Service can.
+Returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can.
 
 </details>
 
@@ -1438,9 +1438,9 @@ var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, 
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* Every type has a zero value; nil slices are usable, nil map writes panic, nil channels block.
+*Remember:* var x T is ready: 0, "", false or nil; nil map writes panic, nil channels block.
 
-Every type has a zero value: 0, "", false, nil for pointers, slices, maps, channels, functions and interfaces, and each field zeroed for structs. A nil slice works with len, append and range. A nil map can be read, but writing to it panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
+var n int is 0, var s string is "", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
 
 </details>
 
@@ -1450,7 +1450,7 @@ Every type has a zero value: 0, "", false, nil for pointers, slices, maps, chann
 
 *Remember:* A slice is pointer, len, cap over a shared array.
 
-A slice is a descriptor with a pointer, a length and a capacity over an underlying array. Re-slicing shares that array, so a write through one slice is visible through the other. append writes in place while capacity allows and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a, so a later append cannot overwrite the original; copy or slices.Clone gives an independent slice.
+s[1:3] copies no elements: a slice is a descriptor with a pointer, a length and a capacity over an underlying array, and re-slicing shares that array, so a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice.
 
 </details>
 
@@ -1480,7 +1480,7 @@ Map iteration order is not specified, so code must not depend on it. Reading a m
 
 *Remember:* len counts bytes; range decodes runes.
 
-A string is an immutable sequence of bytes, usually UTF-8. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by character.
+len("héllo") is 6, not 5, because a string is an immutable sequence of bytes, usually UTF-8, and é takes two of them. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by code point.
 
 </details>
 
@@ -1520,7 +1520,7 @@ I use generics when the algorithm is the same for many types and the caller need
 
 *Remember:* Module = versioned set of packages; internal/ limits importers.
 
-A module is a versioned collection of packages defined by go.mod; a package is one directory compiled together. Code under internal/ can be imported only by packages rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule.
+go.mod declares the module path, such as module example.com/shop, and that module is a versioned collection of packages; a package is one directory compiled together. Code under internal/ can be imported only by packages in the tree rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule.
 
 </details>
 
@@ -1550,7 +1550,7 @@ txsum reads CSV lines, validates every field and sums amounts per account and cu
 
 *Remember:* Data race: unsynchronized access with a write. Race condition: timing-dependent logic.
 
-A goroutine is a function running concurrently, scheduled by the Go runtime onto OS threads; it starts with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections.
+go f() starts f in a new goroutine: a function running concurrently, scheduled by the Go runtime onto OS threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections.
 
 </details>
 
@@ -1610,7 +1610,7 @@ Fan-in starts one goroutine per input that forwards values to a shared output. A
 
 *Remember:* Atomics protect one variable; invariants across fields need a mutex.
 
-Atomics make single operations on one variable indivisible, but they cannot protect an invariant that spans several values, such as moving money between two accounts so the total stays constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
+atomic.AddInt64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
 
 </details>
 
@@ -1620,7 +1620,7 @@ Atomics make single operations on one variable indivisible, but they cannot prot
 
 *Remember:* Close outputs when done; a done channel or ctx stops every stage.
 
-A pipeline is a series of stages connected by channels; each stage receives from upstream, processes and sends downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them.
+In gen → square → print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream over a channel, processes the value and sends it downstream; that chain is a pipeline. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them.
 
 </details>
 

@@ -27,11 +27,14 @@ export const VOICES = {
 // Точечные правки произношения, когда общих правил не хватает: [было в тексте для речи, стало].
 // Каждая правка меняет только чтение, не смысл: сверяется с экранным текстом при ревью.
 const SPEECH_FIXES = {
-  'plan:w1-wed-1': [['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']],
-  'card:c33:short': [['and err not equal to nil is true', 'and err is not nil']],
+  'plan:w1-wed-1': [
+    ['switch v colon-equals x., type, runs', 'switch v colon-equals x dot type runs'],
+    ['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']
+  ],
+  'card:c33:short': [['err not equal to nil is true', 'err is not nil']],
   'card:c34:short': [
     ["pointer to Counter's has both", 'the method set of pointer to Counter has both'],
-    ['c dot Set becomes address of c dot Set', 'c dot Set becomes: take the address of c, then call Set']
+    ['Go rewrites it to address of c dot Set', 'Go rewrites it as: take the address of c, then call Set']
   ],
   'plan:w1-wed-2': [
     ["pointer to Service's has both", 'the method set of pointer to Service has both'],
@@ -42,8 +45,18 @@ const SPEECH_FIXES = {
     ['errors dot Join is roughly add Suppressed', "errors dot Join is roughly Java's add-Suppressed"]
   ],
   'plan:w1-mon-1': [['x colon-equals expr is a short declaration inside a function', 'x colon-equals expression is the short declaration, used inside a function']],
-  'card:c40:short': [['zero value: 0, false, empty string, nil for pointers', 'zero value: zero, false, the empty string, and nil for pointers']],
-  'plan:w1-sat-2': [['zero value: 0, empty string, false, nil for pointers', 'zero value: zero, the empty string, false, and nil for pointers']],
+  'card:c40:short': [
+    ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
+    ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
+  ],
+  'card:c39:short': [
+    ['errors dot Is, err, Err Not Found, asks is', 'errors dot Is, of err and Err Not Found, asks: is'],
+    ['errors dot As, err, address of qe, asks is', 'errors dot As, of err and address of qe, asks: is']
+  ],
+  'plan:w1-sat-2': [
+    ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
+    ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
+  ],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
     ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],
