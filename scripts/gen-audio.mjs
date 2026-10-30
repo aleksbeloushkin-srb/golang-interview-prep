@@ -62,6 +62,22 @@ const SPEECH_FIXES = {
   'card:c29:short': [['s[1:3] copies no elements', 'slicing s from one to three copies no elements']],
   'card:c29:jvm': [['Array List-style growth with sub List- or Byte Buffer-style views', 'Array List style growth with sub-List or Byte Buffer style views']],
   'card:c47:short': [['the main object is pointer to sql dot D-B.', 'the main object is a pointer to sql dot D-B.'], ['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
+  // Неделя 2: срезы, map, строки, generics, модули — синтаксис словами.
+  'card:c30:short': [['2^B buckets', 'two to the power B buckets'], ['a one-byte tophash', 'a one-byte top hash']],
+  'card:c41:short': [['len, s, and s[i] work on bytes', 'len of s and s of i work on bytes'], ['Convert to slice of rune', 'Convert to a slice of runes']],
+  'card:c42:short': [['as in Map, Max or Set[T comparable]', 'as in Map, Max or a Set of comparable T']],
+  'card:c42:jvm': [['so Max[int] works on plain ints', 'so Max of int works on plain ints'], ["while Java's List<Integer> boxes", "while Java's List of Integer boxes"]],
+  'card:c43:short': [['import example dot com/shop/ledger names a package', 'import example dot com slash shop slash ledger names a package'], ['one directory of .go files', 'one directory of dot-go files'], ['A package under internal/ can be imported', 'A package under an internal directory can be imported']],
+  'card:c43:jvm': [['internal/ is a boundary', 'An internal directory is a boundary']],
+  'card:c44:jvm': [['J Unit 5 @Parameterized Test', 'J Unit 5 Parameterized Test'], ['like @After Each registered', 'like After Each registered'], ['t dot Fatalf to stop', 't dot Fatal-f to stop']],
+  'plan:w2-mon-1': [['So s[1:3] copies no elements', 'So slicing s from one to three copies no elements'], ['s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:];', 'a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows;']],
+  'plan:w2-mon-2': [['limit the capacity with a[:len, a:len, a,] so append must allocate', 'limit the capacity with a full slice expression so append must allocate'], ['the whole 100 megabytes array', 'the whole 100-megabyte array']],
+  'plan:w2-tue-1': [['so m[k].f equals 1 does not compile', 'so assigning to a field, m of k dot f, does not compile']],
+  'plan:w2-tue-3': [['len, héllo, is 6, not 5', 'the length of héllo is 6, not 5'], ['len, s, counts bytes and s[i] returns a byte', 'len of s counts bytes and s of i returns a byte']],
+  'plan:w2-tue-4': [['append, s[:i], s[i+1:]..., shifts elements', 'appending the tail after i to the part before i shifts elements']],
+  'plan:w2-wed-1': [['a map of T to a struct literal with Add', 'a map from T to an empty struct with Add']],
+  'plan:w2-thu-1': [['such as module example dot com/shop', 'such as module example dot com slash shop'], ['Code under internal/ can be imported', 'Code in an internal directory can be imported'], ['cmd/ for binaries and internal/ for private code', 'cmd for binaries and internal for private code']],
+  'practice:p-removeslice:talk': [['Removing with append, s[:i], s[i+1:]..., is cheap', 'Removing with append of the part before i and the tail after it is cheap']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
     ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],

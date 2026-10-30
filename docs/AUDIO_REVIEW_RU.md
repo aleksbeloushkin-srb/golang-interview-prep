@@ -1,6 +1,6 @@
 # Приёмка озвучки на слух — неделя 1
 
-Сгенерировано из `data/audio.js` (64 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
+Сгенерировано из `data/audio.js` (91 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
 Как проверять каждую запись (Michael и Heart отдельно):
 
@@ -33,6 +33,8 @@
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 36.0 | `s[1:3]` |  |  |  |  |  |  |
+| [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 26.4 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
+| [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 26.9 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 28.3 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 28.7 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.5 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
@@ -45,6 +47,10 @@
 | [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 41.2 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
 | [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.8 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
 | [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 43.9 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 25.6 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 25.9 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 36.7 | import path, `.go`, `internal/` |  |  |  |  |  |  |
+| [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 38.2 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 47.1 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 48.6 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 27.4 | `x := expr` |  |  |  |  |  |  |
@@ -55,6 +61,12 @@
 | [plan:w1-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Heart | 45.0 | 12.50 EUR, 1250, −0.05 EUR |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 50.0 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 51.5 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
+| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 43.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 45.1 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 33.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Michael | 29.9 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Heart | 30.4 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Michael | 38.8 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
@@ -113,6 +125,16 @@
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 23.5 |  |  |  |  |  |  |  |
 | [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.2 |  |  |  |  |  |  |  |
 | [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.3 |  |  |  |  |  |  |  |
+| [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 19.2 |  |  |  |  |  |  |  |
+| [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 20.2 |  |  |  |  |  |  |  |
+| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 16.2 |  |  |  |  |  |  |  |
+| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Heart | 16.2 |  |  |  |  |  |  |  |
+| [card:c31:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 32.0 |  |  |  |  |  |  |  |
+| [card:c31:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Heart | 32.4 |  |  |  |  |  |  |  |
+| [card:c32:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Michael | 21.6 |  |  |  |  |  |  |  |
+| [card:c32:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Heart | 22.5 |  |  |  |  |  |  |  |
+| [card:c32:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Michael | 24.5 |  |  |  |  |  |  |  |
+| [card:c32:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Heart | 25.0 |  |  |  |  |  |  |  |
 | [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 14.4 |  |  |  |  |  |  |  |
 | [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 15.3 |  |  |  |  |  |  |  |
 | [card:c34:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 15.8 |  |  |  |  |  |  |  |
@@ -121,6 +143,18 @@
 | [card:c35:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 21.7 |  |  |  |  |  |  |  |
 | [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 24.5 |  |  |  |  |  |  |  |
 | [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 25.2 |  |  |  |  |  |  |  |
+| [card:c41:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 18.6 |  |  |  |  |  |  |  |
+| [card:c41:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 19.1 |  |  |  |  |  |  |  |
+| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 22.4 |  |  |  |  |  |  |  |
+| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Heart | 23.1 |  |  |  |  |  |  |  |
+| [card:c42:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 27.4 |  |  |  |  |  |  |  |
+| [card:c42:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Heart | 27.5 |  |  |  |  |  |  |  |
+| [card:c43:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 18.9 |  |  |  |  |  |  |  |
+| [card:c43:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 19.5 |  |  |  |  |  |  |  |
+| [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 23.2 |  |  |  |  |  |  |  |
+| [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 23.9 |  |  |  |  |  |  |  |
+| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 31.1 |  |  |  |  |  |  |  |
+| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 32.7 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 23.5 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 23.8 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
@@ -137,8 +171,28 @@
 | [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 27.6 |  |  |  |  |  |  |  |
 | [plan:w1-wed-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 26.3 |  |  |  |  |  |  |  |
 | [plan:w1-wed-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 26.4 |  |  |  |  |  |  |  |
+| [plan:w2-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Michael | 27.9 |  |  |  |  |  |  |  |
+| [plan:w2-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
+| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
+| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
+| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 27.1 |  |  |  |  |  |  |  |
+| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 27.9 |  |  |  |  |  |  |  |
+| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 43.0 |  |  |  |  |  |  |  |
+| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 44.2 |  |  |  |  |  |  |  |
+| [plan:w2-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 25.7 |  |  |  |  |  |  |  |
+| [plan:w2-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 26.6 |  |  |  |  |  |  |  |
+| [plan:w2-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Michael | 20.6 |  |  |  |  |  |  |  |
+| [plan:w2-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 21.4 |  |  |  |  |  |  |  |
+| [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Michael | 26.4 |  |  |  |  |  |  |  |
+| [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Michael | 33.2 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Heart | 34.3 |  |  |  |  |  |  |  |
+| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Michael | 39.5 |  |  |  |  |  |  |  |
+| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Heart | 40.4 |  |  |  |  |  |  |  |
+| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Michael | 35.4 |  |  |  |  |  |  |  |
+| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Heart | 36.4 |  |  |  |  |  |  |  |
+| [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Michael | 41.4 |  |  |  |  |  |  |  |
+| [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Heart | 41.6 |  |  |  |  |  |  |  |
 | [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Michael | 29.6 |  |  |  |  |  |  |  |
 | [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Heart | 30.3 |  |  |  |  |  |  |  |
 
@@ -186,6 +240,10 @@
 
 > A slice is only a view onto data stored in an array, not the data itself. Its structure is a pointer to the array, a length and a capacity, and a string is a pointer and a length over immutable bytes. So slicing s from one to three copies no elements: it is a new view over the same array, and a change through one slice is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.
 
+**card:c30:short** (хеш текста `5ac47b1b`)
+
+> A Go map is a hash table; before Go one 24 it was an array of two to the power B buckets of eight slots, with overflow buckets chained when a bucket filled up. The low bits of the hash chose the bucket, and a one-byte top hash filtered candidates before the keys were compared. Past an average load of 6.5 per bucket the map doubled, and the copying, called evacuation, was spread over later writes.
+
 **card:c33:short** (хеш текста `a6be640d`)
 
 > A typed nil inside an interface is not really nil. For example, if a function returns a nil pointer to My Error as error, the caller sees that err is not nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds pointer to My Error and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.
@@ -210,6 +268,14 @@
 
 > Every type in Go has a zero value: var n int gives you zero, and you get the empty string for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: assigning to a nil map, m of k equals v, panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync dot Mutex and strings dot Builder work without any setup.
 
+**card:c41:short** (хеш текста `208ccb81`)
+
+> A Go string is bytes, not characters: len of s and s of i work on bytes, while range decodes U-T-F-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually U-T-F-8. Convert to a slice of runes when you need code points by position, and build strings in a loop with strings dot Builder.
+
+**card:c43:short** (хеш текста `1707ad52`)
+
+> A package is what you import, a module is what you version. import example dot com slash shop slash ledger names a package: one directory of dot-go files compiled together, whose import path is the module path from go dot mod plus the directory. A module is a versioned set of packages with a go dot mod that declares the module path, the Go version and the dependencies. A package under an internal directory can be imported only by code in the tree rooted at the parent of internal, and the go command enforces it.
+
 **card:c47:short** (хеш текста `cf718838`)
 
 > In Go you talk to a database through database/sql, and the main object is a pointer to sql dot D-B. It is a connection pool, not a single connection: get it once from sql dot Open at startup, share it, since it is safe for concurrent use, and set limits. Pass the request context to every query with Query Context and Exec Context. Leaks come from objects that hold a connection: a Rows holds one until it is closed, so after checking the query error, defer rows dot Close and check rows dot Err after the loop. A transaction pins one connection: Begin Tx with ctx and nil, check the error, defer tx dot Rollback, run every statement on tx, then Commit.
@@ -229,6 +295,18 @@
 **plan:w1-wed-2** (хеш текста `b4aba892`)
 
 > A typed nil inside an interface is not really nil: returning a nil pointer to My Err as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; the method set of pointer to Service has both. So if Notify has a pointer receiver, pointer to Service implements the interface and Service does not. Calling v dot Notify on a Service variable is only shorthand for taking the address of v, then calling Notify; an element of map of K to Service or a function result of type Service cannot be called that way, while an element of map of K to pointer to Service or a result of type pointer to Service can.
+
+**plan:w2-mon-1** (хеш текста `fa451292`)
+
+> A slice is only a view onto an underlying array: a descriptor with a pointer, a length and a capacity. So slicing s from one to three copies no elements, and because re-slicing shares the array, a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows; copy or slices dot Clone gives an independent slice.
+
+**plan:w2-mon-2** (хеш текста `4bad243c`)
+
+> Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a full slice expression so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100-megabyte array reachable, and only a copy, such as bytes dot Clone or make plus copy, lets the array be collected.
+
+**plan:w2-tue-3** (хеш текста `eda6ef4e`)
+
+> Strings are bytes, not characters: the length of héllo is 6, not 5, because a string is an immutable sequence of bytes, usually U-T-F-8, and é takes two of them. len of s counts bytes and s of i returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes, code points, I use utf8 dot Rune Count In String, and I convert to slice of rune only when I really need to index by code point.
 
 **practice:p-deferpanic:talk** (хеш текста `b4a6387c`)
 
@@ -346,6 +424,26 @@
 
 > The hybrid write barrier is code the compiler adds to pointer writes outside the stack; while the G-C marks, it keeps the running program from hiding a live object. The danger: your code copies the only pointer to an unmarked object into an already scanned object and overwrites the original, so the G-C would free a live object. The barrier shades the old target of the write and, while the current stack is grey, the new one too: a deletion and an insertion barrier combined, hence hybrid. So stack writes need no barrier, and each stack is scanned once.
 
+**card:c30:jvm** (хеш текста `6df5ab69`)
+
+> Java's Hash Map also uses buckets, but each bucket is a linked list that becomes a tree once it passes eight entries and the table has at least 64 buckets, and resizing copies everything at once. Go's old map kept eight entries per bucket inline and grew incrementally.
+
+**card:c31:jvm** (хеш текста `284cb4e6`)
+
+> Unlike Java's Hash Map with chained buckets, Swiss Tables use open addressing: there are no linked nodes, entries live in flat groups, so a lookup touches fewer cache lines. Growth also rehashes one table, not the whole map.
+
+**card:c31:short** (хеш текста `4b7e0c93`)
+
+> Since Go one 24 Go maps are built as Swiss Tables. A map hashes the key; a large map first picks a table from its directory by the top bits. In the table, H1, the high bits, picks a starting group and H2, the low 7 bits, is a fingerprint: a lookup compares H2 with a group's eight control bytes at once, checks only the matching keys and stops at a group with an empty slot. A table doubles up to 1024 slots, then splits.
+
+**card:c32:jvm** (хеш текста `3a743dfe`)
+
+> Like Java's Hash Map, a Go map never shrinks its table on remove or clear. Unlike Hash Map, changing a map from the same goroutine while ranging over it is allowed, with no Concurrent Modification Exception; a write from another goroutine during iteration, however, is a fatal error that recover cannot catch.
+
+**card:c32:short** (хеш текста `57a47be1`)
+
+> A Go map's table never shrinks: delete and clear remove entries, so whatever they referenced can be collected, but the table keeps its size. That memory stays until the whole map is dropped, so after a spike you copy the live entries into a new map. Iteration order is unspecified and starts at a random place; an entry added during the loop may or may not be visited.
+
 **card:c33:jvm** (хеш текста `237b35d0`)
 
 > Java has no such trap: a reference is either null or points to an object. In Go an interface carries its dynamic type separately from the value, so a nil pointer of type T and no value at all are different.
@@ -361,6 +459,30 @@
 **card:c40:jvm** (хеш текста `9ab9a803`)
 
 > In Java a reference field starts as null; in Go many types are usable at their zero value: an empty string instead of null, a ready Mutex or Builder. But writing to a nil map or dereferencing a nil pointer still panics, and Go has no compile-time null safety like Kotlin's nullable T: any pointer, slice, map, channel, function or interface may be nil.
+
+**card:c41:jvm** (хеш текста `7561d2a8`)
+
+> Java's String A-P-I works in U-T-F-16: length counts U-T-F-16 code units and char At returns a char. A Go string is bytes: len counts bytes, and code points come from range, slice of rune or the unicode/utf8 package.
+
+**card:c42:jvm** (хеш текста `accf1bc8`)
+
+> Go generics look like Java generics but are not erased: the compiler generates code per G-C shape plus a runtime dictionary, so Max of int works on plain ints, while Java's List of Integer boxes because its type arguments must be reference types. And interfaces are satisfied implicitly, without an implements clause.
+
+**card:c42:short** (хеш текста `4a7306da`)
+
+> Both let one piece of code work with many types, but in different ways. Use type parameters when the same algorithm works on many types and the caller's type should come back out, as in Map, Max or a Set of comparable T. Use an interface when different types behave differently behind the same methods and the implementation is chosen at run time, as with I-O dot Reader or a Shape. If one concrete type is enough, use that.
+
+**card:c43:jvm** (хеш текста `6c8b048f`)
+
+> A module is like a Maven artifact with its own coordinates and versions, and a package is like a Java package but tied to one directory. An internal directory is a boundary enforced by the go command, close to a package that a J-P-M-S module does not export.
+
+**card:c44:jvm** (хеш текста `21f5388e`)
+
+> Table-driven tests play the role of J Unit 5 Parameterized Test, t dot Run is like a dynamic or nested test, and t dot Cleanup is like After Each registered from inside the test. There are no assertion functions in the standard library: you compare values and call t dot Error-f to continue or t dot Fatal-f to stop.
+
+**card:c44:short** (хеш текста `1dfeb4e7`)
+
+> A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases in a slice of structs and runs each with t dot Run, so failures name the case and -run can select one. t dot Helper marks a helper so failures point at the caller's line. t dot Parallel lets subtests run concurrently after the parent's function returns, so give them only per-case data and register shared teardown with t dot Cleanup, not defer.
 
 **card:c47:jvm** (хеш текста `774abf85`)
 
@@ -394,9 +516,49 @@
 
 > I wrap errors with F-M-T dot Error-f, withdraw: percent w, err, to add context while keeping the cause. errors dot Is walks the chain and compares with a sentinel such as Err Insufficient Funds; errors dot As finds the first error of the target type, such as pointer to Validation Error, and lets me read its fields. A test should check both after one and after two levels of wrapping.
 
+**plan:w2-sat-2** (хеш текста `24d403dd`)
+
+> txsum is a small C-L-I that totals transactions from a C-S-V file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
+
+**plan:w2-thu-1** (хеш текста `6f28e549`)
+
+> A module is the unit of versioning and a package the unit of compilation: go dot mod declares the module path, such as module example dot com slash shop, and a package is one directory compiled together. Code in an internal directory can be imported only by packages in the tree rooted at the parent of that internal directory. cmd for binaries and internal for private code is a common layout, not a language rule.
+
+**plan:w2-thu-2** (хеш текста `63012adb`)
+
+> A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t dot Run, so a failure shows the case name and one case can be run with -run. t dot Helper marks a helper so failures point to the caller's line. t dot Parallel runs a test alongside others, so I use it only when cases don't share mutable data. C-I runs go test -race.
+
+**plan:w2-tue-1** (хеш текста `3a44b4c6`)
+
+> A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so assigning to a field, m of k dot f, does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
+
+**plan:w2-tue-4** (хеш текста `4fe73252`)
+
+> Removing in place changes the caller's data: appending the tail after i to the part before i shifts elements inside the shared array, so the caller's slice sees the change. slices dot Delete also modifies the array and, since Go one 22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices dot Clone or build a new slice.
+
+**plan:w2-wed-1** (хеш текста `44ead2fc`)
+
+> Generics let one type work for many element types: a generic Set[T comparable] is a map from T to an empty struct with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys.
+
+**plan:w2-wed-2** (хеш текста `09e54783`)
+
+> Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice.
+
 **practice:p-account:talk** (хеш текста `b14fd304`)
 
 > Deposit and Withdraw change the account, so they have pointer receivers; with value receivers they would change a copy. Insufficient funds is a sentinel error, because callers only need to branch on that condition. I wrap it with percent w and add the amount and the account, so the message is useful and errors dot Is still finds the cause. Transfer wraps once more, and a test checks that errors dot Is works through both levels and that a failed operation leaves the balances unchanged.
+
+**practice:p-generics:talk** (хеш текста `d0a2c487`)
+
+> The task compares generic helpers with an interface. Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.
+
+**practice:p-removeslice:talk** (хеш текста `d65c9afb`)
+
+> A slice element can be removed in place or with a copy. Removing with append of the part before i and the tail after it is cheap because it shifts the tail inside the same backing array, but the caller's slice shares that array, so it now sees shifted values and a stale duplicate at the end. If the caller's data must stay intact, I allocate a new slice and copy the two parts. slices dot Delete also works in place, and since Go one 22 it zeroes the tail, which helps the garbage collector when elements are pointers.
+
+**practice:p-txsum:talk** (хеш текста `e5f6925d`)
+
+> txsum totals transactions from a C-S-V file, and money needs care: I parse amounts into integer minor units, never floats, and reject anything with more than two decimals. Each bad line becomes a Line Error with the line number, and its Unwrap method lets errors dot Is find the cause, so tests can check both. I don't stop at the first error: the user sees every bad line in one run, and the exit code is non-zero if any line failed. Run takes a reader and two writers, so the whole C-L-I is tested with strings and buffers, and output is sorted because map order is not specified.
 
 **practice:p-validation:talk** (хеш текста `e40edb65`)
 

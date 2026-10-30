@@ -279,7 +279,7 @@ const PRACTICE = [
       "Для независимой копии выдели новый массив: make([]int, 0, len(s)-1), затем два append.",
       "Почему исходный срез оканчивается на 4 4? Его длина не изменилась, а последний элемент никто не перезаписал."
     ],
-    "talkEN": "Removing with append(s[:i], s[i+1:]...) is cheap because it shifts the tail inside the same backing array, but the caller's slice shares that array, so it now sees shifted values and a stale duplicate at the end. If the caller's data must stay intact, I allocate a new slice and copy the two parts. slices.Delete also works in place, and since Go 1.22 it zeroes the tail, which helps the garbage collector when elements are pointers.",
+    "talkEN": "A slice element can be removed in place or with a copy. Removing with append(s[:i], s[i+1:]...) is cheap because it shifts the tail inside the same backing array, but the caller's slice shares that array, so it now sees shifted values and a stale duplicate at the end. If the caller's data must stay intact, I allocate a new slice and copy the two parts. slices.Delete also works in place, and since Go 1.22 it zeroes the tail, which helps the garbage collector when elements are pointers.",
     "pitfalls": [
       "Считать, что append(s[:i], s[i+1:]...) создаёт новый срез → порча данных вызывающего.",
       "Забыть, что длина исходного среза не меняется → «лишний» последний элемент.",
@@ -340,7 +340,7 @@ const PRACTICE = [
       "Max сравнивает через < или встроенный max (Go 1.21), поэтому нужен cmp.Ordered, а не any.",
       "Best принимает []Ranker: в одном срезе лежат разные типы, и каждый сам решает, что такое Score."
     ],
-    "talkEN": "Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.",
+    "talkEN": "The task compares generic helpers with an interface. Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.",
     "pitfalls": [
       "Max[T any] → не компилируется: для any нет операции <.",
       "Set без NewSet и с nil map внутри → panic при первом Add.",
@@ -401,7 +401,7 @@ const PRACTICE = [
       "Порядок обхода map не задан: собери ключи в срез и отсортируй slices.SortFunc перед печатью.",
       "Run принимает io.Reader и io.Writer, а main — это os.Exit(Run(os.Stdin, os.Stdout, os.Stderr)): так CLI тестируется без процессов."
     ],
-    "talkEN": "I parse amounts into integer minor units, never floats, and reject anything with more than two decimals. Each bad line becomes a LineError with the line number, and its Unwrap method lets errors.Is find the cause, so tests can check both. I don't stop at the first error: the user sees every bad line in one run, and the exit code is non-zero if any line failed. Run takes a reader and two writers, so the whole CLI is tested with strings and buffers, and output is sorted because map order is not specified.",
+    "talkEN": "txsum totals transactions from a CSV file, and money needs care: I parse amounts into integer minor units, never floats, and reject anything with more than two decimals. Each bad line becomes a LineError with the line number, and its Unwrap method lets errors.Is find the cause, so tests can check both. I don't stop at the first error: the user sees every bad line in one run, and the exit code is non-zero if any line failed. Run takes a reader and two writers, so the whole CLI is tested with strings and buffers, and output is sorted because map order is not specified.",
     "pitfalls": [
       "strconv.ParseFloat и умножение на 100 → 0.29 превращается в 28.",
       "Остановка на первой ошибке → пользователь исправляет файл по одной строке.",
