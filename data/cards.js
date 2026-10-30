@@ -1540,12 +1540,13 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do stack and heap allocation differ, and how do you compare their cost?",
     "qRU": "Чем отличаются выделения на стеке и в куче и как сравнивать их стоимость?",
-    "shortEN": "A value a function creates lives either on the goroutine's stack or on the heap, and the difference is mostly cost. A stack allocation is part of the function's frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator and brings the next GC cycle closer, and each cycle costs more the more data stays live. For example, a buffer used only inside the function can stay on the stack, while a value whose pointer you return usually escapes to the heap, unless the call is inlined and the caller keeps it local. So measure: -gcflags=-m shows what escapes, and -benchmem counts the allocations that really happen.",
+    "shortEN": "The stack is each goroutine's own memory for function calls: values that stay local to a call live in its frame and disappear when the function returns, so allocating there is nearly free. The heap is shared memory for values that must outlive the call or be reachable from elsewhere; the runtime allocator hands it out, and the GC later frees what is no longer used. That is the fundamental difference: the stack cleans up after itself, the heap needs the GC, and every heap allocation brings the next GC cycle closer. Returning a pointer to a local usually moves it to the heap. Measure: -gcflags=-m shows what escapes, and -benchmem counts real allocations.",
     "anchorsEN": [
-      "stack: part of the frame, nearly free",
-      "heap: allocator now; next GC cycle sooner",
-      "local buffer → stack; returned pointer → usually heap (inlining can avoid it)",
-      "-gcflags=-m: what escapes; -benchmem: real allocations"
+      "stack: per goroutine, frame dies at return, nearly free",
+      "heap: shared, outlives the call, freed by the GC",
+      "stack cleans itself up; heap needs GC → next cycle sooner",
+      "returned pointer → usually heap",
+      "-gcflags=-m: escapes; -benchmem: real allocations"
     ],
     "jvmEN": "The JVM has a similar optimisation, escape analysis with scalar replacement in the JIT, but it happens at run time and only after warm-up. In Go the compiler decides at build time, and -gcflags=-m shows the decision.",
     "detailsEN": [
@@ -1556,7 +1557,7 @@ const CARDS = [
     ],
     "practicalRU": "Сначала выбери корректное владение данными, затем сравни эквивалентные вызовы под рабочей версией компилятора. Не добавляй глобальный указатель только ради того, чтобы benchmark «не исчез»: это само меняет время жизни объекта. Сохраняй наблюдаемый результат так, чтобы не навязать лишний escape. Опора: «владение → размещение → измерение».",
     "code": "package example\n\ntype User struct{ ID int }\n\nfunc NewUserValue(id int) User { return User{ID: id} }\nfunc NewUser(id int) *User     { return &User{ID: id} }\n\nfunc ReadID(id int) int { return NewUser(id).ID }\n\n// Compare the optimized ReadID caller, not just NewUser in isolation.",
-    "shortRU": "Значение, которое создаёт функция, живёт либо на стеке горутины, либо в куче, и разница в основном в цене. Выделение на стеке — часть кадра функции: почти бесплатно и исчезает при возврате. Выделение в куче идёт через аллокатор рантайма и приближает следующий цикл GC, а каждый цикл тем дороже, чем больше живых данных. Например, буфер, который нужен только внутри функции, может остаться на стеке, а значение, указатель на которое функция возвращает, обычно убегает в кучу, если только вызов не встроен и вызывающий код не держит его локально. Поэтому меряют: -gcflags=-m показывает, что убегает, а -benchmem считает выделения, которые происходят на самом деле.",
+    "shortRU": "Стек — собственная память каждой горутины для вызовов функций: значения, которые остаются внутри вызова, лежат в его кадре и исчезают при возврате из функции, поэтому выделение там почти бесплатно. Куча — общая память для значений, которые должны пережить вызов или быть доступны откуда-то ещё; её раздаёт аллокатор рантайма, а то, что больше не нужно, потом освобождает GC. В этом принципиальная разница: стек убирает за собой сам, куче нужен GC, и каждое выделение в куче приближает следующий цикл GC. Если вернуть указатель на локальное значение, оно обычно уходит в кучу. Меряют так: -gcflags=-m показывает, что убегает, а -benchmem считает реальные выделения.",
     "jvmRU": "В JVM есть похожая оптимизация — escape analysis со scalar replacement в JIT, но она работает во время выполнения и только после прогрева. В Go решает компилятор при сборке, и -gcflags=-m показывает это решение.",
     "detailsRU": [
       "Язык гарантирует пригодность значения, пока на него есть ссылки, а не место хранения. Кадр стека содержит локальное состояние; стек горутины может расти и перемещаться. Значения могут остаться в регистрах или вообще исчезнуть после оптимизации.",
