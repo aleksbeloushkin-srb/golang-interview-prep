@@ -1299,14 +1299,15 @@ const CARDS = [
     "simId": "sim5",
     "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
-    "shortEN": "Compare-and-swap is a conditional write done as one atomic step: atomic.CompareAndSwapInt64(&x, old, new) stores new only if x still equals old and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.",
+    "shortEN": "Compare-and-swap means: \"if x still holds the value I saw, replace it with mine\", and the hardware checks and writes as one indivisible step. In Go it is atomic.CompareAndSwapInt64(&x, old, new), which returns false if another goroutine changed x first; then you read again and retry in a loop. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds. It covers one variable, so an invariant across several fields usually needs a mutex.",
     "anchorsEN": [
-      "CompareAndSwap(&x, old, new): store only if still old",
-      "Load + Store gap → both win; CAS → one wins",
-      "one variable; several fields → usually a mutex"
+      "CAS: x still what I saw → write mine, one indivisible step",
+      "CompareAndSwapInt64(&x, old, new) false → read again, retry",
+      "Load + Store: gap, both \"win\"; CAS: exactly one",
+      "one variable; multi-field invariant → mutex"
     ],
     "jvmEN": "This is AtomicInteger.compareAndSet in Java and atomic.Int32.CompareAndSwap in Go. Go atomics are always sequentially consistent, like Java volatile; Go has no weaker modes such as lazySet or getAcquire.",
-    "shortRU": "Compare-and-swap — условная запись одним атомарным шагом: atomic.CompareAndSwapInt64(&x, old, new) записывает new, только если x всё ещё равно old, и сообщает, удалось ли. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна, другая видит false. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
+    "shortRU": "Compare-and-swap означает: «если в x всё ещё то значение, которое я видел, замени его моим», и железо проверяет и записывает одним неделимым шагом. В Go это atomic.CompareAndSwapInt64(&x, old, new): он возвращает false, если другая горутина успела изменить x, и тогда значение перечитывают и пробуют снова в цикле. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
     "jvmRU": "Это AtomicInteger.compareAndSet в Java и atomic.Int32.CompareAndSwap в Go. Атомики Go всегда последовательно согласованы, как volatile в Java; более слабых режимов вроде lazySet или getAcquire в Go нет.",
     "detailsEN": [
       "Think of three inputs: the location, expected old value and proposed new value. If state starts at 0 and two goroutines each try CAS(0, 1), only one can succeed as long as nothing resets state. A failure does not wait or retry by itself.",
