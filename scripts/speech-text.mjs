@@ -16,12 +16,16 @@ const WORDS = {
   OS: "O-S",
   GC: "G-C",
   CPU: "C-P-U",
+  CPUs: "C-P-U's", // иначе разбивка camelCase даёт «CP Us»
   HTTP: "H-T-T-P",
   API: "A-P-I",
   SQL: "S-Q-L",
   JSON: "Jason",
   LIFO: "LIE-foe",
-  GOMAXPROCS: "GO-MAX-PROCS",
+  GOMAXPROCS: "Go max procs", // «GO-MAX-PROCS» синтезатор читал как «go M-A-X procs»
+  Ps: "P's", // «Ps» синтезатор читал по буквам: «P-S»
+  Gs: "G's",
+  Ms: "M's",
   GOGC: "GO-G-C",
   GOMEMLIMIT: "GO-MEM-LIMIT"
 };

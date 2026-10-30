@@ -1230,7 +1230,7 @@ PostgreSQL defaults to Read Committed, where each statement sees its own snapsho
 
 *Remember:* Key + request fingerprint + stored response; same key, other body → 422.
 
-The client sends an Idempotency-Key. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry.
+A client may retry a payment, so it sends an Idempotency-Key that makes the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry.
 
 </details>
 
@@ -1260,7 +1260,7 @@ Publishing after commit is a dual write: if the process dies between the commit 
 
 *Remember:* One owned goroutine: poll, publish in order, mark after the ack, stop on ctx.
 
-The relay is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles.
+The relay moves events from the outbox table to Kafka; it is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles.
 
 </details>
 
@@ -1350,7 +1350,7 @@ Go has two ways to declare a variable: var x T declares one with its zero value 
 
 *Remember:* A closure captures the variable, not a copy of its value.
 
-If closures created in a loop all print the same final value, they share one variable: a closure refers to the variable itself, not a copy, so a later change is visible inside it. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations.
+A closure captures a variable, not a copy of its value. So if closures created in a loop all print the same final value, they share one variable, and a later change is visible inside each of them. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations.
 
 </details>
 
@@ -1380,7 +1380,7 @@ A type switch branches on the dynamic type stored in an interface: switch v := x
 
 *Remember:* Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.
 
-Returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can.
+A typed nil inside an interface is not really nil: returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can.
 
 </details>
 
@@ -1410,7 +1410,7 @@ I use a sentinel error when callers only branch on a fixed condition, and a type
 
 *Remember:* Defer arguments are evaluated immediately; deferred closures can change named results.
 
-Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
+defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
 
 </details>
 
@@ -1420,7 +1420,7 @@ Deferred calls run in last-in-first-out order when the function returns, but the
 
 *Remember:* recover works only in a deferred call of the panicking goroutine.
 
-recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
+A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
 
 </details>
 
@@ -1460,7 +1460,7 @@ A slice is a view, not a copy: s[1:3] copies no elements, because a slice is a d
 
 *Remember:* Aliasing: limit cap or copy. Retention: only a copy frees the array.
 
-q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected.
+Both quiz cases come from slices sharing one array. q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected.
 
 </details>
 
@@ -1560,7 +1560,7 @@ A goroutine is a function running concurrently under the Go runtime: go f() star
 
 *Remember:* nil blocks; closed: send panics, receive drains then returns zero, false.
 
-Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
+A channel's state decides whether an operation blocks, returns at once or panics. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
 
 </details>
 
@@ -1570,7 +1570,7 @@ Sending to or receiving from a nil channel blocks forever. Sending on a closed c
 
 *Remember:* Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.
 
-N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel.
+A worker pool bounds concurrency: N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel.
 
 </details>
 
@@ -1580,7 +1580,7 @@ N workers read from a jobs channel and write to a results channel. The producer 
 
 *Remember:* Each stage owns and closes its output; every send selects on ctx.Done.
 
-Each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
+In a pipeline, each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
 
 </details>
 
