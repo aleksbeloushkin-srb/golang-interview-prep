@@ -1607,12 +1607,12 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How does escape analysis choose storage, and how do you verify a particular allocation?",
     "qRU": "Как escape analysis определяет размещение и как проверить конкретное выделение памяти?",
-    "shortEN": "Escape analysis is the compiler deciding, for each value, whether it can stay on the stack. It keeps a value there unless it might outlive its function, be reachable from the heap, or be too big for the frame. Returning &x, storing it in a global, or sharing it with a goroutine by reference are the usual causes. Since Go 1.25 a non-escaping make([]T, n) with a variable n may use a small stack buffer, 32 bytes by default, and moves to the heap only when larger, so -m can say “does not escape” while -benchmem shows an allocation: check both.",
+    "shortEN": "Escape analysis is how the Go compiler decides, at build time, whether a value can live on the stack or must move to the heap. The rule is simple: a value stays on the stack unless it might outlive its function, be reachable from the heap, or be too big for the frame. In practice it escapes when you return its address, store it in a global, or share it with another goroutine by reference. To check a particular value, build with -gcflags=-m. One catch since Go 1.25: a non-escaping make([]T, n) with a variable n may use a small stack buffer, 32 bytes by default, and only larger sizes go to the heap, so -m can say “does not escape” while -benchmem still shows an allocation: check both.",
     "anchorsEN": [
-      "stack unless: outlives · reachable from heap · too big",
-      "return &x · global · shared with a goroutine",
-      "Go 1.25: make([]T, n) may use a small stack buffer",
-      "verify with -gcflags=-m and -benchmem"
+      "compiler decides at build time: stack or heap",
+      "stays unless: outlives · reachable from heap · too big",
+      "escapes: return &x · global · shared with a goroutine",
+      "check with -gcflags=-m; Go 1.25 make([]T, n) → also -benchmem"
     ],
     "jvmEN": "In Java every object goes to the heap unless the JIT proves otherwise. In Go values live on the stack by default and move to the heap only when the compiler cannot prove that the stack is safe.",
     "detailsEN": [
@@ -1624,7 +1624,7 @@ const CARDS = [
     ],
     "practicalRU": "В примере ReadLocal использует результат сразу, SaveGlobal передаёт адрес функции, которая удерживает его. Sum проверяет диапазон n и реально читает заполненные байты, поэтому пример не сводится к неиспользуемому buf. Проверяй и маленькие, и большие размеры: «не убегает» у динамического make не означает «никогда не выделяет в куче».",
     "code": "package example\n\nvar Saved *int\n\nfunc makeInt(v int) *int  { return &v }\nfunc retain(p *int)       { Saved = p }\nfunc ReadLocal(v int) int { return *makeInt(v) }\nfunc SaveGlobal(v int)    { retain(&v) }\n\nfunc Sum(n int) (int, bool) {\n\tif n < 0 || n > 1024 {\n\t\treturn 0, false\n\t}\n\tbuf := make([]byte, n)\n\tfor i := range buf {\n\t\tbuf[i] = byte(i)\n\t}\n\tsum := 0\n\tfor _, v := range buf {\n\t\tsum += int(v)\n\t}\n\treturn sum, true\n}",
-    "shortRU": "Escape analysis — это решение компилятора для каждого значения: может ли оно остаться на стеке. Компилятор оставляет его там, если оно не может пережить свою функцию, стать доступным из кучи или оказаться слишком большим для кадра. Обычные причины убегания — вернуть &x, сохранить его в глобальной переменной или передать горутине по ссылке. С Go 1.25 неубегающий make([]T, n) с переменным n может использовать небольшой буфер на стеке, по умолчанию 32 байта, и уходит в кучу, только если нужно больше, поэтому -m может написать «does not escape», а -benchmem покажет выделение: проверяй оба.",
+    "shortRU": "Escape analysis — то, как компилятор Go на этапе сборки решает, может ли значение жить на стеке или должно уйти в кучу. Правило простое: значение остаётся на стеке, если оно не может пережить свою функцию, стать доступным из кучи или оказаться слишком большим для кадра. На практике оно убегает, когда вы возвращаете его адрес, сохраняете его в глобальной переменной или передаёте другой горутине по ссылке. Чтобы проверить конкретное значение, соберите с -gcflags=-m. Одна тонкость с Go 1.25: неубегающий make([]T, n) с переменным n может использовать небольшой буфер на стеке, по умолчанию 32 байта, и только большие размеры идут в кучу, поэтому -m может написать «does not escape», а -benchmem всё равно покажет выделение: проверяйте оба.",
     "jvmRU": "В Java каждый объект попадает в кучу, если JIT не докажет обратное. В Go значения по умолчанию живут на стеке и уходят в кучу, только когда компилятор не может доказать, что стек безопасен.",
     "detailsRU": [
       "Передача указателя вниз совместима со стеком лишь если вызываемая функция не сохраняет его дольше нужного времени жизни. И наоборот, return &x из небольшого помощника не обязательно выделяет память в куче в месте встроенного вызова с локальным использованием. Ниже SaveGlobal намеренно сохраняет указатель.",
