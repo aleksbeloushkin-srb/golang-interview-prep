@@ -889,14 +889,14 @@ const CARDS = [
     "simId": null,
     "qEN": "How do nil, open, and closed channels behave?",
     "qRU": "Чем отличаются операции с nil-каналом, открытым и закрытым каналом?",
-    "shortEN": "A channel's state decides whether an operation blocks, returns at once or panics. A nil channel blocks forever, an open one blocks until a partner or the buffer lets the operation complete, and a closed one never blocks a receive. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.",
+    "shortEN": "A channel's state decides whether an operation blocks, returns at once or panics. A send or receive on a nil channel blocks the goroutine forever; on an open channel it waits until a partner or the buffer lets the operation complete; and a receive from a closed channel never blocks. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.",
     "anchorsEN": [
-      "nil blocks · open waits · closed never blocks a receive",
+      "nil: goroutine blocks forever · open: waits · closed: receive never blocks",
       "closed: drain, then zero with ok=false",
       "send on closed · close twice · close nil → panic"
     ],
     "jvmEN": "A Java BlockingQueue has no closed state, so the end of a stream is signalled with a poison pill or an interrupt. In Go, close is that signal, and a range loop over the channel stops by itself.",
-    "shortRU": "От состояния канала зависит, заблокируется операция, вернётся сразу или вызовет панику. nil-канал блокирует навсегда, открытый блокирует, пока операцию не позволит партнёр или буфер, а закрытый никогда не блокирует чтение. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false, а отправка в него, повторный close или close nil-канала паникуют. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
+    "shortRU": "От состояния канала зависит, заблокируется операция, вернётся сразу или вызовет панику. Отправка или чтение на nil-канале блокируют горутину навсегда; на открытом канале она ждёт, пока операцию не позволит партнёр или буфер; а чтение из закрытого канала никогда не блокируется. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false, а отправка в него, повторный close или close nil-канала паникуют. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
     "jvmRU": "У BlockingQueue в Java нет закрытого состояния, поэтому конец потока сообщают «ядовитым» элементом или прерыванием. В Go этот сигнал — close, и цикл range по каналу останавливается сам.",
     "detailsEN": [
       "For an open unbuffered channel, send and receive rendezvous. For an open buffered channel, send waits when it is full and receive waits when it is empty. A nil-channel case cannot proceed in select, so another case or default can still run.",
