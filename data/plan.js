@@ -1236,15 +1236,15 @@ const PLAN = {
 
     "w2-mon-1": {
       hook: "A slice is pointer, len, cap over a shared array.",
-      en: "A slice is a view, not a copy: s[1:3] copies no elements, because a slice is a descriptor with a pointer, a length and a capacity over an underlying array, and re-slicing shares that array, so a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
+      en: "A slice is only a view onto an underlying array: a descriptor with a pointer, a length and a capacity. So s[1:3] copies no elements, and because re-slicing shares the array, a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
     },
     "w2-mon-2": {
       hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
-      en: "Both quiz cases come from slices sharing one array. q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected."
+      en: "Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a[:len(a):len(a)] so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100 MiB array reachable, and only a copy, such as bytes.Clone or make plus copy, lets the array be collected."
     },
     "w2-tue-1": {
       hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
-      en: "Map iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
+      en: "A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
     },
     "w2-tue-3": {
       hook: "len counts bytes; range decodes runes.",
@@ -1256,11 +1256,11 @@ const PLAN = {
     },
     "w2-wed-1": {
       hook: "Set[T comparable] because map keys must be comparable.",
-      en: "A generic Set[T comparable] is a map[T]struct{} with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys."
+      en: "Generics let one type work for many element types: a generic Set[T comparable] is a map[T]struct{} with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys."
     },
     "w2-wed-2": {
       hook: "Generics for same algorithm over types; interfaces for different behaviour.",
-      en: "I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice."
+      en: "Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice."
     },
     "w2-thu-1": {
       hook: "Module = versioned set of packages; internal/ limits importers.",
@@ -1268,11 +1268,11 @@ const PLAN = {
     },
     "w2-thu-2": {
       hook: "Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.",
-      en: "Table-driven tests list named cases and run each in t.Run, so a failure shows the case name and one case can be run with -run. t.Helper marks a helper so failures point to the caller's line. t.Parallel runs a test alongside others, so I use it only when cases don't share mutable data. CI runs go test -race."
+      en: "A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t.Run, so a failure shows the case name and one case can be run with -run. t.Helper marks a helper so failures point to the caller's line. t.Parallel runs a test alongside others, so I use it only when cases don't share mutable data. CI runs go test -race."
     },
     "w2-sat-2": {
       hook: "Validate each line, report all errors, exit non-zero on failure.",
-      en: "txsum reads CSV lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
+      en: "txsum is a small CLI that totals transactions from a CSV file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
     },
 
     "w3-mon-1": {
