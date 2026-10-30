@@ -1026,14 +1026,16 @@ const CARDS = [
     "levelLabel": "🟡 Senior (Runtime)",
     "qEN": "Why does a channel wait queue contain sudog records instead of just goroutines?",
     "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
-    "shortEN": "A channel keeps the goroutines waiting on it in queues, but it queues records, not goroutines. A goroutine blocked in select on three channels waits in three queues at once, so each wait needs its own record, and that record is a sudog. It holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; select enqueues one sudog for each case with a non-nil channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.",
+    "shortEN": "A channel has two wait queues, one for receivers (recvq) and one for senders (sendq), and what stands in them is a sudog: a waiting ticket, one per operation a goroutine waits on. The goroutine itself is not enough: in a select it can wait on several channels at once, so it holds a ticket in each queue. A ticket records the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly. When one case wins, the other tickets are withdrawn, and all of them return to a per-P cache.",
     "anchorsEN": [
-      "select on 3 channels → in 3 queues at once",
-      "sudog = g + channel + value pointer",
-      "one sudog per non-nil case; back to a per-P cache"
+      "two wait queues: recvq, sendq",
+      "sudog = a waiting ticket, one per waiting operation",
+      "select: one goroutine, a ticket in each queue",
+      "ticket = g + channel + where the value is",
+      "case wins → others withdrawn → per-P cache"
     ],
     "jvmEN": "A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.",
-    "shortRU": "Канал держит ждущие горутины в очередях, но в очереди стоят записи, а не сами горутины. Горутина, заблокированная в select на трёх каналах, стоит сразу в трёх очередях, поэтому каждому ожиданию нужна своя запись — это sudog. Он хранит горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую; select ставит в очередь по sudog на каждую ветку с не-nil каналом. Когда одна ветка выигрывает, остальные убираются из очередей, и все sudog возвращаются в кеш на P.",
+    "shortRU": "У канала две очереди ожидания — для получателей (recvq) и для отправителей (sendq), и стоят в них sudog: талоны ожидания, по одному на каждую операцию, которой ждёт горутина. Самой горутины мало: в select она может ждать сразу на нескольких каналах, поэтому держит талон в каждой очереди. В талоне записано, какая горутина, какой канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую. Когда одна ветка срабатывает, остальные талоны снимаются, и все они возвращаются в кеш на P.",
     "jvmRU": "Поток Java, заблокированный на блокировке или очереди, ждёт в одном месте. Go нужна отдельная запись на каждое ожидание, потому что select позволяет одной горутине стоять сразу в нескольких очередях каналов.",
     "detailsEN": [
       "hchan contains buffer capacity and occupancy, send/receive indices, wait queues, closed state, type information and an internal runtime lock. The lock implementation depends on the platform; it is not a universal synonym for futex.",
@@ -1088,14 +1090,15 @@ const CARDS = [
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "qEN": "How does a channel safely hand a value to a waiting receiver?",
     "qRU": "Как канал безопасно передаёт значение ожидающему получателю?",
-    "shortEN": "If a receiver is already waiting, the send skips the buffer: the sender copies the value straight into the receiver while it holds the channel lock. It takes the receiver’s sudog from recvq, copies with sendDirect into the receiver’s destination, usually on its stack, then unlocks and calls goready, which makes the receiver runnable. It is safe because a parked receiver has activeStackChans set, so anyone moving its stack must first take the same channel locks.",
+    "shortEN": "If a receiver is already waiting, the send skips the buffer: the sending goroutine copies the value straight into the receiver's variable, usually on its stack, under the channel lock. If nobody waits and there is room, the value goes into the buffer, which lives on the heap with the hchan; with no room, the sender parks, and a later receiver takes the value from the sender's stack. Directly, the sender takes the receiver's sudog from recvq, copies with sendDirect and wakes it with goready. That is safe because a parked goroutine has activeStackChans set, so moving its stack requires the same channel locks.",
     "anchorsEN": [
-      "copy straight to the receiver, under the lock",
-      "sendDirect → unlock → goready",
-      "activeStackChans: a stack move takes the locks"
+      "receiver waiting → straight into its variable (usually its stack)",
+      "nobody waits + room → buffer on the heap with hchan",
+      "no room → sender parks; receiver takes from its stack",
+      "activeStackChans: a stack move takes the channel locks"
     ],
     "jvmEN": "Java’s SynchronousQueue hands over an object reference through the heap. A Go channel copies the value itself, even a whole struct, straight into the receiver’s variable.",
-    "shortRU": "Если получатель уже ждёт, отправка минует буфер: отправитель копирует значение прямо получателю, пока держит блокировку канала. Он забирает sudog получателя из recvq, через sendDirect копирует значение в место назначения получателя, обычно на его стеке, затем отпускает блокировку и вызывает goready, которая делает получателя готовым к запуску. Это безопасно, потому что у запаркованного получателя стоит флаг activeStackChans: кто переносит его стек, должен сначала взять те же блокировки каналов.",
+    "shortRU": "Если получатель уже ждёт, отправка минует буфер: отправляющая горутина копирует значение прямо в переменную получателя, обычно на его стеке, под блокировкой канала. Если никто не ждёт и место есть, значение идёт в буфер, который лежит в куче вместе с hchan; если места нет, отправитель паркуется, и следующий получатель забирает значение с его стека. В прямом случае отправитель берёт sudog получателя из recvq, копирует через sendDirect и будит его через goready. Это безопасно: у запаркованной горутины стоит флаг activeStackChans, поэтому перенос её стека требует тех же блокировок каналов.",
     "jvmRU": "SynchronousQueue в Java передаёт ссылку на объект через кучу. Канал Go копирует само значение — даже целую структуру — прямо в переменную получателя.",
     "detailsEN": [
       "For an open channel, chansend first checks for a waiting receiver under the lock. It can bypass the buffer and copy to the receive destination with sendDirect. The source may be on the stack or heap; a discarded receive needs no destination copy.",
