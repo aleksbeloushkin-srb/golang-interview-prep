@@ -1372,11 +1372,12 @@ const CARDS = [
     "simId": null,
     "qEN": "How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
     "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
-    "shortEN": "sync.Mutex is built for speed, but it does not let a waiter starve. Lock tries one CAS, may spin briefly, then sleeps on a semaphore; 1 ms is the threshold for switching modes, not a timeout. In normal mode Unlock wakes one waiter, which then competes with newcomers that are already running and often loses. If a woken waiter loses again after waiting more than 1 ms, the mutex switches to starvation mode, and Unlock hands ownership directly to the waiter at the front.",
+    "shortEN": "Inside, sync.Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one CAS that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes one waiter, but in normal mode it competes with newcomers that are already running and often loses: fast, but unfair. A woken waiter that has waited more than 1 ms switches the mutex to starvation mode, where Unlock hands ownership straight to the waiter at the front, so 1 ms is a mode threshold, not a timeout.",
     "anchorsEN": [
-      "CAS → maybe spin → sleep on a semaphore",
-      "normal: woken waiter competes with newcomers",
-      "waited > 1 ms and lost → direct handoff"
+      "state word + semaphore",
+      "Lock: one CAS → brief spin → sleep on the semaphore",
+      "normal mode: woken waiter races newcomers, often loses",
+      "waited > 1 ms → starvation mode: direct handoff; not a timeout"
     ],
     "jvmEN": "Unlike ReentrantLock, sync.Mutex is not reentrant: locking it twice in one goroutine deadlocks, and it has no owner, so another goroutine may unlock it. Normal mode behaves like a non-fair ReentrantLock, and starvation mode like a fair one.",
     "detailsEN": [
@@ -1388,7 +1389,7 @@ const CARDS = [
     ],
     "practicalRU": "Ищи конкуренцию через mutex- и block-профили, затем сокращай критические секции или меняй владение. SetMutexProfileFraction(5) задаёт в среднем одно из пяти событий конкуренции за mutex, а не каждый пятый Lock. Профиль показывает конкуренцию, но не доказывает, что сбой вызван starvation mode.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tmu.Lock()\n\tfmt.Println(mu.TryLock()) // false: already locked\n\tmu.Unlock()\n\tif mu.TryLock() {\n\t\tfmt.Println(\"acquired\")\n\t\tmu.Unlock()\n\t}\n}",
-    "shortRU": "sync.Mutex рассчитан на скорость, но не даёт ждущему голодать. Lock пробует один CAS, может недолго покрутиться в спин-цикле, потом засыпает на семафоре; 1 мс — порог смены режима, а не таймаут. В нормальном режиме Unlock будит одного ждущего, и тот соревнуется с уже работающими новичками и часто проигрывает. Если разбуженный ждущий снова проиграл, прождав больше 1 мс, мьютекс переходит в режим голодания, и Unlock передаёт владение прямо первому в очереди.",
+    "shortRU": "Внутри sync.Mutex — слово состояния и семафор, и Lock пробует три вещи по очереди. Сначала один CAS, который переводит слово из «свободен» в «занят»; без конкуренции на этом всё. Если мьютекс занят, горутина может недолго покрутиться в спин-цикле в расчёте на быстрое освобождение, а потом засыпает на семафоре. Unlock будит одного ждущего, но в обычном режиме тот соревнуется с новичками, которые уже выполняются, и часто проигрывает: быстро, но нечестно. Разбуженный ждущий, который ждал дольше 1 мс, переводит мьютекс в режим голодания, где Unlock передаёт владение прямо первому в очереди, поэтому 1 мс — порог смены режима, а не таймаут.",
     "jvmRU": "В отличие от ReentrantLock, sync.Mutex не реентерабелен: повторный Lock в той же горутине — deadlock, и владельца у него нет, поэтому отпустить его может другая горутина. Нормальный режим ведёт себя как нечестный ReentrantLock, режим голодания — как честный.",
     "detailsRU": [
       "Нулевое значение готово к работе. После первого использования Mutex нельзя копировать. Unlock синхронизируется с последующим успешным Lock; неуспешный TryLock не создаёт синхронизации и не разрешает читать защищённые поля.",
