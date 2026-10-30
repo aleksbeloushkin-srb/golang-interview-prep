@@ -11215,6 +11215,1151 @@ const SIMULATORS = [
         }
       }
     ]
+  },
+  {
+    "id": "sim11",
+    "title": "Диаграмма 11: Deadlock, livelock и starvation — кто кого ждёт",
+    "subtitle": "Два встречных перевода берут две блокировки в разном порядке: как замыкается цикл ожидания, какие четыре условия Коффмана его создают, как его ломает единый порядок и чем от него отличаются livelock и starvation. Идея — рисунок 1-1 книги «Concurrency in Go», схема нарисована заново; поведение рантайма сверено с Go 1.27.3.",
+    "cardId": "c55",
+    "cardLabel": "C55: deadlock, livelock, starvation →",
+    "boardLegend": "Дорожки — участники шага: горутины, блокировки или условия. У горутины «держит» — чем она уже владеет, «ждёт» — что ей нужно дальше; у блокировки — владелец и очередь ждущих. Рамкой выделено то, что изменилось на шаге.",
+    "learningHint": "Как запомнить: «держу одно — жду другое — по кругу». Перед шагами 2 и 6 ответь на вопрос, потом открой ответ. В конце нарисуй по памяти цикл G1 → b → G2 → a → G1 и назови, какое условие ломает каждое исправление.",
+    "sources": [
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 1: deadlock, livelock, starvation",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      },
+      {
+        "title": "Deadlock and the Coffman conditions — Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Deadlock_(computer_science)"
+      },
+      {
+        "title": "runtime.checkdead — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go#L6418"
+      },
+      {
+        "title": "sync.Mutex — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Mutex"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Два перевода — две блокировки",
+        "desc": "G1 переводит деньги со счёта a на счёт b, G2 — с b на a. Каждая сначала блокирует свой счёт-источник: G1 берёт a, G2 берёт b. Пока ничего плохого: у каждой по одной блокировке, и обе могут работать дальше.",
+        "descEN": "G1 transfers from account a to b, G2 from b to a. Each first locks its source account: G1 takes a, G2 takes b. Nothing is wrong yet: each holds one lock and can keep running.",
+        "board": [
+          {
+            "hl": [
+              "a",
+              "b",
+              "G1",
+              "G2"
+            ],
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1 · transfer(a, b)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "a"
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2 · transfer(b, a)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "b"
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "блокировка a",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "блокировка b",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "G1 взяла блокировку a",
+                "G2 взяла блокировку b",
+                "Очереди пусты: никто ещё не ждёт"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Is this already a deadlock?",
+          "promptRU": "Это уже deadlock?",
+          "answerEN": "No. Each goroutine holds one lock and can still run. A deadlock appears only when each asks for the lock the other one holds.",
+          "answerRU": "Нет. Каждая горутина держит одну блокировку и может работать дальше. Deadlock появится, только когда каждая попросит блокировку, которую держит другая."
+        }
+      },
+      {
+        "title": "2. Каждая просит вторую блокировку — круг замкнулся",
+        "desc": "G1 вызывает b.mu.Lock(), но b держит G2; G2 вызывает a.mu.Lock(), но a держит G1. Обе засыпают в состоянии [sync.Mutex.Lock]. Получается круг: G1 ждёт b → b у G2 → G2 ждёт a → a у G1. Никто не отпустит свою блокировку, пока не получит вторую, — значит, не отпустит никогда.",
+        "descEN": "G1 calls b.mu.Lock(), but G2 holds b; G2 calls a.mu.Lock(), but G1 holds a. Both park in state [sync.Mutex.Lock]. That is a cycle: G1 waits for b → b is held by G2 → G2 waits for a → a is held by G1. Neither releases its lock until it gets the second one, so neither ever will.",
+        "predict": {
+          "promptEN": "G1 holds a and asks for b; G2 holds b and asks for a. What happens next?",
+          "promptRU": "G1 держит a и просит b; G2 держит b и просит a. Что будет дальше?"
+        },
+        "board": [
+          {
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1 · transfer(a, b)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "a"
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": [
+                      {
+                        "g": "b",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ],
+                "state": "sync.Mutex.Lock"
+              },
+              {
+                "kind": "g",
+                "title": "G2 · transfer(b, a)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "b"
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": [
+                      {
+                        "g": "a",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ],
+                "state": "sync.Mutex.Lock"
+              },
+              {
+                "kind": "var",
+                "title": "блокировка a",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "ждёт",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "блокировка b",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      "G2"
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "flag": "ждёт",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Цикл ожидания",
+              "ordered": true,
+              "items": [
+                "G1 ждёт b",
+                "b держит G2",
+                "G2 ждёт a",
+                "a держит G1 — круг замкнулся"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Would a third CPU core or a bigger GOMAXPROCS help?",
+          "promptRU": "Поможет ли третье ядро или GOMAXPROCS побольше?",
+          "answerEN": "No. Both goroutines are parked waiting for each other; more Ps or cores give them nothing to run on. Only breaking the cycle helps.",
+          "answerRU": "Нет. Обе горутины запаркованы и ждут друг друга; лишние P или ядра им не помогут. Помогает только разорвать круг."
+        }
+      },
+      {
+        "title": "3. Четыре условия Коффмана — все выполнены",
+        "desc": "Deadlock возможен, только когда одновременно выполнены четыре условия, которые в 1971 году сформулировали Коффман и соавторы. В нашем примере есть все четыре. Сломай любое — и deadlock невозможен. В каждой дорожке «как сломать» показывает, как именно это делают.",
+        "descEN": "A deadlock is possible only when four conditions hold at once; Coffman and co-authors listed them in 1971. Our example has all four. Break any one, and the deadlock cannot happen. In each lane, «как сломать» shows how it is done.",
+        "board": [
+          {
+            "hlQuiet": true,
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "1. Взаимное исключение",
+                "slots": [
+                  {
+                    "label": "в примере",
+                    "items": [
+                      "у мьютекса один владелец"
+                    ]
+                  },
+                  {
+                    "label": "как сломать",
+                    "items": [
+                      {
+                        "g": "нечего блокировать",
+                        "flag": "confinement, копии"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "2. Удержание с ожиданием",
+                "slots": [
+                  {
+                    "label": "в примере",
+                    "items": [
+                      "G1 держит a и ждёт b"
+                    ]
+                  },
+                  {
+                    "label": "как сломать",
+                    "items": [
+                      {
+                        "g": "TryLock",
+                        "flag": "не вышло — отпусти всё"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "3. Нет вытеснения",
+                "slots": [
+                  {
+                    "label": "в примере",
+                    "items": [
+                      "отобрать a у G1 нельзя"
+                    ]
+                  },
+                  {
+                    "label": "как сломать",
+                    "items": [
+                      {
+                        "g": "БД отменяет транзакцию",
+                        "flag": "после факта: 40P01 снимает её блокировки"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "4. Циклическое ожидание",
+                "slots": [
+                  {
+                    "label": "в примере",
+                    "items": [
+                      "G1 → b → G2 → a → G1"
+                    ]
+                  },
+                  {
+                    "label": "как сломать",
+                    "items": [
+                      {
+                        "g": "единый порядок",
+                        "flag": "сначала меньший ID",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Нужны все четыре условия сразу",
+                "На практике ломают циклическое ожидание: один порядок блокировок",
+                "TryLock ломает удержание с ожиданием, но грозит livelock (шаг 6)",
+                "Отмена транзакции в БД — не профилактика, а выход из уже случившегося deadlock"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Which condition does locking accounts by ascending ID break?",
+          "promptRU": "Какое условие ломает блокировка счетов по возрастанию ID?",
+          "answerEN": "Circular wait: a goroutine waits only for a lock with a larger ID than any it holds, so the waits can never loop back.",
+          "answerRU": "Циклическое ожидание: горутина ждёт только блокировку с ID больше любого, что она уже держит, поэтому ожидания не могут замкнуться в круг."
+        }
+      },
+      {
+        "title": "4. Что видит рантайм и что видишь ты",
+        "desc": "Если зависли все горутины программы, рантайм печатает «fatal error: all goroutines are asleep - deadlock!» и завершает процесс. В сервере так не бывает: цикл Accept ждёт сеть, могут быть таймеры — для рантайма программа жива, и два запроса просто висят. Найти их помогает дамп горутин (/debug/pprof/goroutine?debug=2): две горутины в состоянии [sync.Mutex.Lock] на второй блокировке в transfer. В PostgreSQL цикл находит сама база: через deadlock_timeout одна транзакция получает 40P01 (c50).",
+        "descEN": "If every goroutine in the program is stuck, the runtime prints \"fatal error: all goroutines are asleep - deadlock!\" and exits. A server never gets there: the accept loop waits on the network and timers may be pending, so the runtime sees a live program and the two requests just hang. A goroutine dump (/debug/pprof/goroutine?debug=2) finds them: two goroutines in state [sync.Mutex.Lock] on the second lock in transfer. In PostgreSQL the database finds the cycle itself: after deadlock_timeout one transaction gets 40P01 (c50).",
+        "board": [
+          {
+            "hlQuiet": true,
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Маленькая программа",
+                "slots": [
+                  {
+                    "label": "другие горутины",
+                    "items": [
+                      "нет: main ждёт в wg.Wait"
+                    ]
+                  },
+                  {
+                    "label": "рантайм",
+                    "items": [
+                      {
+                        "g": "fatal error",
+                        "flag": "all goroutines are asleep - deadlock!"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "HTTP-сервер",
+                "slots": [
+                  {
+                    "label": "другие горутины",
+                    "items": [
+                      "цикл Accept ждёт сеть",
+                      "возможно, таймеры"
+                    ]
+                  },
+                  {
+                    "label": "рантайм",
+                    "items": [
+                      "молчит: программа жива"
+                    ]
+                  },
+                  {
+                    "label": "симптом",
+                    "items": [
+                      {
+                        "g": "запросы висят",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Дамп горутин (debug=2)",
+                "slots": [
+                  {
+                    "label": "G1",
+                    "items": [
+                      {
+                        "g": "[sync.Mutex.Lock]",
+                        "flag": "transfer: b.mu.Lock()"
+                      }
+                    ]
+                  },
+                  {
+                    "label": "G2",
+                    "items": [
+                      {
+                        "g": "[sync.Mutex.Lock]",
+                        "flag": "transfer: a.mu.Lock()"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Как найти",
+              "items": [
+                "Процесс жив, запросы висят, число горутин растёт",
+                "В дампе — пары горутин в [sync.Mutex.Lock]",
+                "Владельца мьютекс Go не хранит: дамп показывает, где ждут, а кто что держит — видно по коду",
+                "Под -race проверки нет: даже маленькая программа просто висит"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Why doesn't an HTTP server with this bug crash with \"all goroutines are asleep\"?",
+          "promptRU": "Почему HTTP-сервер с этим багом не падает с «all goroutines are asleep»?",
+          "answerEN": "The runtime reports it only when no goroutine can ever run again. In a server the accept loop waits on the network and timers may be pending, so the program looks alive; only the two requests hang.",
+          "answerRU": "Рантайм сообщает об этом, только когда ни одна горутина уже не сможет работать. В сервере цикл Accept ждёт сеть и могут быть таймеры, поэтому программа выглядит живой; висят только два запроса."
+        }
+      },
+      {
+        "title": "5. Исправление: один порядок для всех",
+        "desc": "Обе горутины берут блокировки по возрастанию ID счёта: сначала a, потом b — независимо от направления перевода. G1 взяла a; G2 тоже начинает с a и ждёт, ничего не держа. G1 спокойно берёт b, переводит и отпускает обе; затем a получает G2. Круга нет: ждущая горутина ничего не держит. Перевод на тот же счёт отсекают заранее: sync.Mutex не реентерабелен.",
+        "descEN": "Both goroutines lock in ascending account ID: a first, then b, whatever the transfer direction. G1 takes a; G2 also starts with a and waits while holding nothing. G1 takes b, transfers and releases both; then G2 gets a. No cycle: the waiting goroutine holds nothing. A transfer to the same account is rejected up front, because sync.Mutex is not reentrant.",
+        "board": [
+          {
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1 · transfer(a, b)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": [
+                      "a",
+                      {
+                        "g": "b",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2 · transfer(b, a)",
+                "slots": [
+                  {
+                    "label": "держит",
+                    "items": []
+                  },
+                  {
+                    "label": "ждёт",
+                    "items": [
+                      {
+                        "g": "a",
+                        "flag": "сначала меньший ID",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "блокировка a",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      "G1"
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [
+                      {
+                        "g": "G2",
+                        "flag": "ничего не держит",
+                        "hl": true
+                      }
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "var",
+                "title": "блокировка b",
+                "slots": [
+                  {
+                    "label": "владелец",
+                    "items": [
+                      {
+                        "g": "G1",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "очередь",
+                    "items": [],
+                    "queue": true
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Что изменилось",
+              "items": [
+                "Обе начинают с a — с меньшего ID",
+                "G2 ждёт, но ничего не держит: круга нет",
+                "G1 закончит и отпустит обе блокировки"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "What happens without the from == to check?",
+          "promptRU": "Что будет без проверки from == to?",
+          "answerEN": "The goroutine locks the same mutex twice and waits for itself forever, because sync.Mutex is not reentrant. Reject from == to before locking.",
+          "answerRU": "Горутина возьмёт один и тот же мьютекс дважды и будет вечно ждать саму себя: sync.Mutex не реентерабелен. Отсекай from == to до блокировок."
+        }
+      },
+      {
+        "title": "6. Livelock: вежливые и в такт",
+        "desc": "Другой способ избежать deadlock — не ждать, держа блокировку: взять первую, попробовать вторую через TryLock, а при неудаче отпустить первую, подождать и повторить. Если обе горутины отступают на одно и то же время, они сталкиваются снова и снова: обе заняты повторными попытками, а перевод не идёт. Это livelock — как двое в коридоре, которые одновременно шагают в одну сторону. Обычно их рано или поздно разводит случайность тайминга, но гарантии нет; случайная добавка к задержке (jitter) или единый порядок блокировок решают проблему.",
+        "descEN": "Another way to avoid deadlock is never to wait while holding a lock: take the first, try the second with TryLock, and on failure release the first, wait and retry. If both goroutines back off for the same time, they collide again and again: both keep retrying, and no transfer happens. That is a livelock, like two people in a corridor stepping to the same side at once. Timing luck usually separates them, but nothing guarantees it; random jitter in the back-off or one lock order fixes it.",
+        "predict": {
+          "promptEN": "Both goroutines take their first lock, fail TryLock on the second, release, sleep 1 ms and retry. Can this go on forever?",
+          "promptRU": "Обе горутины берут первую блокировку, получают отказ TryLock на второй, отпускают, спят 1 мс и пробуют снова. Может ли это длиться вечно?"
+        },
+        "board": [
+          {
+            "hlQuiet": true,
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "G1 · transfer(a, b)",
+                "slots": [
+                  {
+                    "label": "раунд 1",
+                    "items": [
+                      "взяла a",
+                      "TryLock(b): нет",
+                      "отпустила a"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "раунд 2",
+                    "items": [
+                      "взяла a",
+                      "TryLock(b): нет",
+                      "отпустила a"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "G2 · transfer(b, a)",
+                "slots": [
+                  {
+                    "label": "раунд 1",
+                    "items": [
+                      "взяла b",
+                      "TryLock(a): нет",
+                      "отпустила b"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "раунд 2",
+                    "items": [
+                      "взяла b",
+                      "TryLock(a): нет",
+                      "отпустила b"
+                    ],
+                    "queue": true
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Итог",
+                "slots": [
+                  {
+                    "label": "попыток",
+                    "items": [
+                      "много"
+                    ]
+                  },
+                  {
+                    "label": "переводов",
+                    "items": [
+                      {
+                        "g": "0",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Не deadlock: никто не спит в Lock",
+                "Прогресса нет: попытки идут в такт",
+                "Лечение: jitter в задержке или единый порядок (q44)"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "What breaks the tie by itself, and what removes the cause?",
+          "promptRU": "Что разводит горутины само по себе и что убирает причину?",
+          "answerEN": "Random jitter in the back-off makes them fall out of step. One lock order for everybody removes the reason to retry at all.",
+          "answerRU": "Случайная добавка к задержке (jitter) выводит их из такта. Единый порядок блокировок для всех убирает саму причину повторять."
+        }
+      },
+      {
+        "title": "7. Starvation: жадная и вежливая",
+        "desc": "Две горутины делят одну блокировку. Жадная держит её всю свою пачку работы, вежливая берёт только на каждый маленький шаг и между шагами отпускает. Обе корректны, но за одно и то же время жадная успевает намного больше: вежливой блокировка достаётся реже. Ошибки нет, процесс не падает — голодание видно только по метрикам пропускной способности и ожидания на каждого воркера. sync.Mutex от крайнего случая защищается сам: разбуженный ждущий, который ждал больше 1 мс, переводит его в режим голодания (диаграмма 8).",
+        "descEN": "Two goroutines share one lock. The greedy one holds it for its whole batch; the polite one takes it only for each small step and releases it in between. Both are correct, but in the same time the greedy one gets much more done: the polite one gets the lock less often. No error, no crash — starvation shows only in per-worker throughput and wait-time metrics. sync.Mutex protects against the extreme case itself: a woken waiter that has waited over 1 ms switches it to starvation mode (diagram 8).",
+        "board": [
+          {
+            "lanes": [
+              {
+                "kind": "g",
+                "title": "Жадная G1",
+                "slots": [
+                  {
+                    "label": "под одной блокировкой",
+                    "items": [
+                      "шаг 1",
+                      "шаг 2",
+                      "шаг 3"
+                    ],
+                    "queue": true
+                  },
+                  {
+                    "label": "за секунду",
+                    "items": [
+                      "много работы"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "g",
+                "title": "Вежливая G2",
+                "slots": [
+                  {
+                    "label": "под одной блокировкой",
+                    "items": [
+                      "шаг 1"
+                    ]
+                  },
+                  {
+                    "label": "между шагами",
+                    "items": [
+                      "отпускает и снова ждёт"
+                    ]
+                  },
+                  {
+                    "label": "за секунду",
+                    "items": [
+                      {
+                        "g": "заметно меньше",
+                        "hl": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Starvation: система идёт, но одной горутине ресурс достаётся редко",
+                "Касается любого ресурса: CPU, соединений, памяти",
+                "Ищи по метрикам на воркера, а не по падениям"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "How is starvation different from livelock?",
+          "promptRU": "Чем starvation отличается от livelock?",
+          "answerEN": "In a livelock nobody makes progress, though everyone is busy. In starvation the system makes progress, but one goroutine rarely gets the resource.",
+          "answerRU": "При livelock прогресса нет ни у кого, хотя все заняты. При starvation система продвигается, но одна горутина редко получает ресурс."
+        }
+      },
+      {
+        "title": "8. Ответ за минуту",
+        "desc": "Сведи всё в ответ на интервью: три способа застрять, четыре условия, исправления и как найти проблему в сервере. Закрой схему и расскажи вслух, потом сверь.",
+        "descEN": "Put it together as an interview answer: three ways to get stuck, four conditions, the fixes and how to find the problem in a server. Hide the diagram, say it aloud, then compare.",
+        "board": [
+          {
+            "list": {
+              "title": "Answer in a minute (EN)",
+              "items": [
+                "Deadlock: goroutines wait for each other in a cycle; it needs mutual exclusion, hold and wait, no preemption and circular wait at the same time.",
+                "I prevent it with one lock order for everybody, short critical sections and no calls out while holding a lock.",
+                "Livelock: everyone is busy retrying in step and nothing gets done; jitter or a fixed order fixes it.",
+                "Starvation: the system makes progress, but one goroutine rarely gets the resource; I see it in per-worker metrics.",
+                "In a server a deadlock doesn't crash the process, so I look for goroutines stuck in sync.Mutex.Lock in a goroutine dump."
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Follow-up: which condition does PostgreSQL break when it aborts a transaction with 40P01?",
+          "promptRU": "Уточняющий вопрос: какое условие ломает PostgreSQL, когда отменяет транзакцию с 40P01?",
+          "answerEN": "No preemption: aborting the victim forcibly releases its locks, so the others proceed; the application then retries the aborted transaction.",
+          "answerRU": "«Нет вытеснения»: отмена транзакции-жертвы принудительно снимает её блокировки, и остальные идут дальше; приложение затем повторяет отменённую транзакцию."
+        }
+      }
+    ]
+  },
+  {
+    "id": "sim12",
+    "title": "Диаграмма 12: Канал, мьютекс или одна горутина — дерево решения",
+    "subtitle": "Пять вопросов по порядку: видит ли данные одна горутина, передаёте ли владение, защищаете ли состояние типа, координируете ли события, горячее ли это место по профилю. Наша версия дерева решения из главы 2 книги «Concurrency in Go», дополненная изоляцией (confinement) из главы 4.",
+    "cardId": "c15",
+    "cardLabel": "C15: канал или мьютекс →",
+    "boardLegend": "Каждый шаг — один вопрос: «да» ведёт к инструменту, «нет» — к следующему вопросу. Рамкой выделен ответ «да» на этом шаге.",
+    "learningHint": "Как запомнить: «одна горутина? владение? состояние? события? профиль?». Перед каждым шагом ответь сам на примере из своего сервиса, потом сверь. В конце нарисуй дерево по памяти.",
+    "sources": [
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 2: Decision tree; гл. 4: Confinement",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      },
+      {
+        "title": "Go Proverbs (Rob Pike, 2015)",
+        "url": "https://go-proverbs.github.io/"
+      },
+      {
+        "title": "Effective Go: Share by communicating",
+        "url": "https://go.dev/doc/effective_go#sharing"
+      },
+      {
+        "title": "runtime/chan.go: hchan.lock — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/chan.go"
+      }
+    ],
+    "steps": [
+      {
+        "title": "1. Видит ли данные только одна горутина?",
+        "desc": "Самая дешёвая синхронизация — никакой. Если данные создаёт и трогает одна горутина, блокировка не нужна. Так бывает по договорённости, когда горутина-владелец обслуживает запросы через канал, или по области видимости, когда функция создаёт данные внутри своей горутины и наружу отдаёт только канал для чтения <-chan. Копии работают так же, если они глубокие: у каждой горутины своя копия, общего ничего нет; скопированная структура по-прежнему делит свои срезы и map.",
+        "descEN": "The cheapest synchronization is none. If one goroutine creates and touches the data, no lock is needed. That can be by agreement, when an owner goroutine serves requests over a channel, or by scope, when a function creates the data inside its goroutine and exposes only a receive-only <-chan. Copies work the same way if they are deep: each goroutine has its own copy and nothing is shared; a copied struct still shares its slices and maps.",
+        "board": [
+          {
+            "hlLabel": "ответ",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Вопрос 1",
+                "slots": [
+                  {
+                    "label": "да →",
+                    "items": [
+                      {
+                        "g": "без синхронизации",
+                        "flag": "confinement",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "нет →",
+                    "items": [
+                      "вопрос 2"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Примеры",
+                "slots": [
+                  {
+                    "label": "по области видимости",
+                    "items": [
+                      "генератор создаёт данные и отдаёт <-chan"
+                    ]
+                  },
+                  {
+                    "label": "по договорённости",
+                    "items": [
+                      "горутина-владелец кеша, запросы через канал"
+                    ]
+                  },
+                  {
+                    "label": "копии",
+                    "items": [
+                      "у каждой горутины своя копия конфигурации"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Нет общих данных — нет блокировок",
+                "Изоляция бывает по договорённости и по области видимости",
+                "Глубокая копия вместо общего указателя"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "A handler builds a slice and returns it. Does the slice need a mutex?",
+          "promptRU": "Обработчик собирает срез и возвращает его. Нужен ли срезу мьютекс?",
+          "answerEN": "No, as long as only the handler's goroutine touches it; it is confined. It needs synchronization only if another goroutine can reach it at the same time.",
+          "answerRU": "Нет, пока его трогает только горутина обработчика: он изолирован. Синхронизация нужна, только если до него одновременно может дотянуться другая горутина."
+        }
+      },
+      {
+        "title": "2. Передаёте владение данными?",
+        "desc": "Одна горутина произвела результат, другая его обрабатывает: это передача владения. Канал выражает это в коде: отправил — больше не трогаешь. Плюсы: буферизованный канал развязывает стороны, а код компонуется с select. Помни, что отправка указателя передаёт не данные, а доступ к ним.",
+        "descEN": "One goroutine produced a result and another processes it: that is a transfer of ownership. A channel says it in code: once sent, you stop touching it. Bonuses: a buffered channel decouples the sides, and the code composes with select. Remember that sending a pointer hands over access, not the data.",
+        "board": [
+          {
+            "hlLabel": "ответ",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Вопрос 2",
+                "slots": [
+                  {
+                    "label": "да →",
+                    "items": [
+                      {
+                        "g": "канал",
+                        "flag": "jobs → воркеры, results → вызывающий",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "нет →",
+                    "items": [
+                      "вопрос 3"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Пример",
+                "slots": [
+                  {
+                    "label": "производитель",
+                    "items": [
+                      "jobs <- job"
+                    ]
+                  },
+                  {
+                    "label": "воркеры",
+                    "items": [
+                      "for job := range jobs"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Канал — это передача владения",
+                "Отправил — больше не трогаешь",
+                "Указатель в канале — общий доступ, а не копия"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "After sending a *Order on a channel, may the sender still change order.Status?",
+          "promptRU": "Можно ли отправителю менять order.Status после того, как он отправил *Order в канал?",
+          "answerEN": "Not under an ownership protocol: the send copies only the pointer, so both sides share the same Order. Stop touching it, or send a copy.",
+          "answerRU": "Нет, если договорились о передаче владения: отправка копирует только указатель, и обе стороны делят один Order. Перестань его трогать или отправь копию."
+        }
+      },
+      {
+        "title": "3. Защищаете внутреннее состояние типа?",
+        "desc": "Кеш, счётчик, баланс: несколько горутин читают и меняют одно состояние на месте. Это мьютекс, спрятанный внутри типа: методы берут его сами, снаружи блокировок не видно. Под одной блокировкой — вся операция с инвариантом: проверка и изменение. Блокировка, которая торчит наружу из типа, — тревожный признак.",
+        "descEN": "A cache, a counter, a balance: several goroutines read and change one state in place. That is a mutex hidden inside the type: its methods take it themselves, and callers never see a lock. One lock covers the whole operation with its invariant: the check and the update. A lock exposed outside the type is a red flag.",
+        "board": [
+          {
+            "hlLabel": "ответ",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Вопрос 3",
+                "slots": [
+                  {
+                    "label": "да →",
+                    "items": [
+                      {
+                        "g": "мьютекс внутри типа",
+                        "flag": "Lock в методах",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "нет →",
+                    "items": [
+                      "вопрос 4"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Пример",
+                "slots": [
+                  {
+                    "label": "type Cache",
+                    "items": [
+                      "mu sync.Mutex",
+                      "items map[string]Item"
+                    ]
+                  },
+                  {
+                    "label": "методы",
+                    "items": [
+                      "Get и Put берут mu сами"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Мьютекс спрятан внутри типа",
+                "Одна блокировка — на всю операцию с инвариантом",
+                "Блокировка наружу — тревожный признак"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Why is an exported Lock method on your Cache a red flag?",
+          "promptRU": "Почему экспортированный метод Lock у твоего Cache — тревожный признак?",
+          "answerEN": "Callers must then follow the locking protocol themselves: the critical section spreads across the code base and invites deadlocks. Keep the lock inside and make each method a whole operation.",
+          "answerRU": "Тогда протокол блокировки должен соблюдать вызывающий код: критическая секция расползается по проекту и провоцирует deadlock. Держи блокировку внутри, а каждый метод делай целой операцией."
+        }
+      },
+      {
+        "title": "4. Координируете несколько событий?",
+        "desc": "Нужно дождаться первого из нескольких событий: результата, отмены, таймаута. Это select по каналам: ctx.Done(), таймер, канал результатов. Мьютекс не бывает веткой select и не принимает context, поэтому для координации — каналы.",
+        "descEN": "You need the first of several events: a result, cancellation, a timeout. That is a select over channels: ctx.Done(), a timer, a results channel. A mutex can't be a select case and takes no context, so coordination means channels.",
+        "board": [
+          {
+            "hlLabel": "ответ",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Вопрос 4",
+                "slots": [
+                  {
+                    "label": "да →",
+                    "items": [
+                      {
+                        "g": "каналы + select",
+                        "flag": "ctx.Done(), таймер, результаты",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "нет →",
+                    "items": [
+                      "вопрос 5"
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "other",
+                "title": "Пример",
+                "slots": [
+                  {
+                    "label": "select",
+                    "items": [
+                      "case r := <-results",
+                      "case <-ctx.Done()",
+                      "case <-timer.C"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "select ждёт первое из нескольких событий",
+                "Мьютекс не бывает веткой select",
+                "Отмена и таймаут — через ctx и таймер"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "You need \"a result, or a 2-second timeout, or the client cancelled\". Why not a mutex?",
+          "promptRU": "Нужно «результат, или таймаут 2 секунды, или клиент отменил запрос». Почему не мьютекс?",
+          "answerEN": "A mutex can't wait for several events at once and has no timeout or context; a select over the result channel, ctx.Done() and a timer does exactly this.",
+          "answerRU": "Мьютекс не умеет ждать нескольких событий сразу, у него нет таймаута и context; select по каналу результата, ctx.Done() и таймеру делает ровно это."
+        }
+      },
+      {
+        "title": "5. Горячее место по профилю?",
+        "desc": "Только если профиль показал узкое место, примитивы — мьютекс или atomic — могут выиграть: канал внутри сам берёт блокировку hchan, поэтому быстрее мьютекса он не будет. Без профиля выбирай то, что понятнее. Иногда горячее место подсказывает, что менять нужно устройство программы, а не примитив.",
+        "descEN": "Only if a profile shows a bottleneck can primitives — a mutex or atomics — win: a channel takes the hchan lock inside, so it won't beat a mutex. Without a profile, choose what reads more clearly. Sometimes a hot spot says the program's structure must change, not the primitive.",
+        "board": [
+          {
+            "hlLabel": "ответ",
+            "lanes": [
+              {
+                "kind": "other",
+                "title": "Вопрос 5",
+                "slots": [
+                  {
+                    "label": "да →",
+                    "items": [
+                      {
+                        "g": "мьютекс или atomic",
+                        "flag": "после замера",
+                        "hl": true
+                      }
+                    ]
+                  },
+                  {
+                    "label": "нет →",
+                    "items": [
+                      "что понятнее; обычно канал"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "list": {
+              "title": "Главное",
+              "items": [
+                "Канал не бесплатен: в hchan своя блокировка",
+                "Сначала профиль, потом смена примитива",
+                "Atomic защищает одну переменную, не инвариант из нескольких полей"
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Is \"mutexes are faster, so use them everywhere\" a good reason?",
+          "promptRU": "«Мьютексы быстрее, поэтому берём их везде» — хороший довод?",
+          "answerEN": "No. Choose by ownership and clarity; switch to primitives only for a profiled hot spot, and measure the result.",
+          "answerRU": "Нет. Выбирай по владению и ясности кода; на примитивы переходи только в горячем месте по профилю и измеряй результат."
+        }
+      },
+      {
+        "title": "6. Дерево целиком и ответ за минуту",
+        "desc": "Пройди дерево сверху вниз на примере из своего сервиса, потом расскажи ответ вслух. Пословица Go «Don't communicate by sharing memory; share memory by communicating» задаёт выбор по умолчанию, а не запрет: Go поддерживает оба подхода.",
+        "descEN": "Walk the tree top-down on an example from your service, then say the answer aloud. The Go proverb \"Don't communicate by sharing memory; share memory by communicating\" sets a default, not a ban: Go supports both.",
+        "board": [
+          {
+            "list": {
+              "title": "Дерево",
+              "ordered": true,
+              "items": [
+                "Одна горутина? → без синхронизации (confinement, копии)",
+                "Передаёте владение? → канал",
+                "Состояние типа? → мьютекс внутри типа",
+                "Несколько событий? → каналы и select",
+                "Горячее место по профилю? → мьютекс или atomic; иначе — что понятнее"
+              ]
+            }
+          },
+          {
+            "list": {
+              "title": "Answer in a minute (EN)",
+              "items": [
+                "I first ask who owns the data. If only one goroutine touches it, I need no lock at all.",
+                "If data moves from one goroutine to another, I use a channel; if several goroutines update one piece of state, a mutex inside the type.",
+                "To wait for one of several events — a result, cancellation, a timeout — I use select over channels.",
+                "The proverb says share memory by communicating, but Go supports both; I switch to a mutex or atomics for a profiled hot spot."
+              ]
+            }
+          }
+        ],
+        "check": {
+          "promptEN": "Follow-up: where does an atomic counter fit in this tree?",
+          "promptRU": "Уточняющий вопрос: где в этом дереве атомарный счётчик?",
+          "answerEN": "Question 3 or 5: one number of shared state, or a profiled hot spot. An atomic protects one variable only; an invariant over several fields still needs a mutex.",
+          "answerRU": "Вопрос 3 или 5: одно число общего состояния или горячее место по профилю. Atomic защищает только одну переменную; инварианту из нескольких полей по-прежнему нужен мьютекс."
+        }
+      }
+    ]
   }
 ];
 

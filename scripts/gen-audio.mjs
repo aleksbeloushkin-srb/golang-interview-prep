@@ -54,6 +54,8 @@ const SPEECH_FIXES = {
     ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
     ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
   ],
+  // Неделя 3 и книга (v74).
+  'card:c12:short': [['go dot uber dot org/goleak fails the test', "Uber's go-leak library fails the test"]],
   // Пилотная выборка (c2, c7, c28, c29, c47).
   'card:c18:jvm': [['or a N-I-O Selector', 'or an N-I-O Selector']],
   'card:c20:short': [['atomic dot Compare And Swap Int64, address of x, old, new, which returns false', 'atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false']],

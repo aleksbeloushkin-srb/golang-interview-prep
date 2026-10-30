@@ -188,7 +188,7 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w3-tue-1", text: "Каналы: буфер что меняет и чего не меняет; nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3"] },
+            { id: "w3-tue-1", text: "Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3", "q45"] },
             { id: "w3-tue-2", text: "W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w3-1", links: ["p-workerpool", "c12", "q15"] },
             { id: "w3-tue-3", text: "W3-2 Pipeline generator → square → sink с остановкой через context", links: ["p-pipeline"] }
           ]
@@ -203,9 +203,9 @@ const PLAN = {
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, atomic; channel vs mutex; CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух", links: ["c15", "c20", "c21", "c22", "sim5", "sim8"] },
+            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух", links: ["c15", "c20", "c21", "c22", "c56", "sim12", "sim5", "sim8"] },
             { id: "w3-thu-2", text: "W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex", talk: "w3-4", links: ["p-counter", "p-safecache"] },
-            { id: "w3-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map", links: ["q7", "q8", "q13", "q14"] }
+            { id: "w3-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for", links: ["q7", "q8", "q13", "q14", "c55", "sim11", "q44", "q46", "q47"] }
           ]
         },
         {
@@ -1092,9 +1092,9 @@ const PLAN = {
     "w3-wed-1": { accept: "c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены." },
     "w3-wed-2": { accept: "Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов." },
     "w3-wed-3": { accept: "q12, q15, q21 в режиме «Сначала свой ответ» (вкладка quiz): дефект и исправление записаны до вариантов и совпали с разбором по причине." },
-    "w3-thu-1": { accept: "c15, c20, c21, c22: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант." },
+    "w3-thu-1": { accept: "c15, c20, c21, c22, c56: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант и почему Wait вызывают в цикле." },
     "w3-thu-2": { accept: "Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее»." },
-    "w3-thu-3": { accept: "q7, q8, q13, q14: дефект до вариантов; исправленный код объяснён." },
+    "w3-thu-3": { accept: "q7, q8, q13, q14, q44, q46, q47: дефект до вариантов; исправленный код объяснён. c55: ответ до раскрытия, названы четыре условия Коффмана и какое ломает порядок блокировок." },
     "w3-sat-1": { accept: "Для каждой горутины W3-1…W3-5 записаны владелец и условие завершения; все тесты под -race проходят." },
     "w3-sat-4": { accept: "Запись 3–5 минут: worker pool по 4 шагам и выбор mutex или channel на примере." },
     "w3-sat-5": { accept: "Вопросы самопроверки — по-английски без подсказки." },
@@ -1297,7 +1297,7 @@ const PLAN = {
     },
     "w3-wed-2": {
       hook: "One forwarder per input; close output after all forwarders finish.",
-      en: "Fan-in starts one goroutine per input that forwards values to a shared output. A WaitGroup tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and an empty list of inputs closes the output immediately."
+      en: "Fan-in starts one goroutine per input that forwards values to a shared output. A WaitGroup tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and an empty list of inputs closes the output immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
     },
     "w3-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex.",
