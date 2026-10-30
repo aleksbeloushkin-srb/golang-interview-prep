@@ -13,16 +13,16 @@
 
 | Ключ | Голос | с | Риск | Термины | Числа | Условие слышно | Паузы/темп | Итог | Комментарий |
 |---|---|---|---|---|---|---|---|---|---|
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 28.2 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 28.1 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 37.2 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 37.7 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.8 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
-| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.6 | `s[1:3]` |  |  |  |  |  |  |
-| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 37.2 | `s[1:3]` |  |  |  |  |  |  |
-| [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 27.7 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
-| [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 27.9 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
-| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.3 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
-| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 43.1 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
+| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
+| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 36.0 | `s[1:3]` |  |  |  |  |  |  |
+| [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 28.3 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
+| [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 28.7 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
+| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.5 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
+| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 43.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
 | [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 26.7 | «directly», «panicking goroutine» |  |  |  |  |  |  |
 | [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 27.8 | «directly», «panicking goroutine» |  |  |  |  |  |  |
 | [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 26.0 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
@@ -47,14 +47,14 @@
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Heart | 39.4 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
 | [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 13.8 |  |  |  |  |  |  |  |
 | [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 13.9 |  |  |  |  |  |  |  |
-| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 28.4 |  |  |  |  |  |  |  |
-| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 29.0 |  |  |  |  |  |  |  |
-| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 16.8 |  |  |  |  |  |  |  |
-| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.4 |  |  |  |  |  |  |  |
+| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.2 |  |  |  |  |  |  |  |
+| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.2 |  |  |  |  |  |  |  |
+| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 16.4 |  |  |  |  |  |  |  |
+| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.2 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 22.6 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 23.5 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 32.9 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 33.5 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.2 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.3 |  |  |  |  |  |  |  |
 | [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 14.4 |  |  |  |  |  |  |  |
 | [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 15.3 |  |  |  |  |  |  |  |
 | [card:c34:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 15.8 |  |  |  |  |  |  |  |
@@ -88,25 +88,25 @@
 
 Текст для речи отличается от экранного только чтением кода и чисел. Если смысл расходится с экраном — это ошибка, её нужно отметить.
 
-**card:c7:short** (хеш текста `d4f40c7d`)
+**card:c7:short** (хеш текста `e661a8bc`)
 
-> GO-MAX-PROCS limits parallel Go code: with GO-MAX-PROCS set to four, at most four goroutines run Go code at the same moment, because GO-MAX-PROCS is the number of Ps, and a P is the right to run Go code. A thread, M, runs goroutines, G, only while it holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
+> Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment, because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of C-P-U cores the process can use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
 
 **card:c29:jvm** (хеш текста `5f8119f2`)
 
 > A slice combines Array List style growth with sub-List or Byte Buffer style views over a shared array: two slices can share one array, and append may or may not create a new one, so always use the slice that append returns. Go strings are immutable bytes, usually U-T-F-8, not U-T-F-16 as Java's String A-P-I.
 
-**card:c29:short** (хеш текста `c05e128e`)
+**card:c29:short** (хеш текста `52ee4476`)
 
-> A slice is a view, not a copy: slicing s from one to three copies no elements, it is a new slice header over the same array. Under the hood a slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.
+> A slice is only a view onto data stored in an array, not the data itself. Its structure is a pointer to the array, a length and a capacity, and a string is a pointer and a length over immutable bytes. So slicing s from one to three copies no elements: it is a new view over the same array, and a change through one slice is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.
 
-**card:c33:short** (хеш текста `dd8e4bc3`)
+**card:c33:short** (хеш текста `a6be640d`)
 
-> A typed nil inside an interface is not nil. If a function returns a nil pointer to My Error as error, the caller sees that err is not nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds pointer to My Error and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.
+> A typed nil inside an interface is not really nil. For example, if a function returns a nil pointer to My Error as error, the caller sees that err is not nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds pointer to My Error and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.
 
-**card:c34:short** (хеш текста `b5cc28ce`)
+**card:c34:short** (хеш текста `1c250450`)
 
-> Calling a method and satisfying an interface follow different rules. If Set has a pointer receiver, you can call it on a Counter variable but cannot store that variable in a Setter: c dot Set compiles, var s Setter equals c does not. The call works because Go rewrites it as: take the address of c, then call Set, which needs an addressable value: an element of map of K to Counter or a function result of type Counter cannot do it, while a pointer to Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, the method set of pointer to Counter has both.
+> Say we have a Counter whose Set method has a pointer receiver, and a Setter interface with Set. Calling the method and satisfying the interface follow different rules: c dot Set compiles on a Counter variable, but var s Setter equals c does not. The call works because Go rewrites it as: take the address of c, then call Set, which needs an addressable value: an element of map of K to Counter or a function result of type Counter cannot do it, while a pointer to Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, the method set of pointer to Counter has both.
 
 **card:c35:short** (хеш текста `0169abc5`)
 
@@ -156,21 +156,21 @@
 
 > Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with Atomic Long.
 
-**card:c2:short** (хеш текста `31410a7e`)
+**card:c2:short** (хеш текста `c88f5462`)
 
-> Yes: two withdrawals can both pass a balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
+> Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
 
 **card:c7:jvm** (хеш текста `a6d2eb45`)
 
-> Unlike a Java thread-pool size, GO-MAX-PROCS limits neither the number of goroutines nor the number of threads; it limits parallel Go execution. It is closer to the parallelism of the Fork Join Pool that carries Java virtual threads.
+> Unlike a Java thread-pool size, Go max procs limits neither the number of goroutines nor the number of threads; it limits parallel Go execution. It is closer to the parallelism of the Fork Join Pool that carries Java virtual threads.
 
 **card:c28:jvm** (хеш текста `88dc8fc3`)
 
 > Java's G1 uses a snapshot-at-the-beginning barrier, which matches only the deletion half of Go's; it needs no insertion half because it scans thread stacks in a stop-the-world pause, while Go scans stacks concurrently. G1 also needs card marking because it is generational and moves objects; Go's collector does neither.
 
-**card:c28:short** (хеш текста `e3cd35b0`)
+**card:c28:short** (хеш текста `7fbb7bbc`)
 
-> A pointer write can hide a live object from concurrent marking: your code copies the only pointer to an unmarked object into an already scanned object, then overwrites the original, so the G-C never sees the object and would free it. Go's hybrid barrier prevents this by shading the old target of a pointer write and, while the current stack is grey, the new one too. Thanks to that, writes to a goroutine's own stack need no barrier, and each stack is scanned once, with no rescan at the end.
+> The hybrid write barrier is code the compiler adds to pointer writes outside the stack; while the G-C marks, it keeps the running program from hiding a live object. The danger: your code copies the only pointer to an unmarked object into an already scanned object and overwrites the original, so the G-C would free a live object. The barrier shades the old target of the write and, while the current stack is grey, the new one too: a deletion and an insertion barrier combined, hence hybrid. So stack writes need no barrier, and each stack is scanned once.
 
 **card:c33:jvm** (хеш текста `237b35d0`)
 

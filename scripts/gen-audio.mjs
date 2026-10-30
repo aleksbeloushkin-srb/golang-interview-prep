@@ -55,10 +55,11 @@ const SPEECH_FIXES = {
     ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
   ],
   // Пилотная выборка (c2, c7, c28, c29, c47).
+  'card:c39:short': [['You wrap it with F-M-T dot Error-f, load user: percent w, err:', 'You wrap it with F-M-T dot Error-f and percent w:']],
   'card:c7:short': [['with Go max procs=4,', 'with Go max procs set to four,'], ['or in cgo', 'or in C-Go']],
   'card:c29:short': [['s[1:3] copies no elements', 'slicing s from one to three copies no elements']],
   'card:c29:jvm': [['Array List-style growth with sub List- or Byte Buffer-style views', 'Array List style growth with sub-List or Byte Buffer style views']],
-  'card:c47:short': [['pointer to sql dot D-B is a connection pool', 'A sql dot D-B handle is a connection pool'], ['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
+  'card:c47:short': [['the main object is pointer to sql dot D-B.', 'the main object is a pointer to sql dot D-B.'], ['Begin Tx, ctx, nil, check the error', 'Begin Tx with ctx and nil, check the error']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
     ['so 12.50 euros is 1250', 'so twelve euros fifty is stored as one thousand two hundred fifty'],

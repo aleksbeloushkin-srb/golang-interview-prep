@@ -24,13 +24,13 @@ const AUDIO = {
     },
     "card:c7:jvm": {
       "hash": "a6d2eb45",
-      "michael": "audio/en/card-c7-jvm-michael-838a360f.mp3",
-      "heart": "audio/en/card-c7-jvm-heart-9317e241.mp3"
+      "michael": "audio/en/card-c7-jvm-michael-075661bb.mp3",
+      "heart": "audio/en/card-c7-jvm-heart-cc49008d.mp3"
     },
     "card:c7:short": {
-      "hash": "d4f40c7d",
-      "michael": "audio/en/card-c7-short-michael-54af5fa2.mp3",
-      "heart": "audio/en/card-c7-short-heart-8478d6b0.mp3"
+      "hash": "e661a8bc",
+      "michael": "audio/en/card-c7-short-michael-b7f398d2.mp3",
+      "heart": "audio/en/card-c7-short-heart-e01e56cc.mp3"
     },
     "card:c28:jvm": {
       "hash": "88dc8fc3",
@@ -38,9 +38,9 @@ const AUDIO = {
       "heart": "audio/en/card-c28-jvm-heart-e1e79ea9.mp3"
     },
     "card:c28:short": {
-      "hash": "e3cd35b0",
-      "michael": "audio/en/card-c28-short-michael-32932139.mp3",
-      "heart": "audio/en/card-c28-short-heart-57632fe3.mp3"
+      "hash": "7fbb7bbc",
+      "michael": "audio/en/card-c28-short-michael-53a80554.mp3",
+      "heart": "audio/en/card-c28-short-heart-83071d56.mp3"
     },
     "card:c29:jvm": {
       "hash": "5f8119f2",
@@ -48,9 +48,9 @@ const AUDIO = {
       "heart": "audio/en/card-c29-jvm-heart-4ef32a6a.mp3"
     },
     "card:c29:short": {
-      "hash": "c05e128e",
-      "michael": "audio/en/card-c29-short-michael-c4f0ecb2.mp3",
-      "heart": "audio/en/card-c29-short-heart-de165dd4.mp3"
+      "hash": "52ee4476",
+      "michael": "audio/en/card-c29-short-michael-0d9696c4.mp3",
+      "heart": "audio/en/card-c29-short-heart-bc53b392.mp3"
     },
     "card:c33:jvm": {
       "hash": "237b35d0",
@@ -58,9 +58,9 @@ const AUDIO = {
       "heart": "audio/en/card-c33-jvm-heart-3b55256c.mp3"
     },
     "card:c33:short": {
-      "hash": "dd8e4bc3",
-      "michael": "audio/en/card-c33-short-michael-bd747dfd.mp3",
-      "heart": "audio/en/card-c33-short-heart-d44ce42f.mp3"
+      "hash": "a6be640d",
+      "michael": "audio/en/card-c33-short-michael-e8d8c757.mp3",
+      "heart": "audio/en/card-c33-short-heart-8c2e05d1.mp3"
     },
     "card:c34:jvm": {
       "hash": "7587119e",
@@ -68,9 +68,9 @@ const AUDIO = {
       "heart": "audio/en/card-c34-jvm-heart-c4928d56.mp3"
     },
     "card:c34:short": {
-      "hash": "b5cc28ce",
-      "michael": "audio/en/card-c34-short-michael-e938ccfe.mp3",
-      "heart": "audio/en/card-c34-short-heart-2dbc61e4.mp3"
+      "hash": "1c250450",
+      "michael": "audio/en/card-c34-short-michael-8c991b20.mp3",
+      "heart": "audio/en/card-c34-short-heart-355a723a.mp3"
     },
     "card:c35:jvm": {
       "hash": "70df987e",
@@ -78,9 +78,9 @@ const AUDIO = {
       "heart": "audio/en/card-c35-jvm-heart-1e86da06.mp3"
     },
     "card:c35:short": {
-      "hash": "0169abc5",
-      "michael": "audio/en/card-c35-short-michael-e8d5943f.mp3",
-      "heart": "audio/en/card-c35-short-heart-bff1abcd.mp3"
+      "hash": "7aa5d80b",
+      "michael": "audio/en/card-c35-short-michael-647bca9d.mp3",
+      "heart": "audio/en/card-c35-short-heart-59418943.mp3"
     },
     "card:c39:jvm": {
       "hash": "50ac7db6",
@@ -88,9 +88,9 @@ const AUDIO = {
       "heart": "audio/en/card-c39-jvm-heart-a048207f.mp3"
     },
     "card:c39:short": {
-      "hash": "75da9750",
-      "michael": "audio/en/card-c39-short-michael-7613e7fb.mp3",
-      "heart": "audio/en/card-c39-short-heart-7a43bb19.mp3"
+      "hash": "28cb9b29",
+      "michael": "audio/en/card-c39-short-michael-15c81024.mp3",
+      "heart": "audio/en/card-c39-short-heart-8179497e.mp3"
     },
     "card:c40:jvm": {
       "hash": "9ab9a803",
@@ -108,9 +108,9 @@ const AUDIO = {
       "heart": "audio/en/card-c47-jvm-heart-5a23f3c4.mp3"
     },
     "card:c47:short": {
-      "hash": "c3a42df1",
-      "michael": "audio/en/card-c47-short-michael-e546cd97.mp3",
-      "heart": "audio/en/card-c47-short-heart-47a2deb1.mp3"
+      "hash": "cf718838",
+      "michael": "audio/en/card-c47-short-michael-efef1446.mp3",
+      "heart": "audio/en/card-c47-short-heart-26e78c2c.mp3"
     },
     "plan:w1-mon-1": {
       "hash": "851cb195",

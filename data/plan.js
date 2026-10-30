@@ -1147,7 +1147,7 @@ const PLAN = {
     },
     "w6-tue-1": {
       hook: "Key + request fingerprint + stored response; same key, other body → 422.",
-      en: "The client sends an Idempotency-Key. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
+      en: "A client may retry a payment, so the client sends an Idempotency-Key and I make the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
     },
     "w6-tue-2": {
       hook: "Claim the key atomically: INSERT … ON CONFLICT DO NOTHING in the transfer's transaction.",
@@ -1159,7 +1159,7 @@ const PLAN = {
     },
     "w6-wed-2": {
       hook: "One owned goroutine: poll, publish in order, mark after the ack, stop on ctx.",
-      en: "The relay is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles."
+      en: "The relay moves events from the outbox table to Kafka; it is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles."
     },
     "w6-thu-1": {
       hook: "Commit the offset after the effect; dedupe by event ID; order per partition.",
@@ -1195,7 +1195,7 @@ const PLAN = {
     },
     "w1-tue-1": {
       hook: "A closure captures the variable, not a copy of its value.",
-      en: "If closures created in a loop all print the same final value, they share one variable: a closure refers to the variable itself, not a copy, so a later change is visible inside it. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations."
+      en: "A closure captures a variable, not a copy of its value. So if closures created in a loop all print the same final value, they share one variable, and a later change is visible inside each of them. Since Go 1.22, in modules declaring go 1.22 or later, a variable declared by the loop, as in for i := range, is new in each iteration, so those closures no longer share it. A variable declared before the loop and assigned with for i = range is still one variable shared by all iterations."
     },
     "w1-tue-3": {
       hook: "Money is integer minor units plus a currency, never float64.",
@@ -1207,7 +1207,7 @@ const PLAN = {
     },
     "w1-wed-2": {
       hook: "Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.",
-      en: "Returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
+      en: "A typed nil inside an interface is not really nil: returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
     },
     "w1-wed-3": {
       hook: "Wrap with %w; Is compares, As extracts.",
@@ -1219,11 +1219,11 @@ const PLAN = {
     },
     "w1-thu-2": {
       hook: "Defer arguments are evaluated immediately; deferred closures can change named results.",
-      en: "Deferred calls run in last-in-first-out order when the function returns, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
+      en: "defer schedules cleanup for the moment the function returns. Deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
     },
     "w1-thu-4": {
       hook: "recover works only in a deferred call of the panicking goroutine.",
-      en: "recover stops a panic only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
+      en: "A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
     },
     "w1-sat-1": {
       hook: "Service lacks pointer-receiver methods in its method set; &Service{} has them.",
@@ -1240,7 +1240,7 @@ const PLAN = {
     },
     "w2-mon-2": {
       hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
-      en: "q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected."
+      en: "Both quiz cases come from slices sharing one array. q6 is aliasing: both appends write into one array with spare capacity; limit cap with a[:len(a):len(a)] so append must allocate, or copy. q4 is retention: a 16-byte slice keeps the whole 100 MiB array reachable; only a copy, such as bytes.Clone or make plus copy, lets it be collected."
     },
     "w2-tue-1": {
       hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
@@ -1281,15 +1281,15 @@ const PLAN = {
     },
     "w3-tue-1": {
       hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
-      en: "Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
+      en: "A channel can be nil, open or closed, and the rules differ. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
     },
     "w3-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
-      en: "N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel."
+      en: "A worker pool bounds concurrency: N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel."
     },
     "w3-tue-3": {
       hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
-      en: "Each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
+      en: "In a pipeline, each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
     },
     "w3-wed-1": {
       hook: "Random among ready cases; checking ctx first is not priority.",
