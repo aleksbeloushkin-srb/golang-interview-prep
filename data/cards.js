@@ -955,10 +955,11 @@ const CARDS = [
     "simId": null,
     "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
-    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership of data or to signal an event, and a mutex to protect shared state with an invariant. With a mutex, the check and the update must happen under one lock, as with a balance or a cache entry. With a channel, a send copies only the value, so after sending a pointer the sender must stop touching that data.",
+    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own mutex that sends and receives take. And a send copies only the value, so after sending a pointer the sending goroutine must stop touching that data.",
     "anchorsEN": [
-      "channel = hand off ownership, signal",
+      "channel = hand off ownership, signal (jobs → workers)",
       "mutex = invariant: check + update under one lock",
+      "hchan has its own mutex: channels are not lock-free",
       "a sent pointer still shares data"
     ],
     "jvmEN": "Java makes the same split: synchronized or ReentrantLock for shared state, a BlockingQueue for handoff. The differences are that sync.Mutex is not reentrant, and channels add close and select, which BlockingQueue lacks.",
@@ -970,7 +971,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
-    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение данными или сообщить о событии, мьютекс — чтобы защитить общее состояние с инвариантом. С мьютексом проверка и изменение должны идти под одной блокировкой, как с балансом или записью в кеше. С каналом отправка копирует только значение, поэтому, отправив указатель, отправитель не должен больше трогать эти данные.",
+    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам; мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, где проверка и изменение должны идти под одной блокировкой. Канал тоже не обходится без блокировки: у его структуры в рантайме, hchan, есть свой мьютекс, который берут отправка и приём. А отправка копирует только значение, поэтому, отправив указатель, отправляющая горутина не должна больше трогать эти данные.",
     "jvmRU": "В Java то же разделение: synchronized или ReentrantLock для общего состояния, BlockingQueue для передачи. Разница в том, что sync.Mutex не реентерабелен, а у каналов есть close и select, которых нет у BlockingQueue.",
     "detailsRU": [
       "Отправка в канал копирует значение. Указатель или срез всё ещё может ссылаться на общую изменяемую память. В протоколе передачи владения отправитель прекращает обращаться к ней после передачи либо обе стороны синхронизируют доступ. Компилятор этот протокол не обеспечивает.",
