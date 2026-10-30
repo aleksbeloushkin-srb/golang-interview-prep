@@ -82,7 +82,7 @@ const CARDS = [
     "simId": null,
     "qEN": "Can a program have a race condition without a data race?",
     "qRU": "Может ли в программе быть логическая гонка без гонки данных?",
-    "shortEN": "Yes: two withdrawals can both pass a balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.",
+    "shortEN": "Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.",
     "anchorsEN": [
       "two withdrawals pass the check, everything locked",
       "race condition = timing-dependent logic",
@@ -90,7 +90,7 @@ const CARDS = [
       "check-then-act → one atomic step"
     ],
     "jvmEN": "Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with AtomicLong.",
-    "shortRU": "Да: два списания могут оба пройти проверку баланса, даже когда каждое чтение и запись под блокировкой, — это логическая гонка без гонки данных. Логическая гонка — ошибка, зависящая от порядка событий; гонка данных — понятие уже: несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; её может обнаружить -race. Здесь проверка и списание берут блокировку по отдельности — «проверить, потом сделать», — поэтому их нужно сделать одним атомарным шагом, например одной критической секцией.",
+    "shortRU": "Да, например в банковском приложении: два списания могут оба пройти проверку баланса, даже когда каждое чтение и запись под блокировкой, — это логическая гонка без гонки данных. Логическая гонка — ошибка, зависящая от порядка событий; гонка данных — понятие уже: несинхронизированный доступ к одной памяти, когда хотя бы одна операция пишет; её может обнаружить -race. Здесь проверка и списание берут блокировку по отдельности — «проверить, потом сделать», — поэтому их нужно сделать одним атомарным шагом, например одной критической секцией.",
     "jvmRU": "Так же, как в Java: synchronized-геттеры и сеттеры делают безопасным каждый вызов, но не пару «проверить и изменить». Нужна одна блокировка на оба шага или цикл compare-and-set, как с AtomicLong.",
     "detailsEN": [
       "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
@@ -412,10 +412,10 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How do G, M and P relate to GOMAXPROCS?",
     "qRU": "Как G, M и P связаны с GOMAXPROCS?",
-    "shortEN": "GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4, at most four goroutines run Go code at the same moment, because GOMAXPROCS is the number of Ps, and a P is the right to run Go code. A thread (M) runs goroutines (G) only while it holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
+    "shortEN": "GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4, at most four goroutines run Go code at the same moment, because GOMAXPROCS is the number of Ps, and a P is the right to run Go code. By default it equals the number of CPU cores the process can use, and in the GMP model a goroutine (G) runs on an OS thread (M) only while that thread holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
     "anchorsEN": [
       "GOMAXPROCS=4 → at most 4 Gs run Go code at once",
-      "GOMAXPROCS = number of Ps; M runs Gs only with a P",
+      "Ps = CPU cores by default; GMP: G runs on M only while M holds a P",
       "threads > Ps: a long-blocked M loses its P"
     ],
     "jvmEN": "Unlike a Java thread-pool size, GOMAXPROCS limits neither the number of goroutines nor the number of threads; it limits parallel Go execution. It is closer to the parallelism of the ForkJoinPool that carries Java virtual threads.",
@@ -427,7 +427,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни со стандартной настройки рантайма, наблюдай throttling и задержки и подбирай значение на реальной нагрузке. Число 2 или количество CPU хоста не является универсальным рецептом для контейнера.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\t// A non-positive argument queries the setting without changing it.\n\tfmt.Println(\"parallel Go execution limit:\", runtime.GOMAXPROCS(0))\n\t// This is not the number of threads or an external-service concurrency limit.\n}",
-    "shortRU": "GOMAXPROCS ограничивает параллельное исполнение Go-кода: при GOMAXPROCS=4 его одновременно исполняют не больше четырёх горутин, потому что GOMAXPROCS — это число P, а P — право исполнять Go-код. Поток (M) исполняет горутины (G), только пока держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
+    "shortRU": "GOMAXPROCS ограничивает параллельное исполнение Go-кода: при GOMAXPROCS=4 его одновременно исполняют не больше четырёх горутин, потому что GOMAXPROCS — это число P, а P — право исполнять Go-код. По умолчанию их столько же, сколько ядер CPU доступно процессу, а в модели GMP горутина (G) выполняется на потоке ОС (M), только пока этот поток держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
     "jvmRU": "В отличие от размера пула потоков в Java, GOMAXPROCS не ограничивает ни число горутин, ни число потоков — только параллельное исполнение Go-кода. Это ближе к параллелизму ForkJoinPool, на котором работают виртуальные потоки Java.",
     "detailsRU": [
       "P — объект рантайма, а не физический CPU или навсегда закреплённое ядро. ОС распределяет M по доступным CPU. В выражении «планирование M:N» буквы M и N обозначают количества, а не имена типов рантайма.",
@@ -1917,8 +1917,9 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "What does Go's hybrid write barrier protect, and which pointer writes need it?",
     "qRU": "Что защищает гибридный барьер записи Go и при каких записях указателей он нужен?",
-    "shortEN": "A pointer write can hide a live object from concurrent marking: your code copies the only pointer to an unmarked object into an already scanned object, then overwrites the original, so the GC never sees the object and would free it. Go’s hybrid barrier prevents this by shading the old target of a pointer write and, while the current stack is grey, the new one too. Thanks to that, writes to a goroutine’s own stack need no barrier, and each stack is scanned once, with no rescan at the end.",
+    "shortEN": "The hybrid write barrier is code the compiler adds to pointer writes outside the stack; while the GC marks, it keeps the running program from hiding a live object. The danger: your code copies the only pointer to an unmarked object into an already scanned object and overwrites the original, so the GC would free a live object. The barrier shades the old target of the write and, while the current stack is grey, the new one too: a deletion and an insertion barrier combined, hence hybrid. So stack writes need no barrier, and each stack is scanned once.",
     "anchorsEN": [
+      "barrier = compiler code on non-stack pointer writes, only during marking",
       "only pointer to an unmarked object → into a scanned one, original overwritten → freed",
       "shade the old target + the new while the stack is grey",
       "own stack: no barrier, scanned once"
@@ -1933,7 +1934,7 @@ const CARDS = [
     ],
     "practicalRU": "Проговори по схеме: «A уже прошли, B ещё нет; переносим B → C в A → C; C нельзя потерять». В Go-коде барьер вставляет компилятор — вручную вызывать runtime не нужно. Пример требует разных ненулевых a и b и исключительного доступа к обоим узлам. Для совместного доступа нужна своя синхронизация. sync.Pool используй после измерений: Get не обязан вернуть прежний объект, содержимое может исчезнуть в любой момент; ускорение в 5–10 раз и переиспользование на том же P не гарантируются.",
     "code": "package example\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\n// Move requires distinct, non-nil nodes and exclusive access.\nfunc Move(a, b *Node) {\n\ta.Next = b.Next\n\tb.Next = nil // Deleting a pointer can also need a GC barrier.\n}\n\n// Compiler-generated barriers protect GC, not concurrent callers.\n// White/grey/black states are a teaching model, not observable here.",
-    "shortRU": "Запись указателя может спрятать живой объект от параллельной разметки: код копирует единственный указатель на неразмеченный объект в уже просканированный объект, а потом затирает исходный, поэтому GC объект не увидит и освободит его. Гибридный барьер Go не даёт этому случиться: он красит старую цель записи указателя и, пока стек текущей горутины серый, ещё и новую. Благодаря этому записи в собственный стек горутины барьера не требуют, а каждый стек сканируется один раз, без повторного сканирования в конце.",
+    "shortRU": "Гибридный барьер записи — код, который компилятор добавляет к записи указателей вне стека; пока GC размечает, он не даёт работающей программе спрятать живой объект. Опасность: код копирует единственный указатель на неразмеченный объект в уже просканированный объект и затирает исходный, и GC освободил бы живой объект. Барьер красит старую цель записи и, пока стек текущей горутины серый, ещё и новую: это барьер удаления и барьер вставки вместе, отсюда «гибридный». Поэтому запись в стек барьера не требует, а каждый стек сканируется один раз.",
     "jvmRU": "G1 в Java использует барьер snapshot-at-the-beginning — он совпадает только с deletion-половиной барьера Go; insertion-половина G1 не нужна, потому что стеки потоков он сканирует в паузе stop-the-world, а Go сканирует стеки конкурентно. Ещё G1 нужен card marking, потому что он поколенческий и перемещает объекты; сборщик Go не делает ни того, ни другого.",
     "detailsRU": [
       "Представь: A уже просмотрен, B ещё нет, а B ссылается на неотмеченный C. Если перенести эту связь из B в A, простой конкурентный обход может пропустить C. Барьер учитывает изменения указателей и защищает C, даже если сборщик уже прошёл A, но ещё не дошёл до B.",
@@ -2292,7 +2293,7 @@ const CARDS = [
     "simId": null,
     "qEN": "What does an interface value contain, and why can a typed nil make an interface non-nil?",
     "qRU": "Что хранит значение интерфейса и почему типизированный nil может дать ненулевой интерфейс?",
-    "shortEN": "A typed nil inside an interface is not nil. If a function returns a nil *MyError as error, the caller sees err != nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds *MyError and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.",
+    "shortEN": "A typed nil inside an interface is not really nil. For example, if a function returns a nil *MyError as error, the caller sees err != nil, and success looks like a failure. An interface value is two words, a type word and a data word, and it is nil only when both are nil; here the type word holds *MyError and only the data word is nil. So return a literal nil when there is no error, not a typed nil pointer.",
     "anchorsEN": [
       "return a nil *MyError as error → err != nil",
       "interface = type word + data word",
@@ -2309,7 +2310,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора: «какой тип внутри → какое значение → что именно сравниваем». При успехе функции, возвращающей error, возвращай nil явно. Для производительности сначала измерь конкретный вызов, а не размер заголовка.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar p *int\n\tvar x any = p\n\tfmt.Println(x == nil, p == nil)\n\tv, ok := x.(*int)\n\tfmt.Println(ok, v == nil)\n}",
-    "shortRU": "Типизированный nil внутри интерфейса — не nil. Если функция возвращает nil *MyError как error, вызывающий видит err != nil, и успех выглядит как сбой. Значение интерфейса — два слова, слово типа и слово данных, и оно равно nil, только когда nil оба; здесь в слове типа лежит *MyError, и nil только слово данных. Поэтому, когда ошибки нет, возвращай литерал nil, а не типизированный nil-указатель.",
+    "shortRU": "Типизированный nil внутри интерфейса — на самом деле не nil. Например, если функция возвращает nil *MyError как error, вызывающий видит err != nil, и успех выглядит как сбой. Значение интерфейса — два слова, слово типа и слово данных, и оно равно nil, только когда nil оба; здесь в слове типа лежит *MyError, и nil только слово данных. Поэтому, когда ошибки нет, возвращай литерал nil, а не типизированный nil-указатель.",
     "jvmRU": "В Java такой ловушки нет: ссылка либо null, либо указывает на объект. В Go интерфейс хранит динамический тип отдельно от значения, поэтому «nil-указатель типа T» и «никакого значения» — разные вещи.",
     "detailsRU": [
       "При присваивании в базовый интерфейс, используемый как тип значения, конкретный тип должен реализовать его методы. Утверждение x.(T) проверяет сохранённый динамический тип; форма comma-ok сообщает о неуспехе без panic. Успешное утверждение типа при этом может вернуть nil-указатель.",

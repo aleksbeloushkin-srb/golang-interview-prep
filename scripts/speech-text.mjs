@@ -21,7 +21,10 @@ const WORDS = {
   SQL: "S-Q-L",
   JSON: "Jason",
   LIFO: "LIE-foe",
-  GOMAXPROCS: "GO-MAX-PROCS",
+  GOMAXPROCS: "Go max procs", // «GO-MAX-PROCS» синтезатор читал как «go M-A-X procs»
+  Ps: "P's", // «Ps» синтезатор читал по буквам: «P-S»
+  Gs: "G's",
+  Ms: "M's",
   GOGC: "GO-G-C",
   GOMEMLIMIT: "GO-MEM-LIMIT"
 };
