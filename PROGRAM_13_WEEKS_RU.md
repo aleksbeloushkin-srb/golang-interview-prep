@@ -1230,7 +1230,7 @@ PostgreSQL defaults to Read Committed, where each statement sees its own snapsho
 
 *Remember:* Key + request fingerprint + stored response; same key, other body → 422.
 
-A client may retry a payment, so the client sends an Idempotency-Key and I make the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry.
+A client may retry a payment, so it sends an Idempotency-Key that makes the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry.
 
 </details>
 
@@ -1410,7 +1410,7 @@ I use a sentinel error when callers only branch on a fixed condition, and a type
 
 *Remember:* Defer arguments are evaluated immediately; deferred closures can change named results.
 
-defer schedules cleanup for the moment the function returns. Deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
+defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
 
 </details>
 
@@ -1560,7 +1560,7 @@ A goroutine is a function running concurrently under the Go runtime: go f() star
 
 *Remember:* nil blocks; closed: send panics, receive drains then returns zero, false.
 
-A channel can be nil, open or closed, and the rules differ. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
+A channel's state decides whether an operation blocks, returns at once or panics. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
 
 </details>
 

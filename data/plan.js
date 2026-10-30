@@ -1147,7 +1147,7 @@ const PLAN = {
     },
     "w6-tue-1": {
       hook: "Key + request fingerprint + stored response; same key, other body → 422.",
-      en: "A client may retry a payment, so the client sends an Idempotency-Key and I make the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
+      en: "A client may retry a payment, so it sends an Idempotency-Key that makes the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
     },
     "w6-tue-2": {
       hook: "Claim the key atomically: INSERT … ON CONFLICT DO NOTHING in the transfer's transaction.",
@@ -1219,7 +1219,7 @@ const PLAN = {
     },
     "w1-thu-2": {
       hook: "Defer arguments are evaluated immediately; deferred closures can change named results.",
-      en: "defer schedules cleanup for the moment the function returns. Deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
+      en: "defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
     },
     "w1-thu-4": {
       hook: "recover works only in a deferred call of the panicking goroutine.",
@@ -1281,7 +1281,7 @@ const PLAN = {
     },
     "w3-tue-1": {
       hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
-      en: "A channel can be nil, open or closed, and the rules differ. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
+      en: "A channel's state decides whether an operation blocks, returns at once or panics. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
     },
     "w3-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",

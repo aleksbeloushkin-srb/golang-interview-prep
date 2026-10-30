@@ -16,6 +16,7 @@ const WORDS = {
   OS: "O-S",
   GC: "G-C",
   CPU: "C-P-U",
+  CPUs: "C-P-U's", // иначе разбивка camelCase даёт «CP Us»
   HTTP: "H-T-T-P",
   API: "A-P-I",
   SQL: "S-Q-L",
