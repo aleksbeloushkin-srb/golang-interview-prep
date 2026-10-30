@@ -818,14 +818,15 @@ const CARDS = [
     "levelLabel": "🟢 Base (Entry/Mid)",
     "qEN": "What does a channel buffer change, and what does it not change?",
     "qRU": "Что меняет буфер канала, а что остаётся прежним?",
-    "shortEN": "A channel buffer is a fixed-size queue between sender and receiver. It lets the sender go ahead without a receiver for up to cap values; an unbuffered send waits until a receiver takes the value. It does not remove backpressure: a full buffer still blocks the sender, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
+    "shortEN": "A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. The buffer does not remove backpressure: when it is full, the sending goroutine blocks, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
     "anchorsEN": [
-      "buffer = up to cap without a receiver",
-      "full buffer still blocks → backpressure",
+      "buffered: up to cap values queued, no receiver needed",
+      "unbuffered: the sending goroutine waits for a receiver",
+      "full buffer blocks the sender → backpressure",
       "copies the value, not what it points to"
     ],
     "jvmEN": "An unbuffered channel is like Java’s SynchronousQueue and a buffered one like an ArrayBlockingQueue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.",
-    "shortRU": "Буфер канала — очередь фиксированного размера между отправителем и получателем. Он позволяет отправителю идти дальше без получателя — до cap значений; небуферизованная отправка ждёт, пока получатель заберёт значение. Обратного давления он не убирает: полный буфер всё так же блокирует отправителя, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
+    "shortRU": "Буфер канала — очередь фиксированного размера между отправляющей и принимающей горутинами. С буфером отправители могут поставить в очередь до cap значений и идти дальше, не дожидаясь получателя; горутина, которая отправляет в небуферизованный канал, ждёт, пока другая горутина примет значение. Обратного давления буфер не убирает: когда он полон, отправляющая горутина блокируется, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
     "jvmRU": "Небуферизованный канал похож на SynchronousQueue в Java, буферизованный — на ArrayBlockingQueue с put и take. Чего у очередей Java нет — это close, чтобы сообщить о конце потока, и select, чтобы ждать сразу на нескольких каналах.",
     "detailsEN": [
       "For an open channel, a waiting receiver can take a value directly, even if the channel has buffer capacity. Otherwise, a sender uses a free buffer slot or waits. With select and default, an operation that cannot proceed can be skipped instead of waiting.",
@@ -888,14 +889,14 @@ const CARDS = [
     "simId": null,
     "qEN": "How do nil, open, and closed channels behave?",
     "qRU": "Чем отличаются операции с nil-каналом, открытым и закрытым каналом?",
-    "shortEN": "A channel's state decides whether an operation blocks, returns at once or panics. A nil channel blocks forever, an open one blocks until a partner or the buffer lets the operation complete, and a closed one never blocks a receive. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.",
+    "shortEN": "A channel's state decides whether an operation blocks, returns at once or panics. A send or receive on a nil channel blocks the goroutine forever; on an open channel it waits until a partner or the buffer lets the operation complete; and a receive from a closed channel never blocks. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.",
     "anchorsEN": [
-      "nil blocks · open waits · closed never blocks a receive",
+      "nil: goroutine blocks forever · open: waits · closed: receive never blocks",
       "closed: drain, then zero with ok=false",
       "send on closed · close twice · close nil → panic"
     ],
     "jvmEN": "A Java BlockingQueue has no closed state, so the end of a stream is signalled with a poison pill or an interrupt. In Go, close is that signal, and a range loop over the channel stops by itself.",
-    "shortRU": "От состояния канала зависит, заблокируется операция, вернётся сразу или вызовет панику. nil-канал блокирует навсегда, открытый блокирует, пока операцию не позволит партнёр или буфер, а закрытый никогда не блокирует чтение. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false, а отправка в него, повторный close или close nil-канала паникуют. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
+    "shortRU": "От состояния канала зависит, заблокируется операция, вернётся сразу или вызовет панику. Отправка или чтение на nil-канале блокируют горутину навсегда; на открытом канале она ждёт, пока операцию не позволит партнёр или буфер; а чтение из закрытого канала никогда не блокируется. Закрытый канал сначала отдаёт оставшиеся в буфере значения, затем нулевое значение с ok=false, а отправка в него, повторный close или close nil-канала паникуют. В select ветка с nil-каналом никогда не выбирается — так ветку выключают.",
     "jvmRU": "У BlockingQueue в Java нет закрытого состояния, поэтому конец потока сообщают «ядовитым» элементом или прерыванием. В Go этот сигнал — close, и цикл range по каналу останавливается сам.",
     "detailsEN": [
       "For an open unbuffered channel, send and receive rendezvous. For an open buffered channel, send waits when it is full and receive waits when it is empty. A nil-channel case cannot proceed in select, so another case or default can still run.",
@@ -954,10 +955,11 @@ const CARDS = [
     "simId": null,
     "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
-    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership of data or to signal an event, and a mutex to protect shared state with an invariant. With a mutex, the check and the update must happen under one lock, as with a balance or a cache entry. With a channel, a send copies only the value, so after sending a pointer the sender must stop touching that data.",
+    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync.Mutex, that sends and receives take. And a send copies only the value, so after sending a pointer the sending goroutine must stop touching that data.",
     "anchorsEN": [
-      "channel = hand off ownership, signal",
+      "channel = hand off ownership, signal (jobs → workers)",
       "mutex = invariant: check + update under one lock",
+      "hchan has its own runtime lock: channels are not lock-free",
       "a sent pointer still shares data"
     ],
     "jvmEN": "Java makes the same split: synchronized or ReentrantLock for shared state, a BlockingQueue for handoff. The differences are that sync.Mutex is not reentrant, and channels add close and select, which BlockingQueue lacks.",
@@ -969,7 +971,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
-    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение данными или сообщить о событии, мьютекс — чтобы защитить общее состояние с инвариантом. С мьютексом проверка и изменение должны идти под одной блокировкой, как с балансом или записью в кеше. С каналом отправка копирует только значение, поэтому, отправив указатель, отправитель не должен больше трогать эти данные.",
+    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам; мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, где проверка и изменение должны идти под одной блокировкой. Канал тоже не обходится без блокировки: у его структуры в рантайме, hchan, есть своя блокировка рантайма, не sync.Mutex, которую берут отправка и приём. А отправка копирует только значение, поэтому, отправив указатель, отправляющая горутина не должна больше трогать эти данные.",
     "jvmRU": "В Java то же разделение: synchronized или ReentrantLock для общего состояния, BlockingQueue для передачи. Разница в том, что sync.Mutex не реентерабелен, а у каналов есть close и select, которых нет у BlockingQueue.",
     "detailsRU": [
       "Отправка в канал копирует значение. Указатель или срез всё ещё может ссылаться на общую изменяемую память. В протоколе передачи владения отправитель прекращает обращаться к ней после передачи либо обе стороны синхронизируют доступ. Компилятор этот протокол не обеспечивает.",
@@ -1024,14 +1026,16 @@ const CARDS = [
     "levelLabel": "🟡 Senior (Runtime)",
     "qEN": "Why does a channel wait queue contain sudog records instead of just goroutines?",
     "qRU": "Зачем очереди канала содержат записи sudog, а не только горутины?",
-    "shortEN": "A channel keeps the goroutines waiting on it in queues, but it queues records, not goroutines. A goroutine blocked in select on three channels waits in three queues at once, so each wait needs its own record, and that record is a sudog. It holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; select enqueues one sudog for each case with a non-nil channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.",
+    "shortEN": "A channel has two wait queues, one for receivers (recvq) and one for senders (sendq), and what stands in them is a sudog: a waiting ticket, one per operation a goroutine waits on. The goroutine itself is not enough: in a select it can wait on several channels at once, so it holds a ticket in each queue. A ticket records the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly. When one case wins, the other tickets are withdrawn, and all of them return to a per-P cache.",
     "anchorsEN": [
-      "select on 3 channels → in 3 queues at once",
-      "sudog = g + channel + value pointer",
-      "one sudog per non-nil case; back to a per-P cache"
+      "two wait queues: recvq, sendq",
+      "sudog = a waiting ticket, one per waiting operation",
+      "select: one goroutine, a ticket in each queue",
+      "ticket = g + channel + where the value is",
+      "case wins → others withdrawn → per-P cache"
     ],
     "jvmEN": "A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.",
-    "shortRU": "Канал держит ждущие горутины в очередях, но в очереди стоят записи, а не сами горутины. Горутина, заблокированная в select на трёх каналах, стоит сразу в трёх очередях, поэтому каждому ожиданию нужна своя запись — это sudog. Он хранит горутину, канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую; select ставит в очередь по sudog на каждую ветку с не-nil каналом. Когда одна ветка выигрывает, остальные убираются из очередей, и все sudog возвращаются в кеш на P.",
+    "shortRU": "У канала две очереди ожидания — для получателей (recvq) и для отправителей (sendq), и стоят в них sudog: талоны ожидания, по одному на каждую операцию, которой ждёт горутина. Самой горутины мало: в select она может ждать сразу на нескольких каналах, поэтому держит талон в каждой очереди. В талоне записано, какая горутина, какой канал и откуда взять или куда положить значение, чтобы партнёр мог скопировать его напрямую. Когда одна ветка срабатывает, остальные талоны снимаются, и все они возвращаются в кеш на P.",
     "jvmRU": "Поток Java, заблокированный на блокировке или очереди, ждёт в одном месте. Go нужна отдельная запись на каждое ожидание, потому что select позволяет одной горутине стоять сразу в нескольких очередях каналов.",
     "detailsEN": [
       "hchan contains buffer capacity and occupancy, send/receive indices, wait queues, closed state, type information and an internal runtime lock. The lock implementation depends on the platform; it is not a universal synonym for futex.",
@@ -1086,14 +1090,15 @@ const CARDS = [
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "qEN": "How does a channel safely hand a value to a waiting receiver?",
     "qRU": "Как канал безопасно передаёт значение ожидающему получателю?",
-    "shortEN": "If a receiver is already waiting, the send skips the buffer: the sender copies the value straight into the receiver while it holds the channel lock. It takes the receiver’s sudog from recvq, copies with sendDirect into the receiver’s destination, usually on its stack, then unlocks and calls goready, which makes the receiver runnable. It is safe because a parked receiver has activeStackChans set, so anyone moving its stack must first take the same channel locks.",
+    "shortEN": "If a receiver is already waiting, the send skips the buffer: the sending goroutine copies the value straight into the receiver's variable, usually on its stack, under the channel lock. If nobody waits and there is room, the value goes into the buffer, which lives on the heap. With no room, the sender parks: on an unbuffered channel a receiver later copies the value from the sender's stack; on a full buffer it takes the oldest value and moves the sender's into the freed slot. It is safe because a goroutine parked on a channel has activeStackChans set, so moving its stack requires the same channel locks.",
     "anchorsEN": [
-      "copy straight to the receiver, under the lock",
-      "sendDirect → unlock → goready",
-      "activeStackChans: a stack move takes the locks"
+      "receiver waiting → straight into its variable (usually its stack)",
+      "nobody waits + room → buffer on the heap",
+      "no room → sender parks; unbuffered: copy from its stack; full: oldest out, sender's in",
+      "activeStackChans: a stack move takes the channel locks"
     ],
     "jvmEN": "Java’s SynchronousQueue hands over an object reference through the heap. A Go channel copies the value itself, even a whole struct, straight into the receiver’s variable.",
-    "shortRU": "Если получатель уже ждёт, отправка минует буфер: отправитель копирует значение прямо получателю, пока держит блокировку канала. Он забирает sudog получателя из recvq, через sendDirect копирует значение в место назначения получателя, обычно на его стеке, затем отпускает блокировку и вызывает goready, которая делает получателя готовым к запуску. Это безопасно, потому что у запаркованного получателя стоит флаг activeStackChans: кто переносит его стек, должен сначала взять те же блокировки каналов.",
+    "shortRU": "Если получатель уже ждёт, отправка минует буфер: отправляющая горутина копирует значение прямо в переменную получателя, обычно на его стеке, под блокировкой канала. Если никто не ждёт и место есть, значение идёт в буфер, который лежит в куче. Если места нет, отправитель паркуется: на небуферизованном канале получатель потом копирует значение с его стека, а на полном буфере забирает самое старое значение и переносит значение отправителя в освободившуюся ячейку. Это безопасно: у горутины, запаркованной на канале, стоит флаг activeStackChans, поэтому перенос её стека требует тех же блокировок каналов.",
     "jvmRU": "SynchronousQueue в Java передаёт ссылку на объект через кучу. Канал Go копирует само значение — даже целую структуру — прямо в переменную получателя.",
     "detailsEN": [
       "For an open channel, chansend first checks for a waiting receiver under the lock. It can bypass the buffer and copy to the receive destination with sendDirect. The source may be on the stack or heap; a discarded receive needs no destination copy.",
@@ -1294,25 +1299,28 @@ const CARDS = [
     "simId": "sim5",
     "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
-    "shortEN": "Compare-and-swap is a conditional write done as one atomic step: atomic.CompareAndSwapInt64(&x, old, new) stores new only if x still equals old and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.",
+    "shortEN": "Compare-and-swap means: \"if x still holds the value I saw, replace it with mine\", and the hardware checks and writes as one indivisible step. In Go it is atomic.CompareAndSwapInt64(&x, old, new), which returns false if x no longer equals old, usually because another goroutine changed it. For an update such as an increment you re-read and retry in a loop; for a one-time claim from 0 to 1, false means another goroutine won. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds. It covers one variable, so an invariant across several fields usually needs a mutex.",
     "anchorsEN": [
-      "CompareAndSwap(&x, old, new): store only if still old",
-      "Load + Store gap → both win; CAS → one wins",
-      "one variable; several fields → usually a mutex"
+      "CAS: x still what I saw → write mine, one indivisible step",
+      "false: x ≠ old → increment: re-read, retry; claim 0→1: someone else won",
+      "Load + Store: gap, both \"win\"; CAS: exactly one",
+      "one variable; multi-field invariant → mutex"
     ],
     "jvmEN": "This is AtomicInteger.compareAndSet in Java and atomic.Int32.CompareAndSwap in Go. Go atomics are always sequentially consistent, like Java volatile; Go has no weaker modes such as lazySet or getAcquire.",
-    "shortRU": "Compare-and-swap — условная запись одним атомарным шагом: atomic.CompareAndSwapInt64(&x, old, new) записывает new, только если x всё ещё равно old, и сообщает, удалось ли. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна, другая видит false. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
+    "shortRU": "Compare-and-swap означает: «если в x всё ещё то значение, которое я видел, замени его моим», и железо проверяет и записывает одним неделимым шагом. В Go это atomic.CompareAndSwapInt64(&x, old, new): он возвращает false, если x уже не равно old — обычно потому, что его изменила другая горутина. Для обновления вроде инкремента значение перечитывают и повторяют в цикле; для однократного захвата с 0 на 1 false значит, что выиграла другая горутина. Отдельные Load и Store оставляют окно: две горутины могут обе прочитать 0 и обе записать 1, и каждая решит, что выиграла, а с CAS успешна ровно одна. CAS охватывает одну переменную, поэтому инварианту из нескольких полей обычно нужен мьютекс.",
     "jvmRU": "Это AtomicInteger.compareAndSet в Java и atomic.Int32.CompareAndSwap в Go. Атомики Go всегда последовательно согласованы, как volatile в Java; более слабых режимов вроде lazySet или getAcquire в Go нет.",
     "detailsEN": [
       "Think of three inputs: the location, expected old value and proposed new value. If state starts at 0 and two goroutines each try CAS(0, 1), only one can succeed as long as nothing resets state. A failure does not wait or retry by itself.",
       "Separate atomic Load and Store calls do not make a combined check-and-update atomic. Both callers can load 0 before either stores 1. CAS closes this gap for the one value it operates on; it does not make an entire multi-field algorithm atomic.",
-      "Go atomics behave as if in a sequentially consistent order. On amd64 it compiles to LOCK CMPXCHG; arm64 has LSE and load/store-exclusive paths. Cache coherence is part of the hardware implementation, not a promise of one latency, one cache-line size or identical instructions on every CPU.",
+      "In registers on amd64: a direct call to atomic.CompareAndSwapInt64 is compiled inline as LOCK CMPXCHGQ. The instruction requires the expected old value in AX; the address and the new value sit in registers the compiler picks (the runtime's assembly Cas64, used for indirect calls, puts them in BX and CX). CMPXCHGQ compares AX with the memory word: if they are equal, it writes the new value there and sets the zero flag; if not, it loads the current value into AX and clears the flag. SETEQ turns the flag into the bool result, and LOCK makes the whole read-compare-write indivisible across cores. On arm64 the choice is made at run time: with LSE it is one CASALD instruction; without it, a loop of LDAXR (load-exclusive) and STLXR (store-exclusive), where a value different from old exits at once with false and the store retries if the exclusive reservation was lost, for example because another core wrote nearby.",
+      "Go atomics behave as if in a sequentially consistent order. Cache coherence is part of the hardware implementation, not a promise of one latency, one cache-line size or identical instructions on every CPU.",
       "CAS compares the current value, not its history: A → B → A can still match A. A state/version design needs its own correctness argument. Start with a mutex for compound invariants unless an atomic design has a concrete benefit."
     ],
     "detailsRU": [
       "Запомни три входа: место в памяти, ожидаемое старое значение, предлагаемое новое. Если state сначала 0 и две горутины пробуют CAS(0, 1), успешной будет только одна, пока никто не сбрасывает state. Неудачный CAS сам не ждёт и не повторяется.",
       "Отдельные атомарные Load и Store не делают всю проверку с изменением атомарной. Оба участника могут прочитать 0 до первой записи 1. CAS закрывает этот промежуток для одного значения, но не превращает весь алгоритм с несколькими полями в атомарный.",
-      "Атомики Go ведут себя как операции в едином последовательном порядке. На amd64 это LOCK CMPXCHG; у arm64 есть пути LSE и exclusive load/store. Когерентность кешей относится к аппаратной реализации, а не к гарантии одной задержки, размера cache line или инструкции для всех CPU.",
+      "В регистрах на amd64: прямой вызов atomic.CompareAndSwapInt64 компилятор встраивает как LOCK CMPXCHGQ. Инструкции нужно ожидаемое старое значение в AX; адрес и новое значение лежат в регистрах, которые выбирает компилятор (ассемблерная Cas64 рантайма для косвенных вызовов кладёт их в BX и CX). CMPXCHGQ сравнивает AX со словом в памяти: если они равны, записывает туда новое значение и ставит флаг нуля; если нет, загружает текущее значение в AX и сбрасывает флаг. SETEQ превращает флаг в результат bool, а LOCK делает всё чтение-сравнение-запись неделимым для всех ядер. На arm64 выбор делается во время выполнения: с LSE это одна инструкция CASALD; без неё — цикл из LDAXR (exclusive load) и STLXR (exclusive store), где значение, отличное от old, сразу даёт false, а запись повторяется, если exclusive-резервирование потеряно, например потому что другое ядро записало рядом.",
+      "Атомики Go ведут себя как операции в едином последовательном порядке. Когерентность кешей относится к аппаратной реализации, а не к гарантии одной задержки, размера cache line или инструкции для всех CPU.",
       "CAS сравнивает текущее значение, а не историю: после A → B → A сравнение с A может пройти. Для схемы с версией состояния всё равно нужно обоснование корректности. Для составного инварианта начни с мьютекса, если у атомарной схемы нет конкретной пользы."
     ],
     "practicalRU": "Опора для памяти: «ожидаю 0 → предлагаю 1 → получилось?» Для false sharing отдельно проверь, делят ли часто изменяемые независимые данные одну cache line. Соседние поля не всегда попадают в одну линию; padding увеличивает расстояние, но сам по себе не гарантирует выравнивания объекта. Измеряй эффект на целевой архитектуре.",
@@ -1364,11 +1372,12 @@ const CARDS = [
     "simId": null,
     "qEN": "How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
     "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
-    "shortEN": "sync.Mutex is built for speed, but it does not let a waiter starve. Lock tries one CAS, may spin briefly, then sleeps on a semaphore; 1 ms is the threshold for switching modes, not a timeout. In normal mode Unlock wakes one waiter, which then competes with newcomers that are already running and often loses. If a woken waiter loses again after waiting more than 1 ms, the mutex switches to starvation mode, and Unlock hands ownership directly to the waiter at the front.",
+    "shortEN": "Inside, sync.Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one CAS that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than 1 ms and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so 1 ms is a mode threshold, not a timeout.",
     "anchorsEN": [
-      "CAS → maybe spin → sleep on a semaphore",
-      "normal: woken waiter competes with newcomers",
-      "waited > 1 ms and lost → direct handoff"
+      "state word + semaphore",
+      "Lock: one CAS → brief spin → sleep on the semaphore",
+      "normal mode: woken waiter races newcomers, often loses",
+      "waited > 1 ms and lost again → starvation mode: direct handoff; not a timeout"
     ],
     "jvmEN": "Unlike ReentrantLock, sync.Mutex is not reentrant: locking it twice in one goroutine deadlocks, and it has no owner, so another goroutine may unlock it. Normal mode behaves like a non-fair ReentrantLock, and starvation mode like a fair one.",
     "detailsEN": [
@@ -1380,7 +1389,7 @@ const CARDS = [
     ],
     "practicalRU": "Ищи конкуренцию через mutex- и block-профили, затем сокращай критические секции или меняй владение. SetMutexProfileFraction(5) задаёт в среднем одно из пяти событий конкуренции за mutex, а не каждый пятый Lock. Профиль показывает конкуренцию, но не доказывает, что сбой вызван starvation mode.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tmu.Lock()\n\tfmt.Println(mu.TryLock()) // false: already locked\n\tmu.Unlock()\n\tif mu.TryLock() {\n\t\tfmt.Println(\"acquired\")\n\t\tmu.Unlock()\n\t}\n}",
-    "shortRU": "sync.Mutex рассчитан на скорость, но не даёт ждущему голодать. Lock пробует один CAS, может недолго покрутиться в спин-цикле, потом засыпает на семафоре; 1 мс — порог смены режима, а не таймаут. В нормальном режиме Unlock будит одного ждущего, и тот соревнуется с уже работающими новичками и часто проигрывает. Если разбуженный ждущий снова проиграл, прождав больше 1 мс, мьютекс переходит в режим голодания, и Unlock передаёт владение прямо первому в очереди.",
+    "shortRU": "Внутри sync.Mutex — слово состояния и семафор, и Lock пробует три вещи по очереди. Сначала один CAS, который переводит слово из «свободен» в «занят»; без конкуренции на этом всё. Если мьютекс занят, горутина может недолго покрутиться в спин-цикле в расчёте на быстрое освобождение, а потом засыпает на семафоре. Unlock будит не больше одного ждущего, и в обычном режиме тот соревнуется с уже работающими новичками и часто проигрывает: быстро, но нечестно. Разбуженный ждущий, который ждёт дольше 1 мс и снова застал мьютекс занятым, переводит его в режим голодания, где Unlock передаёт владение прямо первому в очереди, поэтому 1 мс — порог смены режима, а не таймаут.",
     "jvmRU": "В отличие от ReentrantLock, sync.Mutex не реентерабелен: повторный Lock в той же горутине — deadlock, и владельца у него нет, поэтому отпустить его может другая горутина. Нормальный режим ведёт себя как нечестный ReentrantLock, режим голодания — как честный.",
     "detailsRU": [
       "Нулевое значение готово к работе. После первого использования Mutex нельзя копировать. Unlock синхронизируется с последующим успешным Lock; неуспешный TryLock не создаёт синхронизации и не разрешает читать защищённые поля.",

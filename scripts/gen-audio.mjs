@@ -56,7 +56,7 @@ const SPEECH_FIXES = {
   ],
   // Пилотная выборка (c2, c7, c28, c29, c47).
   'card:c18:jvm': [['or a N-I-O Selector', 'or an N-I-O Selector']],
-  'card:c20:short': [['atomic dot Compare And Swap Int64, address of x, old, new, stores new', 'atomic dot Compare And Swap Int64, called with the address of x, old and new, stores new']],
+  'card:c20:short': [['atomic dot Compare And Swap Int64, address of x, old, new, which returns false', 'atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false']],
   'card:c39:short': [['You wrap it with F-M-T dot Error-f, load user: percent w, err:', 'You wrap it with F-M-T dot Error-f and percent w:']],
   'card:c7:short': [['with Go max procs=4,', 'with Go max procs set to four,'], ['or in cgo', 'or in C-Go']],
   'card:c29:short': [['s[1:3] copies no elements', 'slicing s from one to three copies no elements']],
