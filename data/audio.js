@@ -133,9 +133,9 @@ const AUDIO = {
       "heart": "audio/en/card-c23-jvm-heart-b3b7c6b8.mp3"
     },
     "card:c23:short": {
-      "hash": "fb623055",
-      "michael": "audio/en/card-c23-short-michael-f5adc3da.mp3",
-      "heart": "audio/en/card-c23-short-heart-e21f1064.mp3"
+      "hash": "41b8c485",
+      "michael": "audio/en/card-c23-short-michael-d057503e.mp3",
+      "heart": "audio/en/card-c23-short-heart-a88ebf80.mp3"
     },
     "card:c24:jvm": {
       "hash": "624f70ce",
@@ -143,9 +143,9 @@ const AUDIO = {
       "heart": "audio/en/card-c24-jvm-heart-b53ed488.mp3"
     },
     "card:c24:short": {
-      "hash": "f3ead435",
-      "michael": "audio/en/card-c24-short-michael-08812577.mp3",
-      "heart": "audio/en/card-c24-short-heart-2068a5a9.mp3"
+      "hash": "a9f153be",
+      "michael": "audio/en/card-c24-short-michael-f733e8f6.mp3",
+      "heart": "audio/en/card-c24-short-heart-e73bb7fc.mp3"
     },
     "card:c25:jvm": {
       "hash": "7814f67e",
@@ -153,9 +153,9 @@ const AUDIO = {
       "heart": "audio/en/card-c25-jvm-heart-1614e809.mp3"
     },
     "card:c25:short": {
-      "hash": "3dd85628",
-      "michael": "audio/en/card-c25-short-michael-7924840a.mp3",
-      "heart": "audio/en/card-c25-short-heart-afbcf504.mp3"
+      "hash": "b449c2c9",
+      "michael": "audio/en/card-c25-short-michael-8cde2481.mp3",
+      "heart": "audio/en/card-c25-short-heart-69a48b93.mp3"
     },
     "card:c26:jvm": {
       "hash": "2d2deced",
@@ -163,9 +163,9 @@ const AUDIO = {
       "heart": "audio/en/card-c26-jvm-heart-a9e55a7a.mp3"
     },
     "card:c26:short": {
-      "hash": "95be4198",
-      "michael": "audio/en/card-c26-short-michael-202aaf3d.mp3",
-      "heart": "audio/en/card-c26-short-heart-4b914b8b.mp3"
+      "hash": "5484bd11",
+      "michael": "audio/en/card-c26-short-michael-c91528d7.mp3",
+      "heart": "audio/en/card-c26-short-heart-10b2d501.mp3"
     },
     "card:c27:jvm": {
       "hash": "ff14a66f",
@@ -173,9 +173,9 @@ const AUDIO = {
       "heart": "audio/en/card-c27-jvm-heart-08a0bfff.mp3"
     },
     "card:c27:short": {
-      "hash": "78ca161b",
-      "michael": "audio/en/card-c27-short-michael-93f28ea1.mp3",
-      "heart": "audio/en/card-c27-short-heart-d9e7eaf3.mp3"
+      "hash": "60e43d1d",
+      "michael": "audio/en/card-c27-short-michael-47875f2e.mp3",
+      "heart": "audio/en/card-c27-short-heart-a61a2440.mp3"
     },
     "card:c28:jvm": {
       "hash": "88dc8fc3",
