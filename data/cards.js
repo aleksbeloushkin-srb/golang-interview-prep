@@ -818,14 +818,15 @@ const CARDS = [
     "levelLabel": "🟢 Base (Entry/Mid)",
     "qEN": "What does a channel buffer change, and what does it not change?",
     "qRU": "Что меняет буфер канала, а что остаётся прежним?",
-    "shortEN": "A channel buffer is a fixed-size queue between sender and receiver. It lets the sender go ahead without a receiver for up to cap values; an unbuffered send waits until a receiver takes the value. It does not remove backpressure: a full buffer still blocks the sender, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
+    "shortEN": "A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, a goroutine can send up to cap values and go on without any receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. The buffer does not remove backpressure: when it is full, the sending goroutine blocks, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
     "anchorsEN": [
-      "buffer = up to cap without a receiver",
-      "full buffer still blocks → backpressure",
+      "buffered: send up to cap values with no receiver",
+      "unbuffered: the sending goroutine waits for a receiver",
+      "full buffer blocks the sender → backpressure",
       "copies the value, not what it points to"
     ],
     "jvmEN": "An unbuffered channel is like Java’s SynchronousQueue and a buffered one like an ArrayBlockingQueue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.",
-    "shortRU": "Буфер канала — очередь фиксированного размера между отправителем и получателем. Он позволяет отправителю идти дальше без получателя — до cap значений; небуферизованная отправка ждёт, пока получатель заберёт значение. Обратного давления он не убирает: полный буфер всё так же блокирует отправителя, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
+    "shortRU": "Буфер канала — очередь фиксированного размера между отправляющей и принимающей горутинами. С буфером горутина может отправить до cap значений и идти дальше без получателя; горутина, которая отправляет в небуферизованный канал, ждёт, пока другая горутина примет значение. Обратного давления буфер не убирает: когда он полон, отправляющая горутина блокируется, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
     "jvmRU": "Небуферизованный канал похож на SynchronousQueue в Java, буферизованный — на ArrayBlockingQueue с put и take. Чего у очередей Java нет — это close, чтобы сообщить о конце потока, и select, чтобы ждать сразу на нескольких каналах.",
     "detailsEN": [
       "For an open channel, a waiting receiver can take a value directly, even if the channel has buffer capacity. Otherwise, a sender uses a free buffer slot or waits. With select and default, an operation that cannot proceed can be skipped instead of waiting.",

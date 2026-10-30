@@ -24,6 +24,7 @@
 
 ## Связанные правила
 
+- Точно называть, кто действует: не «an unbuffered send waits», а «a goroutine sending into an unbuffered channel waits until another goroutine receives the value»; не «a nil channel blocks», а «a send or receive on a nil channel blocks the goroutine» (замечание к c13).
 - Пишем по-программистски: термины и имена из кода (`var n int`, `m[k] = v`), но после рамки.
 - RU повторяет EN по смыслу и порядку; опоры (`anchorsEN`) идут в том же порядке, что и ответ, и подкреплены текстом.
 - После правки озвученного текста — пересоздать запись (`node scripts/gen-audio.mjs --week N` или `--cards c2,c7`) и обновить `SPEECH_FIXES`, если правка чтения перестала совпадать.
