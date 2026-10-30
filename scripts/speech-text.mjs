@@ -13,6 +13,7 @@ const WORDS = {
   JPY: "yen",
   JVM: "J-V-M",
   ID: "I-D",
+  IDs: "I-D's", // иначе разбивка даёт «I Ds»
   OS: "O-S",
   GC: "G-C",
   CPU: "C-P-U",
@@ -70,9 +71,12 @@ export function toSpeech(text) {
   s = s.replace(/-gcflags=-m\b/g, "G-C flags dash m");
   s = s.replace(/(^|[\s(])-benchmem\b/g, "$1bench-mem");
   s = s.replace(/(^|[\s(])-Xmx\b/g, "$1X-M-X");
+  s = s.replace(/(^|[\s(])-race\b/g, "$1dash race"); // «-race» читалось просто «race»: «which race can detect»
   s = s.replace(/(^|[\s(])-m\b/g, "$1dash m");
   s = s.replace(/\b(\d+(?:\.\d+)?) KiB\b/g, "$1 kilobytes").replace(/\b(\d+(?:\.\d+)?) MiB\b/g, "$1 megabytes").replace(/\b(\d+(?:\.\d+)?) GiB\b/g, "$1 gigabytes");
   s = s.replace(/\b(\d+(?:\.\d+)?) ms\b/g, (m, n) => (n === "1" ? "one millisecond" : `${n} milliseconds`)); // «1 ms» читалось «one M-S»
+  s = s.replace(/\bI\/O\b/g, "I-O"); // «I/O» синтезатор читал «I slash O»
+  s = s.replace(/\s*→\s*/g, ", then "); // «gen → square» читалось «right arrow»
   s = s.replace(/\s:=\s/g, " colon-equals ");
   s = s.replace(/\s!=\s/g, " not equal to ");
   s = s.replace(/\s==\s/g, " equals ");

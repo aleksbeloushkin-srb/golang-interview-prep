@@ -11,28 +11,28 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is a goroutine, and how does it differ from an OS thread?",
     "qRU": "Что такое горутина и чем она отличается от потока ОС?",
-    "shortEN": "A goroutine is a function running concurrently under the Go runtime: go f() starts one, and the runtime, not the OS, schedules it. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner and a way to finish.",
+    "shortEN": "A goroutine is a function running concurrently under the Go runtime: go f() starts one, and the runtime, not the OS, schedules it. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner, a join point where someone waits for it, and a way to finish.",
     "anchorsEN": [
       "go f(): the runtime schedules it, not the OS",
       "many Gs on few threads; ≥ 2 KiB stack grows",
-      "go returns nothing → owner + exit"
+      "go returns nothing → owner, join point, exit"
     ],
     "jvmEN": "Unlike a Java platform thread, a goroutine is not an OS thread and there is no Thread object to join or interrupt. Like a Java virtual thread, it blocks like ordinary code; unlike a Kotlin coroutine, it needs no suspend functions; and unlike both, the runtime can preempt it in the middle of a loop.",
     "detailsEN": [
       "Concurrency does not require simultaneous execution. GOMAXPROCS limits how many OS threads can execute user Go code at once; it is not the total number of goroutines or threads.",
       "A new goroutine gets the minimum stack, 2 KiB on Linux/amd64; a reused one may start larger, sized from the average stack use the GC observed. A goroutine also has a descriptor (runtime.g) and can keep heap objects alive, so count × 2 KiB is not a memory estimate.",
       "A thread’s reserved stack, its committed memory and RSS are different numbers. Switching goroutines happens in user space, without a system call. Switch costs depend on the machine and the workload: measure them instead of quoting nanoseconds.",
-      "The go statement returns nothing: no ID, no handle, no result. Wait for completion with a WaitGroup, an errgroup or a channel, and give each goroutine an owner and a way to finish. The runtime numbers goroutines internally (the number shows in stack traces), but the language deliberately does not expose it. Returning from main does not wait for other goroutines."
+      "The go statement returns nothing: no ID, no handle, no result. Wait for completion with a WaitGroup, an errgroup or a channel, and give each goroutine an owner and a way to finish. That wait — wg.Wait, g.Wait or a receive — is the join point of the fork that go started: without one, main can return before the goroutine even runs. The runtime numbers goroutines internally (the number shows in stack traces), but the language deliberately does not expose it. Returning from main does not wait for other goroutines."
     ],
     "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
-    "shortRU": "Горутина — это функция, которая выполняется конкурентно под управлением рантайма Go: её запускает go f(), а планирует рантайм, не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец и способ завершиться.",
+    "shortRU": "Горутина — это функция, которая выполняется конкурентно под управлением рантайма Go: её запускает go f(), а планирует рантайм, не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец, точка соединения (join point), где её кто-то ждёт, и способ завершиться.",
     "jvmRU": "В отличие от платформенного потока Java, горутина — не поток ОС, и у неё нет объекта Thread, который можно join или interrupt. Как виртуальный поток Java, она блокируется как обычный код; в отличие от корутины Kotlin, ей не нужны suspend-функции; а в отличие от обоих, рантайм может вытеснить её посреди цикла.",
     "detailsRU": [
       "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
       "Новая горутина получает минимальный стек — 2 КиБ на Linux/amd64; переиспользованная может начать с большего, по среднему использованию стека, которое видел GC. Кроме того, у горутины есть дескриптор (runtime.g), а её ссылки удерживают объекты кучи, поэтому число горутин × 2 КиБ — не оценка памяти.",
       "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Переключение горутин идёт в пространстве пользователя, без системного вызова. Цена переключения зависит от машины и нагрузки: её измеряют, а не заучивают в наносекундах.",
-      "Оператор go ничего не возвращает: ни ID, ни дескриптора, ни результата. Дождаться горутину можно через WaitGroup, errgroup или канал; у каждой горутины должен быть владелец и путь завершения. Внутренний номер у горутины есть (виден в трассах стека), но язык намеренно его не отдаёт. Возврат из main не ждёт остальные горутины."
+      "Оператор go ничего не возвращает: ни ID, ни дескриптора, ни результата. Дождаться горутину можно через WaitGroup, errgroup или канал; у каждой горутины должен быть владелец и путь завершения. Это ожидание — wg.Wait, g.Wait или приём из канала — и есть точка соединения (join point) для разветвления, которое начал go: без неё main может вернуться раньше, чем горутина вообще начнёт работу. Внутренний номер у горутины есть (виден в трассах стека), но язык намеренно его не отдаёт. Возврат из main не ждёт остальные горутины."
     ],
     "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
     "sources": [
@@ -94,11 +94,13 @@ const CARDS = [
     "jvmRU": "Так же, как в Java: synchronized-геттеры и сеттеры делают безопасным каждый вызов, но не пару «проверить и изменить». Нужна одна блокировка на оба шага или цикл compare-and-set, как с AtomicLong.",
     "detailsEN": [
       "Synchronization must protect the invariant, not just each field access. A balance check and the matching withdrawal must form one operation; a suitable atomic compare-and-swap loop is another possible design.",
+      "\"Atomic\" always means atomic relative to something. i++ is one statement but three steps: load, add, store. A sync/atomic add is indivisible for that one variable; a mutex makes a whole critical section indivisible for code that takes the same lock; a database transaction makes its writes all-or-nothing, but a check-and-update inside it is indivisible only with SELECT … FOR UPDATE or a guarded UPDATE (c50). Atomic steps do not add up to an atomic whole: the check and the update must sit inside one boundary.",
       "The race detector observes executed, instrumented paths. A clean go test -race run is useful evidence, not a proof that every possible execution is safe; it does not diagnose all logical races.",
       "An invalid-memory-address panic does not by itself prove a data race. The runtime detects some conflicting map operations, but its map checks are not a substitute for synchronization or the race detector."
     ],
     "detailsRU": [
       "Синхронизация должна защищать инвариант, а не только отдельные обращения к полю. Проверка баланса и соответствующее списание должны быть одной операцией; подходящий цикл compare-and-swap — другой возможный вариант.",
+      "«Атомарно» всегда значит «атомарно относительно чего-то». i++ — один оператор, но три шага: прочитать, прибавить, записать. Сложение из sync/atomic неделимо для одной переменной; мьютекс делает неделимой целую критическую секцию для кода, который берёт ту же блокировку; транзакция БД делает свои записи «всё или ничего», но проверка и изменение внутри неё неделимы только с SELECT … FOR UPDATE или UPDATE с условием (c50). Из атомарных шагов не складывается атомарное целое: проверка и изменение должны быть внутри одной границы.",
       "Детектор гонок наблюдает выполненные инструментированные пути. Успешный go test -race полезен, но не доказывает безопасность всех возможных исполнений и не выявляет все логические гонки.",
       "Panic с invalid memory address сам по себе не доказывает гонку данных. Рантайм обнаруживает некоторые конфликтующие операции с map, но его проверки не заменяют синхронизацию и детектор гонок."
     ],
@@ -747,14 +749,15 @@ const CARDS = [
     "simId": null,
     "qEN": "How would you find and prevent a goroutine leak?",
     "qRU": "Как найти утечку горутин и обеспечить их завершение?",
-    "shortEN": "A leaked goroutine has outlived its work and can never finish, usually because it is blocked on a channel, a lock or I/O without a timeout. I find a leak by watching which stack group keeps growing in the goroutine profile, and prevent it by giving every goroutine an owner and a stop signal. In tests, go.uber.org/goleak fails the test if goroutines are left behind.",
+    "shortEN": "A leaked goroutine has outlived its work and can never finish, usually because it is blocked on a channel, a lock or I/O without a timeout. The GC never collects a goroutine, so every goroutine must end in one of three ways: its work is done, it hits an error, or it is told to stop. The rule: whoever starts a goroutine must be able to stop it. I find a leak by a stack group that keeps growing in the goroutine profile; in tests, go.uber.org/goleak fails the test if goroutines are left behind.",
     "anchorsEN": [
-      "a growing stack group in the goroutine profile",
-      "stuck on a channel, lock or I/O",
-      "owner + stop signal; goleak in tests"
+      "stuck on a channel, lock or I/O; the GC never collects it",
+      "three exits: work done, error, told to stop",
+      "whoever starts it must be able to stop it",
+      "a growing stack group in the goroutine profile; goleak in tests"
     ],
     "jvmEN": "In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have IDs in dumps but no names and no public ID API, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.",
-    "shortRU": "Утёкшая горутина пережила свою работу и уже не может завершиться — обычно потому, что заблокирована на канале, блокировке или вводе-выводе без таймаута. Утечку я нахожу по группе стеков, которая всё растёт в профиле горутин, а предотвращаю тем, что у каждой горутины есть владелец и сигнал остановки. В тестах go.uber.org/goleak роняет тест, если остались горутины.",
+    "shortRU": "Утёкшая горутина пережила свою работу и уже не может завершиться — обычно потому, что заблокирована на канале, блокировке или вводе-выводе без таймаута. GC горутины не собирает, поэтому каждая горутина должна закончиться одним из трёх способов: работа сделана, случилась ошибка или ей велели остановиться. Правило: кто запустил горутину, тот должен уметь её остановить. Утечку я нахожу по группе стеков, которая всё растёт в профиле горутин; в тестах go.uber.org/goleak роняет тест, если остались горутины.",
     "jvmRU": "В Java зависший платформенный поток виден в дампе потоков под своим именем. У горутин в дампах есть номера, но нет имён и публичного API для ID, поэтому утечку находят, группируя одинаковые стеки или по меткам pprof, и следят, какая группа растёт.",
     "detailsEN": [
       "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
@@ -807,7 +810,7 @@ const CARDS = [
   },
 
   // ==========================================
-  // МОДУЛЬ 3: КАНАЛЫ (HCHAN), SELECT, CAS И SYNC (Q13 - Q22)
+  // МОДУЛЬ 3: КАНАЛЫ (HCHAN), SELECT, CAS И SYNC (Q13 - Q22, C55 - C56)
   // ==========================================
   {
     "id": "c13",
@@ -818,27 +821,27 @@ const CARDS = [
     "levelLabel": "🟢 Base (Entry/Mid)",
     "qEN": "What does a channel buffer change, and what does it not change?",
     "qRU": "Что меняет буфер канала, а что остаётся прежним?",
-    "shortEN": "A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. The buffer does not remove backpressure: when it is full, the sending goroutine blocks, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
+    "shortEN": "A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. A buffer decouples the two sides but does not raise their sustained rate: when it is full, the sending goroutine blocks, so a slow consumer still sets the pace. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.",
     "anchorsEN": [
       "buffered: up to cap values queued, no receiver needed",
       "unbuffered: the sending goroutine waits for a receiver",
-      "full buffer blocks the sender → backpressure",
+      "decouples, doesn't raise the sustained rate: a full buffer blocks the sender",
       "copies the value, not what it points to"
     ],
     "jvmEN": "An unbuffered channel is like Java’s SynchronousQueue and a buffered one like an ArrayBlockingQueue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.",
-    "shortRU": "Буфер канала — очередь фиксированного размера между отправляющей и принимающей горутинами. С буфером отправители могут поставить в очередь до cap значений и идти дальше, не дожидаясь получателя; горутина, которая отправляет в небуферизованный канал, ждёт, пока другая горутина примет значение. Обратного давления буфер не убирает: когда он полон, отправляющая горутина блокируется, поэтому медленный потребитель по-прежнему тормозит производителя. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
+    "shortRU": "Буфер канала — очередь фиксированного размера между отправляющей и принимающей горутинами. С буфером отправители могут поставить в очередь до cap значений и идти дальше, не дожидаясь получателя; горутина, которая отправляет в небуферизованный канал, ждёт, пока другая горутина примет значение. Буфер развязывает стороны, но не поднимает их устойчивый темп: когда он полон, отправляющая горутина блокируется, поэтому темп всё равно задаёт медленный потребитель. А отправка копирует только значение, поэтому указатель или срез по-прежнему делят данные с получателем.",
     "jvmRU": "Небуферизованный канал похож на SynchronousQueue в Java, буферизованный — на ArrayBlockingQueue с put и take. Чего у очередей Java нет — это close, чтобы сообщить о конце потока, и select, чтобы ждать сразу на нескольких каналах.",
     "detailsEN": [
       "For an open channel, a waiting receiver can take a value directly, even if the channel has buffer capacity. Otherwise, a sender uses a free buffer slot or waits. With select and default, an operation that cannot proceed can be skipped instead of waiting.",
       "A send copies the element value. A slice value still refers to its backing array, and a pointer still refers to the same object. Copy the data or agree on ownership and synchronization before either side mutates shared data.",
       "In makechan, the limit below 64 KiB is on one element, not the total buffer. For a nonzero buffer of pointer-free elements, the runtime allocates hchan and buffer together; pointer-containing elements use a separately allocated buffer. This layout is not a language guarantee.",
-      "Choose capacity from the amount of work allowed in flight. A larger buffer may absorb a burst, but cannot fix a permanently slower consumer. Measure throughput, waiting and retained memory for the actual workload."
+      "Choose capacity from the amount of work allowed in flight. Little's law, L = λW, makes this concrete: items in the system equal the arrival rate times the time each one spends there. With a consumer at 100 jobs/s, a full buffer of 10,000 adds about 100 s of waiting per job and nothing to throughput; only a faster slowest stage helps (q45). A buffer pays off for bursts and batching, not for a permanently slower consumer; measure throughput, waiting and retained memory."
     ],
     "detailsRU": [
       "Для открытого канала ожидающий получатель может получить значение напрямую, даже если канал имеет буфер. Иначе отправитель использует свободную ячейку или ждёт. В select с default неготовую операцию можно пропустить вместо ожидания.",
       "Отправка копирует значение элемента. Значение среза продолжает ссылаться на исходный массив, а указатель — на тот же объект. До изменения общих данных нужна копия либо договорённость о владении и синхронизации.",
       "В makechan ограничение меньше 64 КиБ относится к одному элементу, а не ко всему буферу. Ненулевой буфер элементов без указателей выделяется вместе с hchan; для элементов с указателями буфер выделяется отдельно. Такое размещение не гарантировано языком.",
-      "Выбирай ёмкость по допустимому объёму незавершённой работы. Большой буфер может поглотить всплеск, но не исправит постоянно более медленного потребителя. Измеряй пропускную способность, ожидание и удерживаемую память на своей нагрузке."
+      "Выбирай ёмкость по допустимому объёму незавершённой работы. Закон Литтла, L = λW, делает это наглядным: число элементов в системе равно темпу поступления, умноженному на время, которое каждый в ней проводит. Если потребитель делает 100 задач в секунду, полный буфер на 10 000 добавляет каждой задаче около 100 с ожидания и ничего не добавляет к пропускной способности; помогает только ускорение самой медленной стадии (q45). Буфер окупается на всплесках и при пакетной обработке, а не при постоянно более медленном потребителе; измеряй пропускную способность, ожидание и удерживаемую память."
     ],
     "practicalRU": "Опора для памяти: «получатель → место → ожидание» для отправки в открытый канал. Отдельный вопрос: что именно копируется? Применение: q15 проверяет ожидание, q21 — общие данные после передачи среза.",
     "versionNote": "Контракт передачи значений применим к Go 1.17/1.25/1.26. Внутренние ветки makechan и chansend сверены по Go 1.25.0 и 1.26.1; устройство памяти и производительность не являются контрактом языка.",
@@ -877,7 +880,10 @@ const CARDS = [
       "followUpEN": "What if a receiver drains one value? Explain which operation can now proceed.",
       "followUpRU": "Что изменится, если получатель прочитает одно значение? Какая операция сможет продолжиться?"
     },
-    "code": "// Function fragment. No receiver is needed for these two sends.\nfunc BufferFull() bool {\n\tch := make(chan int, 2)\n\tch <- 10\n\tch <- 20\n\tselect {\n\tcase ch <- 30:\n\t\treturn false\n\tdefault:\n\t\treturn true\n\t}\n}"
+    "code": "// Function fragment. No receiver is needed for these two sends.\nfunc BufferFull() bool {\n\tch := make(chan int, 2)\n\tch <- 10\n\tch <- 20\n\tselect {\n\tcase ch <- 30:\n\t\treturn false\n\tdefault:\n\t\treturn true\n\t}\n}",
+    "quizIds": [
+      "q45"
+    ]
   },
 
   {
@@ -952,18 +958,21 @@ const CARDS = [
     "modName": "3. Channels, Select & Sync",
     "level": "base",
     "levelLabel": "🟢 Base (Entry/Mid)",
-    "simId": null,
+    "simId": "sim12",
     "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
-    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync.Mutex, that sends and receives take. And a send copies only the value, so after sending a pointer the sending goroutine must stop touching that data.",
+    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync.Mutex, that sends and receives take. And the third option needs no lock on the data at all: confinement, where only one goroutine touches the data or each one gets its own copy; a sent pointer is not a copy.",
     "anchorsEN": [
       "channel = hand off ownership, signal (jobs → workers)",
       "mutex = invariant: check + update under one lock",
       "hchan has its own runtime lock: channels are not lock-free",
+      "third option: confinement — one goroutine, or its own copy",
       "a sent pointer still shares data"
     ],
     "jvmEN": "Java makes the same split: synchronized or ReentrantLock for shared state, a BlockingQueue for handoff. The differences are that sync.Mutex is not reentrant, and channels add close and select, which BlockingQueue lacks.",
     "detailsEN": [
+      "After confinement, four questions in order. Handing data from one goroutine to another, that is ownership? A channel. Guarding a type's internal state? A mutex kept inside the type, never exported. Coordinating several events, cancellation or timeouts? Channels with select. A profiled hot spot? Then a mutex or atomics may win, since a channel takes a lock inside. The Go proverb \"Don't communicate by sharing memory; share memory by communicating\" sets a default, not a ban: Go supports both (sim12).",
+      "Confinement: data that only one goroutine can reach needs no lock. It can be by agreement, when one owner goroutine serves requests over a channel, or by scope, when a function creates the data inside its goroutine and exposes only a receive-only <-chan. Copies work the same way if they are deep: a copied struct still shares its slices and maps.",
       "A channel send copies its value. A pointer or slice can still refer to shared mutable memory. For an ownership-transfer protocol, the sender stops accessing that memory after handing it over, or both sides synchronize access. The compiler does not enforce this protocol.",
       "A mutex should cover the whole operation: check balance AND withdraw, or look up AND install a missing entry. Locking each field access separately can avoid a data race yet leave a logic race. All accesses to protected mutable state must follow the same protocol.",
       "RWMutex allows concurrent readers, but RLock does not permit writes. A pending writer can block new readers; there is no atomic read-to-write upgrade. Extra bookkeeping can outweigh parallelism for short reads: RWMutex is not automatically faster than Mutex.",
@@ -971,9 +980,11 @@ const CARDS = [
     ],
     "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
-    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам; мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, где проверка и изменение должны идти под одной блокировкой. Канал тоже не обходится без блокировки: у его структуры в рантайме, hchan, есть своя блокировка рантайма, не sync.Mutex, которую берут отправка и приём. А отправка копирует только значение, поэтому, отправив указатель, отправляющая горутина не должна больше трогать эти данные.",
+    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам; мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, где проверка и изменение должны идти под одной блокировкой. Канал тоже не обходится без блокировки: у его структуры в рантайме, hchan, есть своя блокировка рантайма, не sync.Mutex, которую берут отправка и приём. А третий вариант обходится без блокировки данных: confinement (изоляция), когда данные трогает только одна горутина или каждая получает свою копию; отправленный указатель — не копия.",
     "jvmRU": "В Java то же разделение: synchronized или ReentrantLock для общего состояния, BlockingQueue для передачи. Разница в том, что sync.Mutex не реентерабелен, а у каналов есть close и select, которых нет у BlockingQueue.",
     "detailsRU": [
+      "После confinement — четыре вопроса по порядку. Передаёте данные от одной горутины другой, то есть владение? Канал. Защищаете внутреннее состояние типа? Мьютекс внутри типа, не наружу. Координируете несколько событий, отмену или таймауты? Каналы и select. Горячее место по профилю? Тогда мьютекс или atomic могут выиграть, ведь канал внутри сам берёт блокировку. Пословица Go «Don't communicate by sharing memory; share memory by communicating» задаёт выбор по умолчанию, а не запрет: Go поддерживает оба подхода (sim12).",
+      "Confinement (изоляция): данные, до которых может дотянуться только одна горутина, не требуют блокировки. Это бывает по договорённости, когда одна горутина-владелец обслуживает запросы через канал, или по области видимости, когда функция создаёт данные внутри своей горутины и наружу отдаёт только канал для чтения <-chan. Копии работают так же, если они глубокие: скопированная структура по-прежнему делит свои срезы и map.",
       "Отправка в канал копирует значение. Указатель или срез всё ещё может ссылаться на общую изменяемую память. В протоколе передачи владения отправитель прекращает обращаться к ней после передачи либо обе стороны синхронизируют доступ. Компилятор этот протокол не обеспечивает.",
       "Мьютекс должен охватывать целую операцию: проверить баланс И списать, найти И установить отсутствующий элемент. Отдельные блокировки вокруг каждого обращения могут убрать data race, но оставить логическую гонку. Все обращения к защищённому изменяемому состоянию следуют одному протоколу.",
       "RWMutex допускает параллельных читателей, но RLock не разрешает запись. Ожидающий писатель может задержать новых читателей; атомарного повышения read-lock до write-lock нет. Для короткого чтения дополнительные расходы могут перевесить параллелизм: RWMutex не всегда быстрее Mutex.",
@@ -992,6 +1003,10 @@ const CARDS = [
       {
         "title": "Go memory model — go1.26.1",
         "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_mem.html"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 2 и 4: дерево решения и confinement",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
       }
     ],
     "quizIds": [
@@ -1462,6 +1477,7 @@ const CARDS = [
     "detailsEN": [
       "WaitGroup: register an initial task before Wait can observe a zero counter. With Add/Done, normally call Add before starting the goroutine. Do not copy after first use; reuse for a new batch only after all previous Wait calls returned. Wait publishes completed work to its waiter, but it does not protect concurrent writes between workers.",
       "WaitGroup.Go was added in Go 1.25. It registers and starts a task; call wg.Go(f), not go wg.Go(f). The function must not panic. Go 1.26.1 re-panics without Done for a recovered non-nil panic, whereas 1.25.0 used defer Done. This prevents Wait from letting main exit before that panic finishes; it does not make panicking callbacks supported.",
+      "Errors from goroutines: a WaitGroup carries no results and no errors. Either send a result struct with a value and an err field back to the caller, which has more context to decide what to do, or use errgroup.WithContext: Wait returns the first non-nil error, and the derived ctx is cancelled so the other goroutines can stop early.",
       "Implementation history: Go 1.17 used three uint32 words to obtain an aligned 64-bit state plus a semaphore. Go 1.25/1.26 use atomic.Uint64: high 32 bits count tasks; the low part contains a synctest flag and 31 waiter bits. Memorize the contract first, not a permanent two-counter layout.",
       "Once.Do publishes initialization only after f finishes. A CAS that marks done before f runs would let losing callers return too early. Recursive Do on the same Once deadlocks. If f panics, Once considers that invocation complete: later Do calls do not retry f. Once itself must not be copied after use.",
       "Cancellation is a request: work must observe Done or use a context-aware API, and its owner still waits for completion where needed. Call the CancelFunc to release associated resources. Context methods are safe for concurrent use; mutable objects stored in values are not automatically protected.",
@@ -1474,6 +1490,7 @@ const CARDS = [
     "detailsRU": [
       "WaitGroup: зарегистрируй первую задачу до того, как Wait сможет увидеть нулевой счётчик. С Add/Done обычно вызывай Add до запуска горутины. После первого использования нельзя копировать; новую группу задач начинай только после возврата всех предыдущих Wait. Wait делает завершённую работу видимой ожидающему, но не защищает записи workers друг от друга.",
       "WaitGroup.Go добавлен в Go 1.25. Он регистрирует и запускает задачу: вызывай wg.Go(f), а не go wg.Go(f). Функция не должна паниковать. Go 1.26.1 повторяет перехваченный ненулевой panic без Done, тогда как 1.25.0 использовал defer Done. Это не даёт Wait выпустить main до завершения такого panic; паника callback всё равно нарушает контракт.",
+      "Ошибки из горутин: WaitGroup не передаёт ни результатов, ни ошибок. Либо отправляй вызывающему коду структуру с значением и полем err — у него больше контекста, чтобы решить, что делать, — либо бери errgroup.WithContext: Wait возвращает первую ненулевую ошибку, а производный ctx отменяется, чтобы остальные горутины могли остановиться раньше.",
       "История реализации: Go 1.17 использовал три слова uint32 для выровненного 64-битного состояния и семафора. В Go 1.25/1.26 используется atomic.Uint64: старшие 32 бита — задачи, младшая часть — флаг synctest и 31 бит ожидающих. Сначала запоминай контракт, а не вечную раскладку из двух счётчиков.",
       "Once.Do публикует инициализацию только после завершения f. CAS с установкой done до вызова f позволил бы проигравшим вернуться слишком рано. Рекурсивный Do того же Once блокируется навсегда. После panic в f Once считает вызов выполненным: следующие Do не повторят f. Once после использования тоже нельзя копировать.",
       "Отмена — просьба: работа должна проверять Done или использовать API с поддержкой контекста, а владелец при необходимости отдельно ждёт завершения. Вызывай CancelFunc для освобождения связанных ресурсов. Методы Context безопасны при параллельных вызовах; изменяемые объекты в values автоматически не защищаются.",
@@ -1500,6 +1517,10 @@ const CARDS = [
       {
         "title": "Context — go1.26.1",
         "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+      },
+      {
+        "title": "errgroup.WithContext — golang.org/x/sync",
+        "url": "https://pkg.go.dev/golang.org/x/sync/errgroup#WithContext"
       }
     ],
     "quizIds": [
@@ -1525,6 +1546,161 @@ const CARDS = [
       ],
       "followUpEN": "After cancel(), can the caller assume all workers stopped? Describe the missing join.",
       "followUpRU": "Можно ли после cancel() считать всех workers остановленными? Опиши недостающее ожидание."
+    }
+  },
+  {
+    "id": "c55",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": "sim11",
+    "qEN": "Deadlock, livelock, starvation — how do they differ, and how do you prevent a deadlock?",
+    "qRU": "Deadlock, livelock и starvation — чем они отличаются и как не допустить deadlock?",
+    "shortEN": "All three are ways concurrent code stops making progress. In a deadlock, goroutines wait for each other in a cycle: G1 holds lock a and waits for b, while G2 holds b and waits for a. It needs four Coffman conditions at once: mutual exclusion, hold and wait, no preemption and circular wait, so breaking any one prevents it; one lock order for everybody breaks the cycle. In a livelock, goroutines stay busy backing off and retrying in step, but nothing gets done. In starvation, the program moves on, but one goroutine rarely gets the resource.",
+    "shortRU": "Все три — способы, которыми конкурентный код перестаёт продвигаться. При deadlock горутины ждут друг друга по кругу: G1 держит блокировку a и ждёт b, а G2 держит b и ждёт a. Для него нужны сразу четыре условия Коффмана: взаимное исключение, удержание с ожиданием, отсутствие вытеснения и циклическое ожидание, поэтому достаточно сломать любое; единый порядок блокировок для всех ломает цикл. При livelock горутины заняты — отступают и повторяют попытку в такт, — но работа не делается. При starvation программа идёт дальше, но одна горутина редко получает ресурс.",
+    "anchorsEN": [
+      "deadlock: a cycle — G1 holds a, waits for b; G2 holds b, waits for a",
+      "Coffman: mutual exclusion, hold and wait, no preemption, circular wait — break one",
+      "one lock order for everybody → no cycle",
+      "livelock: busy retrying in step, no progress",
+      "starvation: others progress, one rarely gets the resource"
+    ],
+    "jvmEN": "The terms are the same as in Java. jstack prints \"Found one Java-level deadlock\" for monitors and ReentrantLocks; Go's runtime reports \"all goroutines are asleep - deadlock!\" only when the whole program is stuck, so in a server you look for the cycle in the goroutine profile. And there is no tryLock with a timeout: sync.Mutex has only TryLock.",
+    "jvmRU": "Термины те же, что в Java. jstack печатает «Found one Java-level deadlock» для мониторов и ReentrantLock; рантайм Go сообщает «all goroutines are asleep - deadlock!», только когда встала вся программа, поэтому в сервере цикл ищут в профиле горутин. И tryLock с таймаутом нет: у sync.Mutex есть только TryLock.",
+    "detailsEN": [
+      "Coffman conditions (1971) in Go terms. Mutual exclusion: a sync.Mutex or a row lock has one owner at a time. Hold and wait: a goroutine keeps lock a while it waits for b. No preemption: nobody can take a lock away; only an Unlock, normally by its holder, releases it. Circular wait: the waits form a cycle. A deadlock needs all four at once.",
+      "Prevention breaks one condition. A single global order, such as locking accounts by ascending ID (c50), removes circular wait. TryLock that releases what it holds on failure removes hold and wait (some textbooks call it breaking no preemption), at the risk of livelock. A database that aborts one transaction does not prevent the deadlock: it detects it and recovers by taking the victim's locks away. Holding one lock at a time, briefly and with no calls out (HTTP, channel sends, callbacks) under it, avoids the question.",
+      "Detection. The Go runtime prints \"fatal error: all goroutines are asleep - deadlock!\" only when every goroutine is blocked and no timer or network wait can wake one; a server always has such waiters, so it just hangs, and under -race the check does not run at all. In a goroutine dump (/debug/pprof/goroutine?debug=2), look for goroutines in state [sync.Mutex.Lock] on their second lock. A Go mutex records no owner, so the dump shows only where each one waits; who holds which lock you work out from the code. PostgreSQL finds cycles itself and aborts one transaction with 40P01 (c50).",
+      "Livelock usually comes from a well-meant fix: both goroutines take their first lock, fail TryLock on the second, release, back off for the same time and try again, in step. They keep retrying with zero throughput, and with a busy spin instead of a sleep the CPU burns too, so it looks alive. Random jitter in the back-off makes them fall out of step; one lock order removes the reason to retry.",
+      "Starvation: a greedy goroutine holds a shared lock for its whole batch while a polite one locks only around each small step; both are correct, yet the greedy one does far more work. You see it in per-worker throughput or wait-time metrics, not as a crash, and it applies to any resource: CPU, connections, memory. sync.Mutex itself switches to starvation mode when a woken waiter has waited over 1 ms (c21, sim8)."
+    ],
+    "detailsRU": [
+      "Условия Коффмана (1971) на языке Go. Взаимное исключение: у sync.Mutex или блокировки строки один владелец. Удержание с ожиданием: горутина держит a, пока ждёт b. Нет вытеснения: блокировку нельзя отобрать, её отпускает только Unlock — обычно того, кто её взял. Циклическое ожидание: ожидания замыкаются в круг. Deadlock требует всех четырёх сразу.",
+      "Профилактика ломает одно условие. Единый порядок — например, блокировать счета по возрастанию ID (c50) — убирает циклическое ожидание. TryLock, который при неудаче отпускает всё взятое, убирает удержание с ожиданием (в некоторых учебниках это называют нарушением «нет вытеснения»), но грозит livelock. База данных, которая отменяет одну транзакцию, deadlock не предотвращает: она его обнаруживает и выходит из него, отбирая блокировки у жертвы. Одна блокировка за раз, ненадолго и без вызовов наружу под ней (HTTP, отправка в канал, колбэки) снимает вопрос.",
+      "Обнаружение. Рантайм Go печатает «fatal error: all goroutines are asleep - deadlock!», только когда заблокированы все горутины и ни таймер, ни ожидание сети не может разбудить ни одну; в сервере такие ожидающие есть всегда, поэтому он просто висит, а под -race эта проверка не срабатывает вовсе. В дампе горутин (/debug/pprof/goroutine?debug=2) ищи горутины в состоянии [sync.Mutex.Lock] на второй блокировке. Мьютекс Go не хранит владельца, поэтому дамп показывает только, где каждая ждёт; кто какую блокировку держит, выясняют по коду. PostgreSQL находит циклы сама и отменяет одну транзакцию с 40P01 (c50).",
+      "Livelock обычно рождается из благого намерения: обе горутины берут первую блокировку, получают отказ TryLock на второй, отпускают, ждут одно и то же время и пробуют снова — в такт. Попыток много, пропускная способность нулевая, а если вместо сна крутиться в цикле, ещё и CPU горит, поэтому всё выглядит живым. Случайная добавка к задержке (jitter) выводит их из такта; единый порядок блокировок убирает саму причину повторять.",
+      "Starvation: жадная горутина держит общую блокировку всю свою пачку работы, а вежливая берёт её только на каждый маленький шаг; обе корректны, но жадная делает гораздо больше. Видно это по метрикам пропускной способности или ожидания на воркера, а не по падению, и касается любого ресурса: CPU, соединений, памяти. Сам sync.Mutex переходит в режим голодания, когда разбуженный ждущий ждал больше 1 мс (c21, sim8)."
+    ],
+    "practicalRU": "В сервисе deadlock выглядит не как падение, а как зависшие запросы и растущее число горутин. Сними дамп горутин (/debug/pprof/goroutine?debug=2) и найди пары в состоянии [sync.Mutex.Lock]. Правило для ревью: если код берёт несколько блокировок, у всех путей один порядок; под блокировкой — никаких вызовов наружу (HTTP, Kafka, отправка в канал без select с ctx). Livelock и starvation ищи по метрикам: повторных попыток много, а пропускная способность падает; один воркер или одна очередь обслуживается заметно реже других.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tID      int\n\tmu      sync.Mutex\n\tBalance int\n}\n\n// transfer locks both accounts in ascending ID order, so two\n// opposite transfers can never wait for each other in a cycle.\nfunc transfer(from, to *Account, amount int) {\n\tif from == to {\n\t\treturn // sync.Mutex is not reentrant\n\t}\n\tfirst, second := from, to\n\tif to.ID < from.ID {\n\t\tfirst, second = to, from\n\t}\n\tfirst.mu.Lock()\n\tdefer first.mu.Unlock()\n\tsecond.mu.Lock()\n\tdefer second.mu.Unlock()\n\tfrom.Balance -= amount\n\tto.Balance += amount\n}\n\nfunc main() {\n\ta := &Account{ID: 1, Balance: 100}\n\tb := &Account{ID: 2, Balance: 100}\n\tvar wg sync.WaitGroup\n\tfor range 1000 {\n\t\twg.Add(2)\n\t\tgo func() { defer wg.Done(); transfer(a, b, 1) }()\n\t\tgo func() { defer wg.Done(); transfer(b, a, 1) }()\n\t}\n\twg.Wait()\n\tfmt.Println(a.Balance, b.Balance) // 100 100\n}",
+    "versionNote": "Определения не зависят от версии. Пример выполнен на Go 1.24.7 и 1.27.3, в том числе с -race; for range по числу требует Go 1.22+. Состояние [sync.Mutex.Lock] в дампе и условие сообщения «all goroutines are asleep - deadlock!» (runtime.checkdead) сверены с исходниками Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Deadlock and the Coffman conditions — Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Deadlock_(computer_science)"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 1: deadlock, livelock, starvation",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      },
+      {
+        "title": "runtime.checkdead — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go#L6418"
+      },
+      {
+        "title": "sync.Mutex — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Mutex"
+      }
+    ],
+    "quizIds": [
+      "q44",
+      "q41",
+      "q8"
+    ],
+    "practice": {
+      "kind": "Найди цикл",
+      "promptEN": "Two handlers share two mutexes: CreateOrder locks users, then orders; CancelOrder locks orders, then users. What can happen under load, how do you prove it, and how do you fix it?",
+      "promptRU": "Два обработчика делят два мьютекса: CreateOrder берёт users, потом orders, а CancelOrder — orders, потом users. Что может случиться под нагрузкой, как это доказать и как исправить?",
+      "pointsEN": [
+        "Deadlock: each handler holds one mutex and waits for the other — circular wait; requests hang, the process does not crash.",
+        "Proof: a goroutine dump shows both stuck in [sync.Mutex.Lock] on their second lock; Go mutexes record no owner, so the code shows that each holds the lock the other wants.",
+        "Fix: one lock order on every path (users, then orders) or one mutex for both; TryLock with back-off needs jitter, or it can livelock."
+      ],
+      "pointsRU": [
+        "Deadlock: каждый обработчик держит один мьютекс и ждёт другой — циклическое ожидание; запросы висят, процесс не падает.",
+        "Доказательство: в дампе горутин обе стоят в [sync.Mutex.Lock] на второй блокировке; владельца мьютекс Go не хранит, поэтому то, что каждая держит нужную другой, видно по коду.",
+        "Исправление: один порядок на всех путях (сначала users, потом orders) или один мьютекс на оба; TryLock с отступом требует jitter, иначе возможен livelock."
+      ],
+      "followUpEN": "Why doesn't the Go runtime print \"all goroutines are asleep\" here, while the same bug in a small main does, unless it runs under -race?",
+      "followUpRU": "Почему рантайм Go здесь не печатает «all goroutines are asleep», а тот же баг в маленьком main печатает — если не запускать его под -race?"
+    }
+  },
+  {
+    "id": "c56",
+    "mod": "m3",
+    "modName": "3. Channels, Select & Sync",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "What is sync.Cond for, and why must Wait sit in a loop?",
+    "qRU": "Зачем нужен sync.Cond и почему Wait вызывают в цикле?",
+    "shortEN": "sync.Cond lets goroutines sleep until shared state changes, for example workers waiting until a queue has an item. It pairs a lock, c.L, with a list of waiting goroutines. A goroutine locks c.L and checks the condition; if it is false, Wait unlocks, sleeps and locks again before returning. The goroutine that changes the state calls Signal to wake one waiter or Broadcast to wake all. Wait sits in a for loop, because another goroutine may change the state before the woken one gets the lock. Cond has no select and no timeout, so for a simple signal use a channel.",
+    "shortRU": "sync.Cond позволяет горутинам спать, пока не изменится общее состояние, — например, воркерам ждать, пока в очереди появится элемент. Он связывает блокировку c.L со списком ждущих горутин. Горутина берёт c.L и проверяет условие; если оно ложно, Wait отпускает блокировку, засыпает и перед возвратом снова её берёт. Горутина, которая меняет состояние, вызывает Signal, чтобы разбудить одного ждущего, или Broadcast — чтобы всех. Wait вызывают в цикле for, потому что, пока разбуженная горутина ждёт блокировку, другая может снова изменить состояние. В select Cond не участвует и таймаута у него нет, поэтому для простого сигнала берут канал.",
+    "anchorsEN": [
+      "Cond = lock c.L + list of waiters: sleep until the state changes",
+      "Wait: unlock → sleep → lock again",
+      "Signal wakes one, Broadcast wakes all",
+      "for !ready { c.Wait() }: the state may change before you get the lock",
+      "no select, no timeout → for a simple signal, a channel"
+    ],
+    "jvmEN": "sync.Cond is Java's Condition from lock.newCondition(), or wait and notify on a monitor: Wait is await, Signal is signal, Broadcast is signalAll, and the while loop is the same rule. Unlike Java, Wait has no spurious wakeups, no timed version and no interruption.",
+    "jvmRU": "sync.Cond — это Condition из lock.newCondition() в Java или wait/notify на мониторе: Wait — await, Signal — signal, Broadcast — signalAll, и правило цикла while то же. В отличие от Java, у Wait нет ложных пробуждений, версии с таймаутом и прерывания.",
+    "detailsEN": [
+      "Wait requires c.L to be held. It first puts the goroutine on the wait list, then unlocks c.L and parks; after a Signal or Broadcast it locks c.L again before returning. Because it registers before unlocking, a Signal sent right after the unlock is not lost.",
+      "Signal and Broadcast do not require the lock, but changing the condition does: change the state under c.L, then signal. Cond keeps no memory of events: a Signal with no waiters does nothing. That is why a waiter checks the state, not whether a signal arrived.",
+      "Signal when exactly one waiter can use the change, such as one new item. Broadcast when the change matters to every waiter, such as close or shutdown, or when waiters wait for different things: with one Cond for both \"not empty\" and \"not full\", Signal can wake a goroutine that cannot proceed while the right one keeps sleeping.",
+      "Limits: Wait is not a select case and takes no context. For cancellation, set a closed flag under the lock and Broadcast; context.AfterFunc (Go 1.21) can run it when ctx is done, but the callback must lock c.L before Broadcast, or the wakeup can be lost, as the example in the context package shows. Do not copy a Cond after first use; go vet reports copies.",
+      "Channels cover most cases: closing a channel is a one-time Broadcast, and a send is a Signal that carries a value. Cond fits when many goroutines wait on state that keeps changing — a bounded queue, a resource pool, a batch becoming ready — and that state already lives under a mutex. The sync documentation itself recommends channels for simple cases."
+    ],
+    "detailsRU": [
+      "Wait вызывают, держа c.L. Сначала он ставит горутину в список ждущих, потом отпускает c.L и паркует её; после Signal или Broadcast он снова берёт c.L и только тогда возвращается. Раз регистрация идёт до разблокировки, Signal, отправленный сразу после неё, не теряется.",
+      "Signal и Broadcast не требуют блокировки, а изменение условия требует: меняй состояние под c.L, потом сигналь. Cond не помнит событий: Signal без ждущих ничего не делает. Поэтому ждущий проверяет состояние, а не то, пришёл ли сигнал.",
+      "Signal — когда изменением может воспользоваться ровно один ждущий, например один новый элемент. Broadcast — когда изменение важно всем: закрытие, остановка, или когда ждущие ждут разного: с одним Cond на «не пусто» и «не полно» Signal может разбудить горутину, которая не может продолжить, а нужная так и спит.",
+      "Ограничения: Wait не бывает веткой select и не принимает context. Для отмены ставь флаг closed под блокировкой и вызывай Broadcast; context.AfterFunc (Go 1.21) может сделать это, когда ctx отменён, но колбэк должен взять c.L перед Broadcast, иначе пробуждение может потеряться, — так и сделано в примере пакета context. Cond нельзя копировать после первого использования; go vet находит копии.",
+      "Каналы покрывают большинство случаев: закрытие канала — одноразовый Broadcast, а отправка — Signal со значением. Cond уместен, когда много горутин ждут состояния, которое меняется снова и снова, — ограниченная очередь, пул ресурсов, готовность пачки, — и это состояние уже живёт под мьютексом. Документация sync сама советует каналы для простых случаев."
+    ],
+    "practicalRU": "Шаблон: c.L.Lock(); for !условие { c.Wait() }; работа; c.L.Unlock(). Состояние меняй под той же блокировкой и только потом зови Signal или Broadcast. Прежде чем брать Cond, проверь, не хватит ли канала: закрытие канала — одноразовый Broadcast, отправка — Signal со значением. Остановку делай флагом closed и Broadcast, иначе ждущие горутины утекут.",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Queue struct {\n\tmu    sync.Mutex\n\tcond  *sync.Cond\n\titems []int\n}\n\nfunc NewQueue() *Queue {\n\tq := &Queue{}\n\tq.cond = sync.NewCond(&q.mu)\n\treturn q\n}\n\nfunc (q *Queue) Put(v int) {\n\tq.mu.Lock()\n\tq.items = append(q.items, v)\n\tq.mu.Unlock()\n\tq.cond.Signal() // one new item: wake one waiter\n}\n\nfunc (q *Queue) Get() int {\n\tq.mu.Lock()\n\tdefer q.mu.Unlock()\n\tfor len(q.items) == 0 { // a loop, not an if\n\t\tq.cond.Wait() // unlocks, sleeps, locks again\n\t}\n\tv := q.items[0]\n\tq.items = q.items[1:]\n\treturn v\n}\n\nfunc main() {\n\tq := NewQueue()\n\tsums := make([]int, 3)\n\tvar wg sync.WaitGroup\n\tfor i := range 3 {\n\t\twg.Add(1)\n\t\tgo func() { defer wg.Done(); sums[i] = q.Get() + q.Get() }()\n\t}\n\tfor v := 1; v <= 6; v++ {\n\t\tq.Put(v)\n\t}\n\twg.Wait()\n\tfmt.Println(sums[0] + sums[1] + sums[2]) // 21\n}",
+    "versionNote": "sync.Cond по смыслу не менялся с Go 1.0; context.AfterFunc — с Go 1.21. Пример выполнен на Go 1.24.7 и 1.27.3, в том числе с -race и go vet; for range по числу требует Go 1.22+.",
+    "sources": [
+      {
+        "title": "sync.Cond — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Cond"
+      },
+      {
+        "title": "sync/cond.go — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/sync/cond.go"
+      },
+      {
+        "title": "context: ExampleAfterFunc_cond — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/context/example_test.go#L127"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 3: Cond",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      }
+    ],
+    "quizIds": [
+      "q46",
+      "q47"
+    ],
+    "practice": {
+      "kind": "Код-ревью Cond",
+      "promptEN": "In a teammate's queue, Get waits with if len(q.items) == 0 { q.cond.Wait() }, and Close sets closed and calls Signal. What breaks with two consumers?",
+      "promptRU": "В очереди коллеги Get ждёт так: if len(q.items) == 0 { q.cond.Wait() }, а Close ставит closed и вызывает Signal. Что сломается при двух потребителях?",
+      "pointsEN": [
+        "if instead of for: a woken consumer may find the queue empty again and read items[0], which panics.",
+        "Close with Signal wakes only one waiter; the other sleeps forever, a goroutine leak. Close needs Broadcast.",
+        "Fix: for len(q.items) == 0 && !q.closed { q.cond.Wait() }, then return false when the queue is empty and closed."
+      ],
+      "pointsRU": [
+        "if вместо for: разбуженный потребитель может снова найти очередь пустой и прочитать items[0] — паника.",
+        "Close с Signal будит только одного ждущего; второй спит вечно — утечка горутины. Close нужен Broadcast.",
+        "Исправление: for len(q.items) == 0 && !q.closed { q.cond.Wait() }, потом вернуть false, если очередь пуста и закрыта."
+      ],
+      "followUpEN": "How would you write this queue with a channel, and what would you gain or lose?",
+      "followUpRU": "Как написать эту очередь на канале и что при этом выигрывается и теряется?"
     }
   },
 
@@ -1861,7 +2037,8 @@ const CARDS = [
       "Mark assists make allocating goroutines contribute tracing work according to allocation debt. This can add request latency. In Go 1.26.1 the background marking target is about 25% of GOMAXPROCS CPU capacity during marking, not a cap on all GC CPU usage.",
       "For estimates, heap goal = live heap + (live heap + roots) × GOGC / 100. With 100 MiB live and 20 MiB roots, GOGC=100 gives 220 MiB, not 200 MiB. The trigger is earlier than the goal; minimums, pacing and the memory limit affect the actual target.",
       "GOMEMLIMIT accounts for runtime memory as MemStats.Sys − MemStats.HeapReleased. This includes more than the heap but excludes C allocations, manually mmap-ed memory and the executable. It is neither process RSS nor a container limit. The runtime adjusts GC and memory release; it may exceed the budget to preserve progress: when the limit is tight, the GC CPU limiter caps GC at about 50% of CPU instead of letting the program stall.",
-      "If reachable data cannot fit, collecting more often cannot remove it. Leave measured headroom for memory outside Go and workload spikes. Even with GOGC=off, a finite memory limit can drive GC. A lower limit can increase collection work rather than solve a leak."
+      "If reachable data cannot fit, collecting more often cannot remove it. Leave measured headroom for memory outside Go and workload spikes. Even with GOGC=off, a finite memory limit can drive GC. A lower limit can increase collection work rather than solve a leak.",
+      "sync.Pool caches short-lived objects of one kind, such as buffers, to cut the allocation rate. It has no size and keeps nothing for sure: at each GC its objects move to a victim cache, and the next GC drops them, so Get may return a new object. Reset an object before Put, never pool connections or anything that needs Close, do not copy a Pool after first use, and measure before and after."
     ],
     "practicalRU": "Сначала сравни память runtime, RSS/память контейнера, живую кучу, скорость аллокаций и GC CPU. Затем найди удержание данных и горячие выделения через профили и trace. Для контейнера 4 GiB значение 3600 MiB может быть лишь стартовой гипотезой после оценки резерва; оно не гарантирует отсутствие OOM. Снижай ненужные выделения и ограничивай кеши/конкурентность. sync.Pool рассматривай только для измеренного переиспользования: он не задаёт предел памяти и не гарантирует сохранение объектов. Опора для памяти: «цель — когда начать — что учитывает бюджет».",
     "code": "// Conceptual estimates, not executable Go or an exact pacer trace.\nheapGoal ≈ liveHeap + (liveHeap + roots) * GOGC / 100\n100 MiB + (100 MiB + 20 MiB) * 100 / 100 = 220 MiB\n// Marking starts before the goal; the limit may lower the goal.\nruntimeMemory = MemStats.Sys - MemStats.HeapReleased\n// runtimeMemory != process RSS != container memory usage",
@@ -1872,7 +2049,8 @@ const CARDS = [
       "Mark assist заставляет выделяющую память горутину выполнить часть обхода соразмерно долгу за аллокации. Это может увеличить задержку запроса. В Go 1.26.1 цель фоновой разметки — около 25% CPU-мощности GOMAXPROCS во время marking, а не предел всех затрат GC.",
       "Для оценки: цель кучи = живая куча + (живая куча + корни) × GOGC / 100. При 100 MiB живых данных, 20 MiB корней и GOGC=100 получится 220 MiB, а не 200 MiB. Запуск происходит раньше достижения цели; минимумы, pacer и лимит памяти влияют на фактическую цель.",
       "GOMEMLIMIT учитывает память runtime как MemStats.Sys − MemStats.HeapReleased. Это больше, чем одна куча, но сюда не входят C-аллокации, ручной mmap и исполняемый файл. Это не RSS процесса и не лимит контейнера. Runtime регулирует GC и возврат памяти, но может превысить бюджет ради продолжения работы: при тесном лимите ограничитель CPU для GC держит его примерно на 50% CPU, а не даёт программе встать.",
-      "Если достижимые данные не помещаются, более частый GC не сможет их удалить. Нужен измеренный запас для памяти вне Go и всплесков нагрузки. Даже при GOGC=off конечный лимит памяти может запускать GC. Снижение лимита способно увеличить работу сборщика вместо устранения утечки."
+      "Если достижимые данные не помещаются, более частый GC не сможет их удалить. Нужен измеренный запас для памяти вне Go и всплесков нагрузки. Даже при GOGC=off конечный лимит памяти может запускать GC. Снижение лимита способно увеличить работу сборщика вместо устранения утечки.",
+      "sync.Pool кеширует короткоживущие объекты одного вида, например буферы, чтобы реже выделять память. Размера у него нет, и ничего он не хранит наверняка: на каждом GC его объекты переходят в кеш-«жертву» (victim cache), а следующий GC их выбрасывает, поэтому Get может вернуть новый объект. Сбрасывай объект перед Put, не клади в пул соединения и всё, что требует Close, не копируй Pool после первого использования и измеряй до и после."
     ],
     "versionNote": "Go 1.17: в формуле ещё нет учёта корней, GOMEMLIMIT отсутствует. Корни включены с 1.18, мягкий лимит — с 1.19. В 1.25 Green Tea экспериментальный; в 1.26 включён по умолчанию и меняет организацию marking/scanning, но не превращает GOMEMLIMIT в жёсткий предел. Детали pacer проверены по Go 1.26.1; формула — учебная оценка, не точная трасса runtime.",
     "sources": [
@@ -1903,6 +2081,10 @@ const CARDS = [
       {
         "title": "sync.Pool contract — Go 1.26.1",
         "url": "https://pkg.go.dev/sync@go1.26.1#Pool"
+      },
+      {
+        "title": "sync/pool.go: poolCleanup и victim cache — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/sync/pool.go"
       }
     ],
     "practice": {
@@ -3167,13 +3349,15 @@ const CARDS = [
       "One goroutine per connection, not per request: with keep-alive, one connection carries requests one after another (HTTP/1.1), and the same goroutine serves them. A panic in a handler is recovered by the server for that connection only; a panic in a goroutine the handler starts crashes the process.",
       "Routing since Go 1.22: patterns like \"GET /accounts/{id}\" match method and path, r.PathValue(\"id\") reads the wildcard, the more specific pattern wins (/accounts/new over /accounts/{id}), and a path that matches with the wrong method gets 405 with an Allow header.",
       "Context: work started for the request must stop when r.Context() is done. Work that must outlive the response needs its own context, for example context.WithoutCancel (Go 1.21) plus a timeout, and an owner that waits for it on shutdown.",
-      "Timeouts: ReadHeaderTimeout protects against slow clients that never finish headers (Slowloris); ReadTimeout covers reading the whole request, WriteTimeout the time until the response is written, IdleTimeout the wait between keep-alive requests. http.TimeoutHandler or a context deadline limits one handler; Shutdown(ctx) drains in-flight requests."
+      "Timeouts: ReadHeaderTimeout protects against slow clients that never finish headers (Slowloris); ReadTimeout covers reading the whole request, WriteTimeout the time until the response is written, IdleTimeout the wait between keep-alive requests. http.TimeoutHandler or a context deadline limits one handler; Shutdown(ctx) drains in-flight requests.",
+      "Hedged requests: when one backend is slow at the tail, send the same idempotent request to a second replica after a short delay, take the first response and cancel the rest through a shared ctx; it adds load, so cap it. Timeouts exist for different reasons: a saturated system should fail fast instead of queuing, data can go stale, a stuck dependency must not hold resources, and the client may already be gone. Long work should check ctx between steps so cancellation takes effect."
     ],
     "detailsRU": [
       "Горутина на соединение, а не на запрос: с keep-alive одно соединение несёт запросы один за другим (HTTP/1.1), и их обслуживает та же горутина. Panic в handler сервер перехватывает только для этого соединения; panic в горутине, которую handler запустил, роняет процесс.",
       "Маршрутизация с Go 1.22: шаблоны вида \"GET /accounts/{id}\" учитывают метод и путь, r.PathValue(\"id\") читает подстановку, побеждает более конкретный шаблон (/accounts/new раньше /accounts/{id}), а путь, совпавший с другим методом, получает 405 с заголовком Allow.",
       "Контекст: работа, начатая ради запроса, должна остановиться, когда r.Context() завершён. Работе, которая должна пережить ответ, нужен свой контекст — например, context.WithoutCancel (Go 1.21) с таймаутом — и владелец, который дождётся её при остановке.",
-      "Таймауты: ReadHeaderTimeout защищает от клиентов, которые никак не дошлют заголовки (Slowloris); ReadTimeout покрывает чтение всего запроса, WriteTimeout — время до записи ответа, IdleTimeout — ожидание следующего запроса keep-alive. http.TimeoutHandler или дедлайн контекста ограничивает один handler; Shutdown(ctx) дожидается запросов в полёте."
+      "Таймауты: ReadHeaderTimeout защищает от клиентов, которые никак не дошлют заголовки (Slowloris); ReadTimeout покрывает чтение всего запроса, WriteTimeout — время до записи ответа, IdleTimeout — ожидание следующего запроса keep-alive. http.TimeoutHandler или дедлайн контекста ограничивает один handler; Shutdown(ctx) дожидается запросов в полёте.",
+      "Hedged requests (страхующие запросы): если один бэкенд тормозит на хвосте, тот же идемпотентный запрос через короткую паузу отправляют второй реплике, берут первый ответ, а остальные отменяют через общий ctx; это добавляет нагрузку, поэтому её ограничивают. У таймаутов разные причины: перегруженная система должна быстро отказать, а не копить очередь; данные могут устареть; зависшая зависимость не должна держать ресурсы; клиент мог уже уйти. Долгая работа проверяет ctx между шагами, чтобы отмена срабатывала."
     ],
     "practicalRU": "На интервью: «горутина на соединение, контекст запроса отменяется при уходе клиента, у сервера четыре таймаута, нулевые — значит без ограничения». И пример, что handler делает с r.Context().",
     "code": "package main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/http/httptest\"\n\t\"time\"\n)\n\nfunc main() {\n\thandlerErr := make(chan error, 1)\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /report\", func(w http.ResponseWriter, r *http.Request) {\n\t\tselect {\n\t\tcase <-time.After(2 * time.Second): // slow work, e.g. a DB query with r.Context()\n\t\t\tfmt.Fprint(w, \"done\")\n\t\tcase <-r.Context().Done(): // the client went away: stop working\n\t\t\thandlerErr <- r.Context().Err()\n\t\t}\n\t})\n\tsrv := httptest.NewUnstartedServer(mux)\n\t// In production: always set server timeouts.\n\tsrv.Config.ReadHeaderTimeout = 5 * time.Second\n\tsrv.Config.IdleTimeout = 60 * time.Second\n\tsrv.Start()\n\tdefer srv.Close()\n\n\tclient := &http.Client{Timeout: 100 * time.Millisecond}\n\t_, err := client.Get(srv.URL + \"/report\")\n\tfmt.Println(\"client timed out:\", err != nil)\n\terr = <-handlerErr\n\tfmt.Println(\"handler saw:\", err, errors.Is(err, context.Canceled))\n}",
@@ -3190,6 +3374,10 @@ const CARDS = [
       {
         "title": "net/http: Request.Context",
         "url": "https://pkg.go.dev/net/http#Request.Context"
+      },
+      {
+        "title": "The Tail at Scale (Dean, Barroso, CACM 2013): hedged requests",
+        "url": "https://research.google/pubs/pub40801/"
       }
     ],
     "practice": {

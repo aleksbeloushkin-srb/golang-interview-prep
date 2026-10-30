@@ -1,6 +1,6 @@
-# Приёмка озвучки на слух — неделя 1
+# Приёмка озвучки на слух — недели 1–3
 
-Сгенерировано из `data/audio.js` (91 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
+Сгенерировано из `data/audio.js` (116 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
 Как проверять каждую запись (Michael и Heart отдельно):
 
@@ -13,8 +13,16 @@
 
 | Ключ | Голос | с | Риск | Термины | Числа | Условие слышно | Паузы/темп | Итог | Комментарий |
 |---|---|---|---|---|---|---|---|---|---|
+| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.6 | `-race` → «dash race» |  |  |  |  |  |  |
+| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.6 | `-race` → «dash race» |  |  |  |  |  |  |
 | [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 37.9 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 38.4 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 18.0 | IDs → «I-D's», pprof |  |  |  |  |  |  |
+| [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 17.9 | IDs → «I-D's», pprof |  |  |  |  |  |  |
+| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 35.2 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
+| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 36.3 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 45.5 | hchan, confinement |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 46.4 | hchan, confinement |  |  |  |  |  |  |
 | [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
 | [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
@@ -53,6 +61,14 @@
 | [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 38.2 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 47.1 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 48.6 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
+| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 24.0 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
+| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 24.5 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
+| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 38.9 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
+| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 39.6 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
+| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 20.0 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
+| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 20.9 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
+| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 40.5 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
+| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 41.5 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 27.4 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Heart | 28.0 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 36.9 | `for i := range` против `for i = range` |  |  |  |  |  |  |
@@ -65,30 +81,40 @@
 | [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 45.1 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
 | [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
 | [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 27.4 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 28.3 | `-race` → «dash race» |  |  |  |  |  |  |
 | [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
 | [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 33.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 29.8 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 30.5 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w3-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 25.7 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w3-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 25.7 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 25.7 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 26.1 | `-race` → «dash race» |  |  |  |  |  |  |
+| [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Michael | 36.8 | I/O |  |  |  |  |  |  |
+| [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Heart | 38.3 | I/O |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Michael | 29.9 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Heart | 30.4 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Michael | 38.8 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Heart | 39.4 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
+| [card:c1:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Michael | 21.5 |  |  |  |  |  |  |  |
+| [card:c1:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Heart | 22.1 |  |  |  |  |  |  |  |
+| [card:c1:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Michael | 33.8 |  |  |  |  |  |  |  |
+| [card:c1:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Heart | 34.4 |  |  |  |  |  |  |  |
 | [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 13.8 |  |  |  |  |  |  |  |
 | [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 13.9 |  |  |  |  |  |  |  |
-| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.2 |  |  |  |  |  |  |  |
-| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.2 |  |  |  |  |  |  |  |
 | [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 16.4 |  |  |  |  |  |  |  |
 | [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.2 |  |  |  |  |  |  |  |
 | [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 15.9 |  |  |  |  |  |  |  |
 | [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 34.5 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 36.4 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 36.8 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 38.2 |  |  |  |  |  |  |  |
 | [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 13.6 |  |  |  |  |  |  |  |
 | [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 13.7 |  |  |  |  |  |  |  |
 | [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 37.0 |  |  |  |  |  |  |  |
 | [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 37.9 |  |  |  |  |  |  |  |
 | [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 15.6 |  |  |  |  |  |  |  |
 | [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 41.6 |  |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 42.7 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 12.5 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 12.6 |  |  |  |  |  |  |  |
 | [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 36.2 |  |  |  |  |  |  |  |
@@ -175,8 +201,6 @@
 | [plan:w2-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
 | [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
 | [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
-| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 27.1 |  |  |  |  |  |  |  |
-| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 27.9 |  |  |  |  |  |  |  |
 | [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 43.0 |  |  |  |  |  |  |  |
 | [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 44.2 |  |  |  |  |  |  |  |
 | [plan:w2-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 25.7 |  |  |  |  |  |  |  |
@@ -185,24 +209,66 @@
 | [plan:w2-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 21.4 |  |  |  |  |  |  |  |
 | [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Michael | 26.4 |  |  |  |  |  |  |  |
 | [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
+| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 35.4 |  |  |  |  |  |  |  |
+| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 36.6 |  |  |  |  |  |  |  |
+| [plan:w3-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 21.5 |  |  |  |  |  |  |  |
+| [plan:w3-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 21.7 |  |  |  |  |  |  |  |
+| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 36.2 |  |  |  |  |  |  |  |
+| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 37.4 |  |  |  |  |  |  |  |
+| [plan:w3-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 39.1 |  |  |  |  |  |  |  |
+| [plan:w3-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 39.7 |  |  |  |  |  |  |  |
+| [plan:w3-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 27.3 |  |  |  |  |  |  |  |
+| [plan:w3-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 27.9 |  |  |  |  |  |  |  |
+| [plan:w3-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 27.8 |  |  |  |  |  |  |  |
+| [plan:w3-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 28.9 |  |  |  |  |  |  |  |
+| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 23.3 |  |  |  |  |  |  |  |
+| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 24.0 |  |  |  |  |  |  |  |
+| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 23.9 |  |  |  |  |  |  |  |
+| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 24.7 |  |  |  |  |  |  |  |
+| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 32.3 |  |  |  |  |  |  |  |
+| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 33.2 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Michael | 33.2 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Heart | 34.3 |  |  |  |  |  |  |  |
+| [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Michael | 26.9 |  |  |  |  |  |  |  |
+| [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Heart | 26.9 |  |  |  |  |  |  |  |
 | [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Michael | 39.5 |  |  |  |  |  |  |  |
 | [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Heart | 40.4 |  |  |  |  |  |  |  |
+| [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Michael | 43.2 |  |  |  |  |  |  |  |
+| [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Heart | 44.3 |  |  |  |  |  |  |  |
 | [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Michael | 35.4 |  |  |  |  |  |  |  |
 | [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Heart | 36.4 |  |  |  |  |  |  |  |
+| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Michael | 41.3 |  |  |  |  |  |  |  |
+| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Heart | 42.5 |  |  |  |  |  |  |  |
 | [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Michael | 41.4 |  |  |  |  |  |  |  |
 | [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Heart | 41.6 |  |  |  |  |  |  |  |
 | [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Michael | 29.6 |  |  |  |  |  |  |  |
 | [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Heart | 30.3 |  |  |  |  |  |  |  |
+| [practice:p-workerpool:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool) | Michael | 41.0 |  |  |  |  |  |  |  |
+| [practice:p-workerpool:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool) | Heart | 42.2 |  |  |  |  |  |  |  |
 
 ## Что читает синтезатор
 
 Текст для речи отличается от экранного только чтением кода и чисел. Если смысл расходится с экраном — это ошибка, её нужно отметить.
 
+**card:c2:short** (хеш текста `c88f5462`)
+
+> Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which dash race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
+
 **card:c7:short** (хеш текста `52a3505d`)
 
 > Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment, because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of logical C-P-U's the process may use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
+
+**card:c12:jvm** (хеш текста `b71dea61`)
+
+> In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have I-D's in dumps but no names and no public I-D A-P-I, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.
+
+**card:c12:short** (хеш текста `3494688c`)
+
+> A leaked goroutine has outlived its work and can never finish, usually because it is blocked on a channel, a lock or I-O without a timeout. The G-C never collects a goroutine, so every goroutine must end in one of three ways: its work is done, it hits an error, or it is told to stop. The rule: whoever starts a goroutine must be able to stop it. I find a leak by a stack group that keeps growing in the goroutine profile; in tests, Uber's go-leak library fails the test if goroutines are left behind.
+
+**card:c15:short** (хеш текста `03d75286`)
+
+> Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync dot Mutex, that sends and receives take. And the third option needs no lock on the data at all: confinement, where only one goroutine touches the data or each one gets its own copy; a sent pointer is not a copy.
 
 **card:c17:short** (хеш текста `7a2bca70`)
 
@@ -280,6 +346,22 @@
 
 > In Go you talk to a database through database/sql, and the main object is a pointer to sql dot D-B. It is a connection pool, not a single connection: get it once from sql dot Open at startup, share it, since it is safe for concurrent use, and set limits. Pass the request context to every query with Query Context and Exec Context. Leaks come from objects that hold a connection: a Rows holds one until it is closed, so after checking the query error, defer rows dot Close and check rows dot Err after the loop. A transaction pins one connection: Begin Tx with ctx and nil, check the error, defer tx dot Rollback, run every statement on tx, then Commit.
 
+**card:c55:jvm** (хеш текста `8203d51c`)
+
+> The terms are the same as in Java. jstack prints Found one Java-level deadlock for monitors and Reentrant Locks; Go's runtime reports all goroutines are asleep - deadlock! only when the whole program is stuck, so in a server you look for the cycle in the goroutine profile. And there is no try Lock with a timeout: sync dot Mutex has only Try Lock.
+
+**card:c55:short** (хеш текста `7f1c310c`)
+
+> All three are ways concurrent code stops making progress. In a deadlock, goroutines wait for each other in a cycle: G1 holds lock a and waits for b, while G2 holds b and waits for a. It needs four Coffman conditions at once: mutual exclusion, hold and wait, no preemption and circular wait, so breaking any one prevents it; one lock order for everybody breaks the cycle. In a livelock, goroutines stay busy backing off and retrying in step, but nothing gets done. In starvation, the program moves on, but one goroutine rarely gets the resource.
+
+**card:c56:jvm** (хеш текста `8ccc4910`)
+
+> sync dot Cond is Java's Condition from lock dot new Condition, or wait and notify on a monitor: Wait is await, Signal is signal, Broadcast is signal All, and the while loop is the same rule. Unlike Java, Wait has no spurious wakeups, no timed version and no interruption.
+
+**card:c56:short** (хеш текста `24e2b053`)
+
+> sync dot Cond lets goroutines sleep until shared state changes, for example workers waiting until a queue has an item. It pairs a lock, c dot L, with a list of waiting goroutines. A goroutine locks c dot L and checks the condition; if it is false, Wait unlocks, sleeps and locks again before returning. The goroutine that changes the state calls Signal to wake one waiter or Broadcast to wake all. Wait sits in a for loop, because another goroutine may change the state before the woken one gets the lock. Cond has no select and no timeout, so for a simple signal use a channel.
+
 **plan:w1-mon-1** (хеш текста `851cb195`)
 
 > Go has two ways to declare a variable: var x T declares one with its zero value and also works at package level. x colon-equals expression is the short declaration, used inside a function: it infers the type and must declare at least one new variable on the left. Deferred calls run when the surrounding function returns, last in, first out, and their arguments are evaluated when the defer statement runs.
@@ -304,9 +386,29 @@
 
 > Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a full slice expression so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100-megabyte array reachable, and only a copy, such as bytes dot Clone or make plus copy, lets the array be collected.
 
+**plan:w2-thu-2** (хеш текста `63012adb`)
+
+> A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t dot Run, so a failure shows the case name and one case can be run with -run. t dot Helper marks a helper so failures point to the caller's line. t dot Parallel runs a test alongside others, so I use it only when cases don't share mutable data. C-I runs go test dash race.
+
 **plan:w2-tue-3** (хеш текста `eda6ef4e`)
 
 > Strings are bytes, not characters: the length of héllo is 6, not 5, because a string is an immutable sequence of bytes, usually U-T-F-8, and é takes two of them. len of s counts bytes and s of i returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes, code points, I use utf8 dot Rune Count In String, and I convert to slice of rune only when I really need to index by code point.
+
+**plan:w3-mon-2** (хеш текста `bba6f6d6`)
+
+> A pipeline is a chain of stages linked by channels: in gen, then square, then print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx dot Done, and cancelling it releases all of them.
+
+**plan:w3-sat-1** (хеш текста `bf848b0c`)
+
+> For each goroutine I can name its owner and its exit path: it returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a Wait Group or errgroup. If I can't name the exit path, the goroutine can leak. go test dash race finds data races in the paths the tests run, not deadlocks or logic errors.
+
+**plan:w3-thu-2** (хеш текста `4df9d7a3`)
+
+> A counter with a Mutex, with atomic dot Int64 and with a single owner goroutine gives the same result under dash race; I choose by clarity and measured contention, not by a general rule. A cache guarded by RW Mutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead.
+
+**practice:p-counter:talk** (хеш текста `56f645c0`)
+
+> For a single number, an atomic add is the simplest and usually the cheapest. A mutex is the general tool, and I need it as soon as an invariant spans more than one field. The channel version gives the state to one owner goroutine and serializes access through messages; it is the most expensive per operation here, but the pattern pays off when the owner does more than count, for example batching or I-O. All three are correct under the race detector; which one is faster depends on contention and the number of C-P-U's, so I measure instead of assuming.
 
 **practice:p-deferpanic:talk** (хеш текста `b4a6387c`)
 
@@ -316,13 +418,17 @@
 
 > I store money as an int sixty-four number of minor units plus a currency code, so twelve euros fifty is one thousand two hundred fifty. Integers keep sums exact, while float sixty-four cannot represent most decimal fractions. String formats the absolute value as whole units and zero-padded minor units, then puts the sign in front, so minus five cents prints as minus zero point zero five E-U-R. The number of decimals belongs to the currency: yen has none and the Bahraini dinar has three, so I look it up instead of hard-coding a hundred.
 
+**card:c1:jvm** (хеш текста `d222847e`)
+
+> Unlike a Java platform thread, a goroutine is not an O-S thread and there is no Thread object to join or interrupt. Like a Java virtual thread, it blocks like ordinary code; unlike a Kotlin coroutine, it needs no suspend functions; and unlike both, the runtime can preempt it in the middle of a loop.
+
+**card:c1:short** (хеш текста `e5d87721`)
+
+> A goroutine is a function running concurrently under the Go runtime: go f starts one, and the runtime, not the O-S, schedules it. The runtime multiplexes many goroutines over a few O-S threads and gives each one a small stack, at least 2 kilobytes at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no I-D and no handle, so each goroutine needs an owner, a join point where someone waits for it, and a way to finish.
+
 **card:c2:jvm** (хеш текста `d55f6cf5`)
 
 > Same as in Java: synchronized getters and setters make each call safe but not a check-then-act sequence. You need one lock around both steps, or a compare-and-set loop, just like with Atomic Long.
-
-**card:c2:short** (хеш текста `c88f5462`)
-
-> Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which -race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
 
 **card:c7:jvm** (хеш текста `a6d2eb45`)
 
@@ -332,9 +438,9 @@
 
 > An unbuffered channel is like Java's Synchronous Queue and a buffered one like an Array Blocking Queue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.
 
-**card:c13:short** (хеш текста `9acea52a`)
+**card:c13:short** (хеш текста `08b1b500`)
 
-> A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. The buffer does not remove backpressure: when it is full, the sending goroutine blocks, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.
+> A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. A buffer decouples the two sides but does not raise their sustained rate: when it is full, the sending goroutine blocks, so a slow consumer still sets the pace. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.
 
 **card:c14:jvm** (хеш текста `850e885a`)
 
@@ -347,10 +453,6 @@
 **card:c15:jvm** (хеш текста `9c54551d`)
 
 > Java makes the same split: synchronized or Reentrant Lock for shared state, a Blocking Queue for handoff. The differences are that sync dot Mutex is not reentrant, and channels add close and select, which Blocking Queue lacks.
-
-**card:c15:short** (хеш текста `957dd287`)
-
-> Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync dot Mutex, that sends and receives take. And a send copies only the value, so after sending a pointer the sending goroutine must stop touching that data.
 
 **card:c16:jvm** (хеш текста `03146667`)
 
@@ -524,10 +626,6 @@
 
 > A module is the unit of versioning and a package the unit of compilation: go dot mod declares the module path, such as module example dot com slash shop, and a package is one directory compiled together. Code in an internal directory can be imported only by packages in the tree rooted at the parent of that internal directory. cmd for binaries and internal for private code is a common layout, not a language rule.
 
-**plan:w2-thu-2** (хеш текста `63012adb`)
-
-> A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t dot Run, so a failure shows the case name and one case can be run with -run. t dot Helper marks a helper so failures point to the caller's line. t dot Parallel runs a test alongside others, so I use it only when cases don't share mutable data. C-I runs go test -race.
-
 **plan:w2-tue-1** (хеш текста `3a44b4c6`)
 
 > A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so assigning to a field, m of k dot f, does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
@@ -544,17 +642,65 @@
 
 > Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice.
 
+**plan:w3-mon-1** (хеш текста `b8baf96a`)
+
+> A goroutine is a function running concurrently under the Go runtime: go f starts one, scheduled onto O-S threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections.
+
+**plan:w3-sat-4** (хеш текста `1a28f7ff`)
+
+> I use channels when work or data moves between goroutines, so ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. The choice is about clarity of ownership; I measure before claiming either is faster.
+
+**plan:w3-thu-1** (хеш текста `a000f3e1`)
+
+> Atomics protect one variable, not an invariant: atomic dot Add Int64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a Compare And Swap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RW Mutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use.
+
+**plan:w3-thu-3** (хеш текста `1c515272`)
+
+> Calling Done on a copy of a Wait Group leaves the original counter unchanged, so Wait blocks; pass pointer to Wait Group, or use wg dot Go in Go one 25 or later. Locking a Mutex again from the code that already holds it deadlocks, because Go mutexes are not reentrant. A check under R Lock is stale after R Unlock, so check-then-insert must recheck under Lock; that is a logic race even without a data race. Returning a pointer from a protected map lets callers read or change the value after unlock, so I copy the value while holding the lock.
+
+**plan:w3-tue-1** (хеш текста `7dddd596`)
+
+> A channel's state decides whether an operation blocks, returns at once or panics. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send.
+
+**plan:w3-tue-2** (хеш текста `e04c8ac5`)
+
+> A worker pool bounds concurrency: N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a Wait Group and then closes results, so the consumer's range ends. Every send and receive also selects on ctx dot Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel.
+
+**plan:w3-tue-3** (хеш текста `e301be6a`)
+
+> In a pipeline, each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx dot Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
+
+**plan:w3-wed-1** (хеш текста `a241ec26`)
+
+> select waits for one of several channel operations; if several are ready, it picks one pseudo-randomly. default makes it non-blocking. Checking ctx dot Err before the select doesn't give cancellation priority, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen.
+
+**plan:w3-wed-2** (хеш текста `1a0ac195`)
+
+> Fan-in starts one goroutine per input that forwards values to a shared output. A Wait Group tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx dot Done, so cancellation stops everything, and an empty list of inputs closes the output immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order.
+
 **practice:p-account:talk** (хеш текста `b14fd304`)
 
 > Deposit and Withdraw change the account, so they have pointer receivers; with value receivers they would change a copy. Insufficient funds is a sentinel error, because callers only need to branch on that condition. I wrap it with percent w and add the amount and the account, so the message is useful and errors dot Is still finds the cause. Transfer wraps once more, and a test checks that errors dot Is works through both levels and that a failed operation leaves the balances unchanged.
+
+**practice:p-fanin:talk** (хеш текста `b3aaeb1e`)
+
+> One goroutine per input forwards values to a shared output. Because several goroutines send on the output, none of them may close it; a separate goroutine waits on a Wait Group and closes the output once every forwarder has returned. A forwarder returns when its input is closed or the context is done. Merge never closes the inputs because it does not own them, and it skips nil inputs, which would block forever.
 
 **practice:p-generics:talk** (хеш текста `d0a2c487`)
 
 > The task compares generic helpers with an interface. Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.
 
+**practice:p-pipeline:talk** (хеш текста `b2d375e6`)
+
+> Generate and Square each own their output channel: each starts one goroutine, defers closing the output, and returns the channel; Sum runs in the caller's goroutine. Every send and every receive sits in a select with ctx dot Done, so when the consumer cancels, every stage returns and closes its output, and nothing stays blocked. Closing flows downstream; cancellation reaches all stages through the shared context. Because cancellation also closes the channels, Sum checks ctx dot Err when its input closes: a closed channel with a live context is a finished stream, otherwise the run was aborted.
+
 **practice:p-removeslice:talk** (хеш текста `d65c9afb`)
 
 > A slice element can be removed in place or with a copy. Removing with append of the part before i and the tail after it is cheap because it shifts the tail inside the same backing array, but the caller's slice shares that array, so it now sees shifted values and a stale duplicate at the end. If the caller's data must stay intact, I allocate a new slice and copy the two parts. slices dot Delete also works in place, and since Go one 22 it zeroes the tail, which helps the garbage collector when elements are pointers.
+
+**practice:p-safecache:talk** (хеш текста `b7eec551`)
+
+> The cache keeps a map and a byte total that must always agree, so both change under the same lock, and readers take a read lock. The subtle part is aliasing: an item holds slices, and a slice shares its backing array. If Get returned the stored item, a caller could modify cache memory without any lock, which is a data race and silently changes cached data behind the lock. So I copy on the way in and on the way out. RW Mutex pays off only when reads dominate and read sections are long enough to outweigh its extra cost; otherwise a plain Mutex is as fast or faster, so I'd benchmark.
 
 **practice:p-txsum:talk** (хеш текста `e5f6925d`)
 
@@ -563,4 +709,8 @@
 **practice:p-validation:talk** (хеш текста `e40edb65`)
 
 > I return a typed error when the caller needs data, here the name of the invalid field. Validation Error implements error on a pointer receiver, so I return a pointer and the caller uses errors dot As with a pointer to Validation Error target. Register wraps it with percent w, so errors dot As still finds it, even through errors dot Join. When the user is valid I return a literal nil, because a nil pointer stored in an error interface is not a nil error.
+
+**practice:p-workerpool:talk** (хеш текста `ed620787`)
+
+> I start a fixed number of workers, so concurrency is bounded by construction. Each worker selects on the jobs channel and ctx dot Done, and it sends its result in a select with ctx dot Done as well, so it never blocks forever on a channel; fn itself must respect ctx. Only the pool sends on the results channel, so only the pool closes it: one extra goroutine waits on a Wait Group for all workers and then closes results. The caller owns the jobs channel and closes it. Backpressure comes for free: with an unbuffered results channel, a slow consumer simply makes the workers wait.
 

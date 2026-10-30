@@ -277,7 +277,8 @@ const QUIZ_QUESTIONS = [
     ],
     "cardIds": [
       "c21",
-      "c15"
+      "c15",
+      "c55"
     ]
   },
 
@@ -1510,7 +1511,8 @@ func WriteReport(path string, payload []byte) (err error) {
     ],
     "cardIds": [
       "c50",
-      "c21"
+      "c21",
+      "c55"
     ]
   },
   {
@@ -1578,6 +1580,134 @@ func WriteReport(path string, payload []byte) (err error) {
     ],
     "cardIds": [
       "c53"
+    ]
+  },
+  {
+    "id": "q44",
+    "title": "Задача 44: TryLock и вежливый отступ",
+    "ru": "Перевод больше не ждёт вторую блокировку: если TryLock не удался, он отпускает первую, ждёт 1 мс и пробует снова. Сто пар встречных переводов идут одновременно. Какое условие deadlock это ломает и что всё ещё может пойти не так?",
+    "en": "The transfer no longer waits for its second lock: if TryLock fails, it releases the first one, sleeps 1 ms and tries again. A hundred pairs of opposite transfers run at once. Which deadlock condition does this break, and what can still go wrong?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n\t\"time\"\n)\n\ntype Account struct {\n\tID      int\n\tmu      sync.Mutex\n\tBalance int\n}\n\n// transfer never waits while holding a lock: if the second lock is\n// busy, it releases the first one, backs off and tries again.\nfunc transfer(from, to *Account, amount int) (retries int) {\n\tfor {\n\t\tfrom.mu.Lock()\n\t\tif to.mu.TryLock() {\n\t\t\tfrom.Balance -= amount\n\t\t\tto.Balance += amount\n\t\t\tto.mu.Unlock()\n\t\t\tfrom.mu.Unlock()\n\t\t\treturn retries\n\t\t}\n\t\tfrom.mu.Unlock()\n\t\tretries++\n\t\ttime.Sleep(time.Millisecond) // the same back-off for everyone\n\t}\n}\n\nfunc main() {\n\ta := &Account{ID: 1, Balance: 100}\n\tb := &Account{ID: 2, Balance: 100}\n\tvar wg sync.WaitGroup\n\tfor range 100 {\n\t\twg.Add(2)\n\t\tgo func() { defer wg.Done(); transfer(a, b, 1) }()\n\t\tgo func() { defer wg.Done(); transfer(b, a, 1) }()\n\t}\n\twg.Wait()\n\tfmt.Println(a.Balance, b.Balance)\n}",
+    "options": [
+      "Deadlock остаётся: обе горутины навсегда засыпают в Lock.",
+      "Deadlock невозможен: ломается удержание с ожиданием. Но горутины могут отступать и повторять в такт — livelock; обычно их разводит случайность тайминга, а гарантирует прогресс единый порядок блокировок.",
+      "Deadlock невозможен: ломается взаимное исключение, потому что TryLock не блокирует.",
+      "Data race на Balance: -race сообщит о гонке.",
+      "Через 1 мс мьютекс переходит в режим голодания и сам разводит горутины, поэтому проблем нет."
+    ],
+    "correct": 1,
+    "explanationRU": "Горутина больше не ждёт, держа блокировку: при отказе TryLock она отпускает первую, поэтому удержание с ожиданием сломано и deadlock невозможен. Но две горутины могут снова и снова брать каждая свою первую блокировку, получать отказ на второй и отступать на одно и то же время — это livelock: обе заняты, прогресса нет. На практике их обычно разводит случайность тайминга, и программа печатает 100 100, но гарантии нет. Надёжное исправление — единый порядок блокировок (по возрастанию ID): он ломает циклическое ожидание, и повторять не нужно. Режим голодания мьютекса здесь не поможет: он упорядочивает только тех, кто ждёт в Lock, а отказывает здесь TryLock, который в очередь не встаёт (в режиме голодания он всегда возвращает false).",
+    "speechEN": "No deadlock: the goroutine never waits while holding a lock, so hold and wait is broken. But both goroutines can keep taking their first lock, failing on the second and backing off for the same time, in step: that's a livelock. Timing luck usually breaks the tie, but nothing guarantees it. One lock order, by ascending ID, removes the cycle, so nobody needs to retry.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tID      int\n\tmu      sync.Mutex\n\tBalance int\n}\n\n// transfer locks both accounts in ascending ID order, so two\n// opposite transfers can never wait for each other in a cycle.\nfunc transfer(from, to *Account, amount int) {\n\tif from == to {\n\t\treturn // sync.Mutex is not reentrant\n\t}\n\tfirst, second := from, to\n\tif to.ID < from.ID {\n\t\tfirst, second = to, from\n\t}\n\tfirst.mu.Lock()\n\tdefer first.mu.Unlock()\n\tsecond.mu.Lock()\n\tdefer second.mu.Unlock()\n\tfrom.Balance -= amount\n\tto.Balance += amount\n}\n\nfunc main() {\n\ta := &Account{ID: 1, Balance: 100}\n\tb := &Account{ID: 2, Balance: 100}\n\tvar wg sync.WaitGroup\n\tfor range 100 {\n\t\twg.Add(2)\n\t\tgo func() { defer wg.Done(); transfer(a, b, 1) }()\n\t\tgo func() { defer wg.Done(); transfer(b, a, 1) }()\n\t}\n\twg.Wait()\n\tfmt.Println(a.Balance, b.Balance)\n}",
+    "versionNote": "Программа и исправленный вариант выполнены на Go 1.24.7 и 1.27.3 (в том числе с -race): обе печатают 100 100. TryLock — с Go 1.18; for range по числу — с Go 1.22.",
+    "sources": [
+      {
+        "title": "sync.Mutex.TryLock — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Mutex.TryLock"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 1: livelock",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      }
+    ],
+    "cardIds": [
+      "c55",
+      "c21"
+    ]
+  },
+  {
+    "id": "q45",
+    "title": "Задача 45: большой буфер и закон Литтла",
+    "ru": "Модель с шагом 50 мс: производитель предлагает 120 задач в секунду, потребитель успевает 100. Буфер канала — 100 или 10 000. Что напечатает программа?",
+    "en": "A model in 50 ms ticks: the producer offers 120 jobs a second, the consumer finishes 100. The channel buffer holds 100 or 10,000. What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\n// A model in 50 ms ticks: the producer offers 6 jobs a tick (120/s),\n// the consumer finishes 5 (100/s). A full buffer blocks the producer.\nfunc run(capacity int) (perSec, queued int) {\n\tqueue := 0\n\tfor tick := 1; tick <= 20_000; tick++ { // 1000 seconds\n\t\tqueue += min(6, capacity-queue) // the producer fills free slots\n\t\tdone := min(queue, 5)           // the consumer takes up to 5\n\t\tqueue -= done\n\t\tif tick > 20_000-20 { // count the last second\n\t\t\tperSec += done\n\t\t}\n\t}\n\treturn perSec, queue\n}\n\nfunc main() {\n\tfor _, capacity := range []int{100, 10_000} {\n\t\tperSec, queued := run(capacity)\n\t\twait := float64(queued) / float64(perSec) // Little's law: W = L / λ\n\t\tfmt.Printf(\"cap %d: %d jobs/s, %d queued, wait %.2f s\\n\", capacity, perSec, queued, wait)\n\t}\n}",
+    "options": [
+      "cap 100: 100 jobs/s, 95 queued, wait 0.95 s | cap 10000: 120 jobs/s, 0 queued, wait 0.00 s",
+      "cap 100: 100 jobs/s, 95 queued, wait 0.95 s | cap 10000: 100 jobs/s, 9995 queued, wait 99.95 s",
+      "cap 100: 120 jobs/s, 0 queued, wait 0.00 s | cap 10000: 120 jobs/s, 0 queued, wait 0.00 s",
+      "cap 100: 100 jobs/s, 95 queued, wait 0.95 s | cap 10000: 110 jobs/s, 5000 queued, wait 45.45 s"
+    ],
+    "correct": 1,
+    "explanationRU": "Большой буфер не поднимает устойчивую пропускную способность: в обоих случаях 100 задач в секунду — столько успевает самая медленная стадия. Буфер лишь копит очередь: за первые ~500 с он заполняется, и производитель снова блокируется. По закону Литтла L = λW время ожидания W = L / λ: 95 / 100 ≈ 0,95 с против 9995 / 100 ≈ 100 с. То есть большой буфер добавил каждой задаче почти 100 секунд задержки и ничего не дал пропускной способности. Помогает только ускорение медленной стадии: в исправленном варианте два потребителя, и обе ёмкости дают 120 задач в секунду без очереди. Буфер полезен для всплесков, пакетной обработки и на входе конвейера, а не против постоянно медленного потребителя.",
+    "speechEN": "Both capacities give 100 jobs a second, the speed of the slowest stage. The bigger buffer only holds a longer queue: by Little's law, wait equals queue length over throughput, so about one second versus about a hundred. A buffer decouples stages and absorbs bursts; it doesn't raise throughput. To go faster, speed up the slowest stage, for example with a second consumer.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\n// A model in 50 ms ticks: the producer offers 6 jobs a tick (120/s),\n// two consumers finish 5 each (200/s). A full buffer blocks the producer.\nfunc run(capacity int) (perSec, queued int) {\n\tqueue := 0\n\tfor tick := 1; tick <= 20_000; tick++ { // 1000 seconds\n\t\tqueue += min(6, capacity-queue) // the producer fills free slots\n\t\tdone := min(queue, 10)          // two consumers take up to 10\n\t\tqueue -= done\n\t\tif tick > 20_000-20 { // count the last second\n\t\t\tperSec += done\n\t\t}\n\t}\n\treturn perSec, queue\n}\n\nfunc main() {\n\tfor _, capacity := range []int{100, 10_000} {\n\t\tperSec, queued := run(capacity)\n\t\twait := float64(queued) / float64(perSec) // Little's law: W = L / λ\n\t\tfmt.Printf(\"cap %d: %d jobs/s, %d queued, wait %.2f s\\n\", capacity, perSec, queued, wait)\n\t}\n}",
+    "versionNote": "Это модель очереди с дискретным шагом, а не замер каналов; выполнена на Go 1.24.7 и 1.27.3. Встроенная min — с Go 1.21, разделители _ в числах — с Go 1.13.",
+    "sources": [
+      {
+        "title": "Little's law — Wikipedia",
+        "url": "https://en.wikipedia.org/wiki/Little%27s_law"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 4: Queuing",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      }
+    ],
+    "cardIds": [
+      "c13"
+    ]
+  },
+  {
+    "id": "q46",
+    "title": "Задача 46: Signal вместо Broadcast",
+    "ru": "Три воркера ждут флага ready на sync.Cond. Главная горутина ставит ready = true и вызывает Signal. Что напечатает программа?",
+    "en": "Three workers wait on a sync.Cond for the ready flag. The main goroutine sets ready = true and calls Signal. What does the program print?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tcond := sync.NewCond(&mu)\n\tready := false\n\n\tvar parked, done sync.WaitGroup\n\tfor range 3 {\n\t\tparked.Add(1)\n\t\tdone.Add(1)\n\t\tgo func() {\n\t\t\tdefer done.Done()\n\t\t\tmu.Lock()\n\t\t\tparked.Done()\n\t\t\tfor !ready {\n\t\t\t\tcond.Wait()\n\t\t\t}\n\t\t\tmu.Unlock()\n\t\t\tfmt.Println(\"worker started\")\n\t\t}()\n\t}\n\tparked.Wait()\n\tmu.Lock() // succeeds only when all three workers sit in Wait\n\tready = true\n\tmu.Unlock()\n\tcond.Signal()\n\tdone.Wait()\n}",
+    "options": [
+      "Три строки worker started, затем программа завершается.",
+      "Одна строка worker started, затем fatal error: all goroutines are asleep - deadlock!",
+      "Ничего: Signal до Wait теряется, сразу deadlock.",
+      "Одна строка worker started, затем программа завершается: остальные воркеры увидят ready при следующей проверке.",
+      "Data race на ready: -race сообщит о гонке."
+    ],
+    "correct": 1,
+    "explanationRU": "parked.Wait и mu.Lock гарантируют, что все три воркера уже сидят в Wait: блокировку main получает, только когда Wait её отпустил. Signal будит одного ждущего; он снова берёт mu, видит ready и печатает worker started. Двое других так и спят: сами они ready не проверят — их должен разбудить Signal или Broadcast. main ждёт в done.Wait, все горутины заблокированы, и рантайм завершает процесс с fatal error: all goroutines are asleep - deadlock! (код выхода 2). Изменение важно всем ждущим, поэтому нужен Broadcast; гонки данных нет — ready меняется и читается под mu.",
+    "speechEN": "Signal wakes only one of the three waiting workers. It prints worker started; the other two keep sleeping, because nothing wakes them to check ready again. Main blocks in Wait on the WaitGroup, every goroutine is blocked, and the runtime stops with: all goroutines are asleep, deadlock. A change that matters to every waiter needs Broadcast.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tvar mu sync.Mutex\n\tcond := sync.NewCond(&mu)\n\tready := false\n\n\tvar parked, done sync.WaitGroup\n\tfor range 3 {\n\t\tparked.Add(1)\n\t\tdone.Add(1)\n\t\tgo func() {\n\t\t\tdefer done.Done()\n\t\t\tmu.Lock()\n\t\t\tparked.Done()\n\t\t\tfor !ready {\n\t\t\t\tcond.Wait()\n\t\t\t}\n\t\t\tmu.Unlock()\n\t\t\tfmt.Println(\"worker started\")\n\t\t}()\n\t}\n\tparked.Wait()\n\tmu.Lock() // succeeds only when all three workers sit in Wait\n\tready = true\n\tmu.Unlock()\n\tcond.Broadcast()\n\tdone.Wait()\n}",
+    "versionNote": "Выполнено на Go 1.24.7 и 1.27.3: исходная программа печатает одну строку и падает с кодом 2, исправленная — три строки. Под -race проверка deadlock в рантайме не срабатывает: исходная программа печатает одну строку и просто висит. for range по числу — с Go 1.22.",
+    "sources": [
+      {
+        "title": "sync.Cond.Signal и Broadcast — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Cond.Broadcast"
+      },
+      {
+        "title": "sync/cond.go — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/sync/cond.go"
+      }
+    ],
+    "cardIds": [
+      "c56"
+    ]
+  },
+  {
+    "id": "q47",
+    "title": "Задача 47: if вместо for вокруг Wait",
+    "ru": "Два потребителя ждут в Get, в очередь кладут один элемент и вызывают Broadcast. Что произойдёт?",
+    "en": "Two consumers wait in Get; one item is added to the queue and Broadcast is called. What happens?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"sync\"\n)\n\ntype Queue struct {\n\tmu      sync.Mutex\n\tcond    *sync.Cond\n\titems   []int\n\twaiting int\n}\n\nfunc (q *Queue) Get() int {\n\tq.mu.Lock()\n\tdefer q.mu.Unlock()\n\tif len(q.items) == 0 {\n\t\tq.waiting++\n\t\tq.cond.Wait()\n\t\tq.waiting--\n\t}\n\tv := q.items[0]\n\tq.items = q.items[1:]\n\treturn v\n}\n\nfunc main() {\n\tq := &Queue{}\n\tq.cond = sync.NewCond(&q.mu)\n\tvar wg sync.WaitGroup\n\tfor range 2 {\n\t\twg.Add(1)\n\t\tgo func() { defer wg.Done(); fmt.Println(\"got\", q.Get()) }()\n\t}\n\tfor { // wait until both consumers sit in Wait\n\t\tq.mu.Lock()\n\t\tif q.waiting == 2 {\n\t\t\tbreak\n\t\t}\n\t\tq.mu.Unlock()\n\t\truntime.Gosched()\n\t}\n\tq.items = append(q.items, 1) // one item...\n\tq.mu.Unlock()\n\tq.cond.Broadcast() // ...but both consumers wake up\n\twg.Wait()\n}",
+    "options": [
+      "Оба потребителя напечатают got 1.",
+      "Один напечатает got 1, второй снова уснёт в Wait, и программа зависнет.",
+      "Второй потребитель паникует: index out of range [0] with length 0 (строка got 1 от первого может успеть напечататься).",
+      "Один напечатает got 1, второй — got 0.",
+      "fatal error: all goroutines are asleep - deadlock! ещё до Broadcast."
+    ],
+    "correct": 2,
+    "explanationRU": "Broadcast будит обоих. Первый, кто снова взял блокировку, забирает единственный элемент. Второй выходит из Wait, но из-за if условие не перепроверяет и читает q.items[0] из пустого среза — паника index out of range [0] with length 0. Успеет ли напечататься got 1 от первого, зависит от расписания. Wait всегда вызывают в цикле for: пока разбуженная горутина ждёт блокировку, состояние может измениться. В исправленном варианте цикл, флаг closed и Close с Broadcast: один потребитель получает элемент, второй видит закрытие и выходит без паники и без утечки.",
+    "speechEN": "Broadcast wakes both consumers. The first one to relock takes the only item. The second returns from Wait, but because of the if it doesn't recheck, reads items at index zero of an empty slice and panics. Always call Wait in a for loop: the state can change before the woken goroutine gets the lock. For shutdown, set a closed flag and Broadcast, so every waiter wakes and exits.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n\t\"sync\"\n)\n\ntype Queue struct {\n\tmu      sync.Mutex\n\tcond    *sync.Cond\n\titems   []int\n\twaiting int\n\tclosed  bool\n}\n\n// Get returns false once the queue is closed and empty.\nfunc (q *Queue) Get() (int, bool) {\n\tq.mu.Lock()\n\tdefer q.mu.Unlock()\n\tfor len(q.items) == 0 && !q.closed { // check again after every wake-up\n\t\tq.waiting++\n\t\tq.cond.Wait()\n\t\tq.waiting--\n\t}\n\tif len(q.items) == 0 {\n\t\treturn 0, false\n\t}\n\tv := q.items[0]\n\tq.items = q.items[1:]\n\treturn v, true\n}\n\nfunc (q *Queue) Close() {\n\tq.mu.Lock()\n\tq.closed = true\n\tq.mu.Unlock()\n\tq.cond.Broadcast() // every waiter must see the new state\n}\n\nfunc main() {\n\tq := &Queue{}\n\tq.cond = sync.NewCond(&q.mu)\n\tvar wg sync.WaitGroup\n\tresults := make(chan bool, 2)\n\tfor range 2 {\n\t\twg.Add(1)\n\t\tgo func() { defer wg.Done(); _, ok := q.Get(); results <- ok }()\n\t}\n\tfor {\n\t\tq.mu.Lock()\n\t\tif q.waiting == 2 {\n\t\t\tbreak\n\t\t}\n\t\tq.mu.Unlock()\n\t\truntime.Gosched()\n\t}\n\tq.items = append(q.items, 1)\n\tq.mu.Unlock()\n\tq.cond.Broadcast()\n\tq.Close()\n\twg.Wait()\n\tclose(results)\n\tgot := 0\n\tfor ok := range results {\n\t\tif ok {\n\t\t\tgot++\n\t\t}\n\t}\n\tfmt.Println(\"items received:\", got, \"consumers that saw close:\", 2-got)\n}",
+    "versionNote": "Выполнено на Go 1.24.7 и 1.27.3: исходная программа паникует с кодом 2 (строка got 1 печатается не всегда), исправленная печатает items received: 1 consumers that saw close: 1.",
+    "sources": [
+      {
+        "title": "sync.Cond.Wait — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Cond.Wait"
+      },
+      {
+        "title": "Concurrency in Go (K. Cox-Buday, O'Reilly, 2017), гл. 3: Cond",
+        "url": "https://www.oreilly.com/library/view/-/9781491941294/"
+      }
+    ],
+    "cardIds": [
+      "c56"
     ]
   }
 ];
