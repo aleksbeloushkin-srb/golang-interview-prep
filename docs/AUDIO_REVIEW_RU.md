@@ -21,14 +21,14 @@
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.3 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
 | [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 45.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
 | [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 46.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
-| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 44.8 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
-| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 46.3 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
-| [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 47.8 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
-| [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 48.6 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
+| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 45.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
+| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 47.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
+| [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 45.3 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
+| [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 46.4 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
 | [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 17.1 | `-Xmx` |  |  |  |  |  |  |
 | [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 17.5 | `-Xmx` |  |  |  |  |  |  |
-| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 47.8 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
-| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 48.9 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
+| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 48.2 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
+| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 50.0 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.8 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
@@ -101,14 +101,14 @@
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 14.0 |  |  |  |  |  |  |  |
 | [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 14.1 |  |  |  |  |  |  |  |
-| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 40.9 |  |  |  |  |  |  |  |
-| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 41.3 |  |  |  |  |  |  |  |
+| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 42.4 |  |  |  |  |  |  |  |
+| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 43.0 |  |  |  |  |  |  |  |
 | [card:c25:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 17.9 |  |  |  |  |  |  |  |
 | [card:c25:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 18.7 |  |  |  |  |  |  |  |
 | [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 19.2 |  |  |  |  |  |  |  |
 | [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 19.7 |  |  |  |  |  |  |  |
-| [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 44.6 |  |  |  |  |  |  |  |
-| [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 45.3 |  |  |  |  |  |  |  |
+| [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 42.5 |  |  |  |  |  |  |  |
+| [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 43.6 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 22.6 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 23.5 |  |  |  |  |  |  |  |
 | [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.2 |  |  |  |  |  |  |  |
@@ -162,21 +162,21 @@
 
 > Inside, sync dot Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one C-A-S that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than one millisecond and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so one millisecond is a mode threshold, not a timeout.
 
-**card:c23:short** (хеш текста `fb623055`)
+**card:c23:short** (хеш текста `41b8c485`)
 
-> A value a function creates lives either on the goroutine's stack or on the heap, and the difference is mostly cost. A stack allocation is part of the function's frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator and brings the next G-C cycle closer, and each cycle costs more the more data stays live. For example, a buffer used only inside the function can stay on the stack, while a value whose pointer you return usually escapes to the heap, unless the call is inlined and the caller keeps it local. So measure: G-C flags dash m shows what escapes, and bench-mem counts the allocations that really happen.
+> The stack is each goroutine's own memory for function calls: values that stay local to a call live in its frame and disappear when the function returns, so allocating there is nearly free. The heap is shared memory for values that must outlive the call or be reachable from elsewhere; the runtime allocator hands it out, and the G-C later frees what is no longer used. That is the fundamental difference: the stack cleans up after itself, the heap needs the G-C, and every heap allocation brings the next G-C cycle closer. Returning a pointer to a local usually moves it to the heap. Measure: G-C flags dash m shows what escapes, and bench-mem counts real allocations.
 
-**card:c25:short** (хеш текста `3dd85628`)
+**card:c25:short** (хеш текста `b449c2c9`)
 
-> Go's heap allocator has three levels: a cache for each P, M-cache, a shared pool for each size class, split into scan and no-scan, M-central, and the page heap behind them, M-heap. For small objects, memory is handed out in spans: runs of pages cut into equal slots of one size class. The M-cache holds one span per class, so a small allocation usually takes a free slot from it without any lock; when that span fills up, the M-cache swaps it for one with free slots from M-central, which gets new spans from M-heap. Objects over 32 kilobytes get a span of their own straight from M-heap. The G-C never looks inside no-scan objects, those without pointers, though it still frees them.
+> Think of Go's heap allocator as storage on three levels. Each P has its own shelf, the M-cache; each size class has a shared stockroom, the M-central, split into scan and no-scan; and behind them is the page warehouse, the M-heap. Small objects come in spans: runs of pages cut into equal slots of one size. An allocation takes a free slot from its P's M-cache without any lock; when that span is full, the M-cache swaps it at the M-central, which gets fresh spans from the M-heap. Objects over 32 kilobytes get their own span straight from the M-heap. Noscan objects have no pointers, so the G-C never looks inside them, though it still frees them.
 
 **card:c27:jvm** (хеш текста `ff14a66f`)
 
 > Go has no X-M-X: by default the heap simply grows as needed, and GO-MEM-LIMIT acts as a soft version of it. There is no catchable Out Of Memory Error either: when memory really runs out, the runtime aborts or the O-S kills the process.
 
-**card:c27:short** (хеш текста `78ca161b`)
+**card:c27:short** (хеш текста `60e43d1d`)
 
-> GO-G-C and GO-MEM-LIMIT decide how often the G-C runs, trading memory for G-C C-P-U. GO-G-C sets how far the heap may grow between cycles: at the default 100, the heap goal is about twice the live data, plus stacks and globals, so 200 megabytes live means a goal near 400 megabytes, and the cycle starts earlier so marking finishes by then. GO-MEM-LIMIT is a soft limit: near it the G-C runs more often, but it cannot prevent O-O-M, because live data cannot be collected. Latency usually comes from mark assists: a goroutine that allocates during marking and runs out of assist credit does some G-C work itself before it gets its memory.
+> Two knobs trade memory for G-C C-P-U: GO-G-C says how much the heap may grow between cycles, and GO-MEM-LIMIT says how much memory you would like to stay under. At the default GO-G-C=100 the heap goal is about twice the live data, plus stacks and globals, so 200 megabytes live means a goal near 400 megabytes, and the cycle starts earlier so marking finishes by then. GO-MEM-LIMIT is a soft limit: near it the G-C runs more often, but it cannot prevent O-O-M, because live data cannot be collected. Latency usually comes from mark assists: a goroutine that allocates during marking and runs out of assist credit does some G-C work itself before it gets its memory.
 
 **card:c29:jvm** (хеш текста `5f8119f2`)
 
@@ -322,9 +322,9 @@
 
 > In Java every object goes to the heap unless the J-I-T proves otherwise. In Go values live on the stack by default and move to the heap only when the compiler cannot prove that the stack is safe.
 
-**card:c24:short** (хеш текста `f3ead435`)
+**card:c24:short** (хеш текста `a9f153be`)
 
-> Escape analysis is the compiler deciding, for each value, whether it can stay on the stack. It keeps a value there unless it might outlive its function, be reachable from the heap, or be too big for the frame. Returning address of x, storing it in a global, or sharing it with a goroutine by reference are the usual causes. Since Go one 25 a non-escaping make, slice of T, n, with a variable n may use a small stack buffer, 32 bytes by default, and moves to the heap only when larger, so dash m can say does not escape while bench-mem shows an allocation: check both.
+> Escape analysis is how the Go compiler decides, at build time, whether a value can live on the stack or must move to the heap. A value stays on the stack unless it might outlive its function, be reachable from the heap, or be too big for the frame. In practice it escapes when you return its address, store it in a global, or share it with another goroutine by reference. Check it with G-C flags dash m and confirm with bench-mem: since Go one 25, a make, slice of T, n, that dash m reports as not escaping may still allocate on the heap when it needs more than a small stack buffer, 32 bytes by default.
 
 **card:c25:jvm** (хеш текста `7814f67e`)
 
@@ -334,9 +334,9 @@
 
 > Unlike G1, Hot Spot's default collector, Go's G-C has no young generation, and unlike any Hot Spot collector it never moves objects, so there is no compaction. The trade-off is that Go relies on escape analysis to keep short-lived values off the heap in the first place.
 
-**card:c26:short** (хеш текста `95be4198`)
+**card:c26:short** (хеш текста `5484bd11`)
 
-> Go's G-C is a concurrent mark-and-sweep collector: it keeps everything your program can still reach from the roots, mainly goroutine stacks and globals, and frees the rest, including unreachable cycles. Marking runs alongside your code, between two short stop-the-world pauses, and colours objects: white means not reached yet, grey means reached but its pointers not yet scanned, black means done. When no grey objects are left, whatever is still white is garbage, and sweeping frees it; a write barrier keeps this safe while your code changes pointers, and new objects start black. The collector neither moves objects nor has generations, so there is no compaction.
+> Go's G-C works in two steps: mark what is still in use, then sweep away the rest. Marking starts from the roots, mainly goroutine stacks and globals, and runs alongside your code between two short stop-the-world pauses. It paints objects in three colours: white is not reached yet, grey is reached but not yet scanned, black is done. When nothing grey is left, everything still white is garbage, including unreachable cycles, and sweeping frees it; a write barrier keeps this correct while your code changes pointers, and new objects start black. Go's G-C never moves objects and has no generations, so there is no compaction.
 
 **card:c28:jvm** (хеш текста `88dc8fc3`)
 
