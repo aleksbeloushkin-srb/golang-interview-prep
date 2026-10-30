@@ -26,6 +26,9 @@ const WORDS = {
   Ps: "P's", // «Ps» синтезатор читал по буквам: «P-S»
   Gs: "G's",
   Ms: "M's",
+  goready: "go-ready", // иначе «гоэрди»
+  recvq: "the receive queue", // «recvq» синтезатор читает как «рекввк»
+  sendq: "the send queue",
   GOGC: "GO-G-C",
   GOMEMLIMIT: "GO-MEM-LIMIT"
 };
@@ -58,6 +61,7 @@ export function toSpeech(text) {
   s = s.replace(/"([^"\n]{1,60})"/g, "$1"); // строковые литералы читаются как текст
   s = s.replace(/\b[Gg]o (1)\.(\d+)\+?/g, (m, one, minor) => `Go one ${minor}${m.endsWith("+") ? " or later" : ""}`);
   s = s.replace(/%([wvsdq])\b/g, "percent $1");
+  s = s.replace(/\b(\d+(?:\.\d+)?) ms\b/g, (m, n) => (n === "1" ? "one millisecond" : `${n} milliseconds`)); // «1 ms» читалось «one M-S»
   s = s.replace(/\s:=\s/g, " colon-equals ");
   s = s.replace(/\s!=\s/g, " not equal to ");
   s = s.replace(/\s==\s/g, " equals ");
