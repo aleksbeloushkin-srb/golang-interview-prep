@@ -27,6 +27,11 @@ const WORDS = {
   Gs: "G's",
   Ms: "M's",
   goready: "go-ready", // иначе «гоэрди»
+  mcache: "M-cache", // иначе «мкэш»
+  mcentral: "M-central",
+  mheap: "M-heap",
+  noscan: "no-scan",
+  TLABs: "T-labs",
   recvq: "the receive queue", // «recvq» синтезатор читает как «рекввк»
   sendq: "the send queue",
   GOGC: "GO-G-C",
@@ -61,6 +66,12 @@ export function toSpeech(text) {
   s = s.replace(/"([^"\n]{1,60})"/g, "$1"); // строковые литералы читаются как текст
   s = s.replace(/\b[Gg]o (1)\.(\d+)\+?/g, (m, one, minor) => `Go one ${minor}${m.endsWith("+") ? " or later" : ""}`);
   s = s.replace(/%([wvsdq])\b/g, "percent $1");
+  // Флаги и единицы: «-gcflags=-m» и «KiB» синтезатор иначе читает по буквам или «Ki B».
+  s = s.replace(/-gcflags=-m\b/g, "G-C flags dash m");
+  s = s.replace(/(^|[\s(])-benchmem\b/g, "$1bench-mem");
+  s = s.replace(/(^|[\s(])-Xmx\b/g, "$1X-M-X");
+  s = s.replace(/(^|[\s(])-m\b/g, "$1dash m");
+  s = s.replace(/\b(\d+(?:\.\d+)?) KiB\b/g, "$1 kilobytes").replace(/\b(\d+(?:\.\d+)?) MiB\b/g, "$1 megabytes").replace(/\b(\d+(?:\.\d+)?) GiB\b/g, "$1 gigabytes");
   s = s.replace(/\b(\d+(?:\.\d+)?) ms\b/g, (m, n) => (n === "1" ? "one millisecond" : `${n} milliseconds`)); // «1 ms» читалось «one M-S»
   s = s.replace(/\s:=\s/g, " colon-equals ");
   s = s.replace(/\s!=\s/g, " not equal to ");

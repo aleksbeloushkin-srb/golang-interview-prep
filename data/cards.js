@@ -1540,10 +1540,11 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do stack and heap allocation differ, and how do you compare their cost?",
     "qRU": "Чем отличаются выделения на стеке и в куче и как сравнивать их стоимость?",
-    "shortEN": "A value a function creates lives either on the goroutine's stack or on the heap, and the difference is mostly cost. A stack allocation is part of the function’s frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator and brings the next GC cycle closer; each cycle costs more the more data stays live. Escape analysis decides at compile time what may stay on the stack, so measure: -gcflags=-m shows what escapes, and -benchmem counts the allocations that really happen.",
+    "shortEN": "A value a function creates lives either on the goroutine's stack or on the heap, and the difference is mostly cost. A stack allocation is part of the function's frame: nearly free, and gone when the function returns. A heap allocation goes through the runtime allocator and brings the next GC cycle closer, and each cycle costs more the more data stays live. For example, a buffer used only inside the function can stay on the stack, while a value whose pointer you return usually escapes to the heap, unless the call is inlined and the caller keeps it local. So measure: -gcflags=-m shows what escapes, and -benchmem counts the allocations that really happen.",
     "anchorsEN": [
       "stack: part of the frame, nearly free",
-      "heap: allocator + GC work",
+      "heap: allocator now; next GC cycle sooner",
+      "local buffer → stack; returned pointer → usually heap (inlining can avoid it)",
       "-gcflags=-m: what escapes; -benchmem: real allocations"
     ],
     "jvmEN": "The JVM has a similar optimisation, escape analysis with scalar replacement in the JIT, but it happens at run time and only after warm-up. In Go the compiler decides at build time, and -gcflags=-m shows the decision.",
@@ -1555,7 +1556,7 @@ const CARDS = [
     ],
     "practicalRU": "Сначала выбери корректное владение данными, затем сравни эквивалентные вызовы под рабочей версией компилятора. Не добавляй глобальный указатель только ради того, чтобы benchmark «не исчез»: это само меняет время жизни объекта. Сохраняй наблюдаемый результат так, чтобы не навязать лишний escape. Опора: «владение → размещение → измерение».",
     "code": "package example\n\ntype User struct{ ID int }\n\nfunc NewUserValue(id int) User { return User{ID: id} }\nfunc NewUser(id int) *User     { return &User{ID: id} }\n\nfunc ReadID(id int) int { return NewUser(id).ID }\n\n// Compare the optimized ReadID caller, not just NewUser in isolation.",
-    "shortRU": "Значение, которое создаёт функция, живёт либо на стеке горутины, либо в куче, и разница в основном в цене. Выделение на стеке — часть кадра функции: почти бесплатно и исчезает при возврате. Выделение в куче идёт через аллокатор рантайма и приближает следующий цикл GC; каждый цикл тем дороже, чем больше живых данных. Escape analysis на этапе компиляции решает, что может остаться на стеке, поэтому меряют: -gcflags=-m показывает, что убегает, а -benchmem считает выделения, которые происходят на самом деле.",
+    "shortRU": "Значение, которое создаёт функция, живёт либо на стеке горутины, либо в куче, и разница в основном в цене. Выделение на стеке — часть кадра функции: почти бесплатно и исчезает при возврате. Выделение в куче идёт через аллокатор рантайма и приближает следующий цикл GC, а каждый цикл тем дороже, чем больше живых данных. Например, буфер, который нужен только внутри функции, может остаться на стеке, а значение, указатель на которое функция возвращает, обычно убегает в кучу, если только вызов не встроен и вызывающий код не держит его локально. Поэтому меряют: -gcflags=-m показывает, что убегает, а -benchmem считает выделения, которые происходят на самом деле.",
     "jvmRU": "В JVM есть похожая оптимизация — escape analysis со scalar replacement в JIT, но она работает во время выполнения и только после прогрева. В Go решает компилятор при сборке, и -gcflags=-m показывает это решение.",
     "detailsRU": [
       "Язык гарантирует пригодность значения, пока на него есть ссылки, а не место хранения. Кадр стека содержит локальное состояние; стек горутины может расти и перемещаться. Значения могут остаться в регистрах или вообще исчезнуть после оптимизации.",
@@ -1685,11 +1686,12 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do mcache, mcentral, mheap and scan/noscan fit together?",
     "qRU": "Как связаны mcache, mcentral, mheap и разделение scan/noscan?",
-    "shortEN": "Go's heap allocator has three levels, from fast and local to slow and shared: mcache, mcentral and mheap. A small allocation usually takes a free slot from the current P's mcache, without any lock. The mcache keeps one span per size class, separately for scan and noscan; when a span fills up, the mcache swaps it for one with free slots from the shared mcentral, which gets new spans from mheap, and objects over 32 KiB go straight to mheap. The GC never looks inside noscan objects, though it still frees them.",
+    "shortEN": "Go's heap allocator has three levels: a cache for each P (mcache), a shared pool for each size class, split into scan and noscan (mcentral), and the page heap behind them (mheap). For small objects, memory is handed out in spans: runs of pages cut into equal slots of one size class. The mcache holds one span per class, so a small allocation usually takes a free slot from it without any lock; when that span fills up, the mcache swaps it for one with free slots from mcentral, which gets new spans from mheap. Objects over 32 KiB get a span of their own straight from mheap. The GC never looks inside noscan objects, those without pointers, though it still frees them.",
     "anchorsEN": [
-      "mcache per P: lock-free slots",
-      "full span → swapped via mcentral · mheap gives spans · > 32 KiB direct",
-      "noscan: GC skips the contents"
+      "mcache per P · mcentral per size class (scan/noscan) · mheap pages",
+      "small objects: span = pages cut into equal slots",
+      "lock-free slot from mcache; full span → mcentral → mheap; > 32 KiB → own span",
+      "noscan = no pointers: GC skips the contents"
     ],
     "jvmEN": "This is similar to TLABs in the JVM: each thread allocates from its own buffer without locks. The difference is that the JVM bumps a pointer in a contiguous buffer and compacts later, while Go hands out fixed-size slots from spans and never moves objects.",
     "detailsEN": [
@@ -1701,7 +1703,7 @@ const CARDS = [
     ],
     "practicalRU": "Сравни alloc_space, inuse_space и метрики /gc/scan/heap:bytes и /gc/scan/stack:bytes при одинаковой нагрузке. Разделяй объём выделений, удержание и объём сканируемой памяти. Массив байтов может почти не добавлять pointer scanning и одновременно удерживать много RAM. Нельзя считать разные размеры/схемы хранения честным сравнением только по паузе одного GC. Опора: «размер ячейки → откуда берётся span → есть ли внутри ссылки».",
     "code": "package example\n\ntype Blob [64]byte // The payload has no pointers.\n\ntype Holder struct {\n\tBytes []byte // The descriptor points to a backing array.\n\tText  string // The descriptor points to string bytes.\n}\n\n// A []Holder backing array contains pointers.\n// A []Blob backing array does not; neither is exempt from GC.",
-    "shortRU": "У аллокатора кучи Go три уровня, от быстрого и локального к медленному и общему: mcache, mcentral и mheap. Выделение небольшого объекта обычно берёт свободную ячейку из mcache текущего P, без блокировок. mcache держит по спану на каждый класс размера, отдельно для scan и noscan; когда спан заполняется, mcache меняет его на спан со свободными ячейками из общего mcentral, который берёт новые спаны у mheap, а объекты больше 32 КиБ идут сразу в mheap. Внутрь noscan-объектов GC не заглядывает, хотя освобождает их.",
+    "shortRU": "У аллокатора кучи Go три уровня: кеш на каждый P (mcache), общий пул на каждый класс размера, отдельно для scan и noscan (mcentral), и страничная куча за ними (mheap). Небольшим объектам память раздаётся спанами — последовательностями страниц, нарезанными на равные ячейки одного класса размера. mcache держит по одному спану на класс, поэтому выделение небольшого объекта обычно берёт из него свободную ячейку без блокировок; когда этот спан заполняется, mcache меняет его на спан со свободными ячейками из mcentral, который берёт новые спаны у mheap. Объекты больше 32 КиБ получают отдельный спан прямо у mheap. Внутрь noscan-объектов, то есть объектов без указателей, GC не заглядывает, хотя освобождает их.",
     "jvmRU": "Это похоже на TLAB в JVM: каждый поток выделяет из своего буфера без блокировок. Разница в том, что JVM сдвигает указатель в непрерывном буфере и потом уплотняет, а Go раздаёт ячейки фиксированного размера из спанов и никогда не перемещает объекты.",
     "detailsRU": [
       "Страница кучи рантайма — 8 KiB, независимо от размера страницы ОС. mspan описывает непрерывную область из одной или нескольких страниц. Span небольших объектов содержит ячейки одинакового размера; классы округляют запрос вверх, поэтому размер объекта и span — разные величины.",
@@ -1768,11 +1770,12 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How does Go's GC decide what to keep, and what happens during a collection?",
     "qRU": "Как GC в Go решает, что сохранить, и из каких этапов состоит сборка?",
-    "shortEN": "Go's GC is a concurrent mark-and-sweep collector: everything your program can still reach from the roots, mainly goroutine stacks and globals, stays, and the rest is freed, including unreachable cycles. Marking runs concurrently with the program between two short stop-the-world pauses: grey objects are found but not yet scanned, black ones are done, and whatever stays white is freed by sweeping, in the background and on allocation. The collector neither moves objects nor has generations, so there is no compaction.",
+    "shortEN": "Go's GC is a concurrent mark-and-sweep collector: it keeps everything your program can still reach from the roots, mainly goroutine stacks and globals, and frees the rest, including unreachable cycles. Marking runs alongside your code, between two short stop-the-world pauses, and colours objects: white means not reached yet, grey means reached but its pointers not yet scanned, black means done. When no grey objects are left, whatever is still white is garbage, and sweeping frees it; a write barrier keeps this safe while your code changes pointers, and new objects start black. The collector neither moves objects nor has generations, so there is no compaction.",
     "anchorsEN": [
-      "reachable from the roots stays",
+      "reachable from the roots stays; unreachable cycles are freed",
       "concurrent mark between two short STW pauses",
-      "white is freed; non-moving, non-generational"
+      "white: not reached · grey: reached, not scanned · black: done",
+      "no grey left → white is garbage → sweep; write barrier; non-moving, no generations"
     ],
     "jvmEN": "Unlike G1, HotSpot’s default collector, Go’s GC has no young generation, and unlike any HotSpot collector it never moves objects, so there is no compaction. The trade-off is that Go relies on escape analysis to keep short-lived values off the heap in the first place.",
     "detailsEN": [
@@ -1784,7 +1787,7 @@ const CARDS = [
     ],
     "practicalRU": "На интервью начни с «GC сохраняет достижимое», затем назови фазы. В примере глобальный root удерживает цикл из двух узлов: после GC чтение даёт 42. После удаления последнего пути от корней цикл можно собрать, но точный момент освобождения и падение RSS не обещаем. Для удержания памяти ищи путь от корня: глобальный кеш, живую горутину, срез. Опора: «нашли → просмотрели → освободили»; отдельно объясни, почему кольцо ссылок само себя не удерживает.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\ntype Node struct {\n\tNext  *Node\n\tValue int\n}\n\nvar root *Node\n\nfunc makeCycle() {\n\ta, b := &Node{Value: 7}, &Node{Value: 42}\n\ta.Next, b.Next = b, a\n\troot = a\n}\n\nfunc main() {\n\tmakeCycle()\n\truntime.GC()\n\tfmt.Println(root.Next.Value) // 42: reachable through a global\n\troot = nil\n\truntime.GC() // The cycle is now collectible; no RSS promise.\n}",
-    "shortRU": "GC в Go — конкурентный сборщик mark-and-sweep: всё, до чего программа ещё может дойти от корней (в основном от стеков горутин и глобальных переменных), остаётся, а остальное освобождается, включая недостижимые циклы. Разметка идёт конкурентно с программой между двумя короткими паузами stop-the-world: серые объекты найдены, но не просканированы, чёрные просканированы, а то, что осталось белым, освобождается при sweep — в фоне и при выделении памяти. Сборщик не перемещает объекты и не делит их на поколения, поэтому уплотнения нет.",
+    "shortRU": "GC в Go — конкурентный сборщик mark-and-sweep: он оставляет всё, до чего программа ещё может дойти от корней (в основном от стеков горутин и глобальных переменных), и освобождает остальное, включая недостижимые циклы. Разметка идёт параллельно с вашим кодом, между двумя короткими паузами stop-the-world, и красит объекты: белый — ещё не достигнут, серый — достигнут, но его указатели ещё не просканированы, чёрный — готов. Когда серых не осталось, всё, что ещё белое, — мусор, и sweep его освобождает; барьер записи сохраняет это верным, пока ваш код меняет указатели, а новые объекты сразу чёрные. Сборщик не перемещает объекты и не делит их на поколения, поэтому уплотнения нет.",
     "jvmRU": "В отличие от G1, сборщика HotSpot по умолчанию, у GC Go нет молодого поколения, а в отличие от любого сборщика HotSpot он никогда не перемещает объекты, поэтому уплотнения нет. Цена — Go полагается на escape analysis, чтобы короткоживущие значения вообще не попадали в кучу.",
     "detailsRU": [
       "Корни включают живые указатели в стеках горутин, глобальных переменных и структурах runtime вне кучи. Достижимый объект удерживается, даже если приложению он уже не нужен. Цикл без пути от корней можно собрать: это обход графа, а не подсчёт ссылок.",
@@ -1843,11 +1846,12 @@ const CARDS = [
     "simId": "sim6",
     "qEN": "How do GC phases, mark assists, GOGC and GOMEMLIMIT affect memory and latency?",
     "qRU": "Как фазы GC, mark assist, GOGC и GOMEMLIMIT влияют на память и задержки?",
-    "shortEN": "GOGC and GOMEMLIMIT trade memory for GC CPU, and latency comes mostly from mark assists, when goroutines that allocate during marking do GC work themselves. GOGC sets how far the heap may grow between cycles, at 100 roughly to double the live heap. GOMEMLIMIT is a soft limit: near it the GC runs more often, but it does not prevent OOM, because live data cannot be collected.",
+    "shortEN": "GOGC and GOMEMLIMIT decide how often the GC runs, trading memory for GC CPU. GOGC sets how far the heap may grow between cycles: at the default 100, the heap goal is about twice the live data, plus stacks and globals, so 200 MiB live means a goal near 400 MiB, and the cycle starts earlier so marking finishes by then. GOMEMLIMIT is a soft limit: near it the GC runs more often, but it cannot prevent OOM, because live data cannot be collected. Latency usually comes from mark assists: a goroutine that allocates during marking and runs out of assist credit does some GC work itself before it gets its memory.",
     "anchorsEN": [
-      "memory ↔ GC CPU; latency from assists",
-      "GOGC = growth per cycle (100 ≈ ×2)",
-      "GOMEMLIMIT: soft, no OOM guard"
+      "GOGC, GOMEMLIMIT: how often GC runs, memory ↔ CPU",
+      "GOGC 100: goal ≈ 2× live (200 → ~400 MiB); cycle starts earlier",
+      "GOMEMLIMIT: soft, no OOM guard",
+      "latency: mark assists when assist credit runs out"
     ],
     "jvmEN": "Go has no -Xmx: by default the heap simply grows as needed, and GOMEMLIMIT acts as a soft version of it. There is no catchable OutOfMemoryError either: when memory really runs out, the runtime aborts or the OS kills the process.",
     "detailsEN": [
@@ -1859,7 +1863,7 @@ const CARDS = [
     ],
     "practicalRU": "Сначала сравни память runtime, RSS/память контейнера, живую кучу, скорость аллокаций и GC CPU. Затем найди удержание данных и горячие выделения через профили и trace. Для контейнера 4 GiB значение 3600 MiB может быть лишь стартовой гипотезой после оценки резерва; оно не гарантирует отсутствие OOM. Снижай ненужные выделения и ограничивай кеши/конкурентность. sync.Pool рассматривай только для измеренного переиспользования: он не задаёт предел памяти и не гарантирует сохранение объектов. Опора для памяти: «цель — когда начать — что учитывает бюджет».",
     "code": "// Conceptual estimates, not executable Go or an exact pacer trace.\nheapGoal ≈ liveHeap + (liveHeap + roots) * GOGC / 100\n100 MiB + (100 MiB + 20 MiB) * 100 / 100 = 220 MiB\n// Marking starts before the goal; the limit may lower the goal.\nruntimeMemory = MemStats.Sys - MemStats.HeapReleased\n// runtimeMemory != process RSS != container memory usage",
-    "shortRU": "GOGC и GOMEMLIMIT меняют память на CPU для GC, а задержки в основном дают mark assist — когда горутины, выделяющие память во время разметки, сами делают работу GC. GOGC задаёт, насколько куча может вырасти между циклами: при 100 — примерно вдвое от живой кучи. GOMEMLIMIT — мягкий лимит: рядом с ним GC работает чаще, но от OOM он не защищает, потому что живые данные не собрать.",
+    "shortRU": "GOGC и GOMEMLIMIT решают, как часто работает GC, меняя память на CPU для GC. GOGC задаёт, насколько куча может вырасти между циклами: при значении по умолчанию 100 цель кучи примерно вдвое больше живых данных, плюс стеки и глобальные переменные, то есть при 200 МиБ живых цель около 400 МиБ, а цикл начинается раньше, чтобы разметка успела завершиться. GOMEMLIMIT — мягкий лимит: рядом с ним GC работает чаще, но от OOM он не защищает, потому что живые данные не собрать. Задержки обычно дают mark assist: горутина, которая выделяет память во время разметки и исчерпала кредит помощи, сама делает часть работы GC и только потом получает память.",
     "jvmRU": "В Go нет -Xmx: по умолчанию куча просто растёт по мере надобности, а GOMEMLIMIT — его мягкий вариант. Нет и OutOfMemoryError, который можно поймать: когда память действительно кончается, рантайм аварийно завершается или процесс убивает ОС.",
     "detailsRU": [
       "Полезная модель из четырёх этапов: подготовка разметки в STW, конкурентная разметка, завершение разметки в STW и конкурентная очистка. Перед подготовкой завершается предыдущая очистка. Sweep освобождает мёртвые ячейки; возврат страниц ОС — отдельная работа scavenger. Фиксированная длительность паузы не гарантируется.",

@@ -127,6 +127,56 @@ const AUDIO = {
       "michael": "audio/en/card-c22-short-michael-ef47ab08.mp3",
       "heart": "audio/en/card-c22-short-heart-303b3096.mp3"
     },
+    "card:c23:jvm": {
+      "hash": "22422ab2",
+      "michael": "audio/en/card-c23-jvm-michael-16723b8a.mp3",
+      "heart": "audio/en/card-c23-jvm-heart-b3b7c6b8.mp3"
+    },
+    "card:c23:short": {
+      "hash": "fb623055",
+      "michael": "audio/en/card-c23-short-michael-f5adc3da.mp3",
+      "heart": "audio/en/card-c23-short-heart-e21f1064.mp3"
+    },
+    "card:c24:jvm": {
+      "hash": "624f70ce",
+      "michael": "audio/en/card-c24-jvm-michael-5c3bb2ee.mp3",
+      "heart": "audio/en/card-c24-jvm-heart-b53ed488.mp3"
+    },
+    "card:c24:short": {
+      "hash": "f3ead435",
+      "michael": "audio/en/card-c24-short-michael-08812577.mp3",
+      "heart": "audio/en/card-c24-short-heart-2068a5a9.mp3"
+    },
+    "card:c25:jvm": {
+      "hash": "7814f67e",
+      "michael": "audio/en/card-c25-jvm-michael-1ed3913f.mp3",
+      "heart": "audio/en/card-c25-jvm-heart-1614e809.mp3"
+    },
+    "card:c25:short": {
+      "hash": "3dd85628",
+      "michael": "audio/en/card-c25-short-michael-7924840a.mp3",
+      "heart": "audio/en/card-c25-short-heart-afbcf504.mp3"
+    },
+    "card:c26:jvm": {
+      "hash": "2d2deced",
+      "michael": "audio/en/card-c26-jvm-michael-ab627790.mp3",
+      "heart": "audio/en/card-c26-jvm-heart-a9e55a7a.mp3"
+    },
+    "card:c26:short": {
+      "hash": "95be4198",
+      "michael": "audio/en/card-c26-short-michael-202aaf3d.mp3",
+      "heart": "audio/en/card-c26-short-heart-4b914b8b.mp3"
+    },
+    "card:c27:jvm": {
+      "hash": "ff14a66f",
+      "michael": "audio/en/card-c27-jvm-michael-60ef35ed.mp3",
+      "heart": "audio/en/card-c27-jvm-heart-08a0bfff.mp3"
+    },
+    "card:c27:short": {
+      "hash": "78ca161b",
+      "michael": "audio/en/card-c27-short-michael-93f28ea1.mp3",
+      "heart": "audio/en/card-c27-short-heart-d9e7eaf3.mp3"
+    },
     "card:c28:jvm": {
       "hash": "88dc8fc3",
       "michael": "audio/en/card-c28-jvm-michael-c476cd1f.mp3",
