@@ -2000,10 +2000,11 @@ const CARDS = [
     "simId": null,
     "qEN": "What do a slice and a string refer to, and when does append allocate a new backing array?",
     "qRU": "На что ссылаются срез и строка и когда append выделяет новый базовый массив?",
-    "shortEN": "A slice is a view, not a copy: s[1:3] copies no elements, it is a new slice header over the same array. Under the hood a slice is a pointer, a length and a capacity over a shared array, and a string is a pointer and a length over immutable bytes. So two slices can share elements, and a change through one is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
+    "shortEN": "A slice is only a view onto data stored in an array, not the data itself. Its structure is a pointer to the array, a length and a capacity, and a string is a pointer and a length over immutable bytes. So s[1:3] copies no elements: it is a new view over the same array, and a change through one slice is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.",
     "anchorsEN": [
-      "s[1:3]: new header, same array, no copy",
+      "slice = a view onto an array, not the data",
       "slice = ptr + len + cap; string = ptr + len",
+      "s[1:3]: new view, same array, no copy",
       "result fits in cap → in place, else new array"
     ],
     "jvmEN": "A slice combines ArrayList-style growth with subList- or ByteBuffer-style views over a shared array: two slices can share one array, and append may or may not create a new one, so always use the slice that append returns. Go strings are immutable bytes, usually UTF-8, not UTF-16 as Java’s String API.",
@@ -2015,7 +2016,7 @@ const CARDS = [
     ],
     "practicalRU": "Опора для памяти: len — что видно; cap — место для append; copy — отдельное хранилище элементов. На интервью сначала предскажи общие записи, затем обсуждай формулу роста. Если итоговый размер известен, можно заранее выделить место; число аллокаций измеряй, а не угадывай по cap.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\ta := make([]int, 2, 4)\n\ta[0], a[1] = 1, 2\n\tlimited := a[:len(a):len(a)]\n\tlimited[0] = 9\n\tgrown := append(limited, 3)\n\tgrown[0] = 7\n\tindependent := make([]int, len(a))\n\tcopy(independent, a)\n\tindependent[1] = 8\n\tfmt.Println(a, grown, independent)\n}",
-    "shortRU": "Срез — это окно в массив, а не копия: s[1:3] не копирует элементы, это новый заголовок среза над тем же массивом. Внутри срез — указатель, длина и ёмкость над общим массивом, а строка — указатель и длина над неизменяемыми байтами. Поэтому два среза могут делить элементы, и изменение через один видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
+    "shortRU": "Срез — лишь окно на данные, которые лежат в массиве, а не сами данные. Его структура — указатель на массив, длина и ёмкость, а строка — указатель и длина над неизменяемыми байтами. Поэтому s[1:3] не копирует элементы: это новое окно на тот же массив, и изменение через один срез видно через другой. append пишет на месте, когда итоговая длина помещается в ёмкость, а иначе копирует в новый, больший массив, поэтому всегда используй срез, который вернул append.",
     "jvmRU": "Срез сочетает рост как у ArrayList с представлениями над общим массивом, как subList или ByteBuffer: два среза могут делить один массив, а append может создать новый, а может и нет, поэтому всегда используй срез, который вернул append. Строки Go — неизменяемые байты, обычно UTF-8, а не UTF-16, как в API строк Java.",
     "detailsRU": [
       "В стандартной реализации на 64-битной платформе у среза указатель, len и cap (три машинных слова, обычно 24 байта); у строки указатель и длина в байтах (два слова, обычно 16 байт). Это не переносимые константы языка. len(string) считает байты, а не Unicode-кодовые точки.",
