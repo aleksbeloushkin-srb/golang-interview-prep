@@ -15,12 +15,12 @@
 |---|---|---|---|---|---|---|---|---|---|
 | [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 37.9 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 38.4 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
-| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 29.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
-| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 29.9 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
-| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 34.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
-| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 35.1 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 33.3 | 1 ms → «one millisecond» |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 34.6 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
+| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
+| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
+| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.3 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 45.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 46.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.8 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
@@ -59,20 +59,20 @@
 | [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.2 |  |  |  |  |  |  |  |
 | [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 15.9 |  |  |  |  |  |  |  |
 | [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 26.5 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 27.8 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 34.5 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 36.4 |  |  |  |  |  |  |  |
 | [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 13.6 |  |  |  |  |  |  |  |
 | [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 13.7 |  |  |  |  |  |  |  |
-| [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 33.4 |  |  |  |  |  |  |  |
-| [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 34.1 |  |  |  |  |  |  |  |
+| [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 37.0 |  |  |  |  |  |  |  |
+| [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 37.9 |  |  |  |  |  |  |  |
 | [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 15.6 |  |  |  |  |  |  |  |
 | [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 28.0 |  |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 28.5 |  |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 41.6 |  |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 42.7 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 12.5 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 12.6 |  |  |  |  |  |  |  |
-| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 35.0 |  |  |  |  |  |  |  |
-| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 35.7 |  |  |  |  |  |  |  |
+| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 36.2 |  |  |  |  |  |  |  |
+| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 36.8 |  |  |  |  |  |  |  |
 | [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 11.3 |  |  |  |  |  |  |  |
 | [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 11.6 |  |  |  |  |  |  |  |
 | [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 13.8 |  |  |  |  |  |  |  |
@@ -130,17 +130,17 @@
 
 > Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment, because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of logical C-P-U's the process may use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
 
-**card:c17:short** (хеш текста `96559527`)
+**card:c17:short** (хеш текста `7a2bca70`)
 
-> If a receiver is already waiting, the send skips the buffer: the sender copies the value straight into the receiver while it holds the channel lock. It takes the receiver's sudog from the receive queue, copies with send Direct into the receiver's destination, usually on its stack, then unlocks and calls go-ready, which makes the receiver runnable. It is safe because a parked receiver has active Stack Chans set, so anyone moving its stack must first take the same channel locks.
+> If a receiver is already waiting, the send skips the buffer: the sending goroutine copies the value straight into the receiver's variable, usually on its stack, under the channel lock. If nobody waits and there is room, the value goes into the buffer, which lives on the heap. With no room, the sender parks: on an unbuffered channel a receiver later copies the value from the sender's stack; on a full buffer it takes the oldest value and moves the sender's into the freed slot. It is safe because a goroutine parked on a channel has active Stack Chans set, so moving its stack requires the same channel locks.
 
-**card:c20:short** (хеш текста `32eb0af5`)
+**card:c20:short** (хеш текста `143c18ce`)
 
-> Compare-and-swap is a conditional write done as one atomic step: atomic dot Compare And Swap Int64, called with the address of x, old and new, stores new only if x still equals old and reports whether it did. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with C-A-S exactly one succeeds and the other sees false. It covers one variable, so an invariant across several fields usually needs a mutex.
+> Compare-and-swap means: if x still holds the value I saw, replace it with mine, and the hardware checks and writes as one indivisible step. In Go it is atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false if x no longer equals old, usually because another goroutine changed it. For an update such as an increment you re-read and retry in a loop; for a one-time claim from 0 to 1, false means another goroutine won. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with C-A-S exactly one succeeds. It covers one variable, so an invariant across several fields usually needs a mutex.
 
-**card:c21:short** (хеш текста `57165874`)
+**card:c21:short** (хеш текста `65a26902`)
 
-> sync dot Mutex is built for speed, but it does not let a waiter starve. Lock tries one C-A-S, may spin briefly, then sleeps on a semaphore; one millisecond is the threshold for switching modes, not a timeout. In normal mode Unlock wakes one waiter, which then competes with newcomers that are already running and often loses. If a woken waiter loses again after waiting more than one millisecond, the mutex switches to starvation mode, and Unlock hands ownership directly to the waiter at the front.
+> Inside, sync dot Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one C-A-S that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than one millisecond and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so one millisecond is a mode threshold, not a timeout.
 
 **card:c29:jvm** (хеш текста `5f8119f2`)
 
@@ -218,33 +218,33 @@
 
 > An unbuffered channel is like Java's Synchronous Queue and a buffered one like an Array Blocking Queue with put and take. What Java queues lack is close, to signal the end of the stream, and select, to wait on several channels at once.
 
-**card:c13:short** (хеш текста `a9a51a60`)
+**card:c13:short** (хеш текста `9acea52a`)
 
-> A channel buffer is a fixed-size queue between sender and receiver. It lets the sender go ahead without a receiver for up to cap values; an unbuffered send waits until a receiver takes the value. It does not remove backpressure: a full buffer still blocks the sender, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.
+> A channel buffer is a fixed-size queue between the sending and the receiving goroutines. With a buffer, senders can queue up to cap values and go on without waiting for a receiver; a goroutine sending into an unbuffered channel waits until another goroutine receives the value. The buffer does not remove backpressure: when it is full, the sending goroutine blocks, so a slow consumer still slows the producer. And a send copies only the value, so a pointer or a slice still shares its data with the receiver.
 
 **card:c14:jvm** (хеш текста `850e885a`)
 
 > A Java Blocking Queue has no closed state, so the end of a stream is signalled with a poison pill or an interrupt. In Go, close is that signal, and a range loop over the channel stops by itself.
 
-**card:c14:short** (хеш текста `ee0fc5db`)
+**card:c14:short** (хеш текста `0f7233dc`)
 
-> A channel's state decides whether an operation blocks, returns at once or panics. A nil channel blocks forever, an open one blocks until a partner or the buffer lets the operation complete, and a closed one never blocks a receive. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.
+> A channel's state decides whether an operation blocks, returns at once or panics. A send or receive on a nil channel blocks the goroutine forever; on an open channel it waits until a partner or the buffer lets the operation complete; and a receive from a closed channel never blocks. A closed channel first returns the remaining buffered values, then the zero value with ok=false, while a send on it, closing it twice, or closing nil panics. In select a nil case is never chosen, which is how you switch a case off.
 
 **card:c15:jvm** (хеш текста `9c54551d`)
 
 > Java makes the same split: synchronized or Reentrant Lock for shared state, a Blocking Queue for handoff. The differences are that sync dot Mutex is not reentrant, and channels add close and select, which Blocking Queue lacks.
 
-**card:c15:short** (хеш текста `18e74020`)
+**card:c15:short** (хеш текста `957dd287`)
 
-> Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership of data or to signal an event, and a mutex to protect shared state with an invariant. With a mutex, the check and the update must happen under one lock, as with a balance or a cache entry. With a channel, a send copies only the value, so after sending a pointer the sender must stop touching that data.
+> Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync dot Mutex, that sends and receives take. And a send copies only the value, so after sending a pointer the sending goroutine must stop touching that data.
 
 **card:c16:jvm** (хеш текста `03146667`)
 
 > A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.
 
-**card:c16:short** (хеш текста `fef58c4a`)
+**card:c16:short** (хеш текста `34eb3020`)
 
-> A channel keeps the goroutines waiting on it in queues, but it queues records, not goroutines. A goroutine blocked in select on three channels waits in three queues at once, so each wait needs its own record, and that record is a sudog. It holds the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly; select enqueues one sudog for each case with a non-nil channel. When one case wins, the others are dequeued, and all the sudogs go back to a per-P cache.
+> A channel has two wait queues, one for receivers, the receive queue, and one for senders, the send queue, and what stands in them is a sudog: a waiting ticket, one per operation a goroutine waits on. The goroutine itself is not enough: in a select it can wait on several channels at once, so it holds a ticket in each queue. A ticket records the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly. When one case wins, the other tickets are withdrawn, and all of them return to a per-P cache.
 
 **card:c17:jvm** (хеш текста `4b5aca71`)
 
