@@ -1153,7 +1153,7 @@ const SIMULATORS = [
       {
         "title": "2. Запросить вытеснение — ещё не переключить",
         "desc": "Отдельный сценарий: G1 исполняется на M1 с P1. Sysmon видит, что schedtick не менялся 10 мс (порог forcePreemptNS), и запрашивает вытеснение. На поддерживаемом Unix-пути используется SIGURG, но точная задержка и успешность этой попытки не гарантированы.",
-        "descEN": "In this scenario G1 runs on M1 with P1. Sysmon sees that the scheduling tick has not moved for 10 ms (forcePreemptNS) and can request preemption. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
+        "descEN": "In this scenario G1 runs on M1 with P1. Sysmon sees that the scheduling tick has not moved for 10 ms (forcePreemptNS) and requests preemption. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
         "board": [
           {
             "hl": [
@@ -3884,7 +3884,7 @@ const SIMULATORS = [
     "steps": [
       {
         "title": "1. Какой путь создаёт компилятор?",
-        "desc": "Не каждый select вызывает selectgo. Здесь считаем ветки с операциями, а default учитываем отдельно. Имена справа — из реализации компилятора, а не обещание языка.",
+        "desc": "Не каждый select вызывает selectgo. Здесь считаем ветки с операциями, а default учитываем отдельно. Имена справа — детали реализации компилятора, а не обещание языка.",
         "descEN": "The compiler chooses a path from the shape of the select. Count channel cases separately from default; these helper names are implementation details.",
         "boxes": [],
         "check": {
@@ -12450,7 +12450,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "14. Битовые операции: маски, флаги, SWAR",
     how: "Флаги — биты одного слова: <code>x &amp; mask != 0</code> проверяет, <code>x | mask</code> ставит, <code>x &amp;^ mask</code> снимает. Для степени двойки <code>i &amp; (n-1)</code> заменяет <code>i % n</code> (при неотрицательном i).",
-    markers: "В Go <code>&amp;</code> связывает сильнее, чем <code>==</code> (не как в C). Swiss map сравнивает 8 байт ctrl сразу: на amd64 — SIMD, на других платформах — SWAR; у SWAR возможен ложный кандидат, ключ всё равно сравнивают. Атомарные <code>And</code>/<code>Or</code> — с Go 1.23.",
+    markers: "В Go <code>&amp;</code> связывает сильнее, чем <code>==</code> (не как в C). Swiss map сравнивает 8 байт ctrl сразу: на amd64 — SIMD, на arm64 — точный SWAR, на остальных — общий SWAR, у которого возможен ложный кандидат; ключ всё равно сравнивают. Атомарные <code>And</code>/<code>Or</code> — с Go 1.23.",
     cardId: "c31", simId: "sim9"
   },
   {
@@ -12468,7 +12468,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "17. Канал, мьютекс или одна горутина",
     how: "Данные видит одна горутина → без блокировки (confinement, глубокие копии). Передача владения → канал. Состояние типа с инвариантом → мьютекс внутри типа. Несколько событий, отмена, таймаут → <code>select</code>.",
-    markers: "У канала в <code>hchan</code> своя блокировка рантайма, быстрее мьютекса он не будет. Отправленный указатель — общий доступ, не копия. Atomic — одна переменная, не инвариант. Примитивы вместо каналов — только для горячего места по профилю.",
+    markers: "У канала в <code>hchan</code> своя блокировка рантайма, поэтому обычно он не быстрее мьютекса. Отправленный указатель — общий доступ, не копия. Atomic — одна переменная, не инвариант. Горячее место по профилю → мьютекс или atomic могут выиграть у канала.",
     cardId: "c15", simId: "sim12"
   }
 ];
