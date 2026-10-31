@@ -47,7 +47,7 @@ const SPEECH_FIXES = {
   ],
   'plan:w1-mon-1': [['x colon-equals expr is a short declaration inside a function', 'x colon-equals expression is the short declaration, used inside a function']],
   'card:c40:short': [
-    ['var n int gives you 0, and you get empty string for strings,', 'var n int gives you zero, and you get the empty string for strings,'],
+    ['var n int gives you 0. You get empty string for strings,', 'var n int gives you zero. You get the empty string for strings,'],
     ['Not safe: m[k] equals v on a nil map panics', 'Not safe: assigning to a nil map, m of k equals v, panics']
   ],
   'plan:w1-sat-2': [
