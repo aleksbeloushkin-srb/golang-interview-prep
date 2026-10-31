@@ -6,7 +6,7 @@
 
 1. Подключить оба репозитория с правом push: `aleksbeloushkin-srb/golang-interview-prep` (сайт) и `aleksbeloushkin-srb/golang-interview-prep-api` (бэкенд). Исторически сайт клонировался в `/home/claude/golang-runtime-prep`, бэкенд — в `/home/claude/golang-interview-prep-api`; путь не важен.
 2. Если хук пишет «no remote branch» после пуша новой ветки, значит fetch ограничен одной веткой. Лечится так: `git config --add remote.origin.fetch "+refs/heads/claude/*:refs/remotes/origin/claude/*"`, потом `git fetch` и `git branch -u origin/<ветка>`.
-3. Прочитать: этот файл, `AGENTS.md`, `docs/ANSWER_STYLE_RU.md`, три последние записи `CLAUDE_CHANGE_LOG_RU.md`, `docs/BOOK_COMPARISON_RU.md`, `docs/REVIEW_REPORT_V75_RU.md`.
+3. Прочитать: этот файл (реестр документов — раздел 10), `AGENTS.md`, `docs/ANSWER_STYLE_RU.md`, три последние записи `CLAUDE_CHANGE_LOG_RU.md`, `docs/BOOK_COMPARISON_RU.md`, `docs/REVIEW_REPORT_V75_RU.md`.
 4. Инструменты, которых может не быть в новой среде:
    - **Go 1.24.7** — обычно в `/usr/local/go`.
    - **Go 1.27.3** — собирался из исходников: `git clone --depth 1 -b go1.27.3 https://github.com/golang/go /root/sdk/go1.27.3 && cd /root/sdk/go1.27.3/src && GOROOT_BOOTSTRAP=/usr/local/go ./make.bash`. Бинарь — `/root/sdk/go1.27.3/bin/go`. Сайт считает 1.27.3 текущей версией, все примеры выполняются на обеих.
@@ -181,3 +181,53 @@
 - Ревью других систем часто опираются на старую версию сайта (48 карточек, старые первые фразы). Сначала сверять с текущим `main`.
 - Длинная генерация озвучки, запущенная через `&`, умирает с концом ответа. Запускать через `run_in_background`.
 - Публикация Pages иногда стоит в очереди GitHub 10–15 минут — это не ошибка.
+
+## 10. Реестр служебных документов
+
+Для любого агента (Claude, Codex, Астра и другие): что читать, чтобы понять, где мы, и какие файлы — история. Обновлять при каждом выпуске.
+
+**Где мы сейчас** — сайт v76, PR #78, 31 октября 2026. Состояние и очередь — разделы 7–8 этого файла; подробности каждого выпуска — `CLAUDE_CHANGE_LOG_RU.md`.
+
+### Действующие — читать и вести
+
+| Файл | Что это | Кто ведёт |
+|---|---|---|
+| `CLAUDE_HANDOFF_RU.md` | Этот файл: как начать, пользователь, развёртывание, ограничения, состояние, очередь, реестр | Claude, при каждом выпуске |
+| `CLAUDE_CHANGE_LOG_RU.md` | Журнал выпусков v60+: повод, что стало, проверка, ограничения — запись на PR | Claude |
+| `AGENTS.md` | Правила репозитория для всех агентов (Go, HTML, доступность, проверки) | общий |
+| `VERIFICATION_WORKFLOW_RU.md` | Порядок проверки порции; на него ссылается `AGENTS.md` | общий |
+| `docs/ANSWER_STYLE_RU.md` | Обязательный подход к коротким ответам карточек, эталонам и talk | по замечаниям пользователя |
+| `docs/AUDIO_REVIEW_RU.md` | Чек-лист прослушивания недель 1–3. Генерируется `node scripts/audio-review.mjs`, руками не править | скрипт |
+| `docs/BOOK_COMPARISON_RU.md` | Сайт против «Concurrency in Go»: что взято, что взять | Claude |
+| `docs/REVIEW_REPORT_V75_RU.md` | Ответ на внешнее ревью v75 по пунктам | Claude |
+| `docs/verification/browser/README.md` | Браузерные наборы Playwright и как их запускать | Claude |
+| `CODEX_REVIEW_REQUEST_RU.md` | Запрос к Codex на ревью. Последний — v63; новый писать сюда же, прежние остаются в истории git | Claude |
+| `README.md` | Публичное описание репозитория и ссылки на сайт | общий |
+| `PROGRAM_13_WEEKS_RU.md` | Исходная программа 13 недель (тексты). Источник истины для сайта — `data/plan.js` | справочно |
+| `SELECT_COMPILATION_RU.md` | Разбор `select`: что компилируется и выбирается (сверено на 1.17/1.25/1.26) | справочно |
+
+### Данные и проверки
+
+- `data/*.js` — весь учебный контент (раздел 4); `audio/en/` и `data/audio.js` — записи и их манифест.
+- `docs/verification/fixtures/` — живые Go-модули: из `fixtures/practice/` генерируется код практикума, `check-content` сверяет побайтно.
+- `docs/verification/*.json`, `docs/verification/scheduler-final/` — отчёты проверок 26–27 октября, история.
+
+### Астра — не трогать (заморожены на порции 14, 27 октября)
+
+| Файл | Что это |
+|---|---|
+| `CHANGE_LOG_RU.md` | Журнал Астры до порции 14 |
+| `CURRENT_STATUS_RU.md` | Остаток редакции на порцию 14 (0/0). **Не текущий статус сайта** |
+| `FINAL_REVIEW_HANDOFF_RU.md`, `REPLY_TO_CLAUDE_RU.md` | Отчёт и ответ Астры после порции 14 |
+| `REVIEW_NEXT_PORTION_RU.md` | Промпт ревьюеру порции 14 |
+| `TASK_RESEARCH_BRIEF_RU.md` | Запрос на независимый поиск новых задач quiz |
+
+### История — читать только для контекста
+
+| Файл | Что это |
+|---|---|
+| `AUDIT_AND_PLAN_RU.md`, `GO_CONTENT_AUDIT_RU.md` | Исходный аудит 25 октября (ревизия `21ee14a`) и реестр Go-материала |
+| `LEARNING_DESIGN_RU.md` | Основания учебных приёмов, 26 октября |
+| `PROGRAM_COMPARISON_RU.md`, `PLAN_ALIGNMENT_RU.md` | Сопоставление программы с сайтом и интеграция плана, 26–27 октября |
+| `DEPLOYMENT_PROPOSAL_RU.md`, `AWS_RECIPE_RU.md` | Предложение и рецепт бэкенда, 28 октября. Бэкенд с тех пор развёрнут (раздел 2); «ничего не развёрнуто» в них устарело |
+| `GOOGLE_AGENT_BRIEF_RU.md` | Задание агенту Google о запоминаемости, 28 октября |
