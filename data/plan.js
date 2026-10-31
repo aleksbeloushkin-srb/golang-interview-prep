@@ -1277,51 +1277,51 @@ const PLAN = {
 
     "w3-mon-1": {
       hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
-      en: "A goroutine is a function running concurrently under the Go runtime: go f() starts one, scheduled onto OS threads, with a small growable stack, so a program can have many. A data race is two goroutines accessing the same memory concurrently, at least one writing, without synchronization; the race detector reports it when it happens in a run. A race condition is a logic bug whose result depends on timing. It can exist without a data race, for example a check and an update done in two separate critical sections."
+      en: "In Go, concurrent work runs in goroutines, which the Go runtime schedules onto a few OS threads. go f() starts one with a small growable stack, so a program can run many; a WaitGroup lets the caller wait for them. Running them together can cause two different bugs. A data race is unsynchronized access to the same memory from two goroutines, at least one writing; the race detector reports it when a run hits it. A race condition is a timing-dependent logic bug, possible without a data race: a check and an update in two separate critical sections."
     },
     "w3-tue-1": {
-      hook: "nil blocks; closed: send panics, receive drains then returns zero, false.",
-      en: "A channel's state decides whether an operation blocks, returns at once or panics. Sending to or receiving from a nil channel blocks forever. Sending on a closed channel panics; receiving from a closed channel returns the remaining buffered values, then the zero value with ok false. Closing a nil or an already closed channel panics. So the side that owns sending closes the channel, once, after the last send."
+      hook: "nil blocks forever; a buffer only absorbs bursts; closed: send panics, receive drains, then zero, false.",
+      en: "A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the sending side closes it, once, after the last send."
     },
     "w3-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
-      en: "A worker pool bounds concurrency: N workers read from a jobs channel and write to a results channel. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range ends. Every send and receive also selects on ctx.Done, so cancelling ctx releases every goroutine; a consumer that stops early must cancel."
+      en: "A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range loop ends. Workers and the producer select on ctx.Done at every send and receive, so cancelling ctx releases all of them; a consumer that stops early must cancel."
     },
     "w3-tue-3": {
       hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
-      en: "In a pipeline, each stage reads from its input, writes to an output it owns and closes that output when the input is exhausted. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
+      en: "The pipeline has three stages, generator, square and sink, and stops through a context. Generator and square each own their output and close it when they return. Every send sits in a select with ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
     },
     "w3-wed-1": {
       hook: "Random among ready cases; checking ctx first is not priority.",
-      en: "select waits for one of several channel operations; if several are ready, it picks one pseudo-randomly. default makes it non-blocking. Checking ctx.Err() before the select doesn't give cancellation priority, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen."
+      en: "In Go, select lets one goroutine wait on several channel operations at once. If several cases are ready, it picks one pseudo-randomly, so there is no priority between them. A default case makes the select non-blocking. Checking ctx.Err() before the select doesn't give cancellation priority either, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen."
     },
     "w3-wed-2": {
       hook: "One forwarder per input; close output after all forwarders finish.",
-      en: "Fan-in starts one goroutine per input that forwards values to a shared output. A WaitGroup tracks the forwarders, and one goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and an empty list of inputs closes the output immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
+      en: "Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A WaitGroup tracks the forwarders, and one more goroutine closes the output after all of them return. Each forwarder selects on ctx.Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
     },
     "w3-thu-1": {
-      hook: "Atomics protect one variable; invariants across fields need a mutex.",
-      en: "Atomics protect one variable, not an invariant: atomic.AddInt64 makes one operation on one variable indivisible, but moving money between two accounts touches two balances, and two separate atomic adds cannot keep their total constant. One balance can be updated with a CompareAndSwap loop; a multi-value invariant usually needs one Mutex around the whole check and update. RWMutex can help when reads dominate, but it is not automatically faster. A Mutex must not be copied after first use."
+      hook: "Atomics protect one variable; invariants across fields need a mutex; Cond.Wait goes in a for loop.",
+      en: "The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic.AddInt64 on a counter, and one balance can also use a CompareAndSwap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs a lock around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns."
     },
     "w3-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
-      en: "A pipeline is a chain of stages linked by channels: in gen → square → print, gen only sends, print only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything. If the consumer stops early, upstream stages would block forever, so every send also listens to a done channel or ctx.Done, and cancelling it releases all of them."
+      en: "A pipeline is a chain of stages connected by channels, such as gen → square → print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send sits in a select with done or ctx.Done; closing done or cancelling ctx frees them all."
     },
     "w3-thu-3": {
       hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",
-      en: "Calling Done on a copy of a WaitGroup leaves the original counter unchanged, so Wait blocks; pass *WaitGroup, or use wg.Go in Go 1.25+. Locking a Mutex again from the code that already holds it deadlocks, because Go mutexes are not reentrant. A check under RLock is stale after RUnlock, so check-then-insert must recheck under Lock; that is a logic race even without a data race. Returning a pointer from a protected map lets callers read or change the value after unlock, so I copy the value while holding the lock."
+      en: "Most sync bugs come from a few traps, and each has a simple fix. Calling Done on a copy of a WaitGroup leaves the original counter unchanged, so Wait blocks; pass a pointer, or use wg.Go in Go 1.25+. A goroutine that locks a Mutex it already holds deadlocks, because Go mutexes are not reentrant. A check under RLock is stale after RUnlock, so check-then-insert must recheck under Lock. A pointer returned from a protected map lets callers change the value after unlock, so I copy the value while holding the lock."
     },
     "w3-sat-1": {
       hook: "For every goroutine: who starts it, who stops it, how it ends.",
-      en: "For each goroutine I can name its owner and its exit path: it returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a WaitGroup or errgroup. If I can't name the exit path, the goroutine can leak. go test -race finds data races in the paths the tests run, not deadlocks or logic errors."
+      en: "Before I call concurrent code done, I check every goroutine's lifecycle. For each one I name its owner and its exit path. It returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a WaitGroup or errgroup. If I can't name the exit path, the goroutine can leak. go test -race finds data races only in the paths the tests run; it does not find deadlocks or logic errors."
     },
     "w3-sat-4": {
       hook: "Channels transfer ownership; mutexes protect shared state.",
-      en: "I use channels when work or data moves between goroutines, so ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. The choice is about clarity of ownership; I measure before claiming either is faster."
+      en: "Channels and mutexes solve different problems, so I choose by who owns the data. I use a channel when work or data moves between goroutines and ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. Either way the goal is clear ownership; I measure before claiming either is faster."
     },
     "w3-thu-2": {
       hook: "Same result three ways; choose by clarity and measured contention; never leak internal state.",
-      en: "A counter with a Mutex, with atomic.Int64 and with a single owner goroutine gives the same result under -race; I choose by clarity and measured contention, not by a general rule. A cache guarded by RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
+      en: "A counter and a cache both hold shared state, but the cache adds an aliasing trap. A counter built with a Mutex, with atomic.Int64 or with one owner goroutine gives the same result under -race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
     }
   },
 

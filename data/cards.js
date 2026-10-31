@@ -11,9 +11,10 @@ const CARDS = [
     "simId": "sim1",
     "qEN": "What is a goroutine, and how does it differ from an OS thread?",
     "qRU": "Что такое горутина и чем она отличается от потока ОС?",
-    "shortEN": "A goroutine is a function running concurrently under the Go runtime: go f() starts one, and the runtime, not the OS, schedules it. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner, a join point where someone waits for it, and a way to finish.",
+    "shortEN": "In Go, concurrent work runs in goroutines, and the Go runtime, not the operating system, schedules them. You start one with go f(), and f then runs concurrently with the caller. The runtime multiplexes many goroutines over a few OS threads and gives each one a small stack, at least 2 KiB at start, that grows on demand, so a program can run hundreds of thousands of them. But the go statement returns nothing, no ID and no handle, so each goroutine needs an owner, a join point where someone waits for it, and a way to finish.",
     "anchorsEN": [
-      "go f(): the runtime schedules it, not the OS",
+      "the Go runtime schedules goroutines, not the OS",
+      "go f() runs f concurrently with the caller",
       "many Gs on few threads; ≥ 2 KiB stack grows",
       "go returns nothing → owner, join point, exit"
     ],
@@ -26,7 +27,7 @@ const CARDS = [
     ],
     "practicalRU": "На сервере отдельно ограничивай выполняемую работу и очередь запросов. Припаркованная горутина не расходует CPU на само ожидание, но её стек и достижимые данные запроса продолжают занимать память.",
     "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tfmt.Println(\"work finished\")\n\t\tclose(done)\n\t}()\n\t<-done // Wait for completion; a Sleep would not establish this ordering.\n}",
-    "shortRU": "Горутина — это функция, которая выполняется конкурентно под управлением рантайма Go: её запускает go f(), а планирует рантайм, не ОС. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец, точка соединения (join point), где её кто-то ждёт, и способ завершиться.",
+    "shortRU": "В Go конкурентная работа выполняется в горутинах, и планирует их рантайм Go, а не операционная система. Горутину запускают так: go f(), и дальше f выполняется конкурентно с вызывающим кодом. Рантайм распределяет много горутин по нескольким потокам ОС и даёт каждой маленький стек — от 2 КиБ на старте, — который растёт по мере надобности, поэтому программа может держать сотни тысяч горутин. Но оператор go ничего не возвращает — ни ID, ни дескриптора, — поэтому у каждой горутины должен быть владелец, точка соединения (join point), где её кто-то ждёт, и способ завершиться.",
     "jvmRU": "В отличие от платформенного потока Java, горутина — не поток ОС, и у неё нет объекта Thread, который можно join или interrupt. Как виртуальный поток Java, она блокируется как обычный код; в отличие от корутины Kotlin, ей не нужны suspend-функции; а в отличие от обоих, рантайм может вытеснить её посреди цикла.",
     "detailsRU": [
       "Конкурентность не требует одновременного исполнения. GOMAXPROCS ограничивает число потоков ОС, одновременно исполняющих пользовательский Go-код; это не общее число горутин или потоков.",
@@ -749,15 +750,16 @@ const CARDS = [
     "simId": null,
     "qEN": "How would you find and prevent a goroutine leak?",
     "qRU": "Как найти утечку горутин и обеспечить их завершение?",
-    "shortEN": "A leaked goroutine has outlived its work and can never finish. Usually it is blocked on a channel, a lock or I/O without a timeout. The GC never collects a goroutine, so every goroutine must end in one of three ways: its work is done, it hits an error, or it is told to stop. The rule: whoever starts a goroutine must be able to stop it. I find a leak by a stack group that keeps growing in the goroutine profile; in tests, go.uber.org/goleak fails the test if goroutines are left behind.",
+    "shortEN": "A goroutine leak is like a memory leak: a goroutine outlives its work and never finishes. Usually it is stuck on a channel, a lock or I/O with no timeout; the GC never collects it. So every goroutine needs an exit: whoever starts one must be able to stop it. Since Go 1.27, the goroutineleak profile lists goroutines blocked on a channel, mutex or WaitGroup that the GC finds unreachable. Other leaks, for example on I/O, show up as a stack group that keeps growing in the goroutine profile. In tests, go.uber.org/goleak fails the test if goroutines are left behind.",
     "anchorsEN": [
+      "like a memory leak: outlives its work, never ends",
       "stuck on a channel, lock or I/O; the GC never collects it",
-      "three exits: work done, error, told to stop",
       "whoever starts it must be able to stop it",
-      "a growing stack group in the goroutine profile; goleak in tests"
+      "Go 1.27 goroutineleak profile; else a growing stack group",
+      "goleak in tests"
     ],
     "jvmEN": "In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have IDs in dumps but no names and no public ID API, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.",
-    "shortRU": "Утёкшая горутина пережила свою работу и уже не может завершиться. Обычно она заблокирована на канале, блокировке или вводе-выводе без таймаута. GC горутины не собирает, поэтому каждая горутина должна закончиться одним из трёх способов: работа сделана, случилась ошибка или ей велели остановиться. Правило: кто запустил горутину, тот должен уметь её остановить. Утечку я нахожу по группе стеков, которая всё растёт в профиле горутин; в тестах go.uber.org/goleak роняет тест, если остались горутины.",
+    "shortRU": "Утечка горутины похожа на утечку памяти: горутина пережила свою работу и уже не завершится. Обычно она застряла на канале, блокировке или вводе-выводе без таймаута; GC горутины не собирает. Поэтому каждой горутине нужен выход: кто её запустил, тот должен уметь её остановить. Начиная с Go 1.27 профиль goroutineleak показывает горутины, которые ждут недостижимый для GC канал, мьютекс или WaitGroup. Остальные утечки, например на вводе-выводе, видны как группа стеков, которая всё растёт в профиле горутин. В тестах go.uber.org/goleak роняет тест, если остались горутины.",
     "jvmRU": "В Java зависший платформенный поток виден в дампе потоков под своим именем. У горутин в дампах есть номера, но нет имён и публичного API для ID, поэтому утечку находят, группируя одинаковые стеки или по меткам pprof, и следят, какая группа растёт.",
     "detailsEN": [
       "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
@@ -961,7 +963,7 @@ const CARDS = [
     "simId": "sim12",
     "qEN": "Channels or a mutex — who owns the data, and what must happen together?",
     "qRU": "Канал или мьютекс: кто владеет данными и какие действия должны выполняться вместе?",
-    "shortEN": "Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync.Mutex, that sends and receives take. And the third option needs no lock on the data at all: confinement, where only one goroutine touches the data or each one gets its own copy; a sent pointer is not a copy.",
+    "shortEN": "Channels and mutexes coordinate goroutines but answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers. Use a mutex to protect shared state with an invariant, such as a balance whose check and update need one lock. Channels are not lock-free either: hchan, their runtime struct, has its own lock. The third option, confinement, needs no lock on the data: only one goroutine touches it, or each gets its own copy. A sent pointer is not a copy.",
     "anchorsEN": [
       "channel = hand off ownership, signal (jobs → workers)",
       "mutex = invariant: check + update under one lock",
@@ -980,7 +982,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни с инварианта: баланс не должен стать отрицательным. Проверку и изменение держи под одним lock. Универсальной цены в наносекундах и замедления актора в 10 раз нет: измеряй свою нагрузку. Возвращай снимки, а не доступ к изменяемому состоянию после unlock.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\ntype Account struct {\n\tmu      sync.Mutex\n\tbalance int\n}\n\nfunc (a *Account) Withdraw(n int) bool {\n\ta.mu.Lock()\n\tdefer a.mu.Unlock()\n\tif n <= 0 || a.balance < n {\n\t\treturn false\n\t}\n\ta.balance -= n\n\treturn true\n}\nfunc main() {\n\ta := Account{balance: 10}\n\tfmt.Println(a.Withdraw(7), a.Withdraw(7)) // true false\n}",
-    "shortRU": "Оба координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам; мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, где проверка и изменение должны идти под одной блокировкой. Канал тоже не обходится без блокировки: у его структуры в рантайме, hchan, есть своя блокировка рантайма, не sync.Mutex, которую берут отправка и приём. А третий вариант обходится без блокировки данных: confinement (изоляция), когда данные трогает только одна горутина или каждая получает свою копию; отправленный указатель — не копия.",
+    "shortRU": "Каналы и мьютексы координируют горутины, но отвечают на разные вопросы: кто владеет данными и что должно меняться вместе. Канал — чтобы передать владение или сообщить о событии, например когда производитель отдаёт задания воркерам. Мьютекс — чтобы защитить общее состояние с инвариантом, например баланс, проверка и изменение которого требуют одной блокировки. Каналы тоже не обходятся без блокировки: у их структуры в рантайме, hchan, есть своя блокировка. Третий вариант, confinement (изоляция), обходится без блокировки данных: их трогает только одна горутина или каждая получает свою копию. Отправленный указатель — не копия.",
     "jvmRU": "В Java то же разделение: synchronized или ReentrantLock для общего состояния, BlockingQueue для передачи. Разница в том, что sync.Mutex не реентерабелен, а у каналов есть close и select, которых нет у BlockingQueue.",
     "detailsRU": [
       "После confinement — четыре вопроса по порядку. Передаёте данные от одной горутины другой, то есть владение? Канал. Защищаете внутреннее состояние типа? Мьютекс внутри типа, не наружу. Координируете несколько событий, отмену или таймауты? Каналы и select. Горячее место по профилю? Тогда мьютекс или atomic могут выиграть, ведь канал внутри сам берёт блокировку. Пословица Go «Don't communicate by sharing memory; share memory by communicating» задаёт выбор по умолчанию, а не запрет: Go поддерживает оба подхода (sim12).",
