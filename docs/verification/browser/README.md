@@ -33,7 +33,8 @@ node docs/verification/browser/check-nav.js                              # ка�
 | `check-update.js`, `check-version.js [папка]` | баннер «Доступна новая версия» и подпись «Версия сайта N» | 8765 |
 | `check-u256.js`, `check-accept.js`, `check-calendar.js`, `check-navlabels.js` | точечные регрессии прошлых правок | 8765 (`check-calendar.js` — и 8767) |
 | `check-v74.js`, `check-v75.js` | ссылки плана недели 3, c55/c56/q44–q47; обратные ссылки диаграмм и строки 13–17 шпаргалки | 8765 |
+| `check-v77.js` | кнопки карточек на шаг другой диаграммы (`extraSims`, c20/c21/c31 → sim9), маршрут `#/simulators/<id>/<шаг>`, «Назад», строки 18–20 шпаргалки, нумерованный ответ sim10/sim11 | 8765 |
 
-Числа, которые зависят от объёма контента (56 карточек, 12 диаграмм, 47 quiz, 17 строк шпаргалки, predict по диаграммам), захардкожены в `check-nav.js`, `check-quiz-new.js`, `check-w12.js`, `check-predict.js` и `check-v75.js` — обновляйте их вместе с контентом.
+Числа, которые зависят от объёма контента (56 карточек, 12 диаграмм, 47 quiz, 20 строк шпаргалки, predict по диаграммам), захардкожены в `check-nav.js`, `check-quiz-new.js`, `check-w12.js`, `check-predict.js`, `check-v75.js` и `check-v77.js` — обновляйте их вместе с контентом.
 
 Смысловую проверку не заменяют: Go-код запускается отдельно (Go 1.24.7 и 1.27.3), структура — `node scripts/check-content.mjs --base origin/main`.

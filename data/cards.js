@@ -1314,6 +1314,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim5",
+    "extraSims": [
+      {
+        "simId": "sim9",
+        "step": 7
+      }
+    ],
     "qEN": "What does compare-and-swap do, and why is a separate check and store different?",
     "qRU": "Что делает compare-and-swap и чем отличается от отдельной проверки и записи?",
     "shortEN": "Compare-and-swap means: \"if x still holds the value I saw, replace it with mine\", and the hardware checks and writes as one indivisible step. In Go it is atomic.CompareAndSwapInt64(&x, old, new), which returns false if x no longer equals old, usually because another goroutine changed it. For an update such as an increment you re-read and retry in a loop; for a one-time claim from 0 to 1, false means another goroutine won. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with CAS exactly one succeeds. It covers one variable, so an invariant across several fields usually needs a mutex.",
@@ -1387,6 +1393,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": "sim8",
+    "extraSims": [
+      {
+        "simId": "sim9",
+        "step": 3
+      }
+    ],
     "qEN": "How does a mutex acquire, wait and hand off — and what does 1 ms really mean?",
     "qRU": "Как Mutex захватывается, ждёт и передаёт владение — и что на самом деле означает 1 мс?",
     "shortEN": "Inside, sync.Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one CAS that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than 1 ms and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so 1 ms is a mode threshold, not a timeout.",
@@ -2339,6 +2351,12 @@ const CARDS = [
     "level": "deep",
     "levelLabel": "🔴 Deep Dive + Prod Cases",
     "simId": "sim7",
+    "extraSims": [
+      {
+        "simId": "sim9",
+        "step": 4
+      }
+    ],
     "qEN": "How do Swiss Tables find a key and grow a Go map?",
     "qRU": "Как Swiss Tables находят ключ и расширяют map в Go?",
     "shortEN": "Since Go 1.24 Go maps are built as Swiss Tables. A map hashes the key; a large map first picks a table from its directory by the top bits. In the table, H1, the high bits, picks a starting group and H2, the low 7 bits, is a fingerprint: a lookup compares H2 with a group’s eight control bytes at once, checks only the matching keys and stops at a group with an empty slot. A table doubles up to 1024 slots, then splits.",

@@ -10,7 +10,7 @@ const { chromium } = require("playwright");
     const sims = await p.evaluate(() => SIMULATORS.map(s => {
       const el = document.getElementById(s.id);
       const links = [...el.querySelectorAll(".diagram-cards a")].map(a => a.getAttribute("href").replace("#/cards/", ""));
-      const expect = CARDS.filter(c => c.simId === s.id || c.id === s.cardId).map(c => c.id);
+      const expect = CARDS.filter(c => c.simId === s.id || c.id === s.cardId || (c.extraSims || []).some(x => x.simId === s.id)).map(c => c.id); // extraSims since v77
       return { id: s.id, links, expect };
     }));
     for (const s of sims) ok(`${w}: ${s.id} lists its cards`, s.links.length > 0 && JSON.stringify(s.links) === JSON.stringify(s.expect), s.links.join(","));
@@ -23,7 +23,7 @@ const { chromium } = require("playwright");
     }
     await p.goto("http://127.0.0.1:8765/#/cheatsheet"); await p.waitForTimeout(400);
     const rows = await p.evaluate(() => [...document.querySelectorAll("#cheatsheet-tbody tr")].map(tr => ({ t: tr.querySelector("td").innerText, sim: tr.querySelector('a[href^="#/simulators/"]')?.getAttribute("href") || "", txt: tr.innerText })));
-    ok(`${w}: cheat sheet has 17 rows`, rows.length === 17, rows.length);
+    ok(`${w}: cheat sheet has 20 rows`, rows.length === 20, rows.length); // 17 in v75, rows 18–20 in v77
     for (const [n, sim] of [[13, "sim8"], [14, "sim9"], [15, "sim10"], [16, "sim11"], [17, "sim12"]]) ok(`${w}: row ${n} → ${sim}`, rows[n - 1].sim === `#/simulators/${sim}` && !/&amp;|<code>/.test(rows[n - 1].txt), rows[n - 1].t);
     const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok(`${w}: no horizontal overflow on cheat sheet`, ov <= 0, ov);

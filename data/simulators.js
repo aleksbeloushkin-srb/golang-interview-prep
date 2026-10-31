@@ -11198,6 +11198,7 @@ const SIMULATORS = [
             ],
             "list": {
               "title": "Answer in a minute (EN)",
+              "ordered": true,
               "items": [
                 "net/http accepts each connection and serves it in its own goroutine; with HTTP/1.1, requests on that connection are handled one at a time in that goroutine.",
                 "Each request gets a context that is cancelled when the client disconnects or when the handler returns, so I pass r.Context() to every downstream call.",
@@ -11961,6 +11962,7 @@ const SIMULATORS = [
           {
             "list": {
               "title": "Answer in a minute (EN)",
+              "ordered": true,
               "items": [
                 "Deadlock: goroutines wait for each other in a cycle; it needs mutual exclusion, hold and wait, no preemption and circular wait at the same time.",
                 "I prevent it with one lock order for everybody, short critical sections and no calls out while holding a lock.",
@@ -12470,5 +12472,23 @@ const CHEATSHEET_ROWS = [
     how: "Данные видит одна горутина → без блокировки (confinement, глубокие копии). Передача владения → канал. Состояние типа с инвариантом → мьютекс внутри типа. Несколько событий, отмена, таймаут → <code>select</code>.",
     markers: "У канала в <code>hchan</code> своя блокировка рантайма, поэтому обычно он не быстрее мьютекса. Отправленный указатель — общий доступ, не копия. Atomic — одна переменная, не инвариант. Горячее место по профилю → мьютекс или atomic могут выиграть у канала.",
     cardId: "c15", simId: "sim12"
+  },
+  {
+    topic: "18. Ошибки: обёртка %w, errors.Is, errors.As, errors.Join",
+    how: "Каждый слой добавляет контекст: <code>fmt.Errorf(\"load user: %w\", err)</code> — исходная ошибка остаётся внутри. <code>errors.Is</code> — это известная ошибка, например <code>ErrNotFound</code>? <code>errors.As</code> — есть ли внутри ошибка нужного типа; отдаёт первую найденную.",
+    markers: "<code>errors.Join</code> и несколько <code>%w</code> в одном <code>fmt.Errorf</code> — с Go 1.20; <code>errors.AsType</code> — с Go 1.26. Ошибку логируют один раз — там, где её обрабатывают. Typed nil в <code>error</code> — не nil (строка 11).",
+    cardId: "c39", simId: null
+  },
+  {
+    topic: "19. Сервис: ошибки в HTTP-коды, *sql.DB, slog",
+    how: "Домен возвращает sentinel- и типизированные ошибки, одна функция на границе HTTP переводит их через <code>errors.Is</code>/<code>errors.As</code>: 400, 404, 409 или 422, остальное — 500 с общим текстом. <code>*sql.DB</code> — пул соединений: один на процесс, с лимитами, контекст в каждый запрос.",
+    markers: "<code>Rows</code> держит соединение до <code>rows.Close()</code>: после проверки ошибки — <code>defer rows.Close()</code>, после цикла — <code>rows.Err()</code>. Транзакция занимает одно соединение: <code>defer tx.Rollback()</code>, в конце <code>Commit</code>. slog: один логгер, <code>request_id</code> через <code>With</code>, секреты скрывает <code>LogValue</code>.",
+    cardId: "c47", simId: null
+  },
+  {
+    topic: "20. Консистентность: изоляция, перевод, идемпотентность, outbox, Kafka",
+    how: "Read Committed — свой снимок у каждого запроса; Repeatable Read и Serializable — один снимок и 40001 при конфликте, транзакцию повторяют целиком. Перевод: одна транзакция, <code>SELECT … FOR UPDATE</code> по возрастанию ID счёта; 40P01 всё равно повторяют.",
+    markers: "Idempotency-Key занимают атомарно: <code>INSERT … ON CONFLICT DO NOTHING</code> в транзакции перевода; тот же ключ с другим телом — 422. Событие — строкой outbox в той же транзакции; доставка at-least-once, потребитель отсеивает дубли по ID события. Порядок в Kafka — только внутри партиции.",
+    cardId: "c50", simId: null
   }
 ];

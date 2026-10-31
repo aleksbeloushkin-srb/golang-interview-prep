@@ -161,14 +161,29 @@ function getCardSimId(card) {
   return card.simId || null;
 }
 
-// Cards a diagram explains: every card whose simId points here, plus the diagram's own main card.
+// Extra diagrams a card points to at a given step: [{ simId, step }] with step counted from 1.
+function cardExtraSims(card) {
+  if (!Array.isArray(card.extraSims) || typeof SIMULATORS === "undefined") return [];
+  return card.extraSims
+    .map(x => ({ ...x, sim: SIMULATORS.find(s => s.id === x.simId) }))
+    .filter(x => x.sim && Number.isInteger(x.step) && x.step >= 1 && x.step <= x.sim.steps.length);
+}
+
+const stepTitle = step => step.title.replace(/^\d+\.\s*/, "");
+
+// Cards a diagram explains: every card whose simId points here, the diagram's own main card,
+// and cards that link to one of its steps through extraSims.
 function diagramCardsHtml(sim) {
   if (typeof CARDS === "undefined") return "";
-  const cards = CARDS.filter(c => c.simId === sim.id || c.id === sim.cardId);
+  const cards = CARDS.filter(c => c.simId === sim.id || c.id === sim.cardId || cardExtraSims(c).some(x => x.simId === sim.id));
   if (!cards.length) return "";
+  const stepNote = c => {
+    const x = c.simId === sim.id || c.id === sim.cardId ? null : cardExtraSims(c).find(e => e.simId === sim.id);
+    return x ? ` (шаг ${x.step})` : "";
+  };
   return `<nav class="related-links diagram-cards" aria-label="Карточки по этой схеме">
     <strong>Карточки по этой схеме:</strong>
-    ${cards.map(c => `<a href="#/cards/${c.id}">${escapeHtml(c.id.toUpperCase())}: ${escapeHtml(c.qRU || c.qEN)}</a>`).join("")}
+    ${cards.map(c => `<a href="#/cards/${c.id}">${escapeHtml(c.id.toUpperCase())}${stepNote(c)}: ${escapeHtml(c.qRU || c.qEN)}</a>`).join("")}
   </nav>`;
 }
 
@@ -326,11 +341,12 @@ function renderCard() {
 
   const targetSim = getCardSimId(card);
   const simLinkWrap = document.getElementById("card-sim-link");
-  if (targetSim) {
-    simLinkWrap.innerHTML = `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Открыть интерактивную диаграмму (${targetSim.toUpperCase()}) →</a>`;
-  } else {
-    simLinkWrap.innerHTML = "";
-  }
+  simLinkWrap.innerHTML = targetSim
+    ? `<a href="#/simulators/${targetSim}" class="btn btn-sm">🔬 Открыть интерактивную диаграмму (${targetSim.toUpperCase()}) →</a>`
+    : "";
+  simLinkWrap.insertAdjacentHTML("beforeend", cardExtraSims(card)
+    .map(x => ` <a href="#/simulators/${x.simId}/${x.step}" class="btn btn-sm">🧮 ${x.simId.toUpperCase()}, шаг ${x.step}: ${escapeHtml(stepTitle(x.sim.steps[x.step - 1]))} →</a>`)
+    .join(""));
   simLinkWrap.insertAdjacentHTML("beforeend", relatedQuizHtml(card.id));
 
   const st = state.progress[card.id] || "unseen";
@@ -951,6 +967,12 @@ function handleRoute() {
   if (activeRoute === "simulators" && param) {
     const targetSim = document.getElementById(param);
     if (targetSim) {
+      // #/simulators/sim9/3 opens step 3 (counted from 1); an invalid step keeps the current one.
+      const simIdx = SIMULATORS.findIndex(s => s.id === param);
+      const step = Number(parts[2]);
+      if (simIdx !== -1 && Number.isInteger(step) && step >= 1 && step <= SIMULATORS[simIdx].steps.length) {
+        renderSimStep(simIdx, step - 1);
+      }
       setTimeout(() => targetSim.scrollIntoView({ behavior: "auto", block: "start" }), 60);
     }
   }
