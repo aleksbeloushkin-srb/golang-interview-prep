@@ -9,7 +9,8 @@
 //
 // Entry: { item, field, file, symbol, fact, verified: ["1.24.7", "1.26.1", "1.27.3"], differs: null | "how versions differ" }
 // file is relative to GOROOT (e.g. "src/runtime/proc.go"); symbol is a func, method, type, const, var or
-// "Type.field". Never a line number: lines move between releases.
+// "Type.field"; in .s files an assembly function, in .html a section id (spec, memory model), in .md a heading.
+// Never a line number: lines move between releases.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,17 +31,42 @@ export function loadRegistry(file = REGISTRY) {
   return entries;
 }
 
-// Text of a top-level declaration, or null. Handles funcs and methods, types, consts/vars (also inside
-// grouped blocks) and Type.field.
-export function definition(src, symbol) {
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// Text of a declaration, or null. The file extension picks the syntax:
+//   .go       funcs and methods, types, consts/vars (also inside grouped blocks), Type.field;
+//   .s        every TEXT block of the symbol (runtime·gogo and gogo<> both count) up to the next TEXT/DATA/GLOBL;
+//   .html     the section of an element with id="symbol" up to the next heading (spec, memory model);
+//   .md       the section under a heading with exactly this text, up to the next heading.
+export function definition(src, symbol, file = '.go') {
+  if (file.endsWith('.s')) {
+    const re = new RegExp(`^TEXT\\s+(?:\\w*·)?${esc(symbol)}(?:<[^>]*>)?\\(SB\\)`, 'gm');
+    const parts = [...src.matchAll(re)].map(m => {
+      const rest = src.slice(m.index + 1);
+      const end = rest.search(/\n(?=TEXT |DATA |GLOBL |#)|\n\n(?=\/\/)/);
+      return src.slice(m.index, end === -1 ? undefined : m.index + 1 + end);
+    });
+    return parts.length ? parts.join('\n') : null;
+  }
+  if (file.endsWith('.html')) {
+    const m = new RegExp(`<h[1-6][^>]*\\bid="${esc(symbol)}"`).exec(src);
+    if (!m) return null;
+    const end = src.slice(m.index + 1).search(/<h[1-6][\s>]/);
+    return src.slice(m.index, end === -1 ? undefined : m.index + 1 + end);
+  }
+  if (file.endsWith('.md')) {
+    const m = new RegExp(`^#+\\s+${esc(symbol)}\\s*$`, 'm').exec(src);
+    if (!m) return null;
+    const end = src.slice(m.index + 1).search(/\n#+\s/);
+    return src.slice(m.index, end === -1 ? undefined : m.index + 1 + end);
+  }
   const block = start => {
     const end = src.indexOf('\n}', start);
     return src.slice(start, end === -1 ? undefined : end + 2);
   };
   if (symbol.includes('.')) {
     const [type, field] = symbol.split('.');
-    const t = definition(src, type);
+    const t = definition(src, type, file);
     if (!t) return null;
     const line = t.split('\n').find(l => new RegExp(`^\\s*${esc(field)}\\b`).test(l));
     return line ? line.trim() : null;
@@ -60,15 +86,20 @@ function read(goroot, file) {
   try { return fs.readFileSync(path.join(goroot, file), 'utf8'); } catch { return null; }
 }
 
+// A symbol that is absent in a version the entry does not list under verified (added later, renamed) is expected.
 function check(goroot) {
   const entries = loadRegistry();
-  let missing = 0;
+  const version = (read(goroot, 'VERSION') || '').split('\n')[0].replace(/^go/, '');
+  let missing = 0, expected = 0;
   for (const e of entries) {
     const src = read(goroot, e.file);
-    const def = src && definition(src, e.symbol);
-    if (!def) { missing++; console.log(`MISSING ${e.item} ${e.file} ${e.symbol} — ${e.fact}`); }
+    if (src && definition(src, e.symbol, e.file)) continue;
+    if (version && !e.verified.includes(version)) { expected++; continue; }
+    missing++;
+    console.log(`MISSING ${e.item} ${e.file} ${e.symbol} — ${e.fact}`);
   }
-  console.log(`${entries.length - missing}/${entries.length} symbols found in ${goroot}`);
+  const found = entries.length - missing - expected;
+  console.log(`${found}/${entries.length} symbols found in ${goroot}${expected ? `; ${expected} absent as expected (not verified on ${version})` : ''}`);
   return missing ? 1 : 0;
 }
 
@@ -79,7 +110,7 @@ function diff(oldRoot, newRoot) {
   for (const e of entries) {
     const key = `${e.file}#${e.symbol}`;
     const a = read(oldRoot, e.file), b = read(newRoot, e.file);
-    const da = a && definition(a, e.symbol), db = b && definition(b, e.symbol);
+    const da = a && definition(a, e.symbol, e.file), db = b && definition(b, e.symbol, e.file);
     if (da === db && da) continue;
     changed++;
     const what = !db ? 'gone' : !da ? 'new' : 'changed';

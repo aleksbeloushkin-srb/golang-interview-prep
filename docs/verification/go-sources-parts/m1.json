@@ -1,1063 +1,1062 @@
 [
-  {
-    "item": "c1",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "stackMin",
-    "fact": "A goroutine starts with a small stack of at least 2 KiB (stackMin = 2048 on Linux/amd64) that grows on demand.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "shortEN",
-    "file": "src/runtime/proc.go",
-    "symbol": "newproc1",
-    "fact": "The Go runtime, not the OS, creates goroutines: newproc1 reuses a dead G from gfget or allocates one with malg(stackMin) and makes it runnable.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "jvmEN",
-    "file": "src/runtime/signal_unix.go",
-    "symbol": "preemptM",
-    "fact": "The runtime can preempt a goroutine in the middle of a loop by signalling its thread (asynchronous preemption).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/debug.go",
-    "symbol": "GOMAXPROCS",
-    "fact": "GOMAXPROCS limits how many OS threads execute user Go code at once; it is not the number of goroutines or threads.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/stack.go",
-    "symbol": "gcComputeStartingStackSize",
-    "fact": "A reused goroutine may start with a larger stack sized from the average stack use the GC observed, never below fixedStack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "g",
-    "fact": "Each goroutine has a runtime descriptor, the struct runtime.g.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "g.goid",
-    "fact": "The runtime numbers goroutines internally in g.goid; no public API exposes the number.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/traceback.go",
-    "symbol": "goroutineheader",
-    "fact": "Stack traces print the internal number as \"goroutine N\".",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c1",
-    "field": "sources",
-    "file": "doc/go_spec.html",
-    "symbol": "Go_statements",
-    "fact": "A go statement evaluates the function value and arguments in the calling goroutine, runs the call in a new goroutine and returns nothing (spec section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "shortEN",
-    "file": "doc/go_spec.html",
-    "symbol": "Go_statements",
-    "fact": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine (spec section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "shortEN",
-    "file": "src/runtime/proc.go",
-    "symbol": "newproc",
-    "fact": "newproc runs on the system stack, creates the G with newproc1, queues it with runqput(pp, newg, true) and then calls wakep once mainStarted.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "stackMin",
-    "fact": "A newly allocated G gets the minimum stack, 2 KiB on Linux.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/proc.go",
-    "symbol": "newproc1",
-    "fact": "newproc1 takes a dead G from gfget or creates one with malg(stackMin).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/proc.go",
-    "symbol": "gfget",
-    "fact": "A reused G whose stack is not startingStackSize gets it freed and a new startingStackSize stack allocated, so reuse does not promise zero allocations.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/stack.go",
-    "symbol": "gcComputeStartingStackSize",
-    "fact": "The starting size for reused Gs is recomputed at each GC from average scanned stack usage, unless GODEBUG adaptivestackstart=0.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/runtime1.go",
-    "symbol": "parseRuntimeDebugVars",
-    "fact": "GODEBUG adaptivestackstart is on by default (debug.adaptivestackstart = 1).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "symbol renamed only: in 1.24.7 the default is set in parsedebugvars, in 1.26.1+ in parseRuntimeDebugVars; default 1 in all three"
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/proc.go",
-    "symbol": "newproc1",
-    "fact": "newproc1 sets newg.sched.sp and newg.sched.pc = goexit + PCQuantum before calling gostartcallfn.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/sys_x86.go",
-    "symbol": "gostartcall",
-    "fact": "On amd64, gostartcall pushes the saved PC (goexit) onto the new stack as the return address and stores fn in sched.pc and the closure in sched.ctxt.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/proc.go",
-    "symbol": "runqput",
-    "fact": "runqput(pp, gp, true) prefers runnext but uses the ordinary queue without sysmon or, randomly, under -race.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/proc.go",
-    "symbol": "wakep",
-    "fact": "After queuing, newproc calls wakep so an idle P can start and steal the new G.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c3",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "g.goid",
-    "fact": "The runtime has internal goroutine IDs (g.goid) but exposes no public current-ID API.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "stackalloc",
-    "fact": "stackalloc serves small stacks from the per-P mcache.stackcache or stackpool free lists and larger ones from stackLarge or a dedicated span, never through mallocgc.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "shortEN",
-    "file": "src/runtime/mheap.go",
-    "symbol": "allocManual",
-    "fact": "Stack spans are manually managed spans from allocManual, not swept GC heap objects and not counted in heapInUse.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "copystack",
-    "fact": "A growing stack is copied to a new, larger allocation, so its address changes.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "shortEN",
-    "file": "src/runtime/mstats.go",
-    "symbol": "MemStats.StackInuse",
-    "fact": "MemStats.StackInuse is bytes in stack spans, not bytes used by live frames.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/mcache.go",
-    "symbol": "mcache.stackcache",
-    "fact": "The per-P free-stack cache lives in mcache.stackcache, one list per size order.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "gobuf.sp",
-    "fact": "g.sched.sp is the saved resume stack pointer.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "stack.lo",
-    "fact": "g.stack.lo and g.stack.hi bound the allocated stack region.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/stack.go",
-    "symbol": "freeStackSpans",
-    "fact": "Unused stack spans are returned to the heap at the end of GC.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c4",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/mstats.go",
-    "symbol": "MemStats.StackSys",
-    "fact": "StackSys is StackInuse plus OS-thread stack memory obtained directly from the OS, and does not count every C stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "When the prologue's stack check fails, morestack calls newstack, which allocates a stack at least twice the old size and copies the frames.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "adjustpointers",
-    "fact": "copystack fixes pointers into the old stack using the compiler's stack pointer maps.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "shortEN",
-    "file": "src/cmd/compile/internal/escape/solve.go",
-    "symbol": "outlives",
-    "fact": "Escape analysis keeps pointers to stack objects out of the heap, so user heap objects never point into a stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "shortEN",
-    "file": "src/runtime/proc.go",
-    "symbol": "main",
-    "fact": "runtime.main sets maxstacksize to 1000000000 bytes on 64-bit systems and 250000000 on 32-bit systems.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "shortEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "Growth beyond maxstacksize prints \"goroutine stack exceeds N-byte limit\" and throws \"stack overflow\".",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "jvmEN",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "Exceeding the stack limit is a fatal throw that cannot be recovered.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[0]",
-    "file": "src/cmd/internal/obj/x86/obj6.go",
-    "symbol": "preprocess",
-    "fact": "On amd64, small frameless leaf functions and NOSPLIT functions get no stack-split check in the prologue.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[0]",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "When stackguard0 == stackPreempt, newstack handles a preemption request instead of growing the stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "newstack starts with twice the old size and doubles again until funcMaxSPDelta + stackGuard fits.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/stack.go",
-    "symbol": "syncadjustsudogs",
-    "fact": "When a G has active channel references, copystack locks the channels and adjusts sudog pointers into the stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/stack.go",
-    "symbol": "shrinkstack",
-    "fact": "shrinkstack halves the stack only if usage (hi - sp + stackNosplit) is below a quarter, the half is at least fixedStack and isShrinkStackSafe allows it.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/mgcmark.go",
-    "symbol": "scanstack",
-    "fact": "The GC shrinks stacks while scanning them, or defers it to a synchronous safe point through preemptShrink.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/proc.go",
-    "symbol": "main",
-    "fact": "The default per-goroutine limit is 1 GB on 64-bit and 250 MB on 32-bit systems.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/stack.go",
-    "symbol": "stackalloc",
-    "fact": "Stack sizes are powers of two, so the largest stack under the 1000000000-byte default is 2^29 bytes = 512 MiB.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[3]",
-    "file": "src/runtime/debug/garbage.go",
-    "symbol": "SetMaxStack",
-    "fact": "debug.SetMaxStack sets the per-goroutine limit for future growth, returns the previous value, and exceeding it crashes the program.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c5",
-    "field": "detailsEN[3]",
-    "file": "src/unsafe/unsafe.go",
-    "symbol": "Pointer",
-    "fact": "A uintptr is an integer, not a pointer the GC tracks or adjusts when a stack moves.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "shortEN",
-    "file": "src/cmd/internal/obj/x86/a.out.go",
-    "symbol": "REGG",
-    "fact": "On amd64 the current G is in R14 under ABIInternal.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "shortEN",
-    "file": "src/runtime/asm_amd64.s",
-    "symbol": "gogo",
-    "fact": "gogo stores the G in TLS and R14, restores SP, BP and the closure context, clears those gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
-  },
-  {
-    "item": "c6",
-    "field": "shortEN",
-    "file": "src/runtime/asm_amd64.s",
-    "symbol": "mcall",
-    "fact": "mcall saves the caller's PC, SP and BP in g.sched, switches R14 and SP to g0 and calls the scheduler function there (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "shortEN",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "m.g0",
-    "fact": "Each M has a g0 whose stack is the thread's system stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "shortEN",
-    "file": "src/runtime/proc.go",
-    "symbol": "execute",
-    "fact": "On g0 the scheduler calls execute, which marks the G running and calls gogo(&gp.sched).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "code",
-    "file": "src/runtime/runtime2.go",
-    "symbol": "gobuf",
-    "fact": "g.sched is a gobuf holding sp, pc, g, ctxt, lr and bp: continuation state, not every CPU register.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "1.24.7: gobuf also has a ret field (removed in Go 1.25); 1.26.1 and 1.27.3: sp, pc, g, ctxt, lr, bp"
-  },
-  {
-    "item": "c6",
-    "field": "detailsEN[1]",
-    "file": "src/runtime/asm_amd64.s",
-    "symbol": "gogo",
-    "fact": "On amd64, gogo restores SP, BP and the closure context, clears selected gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
-  },
-  {
-    "item": "c6",
-    "field": "detailsEN[2]",
-    "file": "src/cmd/compile/abi-internal.md",
-    "symbol": "Function call argument and result passing",
-    "fact": "Go's internal ABI has no callee-save registers, so a voluntary switch at a call needs only the continuation state (Markdown section, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "c6",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/preempt_amd64.s",
-    "symbol": "asyncPreempt",
-    "fact": "Asynchronous preemption first saves every register on the goroutine's stack (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7"
-    ],
-    "differs": "1.24.7: asyncPreempt saves flags, GP registers and X0-X15 on the goroutine stack (ADJSP $368); 1.26.1+ (since Go 1.26): only flags and GP registers go on the stack (ADJSP $112), vector registers go to p.xRegs.scratch and xRegSave moves them to off-stack gp.xRegs.state"
-  },
-  {
-    "item": "c6",
-    "field": "detailsEN[2]",
-    "file": "src/runtime/preempt_xreg.go",
-    "symbol": "xRegSave",
-    "fact": "On amd64, arm64 and loong64, asynchronous preemption saves the vector registers outside the goroutine stack, in per-G state gp.xRegs.state.",
-    "verified": [
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "absent in 1.24.7: file added in Go 1.26 (also absent in the 1.25.1 tree); before that the vector registers were saved on the goroutine stack"
-  },
-  {
-    "item": "c6",
-    "field": "detailsEN[3]",
-    "file": "src/cmd/internal/obj/arm64/a.out.go",
-    "symbol": "REGG",
-    "fact": "On arm64 the current G is in R28.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[0].desc",
-    "file": "doc/go_spec.html",
-    "symbol": "Go_statements",
-    "fact": "G1 evaluates the function value and arguments of go doWork(n); the new goroutine runs the call (spec section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[0].board",
-    "file": "src/runtime/proc.go",
-    "symbol": "runqput",
-    "fact": "runnext is a single slot: a new G from go takes it, and the previous occupant moves to the tail of the local runq.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[1].desc",
-    "file": "src/runtime/asm_amd64.s",
-    "symbol": "systemstack",
-    "fact": "systemstack switches R14 and SP to g0 while m.curg still points to the user G (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[1].board",
-    "file": "src/runtime/proc.go",
-    "symbol": "newproc1",
-    "fact": "G2 comes from the free pool (gfget) or is newly allocated (malg).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[1].board",
-    "file": "src/runtime/stack.go",
-    "symbol": "gcComputeStartingStackSize",
-    "fact": "A new G gets 2 KiB on Linux/amd64; a pooled G gets the adaptive starting size, never below 2 KiB.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[2].desc",
-    "file": "src/cmd/compile/internal/typecheck/stmt.go",
-    "symbol": "normalizeGoDeferCall",
-    "fact": "For go doWork(n) the compiler evaluates n in the caller and wraps the call in a generated closure (main.main.gowrap1) that holds the copy.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[2].desc",
-    "file": "src/runtime/sys_x86.go",
-    "symbol": "gostartcall",
-    "fact": "On amd64, goexit is pushed as the wrapper's return address; sched.pc becomes the wrapper entry and sched.ctxt the closure.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[3].board",
-    "file": "src/runtime/proc.go",
-    "symbol": "runqput",
-    "fact": "Without sysmon (wasm) runnext is not used; under -race the runtime puts the G in the ordinary queue with probability 1/2.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[4].desc",
-    "file": "src/runtime/proc.go",
-    "symbol": "execute",
-    "fact": "execute moves the G from runnable to running and calls gogo.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[4].desc",
-    "file": "src/runtime/asm_amd64.s",
-    "symbol": "gogo",
-    "fact": "gogo restores the current G, SP, BP and closure context, then jumps to the saved PC (assembly TEXT symbol).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
-  },
-  {
-    "item": "sim1",
-    "field": "steps[4].boxes",
-    "file": "src/runtime/proc.go",
-    "symbol": "execute",
-    "fact": "schedtick is incremented only when the time slice is not inherited.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[5].desc",
-    "file": "src/runtime/proc.go",
-    "symbol": "goexit1",
-    "fact": "After the function returns, goexit calls goexit1, which calls mcall(goexit0) to switch to g0.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[5].board",
-    "file": "src/runtime/proc.go",
-    "symbol": "gdestroy",
-    "fact": "goexit0 calls gdestroy, which sets _Gdead and calls gfput, and then calls schedule.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[5].board",
-    "file": "src/runtime/proc.go",
-    "symbol": "gfput",
-    "fact": "gfput puts the dead G into the free pool and frees its stack if it is not startingStackSize.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[6].check",
-    "file": "src/runtime/stack.go",
-    "symbol": "newstack",
-    "fact": "On overflow the runtime prints \"goroutine stack exceeds 1000000000-byte limit\" and throws \"stack overflow\"; growth at least doubles the stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "sim1",
-    "field": "steps[6].check",
-    "file": "src/runtime/stack.go",
-    "symbol": "shrinkstack",
-    "fact": "The GC can shrink an underused stack.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q1",
-    "field": "explanationRU",
-    "file": "src/cmd/compile/internal/noder/writer.go",
-    "symbol": "distinctVars",
-    "fact": "Per-iteration loop variables apply when the file's Go version is at least go1.22; older language versions share one variable.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q1",
-    "field": "ru",
-    "file": "src/cmd/go/internal/gover/toolchain.go",
-    "symbol": "TooNewError",
-    "fact": "A module declaring go 1.25 or go 1.26 needs a toolchain at least that new; with GOTOOLCHAIN=local, Go 1.24.7 refuses to build it.",
-    "verified": [
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "1.24.7 cannot build a module that declares go 1.25 or 1.26 (go.mod requires go >= 1.25); with go 1.22-1.24 in go.mod it prints the same 0, 1, 2"
-  },
-  {
-    "item": "q1",
-    "field": "sources",
-    "file": "doc/go_spec.html",
-    "symbol": "For_clause",
-    "fact": "Since Go 1.22 each iteration of a for clause has its own variable; before, iterations shared one (spec section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q1",
-    "field": "sources",
-    "file": "doc/go_mem.html",
-    "symbol": "chan",
-    "fact": "Closing a channel is synchronized before a receive that returns because the channel is closed (memory model section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q1",
-    "field": "sources",
-    "file": "src/sync/waitgroup.go",
-    "symbol": "Wait",
-    "fact": "WaitGroup.Wait blocks until the counter reaches zero; it ensures completion, not order.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q15",
-    "field": "explanationRU",
-    "file": "src/sync/waitgroup.go",
-    "symbol": "Wait",
-    "fact": "Wait blocks until every Done; a sender blocked on a full buffer never calls Done, so reading only after Wait hangs.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q15",
-    "field": "versionNote",
-    "file": "src/sync/waitgroup.go",
-    "symbol": "Go",
-    "fact": "WaitGroup.Go(func()) exists from Go 1.25 (api/go1.25.txt); the example uses only Add, Done and Wait, which exist from Go 1.0.",
-    "verified": [
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": "WaitGroup.Go is absent in 1.24.7 and present in 1.26.1 and 1.27.3, whose docs recommend it over Add/Done; Add, Done and Wait are in all three"
-  },
-  {
-    "item": "q15",
-    "field": "explanationRU",
-    "file": "src/runtime/chan.go",
-    "symbol": "chansend",
-    "fact": "A send on a full buffered channel blocks until a receiver frees a slot.",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  },
-  {
-    "item": "q15",
-    "field": "sources",
-    "file": "doc/go_spec.html",
-    "symbol": "Close",
-    "fact": "close does not wait for the buffer to drain; receives return the remaining values, then zero values (spec section id, not a Go declaration).",
-    "verified": [
-      "1.24.7",
-      "1.26.1",
-      "1.27.3"
-    ],
-    "differs": null
-  }
+ {
+  "item": "c1",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackMin",
+  "fact": "A goroutine starts with a small stack of at least 2 KiB (stackMin = 2048 on Linux/amd64) that grows on demand.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "The Go runtime, not the OS, creates goroutines: newproc1 reuses a dead G from gfget or allocates one with malg(stackMin) and makes it runnable.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "jvmEN",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "preemptM",
+  "fact": "The runtime can preempt a goroutine in the middle of a loop by signalling its thread (asynchronous preemption).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/debug.go",
+  "symbol": "GOMAXPROCS",
+  "fact": "GOMAXPROCS limits how many OS threads execute user Go code at once; it is not the number of goroutines or threads.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "A reused goroutine may start with a larger stack sized from the average stack use the GC observed, never below fixedStack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g",
+  "fact": "Each goroutine has a runtime descriptor, the struct runtime.g.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g.goid",
+  "fact": "The runtime numbers goroutines internally in g.goid; no public API exposes the number.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/traceback.go",
+  "symbol": "goroutineheader",
+  "fact": "Stack traces print the internal number as \"goroutine N\".",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "A go statement evaluates the function value and arguments in the calling goroutine, runs the call in a new goroutine and returns nothing (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc",
+  "fact": "newproc runs on the system stack, creates the G with newproc1, queues it with runqput(pp, newg, true) and then calls wakep once mainStarted.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackMin",
+  "fact": "A newly allocated G gets the minimum stack, 2 KiB on Linux.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "newproc1 takes a dead G from gfget or creates one with malg(stackMin).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "gfget",
+  "fact": "A reused G whose stack is not startingStackSize gets it freed and a new startingStackSize stack allocated, so reuse does not promise zero allocations.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "The starting size for reused Gs is recomputed at each GC from average scanned stack usage, unless GODEBUG adaptivestackstart=0.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/runtime1.go",
+  "symbol": "parseRuntimeDebugVars",
+  "fact": "GODEBUG adaptivestackstart is on by default (debug.adaptivestackstart = 1).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "symbol renamed only: in 1.24.7 the default is set in parsedebugvars, in 1.26.1+ in parseRuntimeDebugVars; default 1 in all three"
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "newproc1 sets newg.sched.sp and newg.sched.pc = goexit + PCQuantum before calling gostartcallfn.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/sys_x86.go",
+  "symbol": "gostartcall",
+  "fact": "On amd64, gostartcall pushes the saved PC (goexit) onto the new stack as the return address and stores fn in sched.pc and the closure in sched.ctxt.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "runqput(pp, gp, true) prefers runnext but uses the ordinary queue without sysmon or, randomly, under -race.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "wakep",
+  "fact": "After queuing, newproc calls wakep so an idle P can start and steal the new G.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g.goid",
+  "fact": "The runtime has internal goroutine IDs (g.goid) but exposes no public current-ID API.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackalloc",
+  "fact": "stackalloc serves small stacks from the per-P mcache.stackcache or stackpool free lists and larger ones from stackLarge or a dedicated span, never through mallocgc.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/mheap.go",
+  "symbol": "allocManual",
+  "fact": "Stack spans are manually managed spans from allocManual, not swept GC heap objects and not counted in heapInUse.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "copystack",
+  "fact": "A growing stack is copied to a new, larger allocation, so its address changes.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/mstats.go",
+  "symbol": "MemStats.StackInuse",
+  "fact": "MemStats.StackInuse is bytes in stack spans, not bytes used by live frames.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/mcache.go",
+  "symbol": "mcache.stackcache",
+  "fact": "The per-P free-stack cache lives in mcache.stackcache, one list per size order.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "gobuf.sp",
+  "fact": "g.sched.sp is the saved resume stack pointer.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "stack.lo",
+  "fact": "g.stack.lo and g.stack.hi bound the allocated stack region.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/stack.go",
+  "symbol": "freeStackSpans",
+  "fact": "Unused stack spans are returned to the heap at the end of GC.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/mstats.go",
+  "symbol": "MemStats.StackSys",
+  "fact": "StackSys is StackInuse plus OS-thread stack memory obtained directly from the OS, and does not count every C stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "When the prologue's stack check fails, morestack calls newstack, which allocates a stack at least twice the old size and copies the frames.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "adjustpointers",
+  "fact": "copystack fixes pointers into the old stack using the compiler's stack pointer maps.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/cmd/compile/internal/escape/solve.go",
+  "symbol": "outlives",
+  "fact": "Escape analysis keeps pointers to stack objects out of the heap, so user heap objects never point into a stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "main",
+  "fact": "runtime.main sets maxstacksize to 1000000000 bytes on 64-bit systems and 250000000 on 32-bit systems.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "Growth beyond maxstacksize prints \"goroutine stack exceeds N-byte limit\" and throws \"stack overflow\".",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "jvmEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "Exceeding the stack limit is a fatal throw that cannot be recovered.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[0]",
+  "file": "src/cmd/internal/obj/x86/obj6.go",
+  "symbol": "preprocess",
+  "fact": "On amd64, small frameless leaf functions and NOSPLIT functions get no stack-split check in the prologue.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "When stackguard0 == stackPreempt, newstack handles a preemption request instead of growing the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "newstack starts with twice the old size and doubles again until funcMaxSPDelta + stackGuard fits.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "syncadjustsudogs",
+  "fact": "When a G has active channel references, copystack locks the channels and adjusts sudog pointers into the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/stack.go",
+  "symbol": "shrinkstack",
+  "fact": "shrinkstack halves the stack only if usage (hi - sp + stackNosplit) is below a quarter, the half is at least fixedStack and isShrinkStackSafe allows it.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/mgcmark.go",
+  "symbol": "scanstack",
+  "fact": "The GC shrinks stacks while scanning them, or defers it to a synchronous safe point through preemptShrink.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/proc.go",
+  "symbol": "main",
+  "fact": "The default per-goroutine limit is 1 GB on 64-bit and 250 MB on 32-bit systems.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackalloc",
+  "fact": "Stack sizes are powers of two, so the largest stack under the 1000000000-byte default is 2^29 bytes = 512 MiB.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/debug/garbage.go",
+  "symbol": "SetMaxStack",
+  "fact": "debug.SetMaxStack sets the per-goroutine limit for future growth, returns the previous value, and exceeding it crashes the program.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/unsafe/unsafe.go",
+  "symbol": "Pointer",
+  "fact": "A uintptr is an integer, not a pointer the GC tracks or adjusts when a stack moves.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/cmd/internal/obj/x86/a.out.go",
+  "symbol": "REGG",
+  "fact": "On amd64 the current G is in R14 under ABIInternal.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "gogo stores the G in TLS and R14, restores SP, BP and the closure context, clears those gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "mcall",
+  "fact": "mcall saves the caller's PC, SP and BP in g.sched, switches R14 and SP to g0 and calls the scheduler function there (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "m.g0",
+  "fact": "Each M has a g0 whose stack is the thread's system stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "On g0 the scheduler calls execute, which marks the G running and calls gogo(&gp.sched).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "code",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "gobuf",
+  "fact": "g.sched is a gobuf holding sp, pc, g, ctxt, lr and bp: continuation state, not every CPU register.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gobuf also has a ret field (removed in Go 1.25); 1.26.1 and 1.27.3: sp, pc, g, ctxt, lr, bp"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "On amd64, gogo restores SP, BP and the closure context, clears selected gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/cmd/compile/abi-internal.md",
+  "symbol": "Function call argument and result passing",
+  "fact": "Go's internal ABI has no callee-save registers, so a voluntary switch at a call needs only the continuation state (Markdown section, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/preempt_amd64.s",
+  "symbol": "asyncPreempt",
+  "fact": "Asynchronous preemption first saves every register on the goroutine's stack (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.24.7: asyncPreempt saves flags, GP registers and X0-X15 on the goroutine stack (ADJSP $368); 1.26.1+ (since Go 1.26): only flags and GP registers go on the stack (ADJSP $112), vector registers go to p.xRegs.scratch and xRegSave moves them to off-stack gp.xRegs.state"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/preempt_xreg.go",
+  "symbol": "xRegSave",
+  "fact": "On amd64, arm64 and loong64, asynchronous preemption saves the vector registers outside the goroutine stack, in per-G state gp.xRegs.state.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "absent in 1.24.7: file added in Go 1.26 (also absent in the 1.25.1 tree); before that the vector registers were saved on the goroutine stack"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[3]",
+  "file": "src/cmd/internal/obj/arm64/a.out.go",
+  "symbol": "REGG",
+  "fact": "On arm64 the current G is in R28.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[0].desc",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "G1 evaluates the function value and arguments of go doWork(n); the new goroutine runs the call (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[0].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "runnext is a single slot: a new G from go takes it, and the previous occupant moves to the tail of the local runq.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].desc",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "systemstack",
+  "fact": "systemstack switches R14 and SP to g0 while m.curg still points to the user G (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "G2 comes from the free pool (gfget) or is newly allocated (malg).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].board",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "A new G gets 2 KiB on Linux/amd64; a pooled G gets the adaptive starting size, never below 2 KiB.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[2].desc",
+  "file": "src/cmd/compile/internal/typecheck/stmt.go",
+  "symbol": "normalizeGoDeferCall",
+  "fact": "For go doWork(n) the compiler evaluates n in the caller and wraps the call in a generated closure (main.main.gowrap1) that holds the copy.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[2].desc",
+  "file": "src/runtime/sys_x86.go",
+  "symbol": "gostartcall",
+  "fact": "On amd64, goexit is pushed as the wrapper's return address; sched.pc becomes the wrapper entry and sched.ctxt the closure.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[3].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "Without sysmon (wasm) runnext is not used; under -race the runtime puts the G in the ordinary queue with probability 1/2.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "execute moves the G from runnable to running and calls gogo.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].desc",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "gogo restores the current G, SP, BP and closure context, then jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].boxes",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "schedtick is incremented only when the time slice is not inherited.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "goexit1",
+  "fact": "After the function returns, goexit calls goexit1, which calls mcall(goexit0) to switch to g0.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "gdestroy",
+  "fact": "goexit0 calls gdestroy, which sets _Gdead and calls gfput, and then calls schedule.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "gfput",
+  "fact": "gfput puts the dead G into the free pool and frees its stack if it is not startingStackSize.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[6].check",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "On overflow the runtime prints \"goroutine stack exceeds 1000000000-byte limit\" and throws \"stack overflow\"; growth at least doubles the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[6].check",
+  "file": "src/runtime/stack.go",
+  "symbol": "shrinkstack",
+  "fact": "The GC can shrink an underused stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "explanationRU",
+  "file": "src/cmd/compile/internal/noder/writer.go",
+  "symbol": "distinctVars",
+  "fact": "Per-iteration loop variables apply when the file's Go version is at least go1.22; older language versions share one variable.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "ru",
+  "file": "src/cmd/go/internal/gover/toolchain.go",
+  "symbol": "TooNewError",
+  "fact": "A module declaring go 1.25 or go 1.26 needs a toolchain at least that new; with GOTOOLCHAIN=local, Go 1.24.7 refuses to build it.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7 cannot build a module that declares go 1.25 or 1.26 (go.mod requires go >= 1.25); with go 1.22-1.24 in go.mod it prints the same 0, 1, 2"
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "For_clause",
+  "fact": "Since Go 1.22 each iteration of a for clause has its own variable; before, iterations shared one (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "doc/go_mem.html",
+  "symbol": "chan",
+  "fact": "Closing a channel is synchronized before a receive that returns because the channel is closed (memory model section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Wait",
+  "fact": "WaitGroup.Wait blocks until the counter reaches zero; it ensures completion, not order.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "explanationRU",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Wait",
+  "fact": "Wait blocks until every Done; a sender blocked on a full buffer never calls Done, so reading only after Wait hangs.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "versionNote",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Go",
+  "fact": "WaitGroup.Go(func()) exists from Go 1.25 (api/go1.25.txt); the example uses only Add, Done and Wait, which exist from Go 1.0.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "WaitGroup.Go is absent in 1.24.7 and present in 1.26.1 and 1.27.3, whose docs recommend it over Add/Done; Add, Done and Wait are in all three"
+ },
+ {
+  "item": "q15",
+  "field": "explanationRU",
+  "file": "src/runtime/chan.go",
+  "symbol": "chansend",
+  "fact": "A send on a full buffered channel blocks until a receiver frees a slot.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "Close",
+  "fact": "close does not wait for the buffer to drain; receives return the remaining values, then zero values (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ }
 ]
