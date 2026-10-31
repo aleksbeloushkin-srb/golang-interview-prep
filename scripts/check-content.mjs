@@ -214,6 +214,15 @@ export function validateContent(data) {
     fields(c, ['qEN', 'qRU', 'shortEN', 'mod', 'level'], c.id);
     require(texts(c.detailsEN), `${c.id}: missing detailsEN`);
     if (c.simId != null) link(c.simId, 'simulators', c.id);
+    // Extra diagrams a card links to, each opened at a given step (1-based): [{ simId, step }].
+    if (c.extraSims !== undefined) {
+      require(Array.isArray(c.extraSims) && c.extraSims.length > 0, `${c.id}: extraSims must be a non-empty list`);
+      for (const x of Array.isArray(c.extraSims) ? c.extraSims : []) {
+        const sim = data.simulators.find(s => s.id === x?.simId);
+        require(sim && x.simId !== c.simId, `${c.id}: extraSims needs another known diagram, got ${x?.simId}`);
+        require(sim && Number.isInteger(x.step) && x.step >= 1 && x.step <= sim.steps.length, `${c.id}: extraSims step ${x?.step} out of range`);
+      }
+    }
     if (c.anchorsEN !== undefined) require(texts(c.anchorsEN) && c.anchorsEN.length >= 3 && c.anchorsEN.length <= 5, `${c.id}: anchorsEN must list 3–5 anchors`);
     if (c.jvmEN !== undefined || c.jvmRU !== undefined) require(text(c.jvmEN) && text(c.jvmRU), `${c.id}: incomplete EN/RU Java comparison`);
     if (c.shortRU !== undefined || c.detailsRU !== undefined) {

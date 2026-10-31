@@ -17,6 +17,8 @@ const failures = [
   ['sparse row serialized as null', d => { d.cheatsheet.push(null); }, /cheatsheet: expected object/],
   ['broken card link', d => { d.quiz[0].cardIds = ['c999']; }, /unknown cards ID/],
   ['broken simulator link', d => { d.cards[0].simId = 'sim999'; }, /unknown simulators ID/],
+  ['unknown extra diagram', d => { d.cards[0].extraSims = [{ simId: 'sim999', step: 1 }]; }, /extraSims needs another known diagram/],
+  ['extra diagram step out of range', d => { d.cards[0].extraSims = [{ simId: 'sim9', step: 99 }]; }, /extraSims step 99 out of range/],
   ['correct answer out of range', d => { d.quiz[0].correct = d.quiz[0].options.length; }, /correct index/],
   ['non-integer correct answer', d => { d.quiz[0].correct = 1.5; }, /correct index/],
   ['missing options', d => { delete d.quiz[0].options; }, /invalid options/],
