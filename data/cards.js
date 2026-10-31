@@ -3255,8 +3255,8 @@ const CARDS = [
         "url": "https://go.dev/doc/modules/layout"
       },
       {
-        "title": "cmd/go: internal directories",
-        "url": "https://pkg.go.dev/cmd/go#hdr-Internal_Directories"
+        "title": "cmd/go: internal packages",
+        "url": "https://pkg.go.dev/cmd/go#hdr-Internal_packages"
       }
     ],
     "practice": {
@@ -4023,5 +4023,645 @@ const CARDS = [
       "followUpEN": "What does EXPLAIN ANALYZE show for the history query before and after adding the index?",
       "followUpRU": "Что покажет EXPLAIN ANALYZE для запроса истории до и после добавления индекса?"
     }
+  },
+  // ==========================================
+  // МОДУЛЬ 9: АРХИТЕКТУРА GO-СЕРВИСА — РАСКЛАДКА, DI, REST, gRPC, LONG POLLING, КАНАЛЫ, СТЕК (C57 - C64)
+  // ==========================================
+  {
+    "id": "c57",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you lay out a Go service, and which way should dependencies point?",
+    "qRU": "Как разложить Go-сервис по пакетам и куда должны смотреть зависимости?",
+    "shortEN": "When a Go service outgrows one file, you decide which package holds what and who may import whom. cmd/ledger/main.go stays thin: it reads config, builds dependencies and starts the server. The rest lives under internal/, split by business area: ledger, transfer. The HTTP handler calls the use case, which calls the domain. The use case declares the small interface it needs, say AccountStore, and the PostgreSQL adapter implements it. Dependencies point inward, and the domain imports nothing from the rest of the service: that is hexagonal architecture. This holds only if a linter or test checks imports.",
+    "anchorsEN": [
+      "cmd/ledger/main.go is thin: config, wiring, start",
+      "internal/, by business area: ledger, transfer",
+      "handler → use case → domain",
+      "the consumer declares the port (AccountStore), the adapter implements it",
+      "domain imports nothing from the service; a linter or an import test keeps it"
+    ],
+    "jvmEN": "A typical Spring project is split by layer into controller, service and repository packages, and the repository interface comes from the persistence side, often a Spring Data JpaRepository. In Go the use case declares the small interface it calls, and the adapter satisfies it implicitly, with no implements clause, so the adapter never imports the use case. Where a Java team adds ArchUnit rules, a Go team checks imports with a linter or a short test.",
+    "detailsEN": [
+      "Each executable gets cmd/<binary>/main.go; everything else goes under internal/, and the go command rejects importing it from outside the tree rooted at the parent of internal/: \"use of internal package … not allowed\" (c43). The official layout guide has no pkg/ directory. Put a package outside internal/ only when another module really imports it, because its API then becomes a contract with that module.",
+      "Name packages after the business, such as ledger and transfer, not after a layer or a kind of file, such as models, services or utils. Inside an area, the transport (net/http or gRPC handlers) decodes the request, calls one use case and maps errors to status codes (c46); the use case runs one business operation; the domain holds types and rules such as Account.Withdraw; adapters talk to PostgreSQL or an external API. Transport and adapters stay thin and hold no business rules.",
+      "Direction: transport → use case → domain, and adapter → domain. The use case declares the port, an interface with only the methods it calls; the adapter returns a concrete type such as *postgres.Store, which satisfies the port without importing the use case. Only main sees both and connects them (c58). This is hexagonal architecture, also called ports and adapters; clean architecture draws the same rule as rings.",
+      "How it decays: the domain imports the HTTP package for a DTO or a status code, a utils or common package appears that everything imports, the store starts returning HTTP errors. Go rejects import cycles (\"import cycle not allowed\"), so a wrong import often shows up later as a cycle. Keep the rule with depguard in golangci-lint, with go-arch-lint, or with a short test that parses imports with go/parser and fails on anything outside an allowed list.",
+      "A small service does not need this hierarchy: one main package, or main and two or three packages, is fine. Add a port when there is a real second implementation or a slow dependency to fake in tests, not in front of every struct."
+    ],
+    "practicalRU": "Неделя 5, понедельник: раскладка ledger — cmd/ledger, internal/http, internal/ledger, internal/store; деньги в int64 минорных единиц. Пакет internal/http в файлах, где нужен и net/http, придётся импортировать под другим именем, поэтому его часто называют httpapi. В субботу недели 5 — проговор «Walk me through your project structure and why»: назови направление зависимостей, где объявлены интерфейсы и чем это проверяется в CI.",
+    "code": "// Fragment of one module, example.com/m9/c57:\n//\n//\tcmd/ledger/main.go      reads config, wires the packages, starts the server\n//\tinternal/httpapi        transport: JSON in and out, errors to status codes\n//\tinternal/transfer       use case and the port it needs\n//\tinternal/ledger         domain: Account, its rules and errors\n//\tinternal/store/memory   adapter; a PostgreSQL adapter would sit next to it\n\n// internal/ledger/account.go: the domain imports nothing from the service.\npackage ledger\n\nvar (\n\tErrAccountNotFound   = errors.New(\"account not found\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\n// Account holds its balance in minor units (cents).\ntype Account struct {\n\tID      string\n\tBalance int64\n}\n\nfunc (a *Account) Withdraw(amount int64) error {\n\tif amount > a.Balance {\n\t\treturn ErrInsufficientFunds\n\t}\n\ta.Balance -= amount\n\treturn nil\n}\n\nfunc (a *Account) Deposit(amount int64) { a.Balance += amount }\n\n// internal/transfer/service.go: the use case declares the port it needs.\npackage transfer\n\nvar (\n\tErrInvalidAmount = errors.New(\"amount must be positive\")\n\tErrSameAccount   = errors.New(\"cannot transfer to the same account\")\n)\n\n// AccountStore is the port this use case needs, declared here by its consumer.\n// Adapters implement it without importing this package.\ntype AccountStore interface {\n\t// Update loads both accounts, calls fn and saves both atomically if fn returns nil.\n\tUpdate(ctx context.Context, fromID, toID string, fn func(from, to *ledger.Account) error) error\n}\n\ntype Service struct {\n\taccounts AccountStore\n}\n\nfunc NewService(accounts AccountStore) *Service {\n\treturn &Service{accounts: accounts}\n}\n\n// Transfer moves amount minor units from one account to another.\nfunc (s *Service) Transfer(ctx context.Context, fromID, toID string, amount int64) error {\n\tif amount <= 0 {\n\t\treturn ErrInvalidAmount\n\t}\n\tif fromID == toID {\n\t\treturn ErrSameAccount\n\t}\n\treturn s.accounts.Update(ctx, fromID, toID, func(from, to *ledger.Account) error {\n\t\tif err := from.Withdraw(amount); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tto.Deposit(amount)\n\t\treturn nil\n\t})\n}\n\n// internal/store/memory/store.go: an adapter. It imports ledger, not transfer;\n// *Store satisfies transfer.AccountStore implicitly.\npackage memory\n\n// Update changes copies of both accounts and saves them only if fn succeeds,\n// so a failed transfer leaves both balances as they were.\nfunc (s *Store) Update(ctx context.Context, fromID, toID string, fn func(from, to *ledger.Account) error) error {\n\tif err := ctx.Err(); err != nil {\n\t\treturn err\n\t}\n\ts.mu.Lock()\n\tdefer s.mu.Unlock()\n\tfrom, ok := s.accounts[fromID]\n\tif !ok {\n\t\treturn fmt.Errorf(\"account %q: %w\", fromID, ledger.ErrAccountNotFound)\n\t}\n\tto, ok := s.accounts[toID]\n\tif !ok {\n\t\treturn fmt.Errorf(\"account %q: %w\", toID, ledger.ErrAccountNotFound)\n\t}\n\tif err := fn(&from, &to); err != nil {\n\t\treturn err\n\t}\n\ts.accounts[fromID], s.accounts[toID] = from, to\n\treturn nil\n}\n\n// internal/transfer/service_test.go\npackage transfer_test\n\n// The in-memory adapter stands in for the database: same port, no PostgreSQL.\nfunc newService() (*transfer.Service, *memory.Store) {\n\tstore := memory.New(\n\t\tledger.Account{ID: \"alice\", Balance: 1000},\n\t\tledger.Account{ID: \"bob\", Balance: 0},\n\t)\n\treturn transfer.NewService(store), store\n}\n\nfunc balance(t *testing.T, store *memory.Store, id string) int64 {\n\tt.Helper()\n\ta, err := store.Get(context.Background(), id)\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\treturn a.Balance\n}\n\nfunc TestTransfer(t *testing.T) {\n\ttests := []struct {\n\t\tname             string\n\t\tfrom, to         string\n\t\tamount           int64\n\t\twantErr          error\n\t\twantAlice, wantB int64\n\t}{\n\t\t{name: \"moves money\", from: \"alice\", to: \"bob\", amount: 300, wantAlice: 700, wantB: 300},\n\t\t{name: \"insufficient funds\", from: \"alice\", to: \"bob\", amount: 1001, wantErr: ledger.ErrInsufficientFunds, wantAlice: 1000},\n\t\t{name: \"unknown account\", from: \"alice\", to: \"carol\", amount: 1, wantErr: ledger.ErrAccountNotFound, wantAlice: 1000},\n\t\t// … zero, negative and same-account cases\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tsvc, store := newService()\n\t\t\terr := svc.Transfer(context.Background(), tt.from, tt.to, tt.amount)\n\t\t\tif !errors.Is(err, tt.wantErr) {\n\t\t\t\tt.Fatalf(\"Transfer() error = %v, want %v\", err, tt.wantErr)\n\t\t\t}\n\t\t\tif got := balance(t, store, \"alice\"); got != tt.wantAlice {\n\t\t\t\tt.Errorf(\"alice = %d, want %d\", got, tt.wantAlice)\n\t\t\t}\n\t\t\tif got := balance(t, store, \"bob\"); got != tt.wantB {\n\t\t\t\tt.Errorf(\"bob = %d, want %d\", got, tt.wantB)\n\t\t\t}\n\t\t})\n\t}\n}\n",
+    "shortRU": "Когда Go-сервис перерастает один файл, нужно решить, какой пакет что содержит и кто кого может импортировать. cmd/ledger/main.go остаётся тонким: читает конфиг, собирает зависимости и запускает сервер. Остальное живёт в internal/, по предметным областям: ledger, transfer. HTTP-обработчик вызывает use case, а тот — домен. Use case объявляет нужный ему маленький интерфейс, например AccountStore, а адаптер PostgreSQL его реализует. Зависимости смотрят внутрь, и домен ничего не импортирует из остального сервиса: это и есть гексагональная архитектура. Это держится, только если импорты проверяет линтер или тест.",
+    "jvmRU": "Типичный проект на Spring делится по слоям на пакеты controller, service и repository, а интерфейс репозитория приходит со стороны хранения, часто это JpaRepository из Spring Data. В Go use case сам объявляет маленький интерфейс, который вызывает, а адаптер удовлетворяет ему неявно, без implements, поэтому адаптер никогда не импортирует use case. Там, где Java-команда пишет правила ArchUnit, Go-команда проверяет импорты линтером или коротким тестом.",
+    "detailsRU": [
+      "У каждого исполняемого файла свой cmd/<binary>/main.go; всё остальное — в internal/, и команда go отклоняет его импорт извне дерева с корнем в родителе internal/: «use of internal package … not allowed» (c43). В официальном руководстве по раскладке каталога pkg/ нет. Пакет кладут вне internal/, только если его действительно импортирует другой модуль: тогда его API становится контрактом с этим модулем.",
+      "Пакеты называют по предметной области, например ledger и transfer, а не по слою или виду файлов вроде models, services или utils. Внутри области транспорт (обработчики net/http или gRPC) разбирает запрос, вызывает один use case и переводит ошибки в коды статуса (c46); use case выполняет одну бизнес-операцию; домен держит типы и правила вроде Account.Withdraw; адаптеры ходят в PostgreSQL или во внешний API. Транспорт и адаптеры тонкие и бизнес-правил не содержат.",
+      "Направление: транспорт → use case → домен и адаптер → домен. Use case объявляет порт — интерфейс только с теми методами, которые он вызывает; адаптер возвращает конкретный тип вроде *postgres.Store, который удовлетворяет порту, не импортируя use case. Только main видит оба и соединяет их (c58). Это гексагональная архитектура, она же ports and adapters; clean architecture рисует то же правило кольцами.",
+      "Как это деградирует: домен импортирует HTTP-пакет ради DTO или кода статуса, появляется пакет utils или common, который импортируют все, store начинает возвращать HTTP-ошибки. Циклы импортов Go запрещает («import cycle not allowed»), поэтому неверный импорт часто всплывает позже как цикл. Правило держат depguard в golangci-lint, go-arch-lint или короткий тест, который разбирает импорты через go/parser и падает на всём, чего нет в списке разрешённых.",
+      "Маленькому сервису эта иерархия не нужна: один пакет main или main и два-три пакета — нормально. Порт добавляют, когда есть реальная вторая реализация или медленная зависимость, которую нужно подменить в тестах, а не перед каждой структурой."
+    ],
+    "versionNote": "Правило internal действует для всех репозиториев с Go 1.5. Сверено на Go 1.24.7 и 1.27.3: проверка internal в команде go (disallowInternal в cmd/go/internal/load/pkg.go) по логике не менялась, тексты ошибок «use of internal package … not allowed» и «import cycle not allowed» — из запуска на обеих версиях. Фикстура (пять пакетов и тест направления импортов): gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Organizing a Go module: server project",
+        "url": "https://go.dev/doc/modules/layout#server-project"
+      },
+      {
+        "title": "Go Code Review Comments: interfaces",
+        "url": "https://go.dev/wiki/CodeReviewComments#interfaces"
+      },
+      {
+        "title": "cmd/go: internal packages",
+        "url": "https://pkg.go.dev/cmd/go#hdr-Internal_packages"
+      },
+      {
+        "title": "depguard: import allow and deny lists",
+        "url": "https://github.com/OpenPeeDeeP/depguard"
+      }
+    ],
+    "practice": {
+      "kind": "Найди нарушение направления зависимостей",
+      "promptEN": "A teammate made internal/ledger import internal/httpapi to reuse its TransferRequest DTO. internal/httpapi imports internal/transfer, and internal/transfer imports internal/ledger and internal/store/postgres. Now go build fails with \"import cycle not allowed\". What is wrong, and how do you fix it?",
+      "promptRU": "Коллега сделал так, что internal/ledger импортирует internal/httpapi ради DTO TransferRequest. internal/httpapi импортирует internal/transfer, а internal/transfer — internal/ledger и internal/store/postgres. Теперь go build падает с «import cycle not allowed». Что не так и как это исправить?",
+      "pointsEN": [
+        "The domain imports the transport: ledger → httpapi → transfer → ledger is a cycle, and Go rejects it. Even without a cycle, the domain must not know about JSON or HTTP.",
+        "Keep the DTO in httpapi: the handler decodes it and passes plain values, the IDs and an int64 amount, to the use case.",
+        "transfer importing store/postgres is the second violation: declare AccountStore in transfer, let *postgres.Store satisfy it, connect them in main, and add an import check to CI."
+      ],
+      "pointsRU": [
+        "Домен импортирует транспорт: ledger → httpapi → transfer → ledger — это цикл, и Go его отклоняет. Даже без цикла домен не должен знать о JSON и HTTP.",
+        "DTO остаётся в httpapi: обработчик разбирает его и передаёт в use case простые значения — ID и сумму в int64.",
+        "Импорт store/postgres из transfer — второе нарушение: объяви AccountStore в transfer, пусть *postgres.Store ему удовлетворяет, соедини их в main и добавь проверку импортов в CI."
+      ],
+      "followUpEN": "Why can *postgres.Store satisfy transfer.AccountStore without importing the transfer package, and why does that matter here?",
+      "followUpRU": "Почему *postgres.Store может удовлетворять transfer.AccountStore, не импортируя пакет transfer, и почему это здесь важно?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c58",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "How do you wire dependencies in a Go service: by hand, with Wire, or with Fx?",
+    "qRU": "Как собирать зависимости в Go-сервисе: руками, через Wire или через Fx?",
+    "shortEN": "A Go service has to build its database pool, clients, services and handlers in the right order. In Go, dependency injection just means passing them to constructors. One function, the composition root in main or internal/app, calls constructors in order and pushes each resource's close function onto a stack. Wiring by hand is the default even in large services: a missing dependency is a compile error, and the graph reads top to bottom. Wire generates the same function and reports a missing provider during generation. Fx builds the graph at run time with reflection, so errors appear at startup.",
+    "anchorsEN": [
+      "DI in Go = constructor parameters, no container",
+      "composition root: main or internal/app, dependency order, close stack",
+      "by hand by default: compile errors, graph reads top to bottom",
+      "Wire: generated code, errors during generation",
+      "Fx: reflection at run time, errors at startup"
+    ],
+    "jvmEN": "Spring scans annotations and builds the bean graph at run time with reflection, which is close to Fx; Dagger generates the wiring at compile time, close to Wire. What Spring recommends for required dependencies, constructor injection, is what Go does by hand, and Spring destroying a bean's dependents before the bean is the close stack you write yourself. Most Go services use neither tool.",
+    "detailsEN": [
+      "The composition root is one function, main or internal/app.New, that calls constructors in dependency order: config, database pool, stores, clients, use cases, handlers, server. Each constructor receives what it needs as parameters and returns a concrete type; no package reaches out for its own dependencies. Tests call the same constructors with fakes.",
+      "A long main is the price of wiring by hand. Group the steps into functions such as newStorage(cfg) or newClients(cfg) that return values and close functions, not package-level variables. Pass getenv and the logger in, as LoadConfig(os.Getenv) does, so tests need no os.Setenv.",
+      "Wire: you write providers, which are ordinary constructors, and an injector stub that calls wire.Build; the wire command writes wire_gen.go with the same function you would write by hand, and a missing provider stops generation: \"no provider found for …\". A provider may also return a cleanup func(); the generated injector calls it when a later provider fails and returns the combined cleanup otherwise. The repository is now archived and marked no longer maintained.",
+      "Fx is built on dig, a reflection-based container. fx.Provide registers constructors, which Fx calls lazily, once each; fx.Invoke registers functions that fx.New runs right away, and Fx builds only what they need; fx.Lifecycle collects OnStart and OnStop hooks, and OnStop hooks run in reverse order. Value groups (group:\"routes\") collect many values of one type, and fx.Module bundles a reusable part. A missing type or a cycle comes back from fx.New as app.Err(), so run fx.ValidateApp in a test.",
+      "When to choose: by hand by default; Wire for a large graph that changes rarely; Fx when a platform team ships shared modules such as logging, metrics, config and the server to many services and wants one lifecycle. A homegrown generator that reads annotations in comments is in the same class as Wire.",
+      "Anti-patterns. A service locator, a global registry that code asks for what it needs, hides dependencies and fails at run time. A constructor that takes a container of everything with getters lies about what it uses, and every test has to build all of it. An init() that opens connections runs on import, has no context and cannot return an error.",
+      "Stopping is the mirror image: close in reverse order of creation, so the server stops first, then the workers and the clients, and the database pool last (c59). If startup fails halfway, close what is already open, as the close stack in the example does."
+    ],
+    "practicalRU": "Неделя 5: сборка ledger в cmd/ledger — конфиг из переменных окружения, pgxpool, store, сервис, обработчик, сервер и стек закрытия с первого дня. Неделя 8, среда: в README со схемой архитектуры нарисуй граф сборки и объясни, почему без контейнера. На вопрос «а почему не Fx?» — граф маленький, ошибки ловит компилятор, а общий жизненный цикл для многих сервисов не нужен.",
+    "code": "// Fragment of internal/app, the composition root (module example.com/m9/c58).\n// openDB, newStore, newRiskClient, newTransferService and newHandler stand in\n// for the real packages: a PostgreSQL pool, a store, an external API client,\n// the use case and the HTTP transport.\npackage app\n\ntype App struct {\n\tHandler http.Handler\n\tcleanup cleanup\n}\n\n// New builds the service in dependency order. If a step fails, it closes\n// what it has already opened, in reverse order, and returns the error.\nfunc New(ctx context.Context, cfg Config, log *slog.Logger) (_ *App, err error) {\n\ta := &App{cleanup: cleanup{log: log}}\n\tdefer func() {\n\t\tif err != nil {\n\t\t\terr = errors.Join(err, a.cleanup.run())\n\t\t}\n\t}()\n\n\tdb, err := openDB(cfg.DSN)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"open db: %w\", err)\n\t}\n\ta.cleanup.push(\"db\", db.Close)\n\n\tst, err := newStore(ctx, db)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"store: %w\", err)\n\t}\n\ta.cleanup.push(\"store\", st.Close)\n\n\trisk, err := newRiskClient(cfg.RiskURL)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"risk client: %w\", err)\n\t}\n\ta.cleanup.push(\"risk\", risk.Close)\n\n\tsvc := newTransferService(st, risk)\n\ta.Handler = newHandler(svc, log)\n\treturn a, nil\n}\n\n// Close releases resources in reverse order of creation. A second call does nothing.\nfunc (a *App) Close() error { return a.cleanup.run() }\n\n// cleanup is a stack of close functions: the last resource opened is closed first,\n// so nothing is closed while a resource built on top of it still uses it.\ntype cleanup struct {\n\tlog   *slog.Logger\n\tsteps []cleanupStep\n}\n\ntype cleanupStep struct {\n\tname  string\n\tclose func() error\n}\n\nfunc (c *cleanup) push(name string, close func() error) {\n\tc.steps = append(c.steps, cleanupStep{name: name, close: close})\n}\n\n// run closes everything, keeps going after an error and returns all errors joined.\nfunc (c *cleanup) run() error {\n\tvar errs []error\n\tfor i := len(c.steps) - 1; i >= 0; i-- {\n\t\ts := c.steps[i]\n\t\tif err := s.close(); err != nil {\n\t\t\terrs = append(errs, fmt.Errorf(\"close %s: %w\", s.name, err))\n\t\t\tcontinue\n\t\t}\n\t\tc.log.Info(\"closed\", \"resource\", s.name)\n\t}\n\tc.steps = nil\n\treturn errors.Join(errs...)\n}\n\n// With RiskURL \"risk.local\" (no scheme) the third step fails. The log, without time:\n//\n//\tlevel=INFO msg=closed resource=store\n//\tlevel=INFO msg=closed resource=db\n//\n// New returns: risk client: URL \"risk.local\" needs a scheme and a host\n\n// app_test.go; newLog returns a logger and the list of resources it saw closed.\nfunc TestNewClosesWhatItOpenedOnError(t *testing.T) {\n\tcancelled, cancel := context.WithCancel(context.Background())\n\tcancel()\n\ttests := []struct {\n\t\tname       string\n\t\tctx        context.Context\n\t\tcfg        Config\n\t\twantErr    string\n\t\twantClosed []string\n\t}{\n\t\t{name: \"step 1, db\", ctx: context.Background(), cfg: Config{DSN: \"postgres://x\", RiskURL: \"http://risk.local\"},\n\t\t\twantErr: \"open db\", wantClosed: nil},\n\t\t{name: \"step 2, store\", ctx: cancelled, cfg: Config{DSN: \"mem://ledger\", RiskURL: \"http://risk.local\"},\n\t\t\twantErr: \"store\", wantClosed: []string{\"db\"}},\n\t\t{name: \"step 3, risk client\", ctx: context.Background(), cfg: Config{DSN: \"mem://ledger\", RiskURL: \"risk.local\"},\n\t\t\twantErr: \"risk client\", wantClosed: []string{\"store\", \"db\"}},\n\t}\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) {\n\t\t\tlog, closed := newLog()\n\t\t\ta, err := New(tt.ctx, tt.cfg, log)\n\t\t\tif err == nil || !strings.HasPrefix(err.Error(), tt.wantErr+\":\") {\n\t\t\t\tt.Fatalf(\"New() error = %v, want prefix %q\", err, tt.wantErr)\n\t\t\t}\n\t\t\tif a != nil {\n\t\t\t\tt.Fatal(\"New() returned an App together with an error\")\n\t\t\t}\n\t\t\tif got := closed(); !slices.Equal(got, tt.wantClosed) {\n\t\t\t\tt.Fatalf(\"closed %q, want %q\", got, tt.wantClosed)\n\t\t\t}\n\t\t})\n\t}\n}\n",
+    "shortRU": "Go-сервису нужно создать пул базы данных, клиенты, сервисы и обработчики в правильном порядке. Внедрение зависимостей в Go — это просто передача их в конструкторы. Одна функция, composition root в main или internal/app, вызывает конструкторы по порядку и кладёт функцию закрытия каждого ресурса в стек. Ручная сборка — норма даже в больших сервисах: пропущенная зависимость — ошибка компиляции, а граф читается сверху вниз. Wire генерирует ту же функцию и сообщает о пропущенном провайдере при генерации. Fx строит граф во время выполнения через рефлексию, поэтому его ошибки видны при старте.",
+    "jvmRU": "Spring сканирует аннотации и строит граф бинов во время выполнения через рефлексию — это близко к Fx; Dagger генерирует сборку при компиляции — это близко к Wire. То, что Spring советует для обязательных зависимостей, — внедрение через конструктор — Go делает руками, а то, что Spring уничтожает зависимые бины раньше самого бина, — это стек закрытия, который в Go пишешь сам. Большинство Go-сервисов обходятся без обоих инструментов.",
+    "detailsRU": [
+      "Composition root — одна функция, main или internal/app.New, которая вызывает конструкторы в порядке зависимостей: конфиг, пул базы, store, клиенты, use case, обработчики, сервер. Каждый конструктор получает нужное параметрами и возвращает конкретный тип; ни один пакет не достаёт свои зависимости сам. Тесты вызывают те же конструкторы с фейками.",
+      "Длинный main — плата за ручную сборку. Шаги группируют в функции вроде newStorage(cfg) или newClients(cfg), которые возвращают значения и функции закрытия, а не в переменные уровня пакета. getenv и логгер передают параметрами, как в LoadConfig(os.Getenv), чтобы тестам не нужен был os.Setenv.",
+      "Wire: ты пишешь провайдеры — обычные конструкторы — и заготовку инжектора с вызовом wire.Build; команда wire пишет wire_gen.go с той же функцией, что ты написал бы руками, а пропущенный провайдер останавливает генерацию: «no provider found for …». Провайдер может вернуть и cleanup-функцию func(); сгенерированный инжектор вызывает её, если следующий провайдер упал, а иначе возвращает общую cleanup-функцию. Репозиторий сейчас архивирован и помечен как больше не поддерживаемый.",
+      "Fx построен на dig — контейнере на рефлексии. fx.Provide регистрирует конструкторы, которые Fx вызывает лениво и по одному разу; fx.Invoke регистрирует функции, которые fx.New выполняет сразу, и Fx создаёт только то, что им нужно; fx.Lifecycle собирает хуки OnStart и OnStop, и хуки OnStop выполняются в обратном порядке. Группы значений (group:\"routes\") собирают много значений одного типа, а fx.Module упаковывает переиспользуемую часть. Пропущенный тип или цикл возвращается из fx.New как app.Err(), поэтому fx.ValidateApp запускают в тесте.",
+      "Когда что: по умолчанию — руками; Wire — для большого графа, который редко меняется; Fx — когда команда платформы раздаёт многим сервисам общие модули вроде логов, метрик, конфига и сервера и хочет единый жизненный цикл. Свой генератор по аннотациям в комментариях — того же класса, что Wire.",
+      "Анти-паттерны. Service locator — глобальный реестр, у которого код сам просит нужное, — прячет зависимости и падает во время выполнения. Конструктор, который принимает «контейнер всего» с геттерами, скрывает, чем пользуется, и каждому тесту приходится собирать его целиком. init(), открывающий соединения, выполняется при импорте, без контекста и не может вернуть ошибку.",
+      "Остановка — зеркальное отражение: закрывать в порядке, обратном созданию, — сначала сервер, затем воркеры и клиенты, последним — пул базы (c59). Если старт упал на полпути, закрыть то, что уже открыто, как это делает стек закрытия в примере."
+    ],
+    "versionNote": "Сверено на Go 1.24.7 и 1.27.3: errors.Join (с Go 1.20) и http.Client.CloseIdleConnections (с Go 1.12) в обеих версиях ведут себя одинаково (исходник errors/join.go отличается только комментарием). Wire и Fx в фикстуре не используются; их поведение сверено по README и guide Wire (репозиторий архивирован, последний push — август 2025) и по документации Fx v1.24.0 (последний релиз на 31.10.2026). Фикстура: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3; вывод в коде — из запуска на обеих версиях.",
+    "sources": [
+      {
+        "title": "Wire User Guide: injectors and cleanup functions",
+        "url": "https://github.com/google/wire/blob/main/docs/guide.md"
+      },
+      {
+        "title": "Compile-time Dependency Injection With Go Cloud's Wire (Go blog)",
+        "url": "https://go.dev/blog/wire"
+      },
+      {
+        "title": "Package go.uber.org/fx",
+        "url": "https://pkg.go.dev/go.uber.org/fx"
+      },
+      {
+        "title": "Package errors: Join",
+        "url": "https://pkg.go.dev/errors#Join"
+      }
+    ],
+    "practice": {
+      "kind": "Разбери сборку сервиса",
+      "promptEN": "NewServer(deps *Container) takes a struct with 14 getters, such as DB(), Kafka(), Config(), Logger() and RiskClient(), and the server uses three of them. Each getter creates its value on the first call. What problems does this cause, and how would you rewrite it?",
+      "promptRU": "NewServer(deps *Container) принимает структуру с 14 геттерами — DB(), Kafka(), Config(), Logger(), RiskClient() и другими, — а сервер пользуется тремя из них. Каждый геттер создаёт своё значение при первом вызове. Какие проблемы это создаёт и как бы ты это переписал?",
+      "pointsEN": [
+        "The signature hides what the server needs: a reader cannot tell, and a test has to build or fake the whole container.",
+        "Lazy getters move failures and creation order to run time, and nobody owns closing: a broken broker address shows up on the first request, not at startup.",
+        "Rewrite it as NewServer(store, risk, log) with only the three dependencies, behind small interfaces at the consumer where a test needs a fake; the composition root builds them in order and closes them in reverse."
+      ],
+      "pointsRU": [
+        "Сигнатура скрывает, что нужно серверу: читатель этого не видит, а тесту приходится собирать или подменять весь контейнер.",
+        "Ленивые геттеры переносят ошибки и порядок создания на время выполнения, а закрытием никто не владеет: неверный адрес брокера всплывёт на первом запросе, а не при старте.",
+        "Переписать как NewServer(store, risk, log) только с тремя зависимостями, за маленькими интерфейсами у потребителя там, где тесту нужен фейк; composition root создаёт их по порядку и закрывает в обратном."
+      ],
+      "followUpEN": "Fx also builds the graph for you. How is it different from this container?",
+      "followUpRU": "Fx тоже собирает граф за тебя. Чем он отличается от этого контейнера?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c59",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "What should a Go service do between SIGTERM and exit?",
+    "qRU": "Что должен сделать Go-сервис между SIGTERM и выходом?",
+    "shortEN": "When Kubernetes stops a pod, the service gets SIGTERM and, by default, thirty seconds before SIGKILL. In that window it must finish its work and lose nothing. signal.NotifyContext turns the signal into a cancelled context; after that, order matters. First the service reports not ready and keeps serving a few seconds, while load balancers stop sending it requests. Then http.Server.Shutdown with a deadline closes the listener and waits for requests in flight. Then the service cancels its workers and consumers and waits for them. It closes resources in reverse order, logs and traces last, and exits non-zero if anything failed.",
+    "anchorsEN": [
+      "SIGTERM → grace period (30 s) → SIGKILL; NotifyContext cancels ctx",
+      "not ready, keep serving a few seconds",
+      "Shutdown with a deadline: close the listener, drain requests",
+      "cancel workers and consumers, wait for them",
+      "close in reverse, telemetry last; exit 1 on failure"
+    ],
+    "jvmEN": "Spring Boot does most of this for you: graceful shutdown of the embedded server is on by default since 3.4 (server.shutdown=graceful before that), spring.lifecycle.timeout-per-shutdown-phase bounds each phase, SmartLifecycle beans stop phase by phase, and then singletons are destroyed in reverse dependency order. Its Kubernetes guide adds a preStop sleep for the same load-balancer window. In Go nothing is implicit: run spells out the order in one function, which makes it easy to read and easy to get wrong.",
+    "detailsEN": [
+      "Kubernetes runs the preStop hook, if there is one, sends SIGTERM to process 1 of each container, and at the same time the control plane marks the pod's endpoints as terminating and not ready. Proxies and load balancers learn this with a delay, so new requests can arrive for a few seconds after SIGTERM: hence the pause, in the service or as a preStop sleep. The pause plus the Shutdown deadline must fit into terminationGracePeriodSeconds, or SIGKILL cuts the drain short. /readyz answers 503 during the pause for balancers that probe the pod themselves; liveness keeps answering 200.",
+      "errgroup.WithContext ties the parts together: the server, the worker and a stopper that waits on gctx. The first member to return an error cancels gctx, so a failed worker also stops HTTP; g.Wait returns after every member has returned, with the first error. Only then does run close resources, because nothing can use them any more. A member that ignores cancellation keeps Wait from returning, and the pod is killed at the end of the grace period.",
+      "Contexts: request contexts come from Server.BaseContext, which is context.Background by default; setting it to the signal context would cancel every request in flight at SIGTERM. Shutdown needs its own deadline: context.WithTimeout(context.WithoutCancel(ctx), d) keeps the values but drops the cancellation (Go 1.21). With the already cancelled signal context, Shutdown returns context.Canceled at once if any request is in flight, without waiting for it; with context.Background() and no timeout it may wait forever. If the deadline passes, srv.Close drops the remaining connections, and the error reaches the exit code.",
+      "Workers: one that takes jobs from handlers stops after HTTP has drained (W4-3); an independent Kafka consumer may stop in parallel. Either way the service waits for all of them before closing the pool, and a consumer commits offsets only for processed messages (c53). gRPC: GracefulStop refuses new RPCs and waits for pending ones but takes no context, so run it in a goroutine and call Stop if it has not returned in time. Shutdown does not wait for hijacked connections such as WebSockets; RegisterOnShutdown can notify them.",
+      "Typical mistakes: sleeping a few seconds and closing resources without waiting for run to return, so requests fail on a closed pool; stopping the logger or tracer before the HTTP server, so the last requests leave no records; calling Shutdown with the cancelled signal context; exiting 0 after a failure; no ReadTimeout or WriteTimeout (c45), so a client that uploads or reads slowly keeps its request active and the drain runs to the deadline; a shell script that starts the binary without exec, which may never pass SIGTERM on.",
+      "Exit code: main calls run and, if it returns an error, logs it and calls os.Exit(1). os.Exit skips deferred calls, so everything that must be closed lives inside run. A clean stop on SIGTERM returns nil and exits 0; a failure exits 1, so restarts, Job status and alerts see it. To log why the service stopped, use context.Cause: in Go 1.27.3 it returns \"terminated signal received\" for SIGTERM on the NotifyContext context, in 1.24.7 only context.Canceled."
+    ],
+    "practicalRU": "Неделя 8, вторник: graceful shutdown всего сервиса — HTTP, gRPC, relay-воркер и консьюмер (w8-tue-1). Он опирается на практикум W4-3, где порядок «HTTP → воркеры → база» собран для одного сервера; здесь добавляются readiness с паузой, errgroup и код выхода. В w8-sat-4 (liveness и readiness на /healthz и /readyz) проверь, что /readyz отвечает 503 с начала остановки, а /healthz — нет.",
+    "code": "// Command service shows the order in which a whole Go service stops:\n// not ready → drain HTTP → stop the worker → close resources in reverse → exit code.\npackage main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"fmt\"\n\t\"io\"\n\t\"log/slog\"\n\t\"net\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"sync/atomic\"\n\t\"syscall\"\n\t\"time\"\n\n\t\"golang.org/x/sync/errgroup\"\n)\n\n// Service is what run serves and owns.\ntype Service struct {\n\tHandler http.Handler                    // business routes; run adds GET /readyz\n\tWork    func(ctx context.Context) error // one round of the background worker\n\tTick    time.Duration                   // how often Work runs\n\t// Resources in the order main opened them: telemetry, the DB pool, clients.\n\t// run closes them in reverse, so logs and traces are flushed last.\n\tResources  []io.Closer\n\tDrainDelay time.Duration // time for load balancers to stop sending requests\n\tTimeout    time.Duration // budget for requests in flight\n\tLog        *slog.Logger\n}\n\n// run serves until ctx is done or a part fails, then stops in order.\n// Its error decides the exit code.\nfunc run(ctx context.Context, ln net.Listener, s Service) error {\n\tvar ready atomic.Bool\n\tready.Store(true)\n\tmux := http.NewServeMux()\n\tmux.Handle(\"/\", s.Handler)\n\tmux.HandleFunc(\"GET /readyz\", func(w http.ResponseWriter, r *http.Request) {\n\t\tif !ready.Load() {\n\t\t\thttp.Error(w, \"shutting down\", http.StatusServiceUnavailable)\n\t\t\treturn\n\t\t}\n\t\tio.WriteString(w, \"ok\")\n\t})\n\t// No BaseContext: requests get context.Background, so SIGTERM does not cancel them.\n\t// Server timeouts (c45) stay below Timeout, so a slow client cannot hold the drain.\n\tsrv := &http.Server{\n\t\tHandler:           mux,\n\t\tReadHeaderTimeout: 5 * time.Second,\n\t\tReadTimeout:       10 * time.Second,\n\t\tWriteTimeout:      15 * time.Second,\n\t}\n\n\t// The worker stops after HTTP has drained: a request in flight may still need it.\n\tworkCtx, stopWork := context.WithCancel(context.WithoutCancel(ctx))\n\tdefer stopWork()\n\n\tg, gctx := errgroup.WithContext(ctx)\n\tg.Go(func() error {\n\t\tif err := srv.Serve(ln); !errors.Is(err, http.ErrServerClosed) {\n\t\t\treturn fmt.Errorf(\"serve: %w\", err)\n\t\t}\n\t\treturn nil\n\t})\n\tg.Go(func() error {\n\t\tt := time.NewTicker(s.Tick)\n\t\tdefer t.Stop()\n\t\tfor {\n\t\t\tselect {\n\t\t\tcase <-workCtx.Done():\n\t\t\t\ts.Log.Info(\"worker stopped\")\n\t\t\t\treturn nil\n\t\t\tcase <-t.C:\n\t\t\t\tif err := s.Work(workCtx); err != nil && workCtx.Err() == nil {\n\t\t\t\t\treturn fmt.Errorf(\"worker: %w\", err)\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t})\n\tg.Go(func() error {\n\t\t<-gctx.Done() // a signal, or another member of the group failed\n\t\tdefer stopWork()\n\t\tready.Store(false)\n\t\ts.Log.Info(\"not ready\", \"cause\", context.Cause(gctx))\n\t\ttime.Sleep(s.DrainDelay) // a pause for load balancers, not a way to wait for our goroutines\n\n\t\tsctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), s.Timeout)\n\t\tdefer cancel()\n\t\tif err := srv.Shutdown(sctx); err != nil {\n\t\t\tsrv.Close() // out of time: drop the connections that are left\n\t\t\treturn fmt.Errorf(\"http shutdown: %w\", err)\n\t\t}\n\t\ts.Log.Info(\"http drained\")\n\t\treturn nil\n\t})\n\n\terrs := []error{g.Wait()} // every member has returned: nothing uses the resources now\n\tfor i := len(s.Resources) - 1; i >= 0; i-- {\n\t\terrs = append(errs, s.Resources[i].Close())\n\t}\n\treturn errors.Join(errs...)\n}\n\nfunc main() {\n\tctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\n\tgo func() {\n\t\t<-ctx.Done()\n\t\tstop() // restore the default handling: a second signal kills the process\n\t}()\n\tlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))\n\tln, err := net.Listen(\"tcp\", \":8080\")\n\tif err == nil {\n\t\tlog.Info(\"listening\", \"addr\", ln.Addr().String())\n\t\terr = run(ctx, ln, Service{\n\t\t\tHandler: http.NotFoundHandler(),                     // the real routes\n\t\t\tWork:    func(context.Context) error { return nil }, // e.g. one outbox relay round\n\t\t\tTick:    time.Second,\n\t\t\t// Resources: the trace exporter, the DB pool and clients, in the order main opened them.\n\t\t\tDrainDelay: 5 * time.Second,\n\t\t\tTimeout:    20 * time.Second, // 5 s + 20 s fit into the default 30 s grace period\n\t\t\tLog:        log,\n\t\t})\n\t}\n\tstop()\n\tif err != nil {\n\t\tlog.Error(\"service stopped\", \"err\", err)\n\t\tos.Exit(1) // the platform and alerts must see a failure, not a clean stop\n\t}\n}",
+    "shortRU": "Когда Kubernetes останавливает под, сервис получает SIGTERM и по умолчанию тридцать секунд до SIGKILL. За это время он должен доделать начатое и ничего не потерять. signal.NotifyContext превращает сигнал в отмену контекста; дальше важен порядок. Сначала сервис сообщает, что не готов, и ещё несколько секунд обслуживает запросы, пока балансировщики перестают слать ему трафик. Затем http.Server.Shutdown с дедлайном закрывает listener и ждёт запросы в полёте. Затем сервис отменяет воркеры и консьюмеры и дожидается их. Ресурсы он закрывает в обратном порядке, логи и трейсы — последними, и выходит с ненулевым кодом, если что-то упало.",
+    "jvmRU": "Spring Boot делает большую часть сам: graceful shutdown встроенного сервера включён по умолчанию с 3.4 (раньше — server.shutdown=graceful), spring.lifecycle.timeout-per-shutdown-phase ограничивает каждую фазу, SmartLifecycle-бины останавливаются по фазам, а затем синглтоны уничтожаются в порядке, обратном зависимостям. Его руководство по Kubernetes добавляет preStop со sleep ради того же окна балансировщиков. В Go ничего не происходит неявно: run выписывает порядок в одной функции — его легко прочитать и легко нарушить.",
+    "detailsRU": [
+      "Kubernetes выполняет preStop-хук, если он есть, отправляет SIGTERM процессу 1 каждого контейнера, и одновременно control plane помечает endpoints пода как завершающиеся и неготовые. Прокси и балансировщики узнают об этом с задержкой, поэтому ещё несколько секунд после SIGTERM могут приходить новые запросы: отсюда пауза — в сервисе или как preStop со sleep. Пауза плюс дедлайн Shutdown должны уложиться в terminationGracePeriodSeconds, иначе SIGKILL оборвёт дренаж. /readyz во время паузы отвечает 503 — для балансировщиков, которые сами опрашивают под; liveness продолжает отвечать 200.",
+      "errgroup.WithContext связывает части: сервер, воркер и «остановщик», который ждёт gctx. Первый участник, вернувший ошибку, отменяет gctx, поэтому упавший воркер останавливает и HTTP; g.Wait возвращается, когда вернулись все участники, с первой ошибкой. Только после этого run закрывает ресурсы: ими уже никто не может пользоваться. Участник, который игнорирует отмену, не даёт Wait вернуться, и под убивают в конце grace period.",
+      "Контексты: контексты запросов берутся из Server.BaseContext, по умолчанию это context.Background; если подставить туда контекст сигнала, SIGTERM отменит все запросы в полёте. Shutdown нужен свой дедлайн: context.WithTimeout(context.WithoutCancel(ctx), d) сохраняет values, но убирает отмену (Go 1.21). С уже отменённым контекстом сигнала Shutdown сразу возвращает context.Canceled, если есть запросы в полёте, и не ждёт их; с context.Background() без таймаута может ждать вечно. Если дедлайн истёк, srv.Close обрывает оставшиеся соединения, а ошибка доходит до кода выхода.",
+      "Воркеры: тот, что получает задачи от хендлеров, останавливается после дренажа HTTP (W4-3); независимый консьюмер Kafka может останавливаться параллельно. В любом случае сервис дожидается их всех до закрытия пула, а консьюмер коммитит offset только обработанных сообщений (c53). gRPC: GracefulStop отказывает новым RPC и ждёт текущие, но контекста не принимает, поэтому его запускают в горутине и вызывают Stop, если он не вернулся вовремя. Shutdown не ждёт hijacked-соединения вроде WebSocket; уведомить их можно через RegisterOnShutdown.",
+      "Типичные ошибки: поспать несколько секунд и закрыть ресурсы, не дождавшись возврата run, — запросы падают на закрытом пуле; остановить логгер или трейсер раньше HTTP-сервера — последние запросы не оставляют записей; вызвать Shutdown с отменённым контекстом сигнала; выйти с кодом 0 после сбоя; не задать ReadTimeout и WriteTimeout (c45) — клиент, который медленно отправляет или читает данные, держит запрос активным, и дренаж длится до дедлайна; shell-скрипт, который запускает бинарник без exec и может так и не передать SIGTERM.",
+      "Код выхода: main вызывает run и, если тот вернул ошибку, логирует её и вызывает os.Exit(1). os.Exit не выполняет отложенные вызовы, поэтому всё, что нужно закрыть, живёт внутри run. Чистая остановка по SIGTERM возвращает nil и даёт код 0; сбой даёт 1, и его видят перезапуски, статус Job и алерты. Чтобы записать в лог причину остановки, берут context.Cause: в Go 1.27.3 для SIGTERM на контексте NotifyContext он возвращает «terminated signal received», в 1.24.7 — только context.Canceled."
+    ],
+    "versionNote": "Сверено по исходникам Go 1.24.7 и 1.27.3: поведение http.Server.Shutdown (закрыть listener и простаивающие соединения, ждать активные, при истёкшем контексте вернуть его ошибку), Server.BaseContext и context.WithoutCancel (с Go 1.21) не изменились. signal.NotifyContext изменился: в 1.24.7 контекст отменяется без причины, в 1.27.3 context.Cause возвращает «terminated signal received» (проверено запуском на обеих версиях). Шаблон «GET /readyz» — Go 1.22; errgroup — golang.org/x/sync v0.19.0, последний выпуск для Go 1.24 (v0.20.0 требует Go 1.25). Фикстура: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "net/http: Server.Shutdown",
+        "url": "https://pkg.go.dev/net/http#Server.Shutdown"
+      },
+      {
+        "title": "os/signal: NotifyContext — go1.27.3 (context.Cause names the signal)",
+        "url": "https://pkg.go.dev/os/signal@go1.27.3#NotifyContext"
+      },
+      {
+        "title": "os/signal: NotifyContext — go1.24.7",
+        "url": "https://pkg.go.dev/os/signal@go1.24.7#NotifyContext"
+      },
+      {
+        "title": "golang.org/x/sync/errgroup",
+        "url": "https://pkg.go.dev/golang.org/x/sync/errgroup"
+      },
+      {
+        "title": "Kubernetes: Termination of Pods",
+        "url": "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination"
+      }
+    ],
+    "practice": {
+      "kind": "Найди ошибку в остановке",
+      "promptEN": "main starts go srv.ListenAndServe() and go consumer.Run(ctx). On SIGTERM it calls time.Sleep(3 * time.Second), then cancel() for the consumer, then db.Close() and os.Exit(0). What breaks, and how do you fix it?",
+      "promptRU": "main запускает go srv.ListenAndServe() и go consumer.Run(ctx). По SIGTERM он делает time.Sleep(3 * time.Second), затем cancel() для консьюмера, затем db.Close() и os.Exit(0). Что сломается и как исправить?",
+      "pointsEN": [
+        "Nothing stops the server or waits for anyone: a request longer than 3 s and the batch the consumer is finishing after cancel() get \"sql: database is closed\".",
+        "os.Exit(0) cuts off responses in progress, skips deferred calls such as flushing logs and spans, and tells the platform the stop was clean even after a failure.",
+        "Fix: not ready, a short pause, Shutdown with its own deadline, cancel the consumer and wait for it (errgroup Wait), close in reverse, and exit 1 if run returned an error."
+      ],
+      "pointsRU": [
+        "Сервер никто не останавливает и никого не ждут: запрос дольше 3 с и пакет, который консьюмер доделывает после cancel(), получают «sql: database is closed».",
+        "os.Exit(0) обрывает ответы на середине, пропускает отложенные вызовы вроде сброса логов и спанов и сообщает платформе о чистой остановке даже после сбоя.",
+        "Исправление: not ready, короткая пауза, Shutdown со своим дедлайном, отмена консьюмера и ожидание его (errgroup Wait), закрытие в обратном порядке и выход с кодом 1, если run вернул ошибку."
+      ],
+      "followUpEN": "The pause is 10 s, the Shutdown deadline 30 s, and terminationGracePeriodSeconds is left at its default. What happens to a slow request, and what do you change?",
+      "followUpRU": "Пауза — 10 с, дедлайн Shutdown — 30 с, а terminationGracePeriodSeconds оставлен по умолчанию. Что будет с медленным запросом и что поменять?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c60",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How do you build a REST API in Go: hand-written routes or OpenAPI-first code generation, and what goes into middleware?",
+    "qRU": "Как строить REST API на Go: маршруты руками или кодогенерация из OpenAPI, и что кладут в middleware?",
+    "shortEN": "In Go a REST API is usually net/http handlers behind a router, wrapped in middleware. Since Go 1.22 the standard ServeMux matches method and path, as in GET /accounts/{id}, and r.PathValue reads the id. Routes are written by hand, or spec-first: oapi-codegen or ogen turns the OpenAPI file into types, a server interface and clients, and you implement that interface. Middleware is a function that wraps one handler in another. Request id goes outermost, then logging, then recover, which must answer 500, then rate limits and auth, so the log line shows the 500 with its id.",
+    "anchorsEN": [
+      "net/http handlers + router + middleware",
+      "Go 1.22 ServeMux: GET /accounts/{id}, r.PathValue",
+      "by hand or spec-first: oapi-codegen, ogen → types, interface, clients",
+      "middleware wraps a handler: request id → logging → recover (500) → limits, auth"
+    ],
+    "jvmEN": "Spring MVC maps routes with @GetMapping and wraps them in servlet filters and HandlerInterceptors. springdoc generates the spec from the code, which is code-first; openapi-generator generates controller interfaces from the spec, which is spec-first. Go has the same split, but no annotations or classpath scanning: routes are registered in code, and the middleware chain is ordinary function composition, read from the outside in.",
+    "detailsEN": [
+      "Beyond c45: GET also matches HEAD, so the 405 answer carries Allow: \"GET, HEAD\". {$} matches only the exact path, {rest...} matches the remainder, and registering two conflicting patterns panics at startup. The mux's own 404 and 405 bodies are plain text, not JSON.",
+      "Routers: chi keeps the net/http types, so its handlers and middleware are ordinary http.Handler, and it adds route groups, subrouters and a middleware package. echo and gin have their own Context type and their own error handling: an echo handler returns an error, a gin handler records it with c.Error. They are convenient, but the code is tied to the framework.",
+      "Spec-first with oapi-codegen: it generates servers for net/http, chi, echo, gin and others; strict-server mode gives each operation typed request and response objects, and a validator middleware built on kin-openapi rejects requests that do not match the spec. ogen generates its own router, validation and JSON encoding without reflection. Generated files are never edited by hand; a CI step that regenerates them and fails on a diff keeps them in sync.",
+      "Trade-offs: spec-first gives other teams a contract before the code exists, clients come for free, and the compiler reports an operation you did not implement. The price is code shaped by the generator, for example optional fields as pointers or Opt wrappers, and friction with streaming or unusual endpoints. Code-first gives full control, but a spec generated from comments or written by hand can drift from the code.",
+      "Recover: net/http already recovers a handler panic, logs it and closes the connection (over HTTP/2, resets the stream): the client gets no response, over HTTP/1.1 it sees EOF. A recover middleware sends a proper 500 with the request id; if it only logs, the handler returns normally and net/http sends an empty 200. Re-panic http.ErrAbortHandler: it means abort quietly. Once the handler has written the header, the status cannot change, and a panic in a goroutine the handler started is caught by no middleware (c45).",
+      "Order, outermost first: request id, so every layer and the log see it; logging and tracing, so they measure everything inside, including the 500 from recover; recover; a rate limit before auth sheds floods cheaply, while a per-user limit needs auth first; a timeout closest to the handler. chi's README uses the same order: RequestID, then Logger, then Recoverer. Domain errors become status codes in one function at the boundary (c46), not in middleware. Accept an incoming X-Request-ID only from your own edge; otherwise generate one, for example with crypto/rand.Text (Go 1.24)."
+    ],
+    "practicalRU": "Неделя 5, вторник: HTTP на net/http с шаблонами маршрутов Go 1.22 (w5-tue-1, практикум W5-1) и ошибки → коды (w5-tue-2, c46). Цепочка request id → logging → recover — развитие follow-up W5-1 (там request id и логирование): добавь recover и проверь тестами панику и 405, как в примере. Кодогенерацию из OpenAPI стоит попробовать на одном эндпоинте, чтобы сравнивать подходы на интервью по опыту.",
+    "code": "// Command accounts is a small REST API on the standard ServeMux (Go 1.22\n// patterns) with a middleware chain: request id → logging → recover.\npackage main\n\nimport (\n\t\"context\"\n\t\"crypto/rand\"\n\t\"encoding/json\"\n\t\"log/slog\"\n\t\"net/http\"\n\t\"os\"\n\t\"runtime/debug\"\n\t\"time\"\n)\n\n// routes registers handlers by method and path; balances are in minor units.\nfunc routes(balances map[string]int64) *http.ServeMux {\n\tmux := http.NewServeMux()\n\tmux.HandleFunc(\"GET /accounts/{id}\", func(w http.ResponseWriter, r *http.Request) {\n\t\tid := r.PathValue(\"id\")\n\t\tbalance, ok := balances[id]\n\t\tif !ok {\n\t\t\twriteJSON(w, http.StatusNotFound, map[string]string{\"error\": \"account not found\"})\n\t\t\treturn\n\t\t}\n\t\twriteJSON(w, http.StatusOK, map[string]any{\"id\": id, \"balance\": balance})\n\t})\n\treturn mux\n}\n\n// withMiddleware lists the layers outermost first. Rate limiting and auth\n// would follow recoverer.\nfunc withMiddleware(h http.Handler, log *slog.Logger) http.Handler {\n\treturn chain(h, requestID, logging(log), recoverer(log))\n}\n\n// chain wraps h so that the first middleware listed is the outermost.\nfunc chain(h http.Handler, mws ...func(http.Handler) http.Handler) http.Handler {\n\tfor i := len(mws) - 1; i >= 0; i-- {\n\t\th = mws[i](h)\n\t}\n\treturn h\n}\n\ntype requestIDKey struct{}\n\n// requestID puts an id into the context for inner layers and into the response for the client.\nfunc requestID(next http.Handler) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tid := rand.Text()\n\t\tw.Header().Set(\"X-Request-ID\", id)\n\t\tnext.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), requestIDKey{}, id)))\n\t})\n}\n\nfunc requestIDFrom(ctx context.Context) string {\n\tid, _ := ctx.Value(requestIDKey{}).(string)\n\treturn id\n}\n\n// logging writes one line per request with the status the inner layers produced.\nfunc logging(log *slog.Logger) func(http.Handler) http.Handler {\n\treturn func(next http.Handler) http.Handler {\n\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t\tstart := time.Now()\n\t\t\tsw := &statusWriter{ResponseWriter: w, status: http.StatusOK}\n\t\t\tnext.ServeHTTP(sw, r)\n\t\t\tlog.Info(\"request\", \"method\", r.Method, \"path\", r.URL.Path, \"status\", sw.status,\n\t\t\t\t\"request_id\", requestIDFrom(r.Context()), \"duration\", time.Since(start))\n\t\t})\n\t}\n}\n\ntype statusWriter struct {\n\thttp.ResponseWriter\n\tstatus int\n\twrote  bool\n}\n\nfunc (s *statusWriter) WriteHeader(code int) {\n\tif !s.wrote {\n\t\ts.status, s.wrote = code, true\n\t}\n\ts.ResponseWriter.WriteHeader(code)\n}\n\nfunc (s *statusWriter) Write(b []byte) (int, error) {\n\ts.wrote = true\n\treturn s.ResponseWriter.Write(b)\n}\n\n// Unwrap lets http.ResponseController reach the original writer.\nfunc (s *statusWriter) Unwrap() http.ResponseWriter { return s.ResponseWriter }\n\n// recoverer turns a panic into a 500 with the request id. Without it, net/http\n// logs the panic and drops the connection (HTTP/2: the stream) with no response.\nfunc recoverer(log *slog.Logger) func(http.Handler) http.Handler {\n\treturn func(next http.Handler) http.Handler {\n\t\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\t\tdefer func() {\n\t\t\t\tv := recover()\n\t\t\t\tif v == nil {\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tif v == http.ErrAbortHandler {\n\t\t\t\t\tpanic(v) // the handler asked net/http to abort the response\n\t\t\t\t}\n\t\t\t\tid := requestIDFrom(r.Context())\n\t\t\t\tlog.Error(\"panic\", \"request_id\", id, \"panic\", v, \"stack\", string(debug.Stack()))\n\t\t\t\twriteJSON(w, http.StatusInternalServerError, map[string]string{\"error\": \"internal error\", \"request_id\": id})\n\t\t\t}()\n\t\t\tnext.ServeHTTP(w, r)\n\t\t})\n\t}\n}\n\nfunc writeJSON(w http.ResponseWriter, status int, v any) {\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\tw.WriteHeader(status)\n\tjson.NewEncoder(w).Encode(v)\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewJSONHandler(os.Stderr, nil))\n\tsrv := &http.Server{\n\t\tAddr:              \"127.0.0.1:8080\",\n\t\tHandler:           withMiddleware(routes(map[string]int64{\"42\": 1050}), log),\n\t\tReadHeaderTimeout: 5 * time.Second,\n\t}\n\tif err := srv.ListenAndServe(); err != nil {\n\t\tlog.Error(\"server stopped\", \"err\", err)\n\t\tos.Exit(1)\n\t}\n}",
+    "shortRU": "В Go REST API — это обычно хендлеры net/http за роутером, обёрнутые в middleware. С Go 1.22 стандартный ServeMux сопоставляет метод и путь, как в GET /accounts/{id}, а r.PathValue читает id. Маршруты пишут руками или идут от спеки: oapi-codegen или ogen превращает файл OpenAPI в типы, интерфейс сервера и клиентов, а ты реализуешь этот интерфейс. Middleware — функция, которая оборачивает один хендлер в другой. Request id — самый внешний, за ним логирование, потом recover, который обязан ответить 500, потом лимиты и аутентификация, — тогда строка лога покажет 500 вместе с id.",
+    "jvmRU": "Spring MVC сопоставляет маршруты через @GetMapping и оборачивает их фильтрами сервлетов и HandlerInterceptor. springdoc строит спеку по коду — это code-first; openapi-generator генерирует интерфейсы контроллеров по спеке — это spec-first. В Go то же разделение, но без аннотаций и сканирования classpath: маршруты регистрируются в коде, а цепочка middleware — обычная композиция функций, которая читается снаружи внутрь.",
+    "detailsRU": [
+      "Сверх c45: GET совпадает и с HEAD, поэтому ответ 405 несёт Allow: «GET, HEAD». {$} совпадает только с точным путём, {rest...} — с остатком пути, а регистрация двух конфликтующих шаблонов вызывает panic при старте. Собственные тела ответов 404 и 405 у mux — простой текст, не JSON.",
+      "Роутеры: chi сохраняет типы net/http, поэтому его хендлеры и middleware — обычные http.Handler, а сверху он добавляет группы маршрутов, вложенные роутеры и пакет middleware. У echo и gin свой тип Context и своя обработка ошибок: хендлер echo возвращает ошибку, хендлер gin записывает её через c.Error. Это удобно, но код привязан к фреймворку.",
+      "Spec-first на oapi-codegen: он генерирует серверы для net/http, chi, echo, gin и других; режим strict-server даёт каждой операции типизированные объекты запроса и ответа, а middleware-валидатор на kin-openapi отклоняет запросы, не соответствующие спеке. ogen генерирует собственный роутер, валидацию и кодирование JSON без рефлексии. Сгенерированные файлы руками не правят; шаг CI, который генерирует их заново и падает на расхождении, держит их в синхроне.",
+      "Компромиссы: spec-first даёт другим командам контракт раньше кода, клиенты получаются бесплатно, а компилятор сообщает о нереализованной операции. Цена — код в форме, которую диктует генератор, например необязательные поля как указатели или обёртки Opt, и трудности со стримингом и нестандартными эндпоинтами. Code-first даёт полный контроль, но спека, сгенерированная из комментариев или написанная руками, может разойтись с кодом.",
+      "Recover: net/http сам перехватывает panic в хендлере, логирует её и закрывает соединение (по HTTP/2 сбрасывает поток): клиент не получает ответа, по HTTP/1.1 он видит EOF. Middleware recover отправляет нормальный 500 с request id; если он только логирует, хендлер возвращается как обычно, и net/http отправляет пустой 200. http.ErrAbortHandler пробрасывают дальше: это просьба тихо оборвать ответ. Если хендлер уже записал заголовок, статус не поменять, а panic в горутине, которую запустил хендлер, не поймает никакой middleware (c45).",
+      "Порядок от внешнего: request id — чтобы его видели все слои и лог; логирование и трейсинг — чтобы они измеряли всё внутри, включая 500 от recover; recover; rate limit до аутентификации дёшево отсекает поток запросов, а лимиту по пользователю аутентификация нужна раньше; таймаут — ближе всех к хендлеру. В README chi тот же порядок: RequestID, затем Logger, затем Recoverer. Ошибки домена превращаются в коды в одной функции на границе (c46), а не в middleware. Входящий X-Request-ID принимают только от своего edge, иначе генерируют свой, например через crypto/rand.Text (Go 1.24)."
+    ],
+    "versionNote": "Сверено по исходникам Go 1.24.7 и 1.27.3: шаблоны маршрутов с методом и {id}, r.PathValue, ответ 405 с Allow («GET, HEAD» — GET совпадает и с HEAD) и panic при конфликте шаблонов не изменились (routing_tree.go совпадает, код 405 тот же); восстановление panic в net/http с закрытием соединения — тоже. Изменилось: редирект на путь со слешем и на очищенный путь — 301 в 1.24.7, 307 в 1.27.3 (запуск: /accounts → /accounts/ даёт 301 и 307). Шаблоны — Go 1.22, crypto/rand.Text — Go 1.24, http.ResponseController и Unwrap — Go 1.20. Вывод в тексте (EOF у клиента без recover, пустой 200 у recover, который только логирует) — из тестов на настоящем сервере (httptest.NewServer) на обеих версиях. Фикстура: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Routing Enhancements for Go 1.22",
+        "url": "https://go.dev/blog/routing-enhancements"
+      },
+      {
+        "title": "net/http: ServeMux — go1.27.3 (redirect 307)",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go#L2743"
+      },
+      {
+        "title": "net/http: ServeMux — go1.24.7 (redirect 301)",
+        "url": "https://github.com/golang/go/blob/go1.24.7/src/net/http/server.go#L2672"
+      },
+      {
+        "title": "oapi-codegen",
+        "url": "https://github.com/oapi-codegen/oapi-codegen"
+      },
+      {
+        "title": "ogen: OpenAPI v3 code generator",
+        "url": "https://github.com/ogen-go/ogen"
+      },
+      {
+        "title": "chi: router and middleware",
+        "url": "https://github.com/go-chi/chi"
+      }
+    ],
+    "practice": {
+      "kind": "Расставь middleware по порядку",
+      "promptEN": "Order these from the outermost: auth, recover, logging, request id, rate limit. What do the log and the client see for a panicking request if recover only logs the panic, or if recover is moved outside logging?",
+      "promptRU": "Расставь от внешнего к внутреннему: auth, recover, logging, request id, rate limit. Что увидят лог и клиент при панике в хендлере, если recover только логирует панику или если recover вынести наружу logging?",
+      "pointsEN": [
+        "request id → logging → recover → rate limit → auth: every layer and the log line see the id, and logging records the 500 that recover writes; a per-user limit goes after auth.",
+        "A recover that only logs lets the handler return: net/http sends an empty 200, and the access log says 200.",
+        "With recover outside logging, the panic skips the code after next.ServeHTTP, so the access log loses exactly the failed request; if recover is also outside request id, the X-Request-ID header still goes out, but the body and the panic log line get an empty id, so the client's id matches no log line."
+      ],
+      "pointsRU": [
+        "request id → logging → recover → rate limit → auth: id видят все слои и строка лога, а logging записывает 500, который пишет recover; лимит по пользователю ставят после auth.",
+        "Recover, который только логирует, даёт хендлеру вернуться: net/http отправляет пустой 200, и в журнале запросов тоже 200.",
+        "Если recover снаружи logging, panic пропускает код после next.ServeHTTP, и журнал запросов теряет как раз упавший запрос; если recover ещё и снаружи request id, заголовок X-Request-ID всё равно уйдёт, но в теле и в строке лога паники id пустой, и id клиента не найти в логах."
+      ],
+      "followUpEN": "Which panics can no middleware catch, and what does net/http do with a handler panic when there is no recover at all?",
+      "followUpRU": "Какие паники не поймает никакой middleware и что делает net/http с паникой в хендлере, если recover нет вообще?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c61",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "When do you choose gRPC over REST, and what does a production gRPC server in Go need?",
+    "qRU": "Когда выбирать gRPC вместо REST и что нужно production gRPC-серверу на Go?",
+    "shortEN": "Between services inside one system, teams often choose gRPC; REST with JSON stays for browsers, public APIs and HTTP caching. gRPC is RPC over HTTP/2: protoc or buf generates types, server and client code from a .proto contract. It brings a strict contract, binary messages, streaming and deadlines that follow the call chain. In production the server chains interceptors with grpc.ChainUnaryInterceptor: logs, metrics, panic recovery and auth; grpc-go itself does not recover panics. Errors leave as status codes, and the health service answers balancers. GracefulStop may wait forever on a long stream, so after a timeout Stop cancels the rest.",
+    "anchorsEN": [
+      "inside the system: gRPC · browsers, public APIs, HTTP caching: REST",
+      "HTTP/2 + .proto → protoc or buf → types, server, client",
+      "strict contract · binary · streaming · deadline follows the chain",
+      "ChainUnaryInterceptor: logs, metrics, recovery, auth (grpc-go does not recover)",
+      "status codes · health service · GracefulStop + timeout → Stop cancels the rest"
+    ],
+    "jvmEN": "grpc-java has the same pieces: ServerInterceptor, StatusRuntimeException, and Spring gRPC or grpc-spring-boot-starter to register interceptors as beans. But an uncaught exception there closes only that call with UNKNOWN, while a panic in grpc-go kills the process. And Java keeps the deadline in a gRPC Context bound to the thread; Go carries it in ctx, so a handler that drops ctx also drops the deadline.",
+    "detailsEN": [
+      "gRPC fits calls between your own services: a shared contract, many small calls, streaming. REST with JSON fits browsers (there gRPC needs gRPC-Web or a gateway), public APIs, HTTP caching and debugging with curl. Many companies keep internal services on REST with OpenAPI code generation and use gRPC only in places; the choice follows the ecosystem.",
+      "Code generation: protoc-gen-go writes the message types, protoc-gen-go-grpc the server interface and the client. The server struct embeds UnimplementedXxxServer, so a method added to the .proto still compiles and answers codes.Unimplemented until it is written. buf adds lint and breaking-change checks for .proto files.",
+      "Interceptors wrap every call: grpc.ChainUnaryInterceptor for unary calls, grpc.ChainStreamInterceptor for streams; the first one listed is the outermost. grpc-go does not recover panics, so one panicking handler, unary or stream, kills the process with every running call. The example adds recovery to both chains; put it after logging and metrics, so that they record codes.Internal.",
+      "Errors: return status.Error(codes.NotFound, \"payment not found\") for expected cases and status.Error(codes.Internal, \"internal error\") for failures, with the cause in the log. A plain error reaches the client as codes.Unknown with its full text, so SQL leaks out. Structured details, for example errdetails.BadRequest, are added with WithDetails on a *status.Status.",
+      "Deadlines: the client's deadline travels as the grpc-timeout header with the remaining time; on the server ctx.Deadline() returns it, and ctx is cancelled when it passes. The handler passes ctx to the database and to outgoing calls, so the whole chain stops together. A client call without a deadline can wait forever.",
+      "Health: the service from google.golang.org/grpc/health answers Check and Watch for load balancers and Kubernetes gRPC probes. Before the stop, health.Server.Shutdown switches every service to NOT_SERVING, so traffic moves away. Reflection lets grpcurl list services without the .proto; it is a debugging aid and is often off in production.",
+      "Stopping: GracefulStop closes the listeners, takes no new RPCs and waits for running ones, including a stream that never ends. Stop closes the connections and cancels the RPC contexts without waiting for handlers. In grpc-go before v1.85.0, though, a Stop called while GracefulStop is already waiting for handlers blocks on the same lock, so the fallback is bounded only if handlers honour ctx; the example calls go srv.Stop() and returns."
+    ],
+    "practicalRU": "Неделя 7: proto и генерация, gRPC Transfer и GetBalance (w7-mon-1), интерсепторы и перевод ошибок в статусы (w7-tue-1), проговор «REST vs gRPC» (w7-tue-2). Ошибки домена переводят в коды так же, как в HTTP (c46), дедлайн едет в ctx (c22), а остановку сравни с http.Server.Shutdown (c45) и с порядком остановки всего сервиса (c59, w8-tue-1).",
+    "code": "// Needs google.golang.org/grpc v1.80.0; the fixture tests serve it over bufconn.\n// Package grpcserver shows what a production gRPC server needs besides the\n// generated code: panic-recovery interceptors, the standard health service\n// and a graceful stop with a time limit.\npackage grpcserver\n\nimport (\n\t\"context\"\n\t\"log/slog\"\n\t\"runtime/debug\"\n\t\"time\"\n\n\t\"google.golang.org/grpc\"\n\t\"google.golang.org/grpc/codes\"\n\t\"google.golang.org/grpc/health\"\n\thealthpb \"google.golang.org/grpc/health/grpc_health_v1\"\n\t\"google.golang.org/grpc/status\"\n)\n\n// New builds a server with interceptors and registers the health service.\n// Logging, metrics, tracing and auth interceptors go into the same chains;\n// the first one listed is the outermost, so recovery goes after logging and\n// metrics and they record codes.Internal.\nfunc New(log *slog.Logger) (*grpc.Server, *health.Server) {\n\tsrv := grpc.NewServer(\n\t\tgrpc.ChainUnaryInterceptor(RecoverUnary(log)),\n\t\tgrpc.ChainStreamInterceptor(RecoverStream(log)),\n\t)\n\ths := health.NewServer() // the overall status \"\" starts as SERVING\n\thealthpb.RegisterHealthServer(srv, hs)\n\treturn srv, hs\n}\n\n// RecoverUnary turns a panic in a unary handler into codes.Internal. grpc-go\n// does not recover panics itself: without this the whole process crashes.\nfunc RecoverUnary(log *slog.Logger) grpc.UnaryServerInterceptor {\n\treturn func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {\n\t\tdefer func() {\n\t\t\tif p := recover(); p != nil {\n\t\t\t\tresp, err = nil, recovered(ctx, log, info.FullMethod, p)\n\t\t\t}\n\t\t}()\n\t\treturn handler(ctx, req)\n\t}\n}\n\n// RecoverStream does the same for streaming handlers, Health/Watch included.\nfunc RecoverStream(log *slog.Logger) grpc.StreamServerInterceptor {\n\treturn func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {\n\t\tdefer func() {\n\t\t\tif p := recover(); p != nil {\n\t\t\t\terr = recovered(ss.Context(), log, info.FullMethod, p)\n\t\t\t}\n\t\t}()\n\t\treturn handler(srv, ss)\n\t}\n}\n\n// recovered logs the panic value and the stack; the client gets a generic text.\nfunc recovered(ctx context.Context, log *slog.Logger, method string, p any) error {\n\tlog.ErrorContext(ctx, \"panic in handler\", \"method\", method, \"panic\", p, \"stack\", string(debug.Stack()))\n\treturn status.Error(codes.Internal, \"internal error\")\n}\n\n// Shutdown marks the server NOT_SERVING, lets running RPCs finish and, after\n// timeout, starts Stop, which cancels the rest. It returns within timeout and\n// reports whether all RPCs finished in time.\nfunc Shutdown(srv *grpc.Server, hs *health.Server, timeout time.Duration) bool {\n\ths.Shutdown()\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tsrv.GracefulStop() // waits for every running RPC, a long stream included\n\t\tclose(done)\n\t}()\n\tt := time.NewTimer(timeout)\n\tdefer t.Stop()\n\tselect {\n\tcase <-done:\n\t\treturn true\n\tcase <-t.C:\n\t\t// Stop closes the connections and cancels the RPC contexts. Before\n\t\t// grpc-go v1.85.0, a Stop called while GracefulStop waits for handlers\n\t\t// blocks on the server lock until they return, so do not wait for it:\n\t\t// the RPCs end only if their handlers honour ctx.\n\t\tgo srv.Stop()\n\t\treturn false\n\t}\n}",
+    "shortRU": "Между сервисами внутри одной системы часто выбирают gRPC; REST с JSON остаётся для браузеров, публичных API и кэширования через HTTP. gRPC — это RPC поверх HTTP/2: protoc или buf генерирует типы, код сервера и клиента из контракта .proto. Он даёт строгий контракт, бинарные сообщения, стриминг и дедлайны, которые идут по цепочке вызовов. В production сервер собирает интерсепторы через grpc.ChainUnaryInterceptor: логи, метрики, восстановление после паники и аутентификация; сам grpc-go паники не перехватывает. Ошибки уходят кодами статуса, а health-сервис отвечает балансерам. GracefulStop может вечно ждать долгий стрим, поэтому после таймаута Stop отменяет остальное.",
+    "jvmRU": "В grpc-java те же части: ServerInterceptor, StatusRuntimeException, а Spring gRPC или grpc-spring-boot-starter регистрируют интерсепторы как бины. Но необработанное исключение там закрывает только этот вызов с UNKNOWN, а паника в grpc-go роняет процесс. И дедлайн Java хранит в gRPC Context, привязанном к потоку; в Go он едет в ctx, поэтому обработчик, потерявший ctx, теряет и дедлайн.",
+    "detailsRU": [
+      "gRPC подходит для вызовов между своими сервисами: общий контракт, много мелких вызовов, стриминг. REST с JSON подходит для браузеров (там gRPC нужен gRPC-Web или шлюз), публичных API, кэширования через HTTP и отладки через curl. Многие компании держат внутренние сервисы на REST с кодогенерацией из OpenAPI и берут gRPC точечно; выбор следует за экосистемой.",
+      "Кодогенерация: protoc-gen-go пишет типы сообщений, protoc-gen-go-grpc — интерфейс сервера и клиент. Структура сервера встраивает UnimplementedXxxServer, поэтому метод, добавленный в .proto, всё равно компилируется и отвечает codes.Unimplemented, пока его не написали. buf добавляет линтер и проверку несовместимых изменений для файлов .proto.",
+      "Интерсепторы оборачивают каждый вызов: grpc.ChainUnaryInterceptor — unary-вызовы, grpc.ChainStreamInterceptor — стримы; первый в списке — самый внешний. grpc-go не перехватывает паники, поэтому один паникующий обработчик, unary или потоковый, роняет процесс со всеми текущими вызовами. Пример добавляет восстановление в обе цепочки; его ставят после логирования и метрик, чтобы они записали codes.Internal.",
+      "Ошибки: для ожидаемых случаев — status.Error(codes.NotFound, \"payment not found\"), для сбоев — status.Error(codes.Internal, \"internal error\"), а причина — в лог. Обычная ошибка доходит до клиента как codes.Unknown с полным текстом, и SQL утекает наружу. Структурированные детали, например errdetails.BadRequest, добавляют методом WithDetails у *status.Status.",
+      "Дедлайны: дедлайн клиента едет заголовком grpc-timeout с оставшимся временем; на сервере его возвращает ctx.Deadline(), а когда он наступает, ctx отменяется. Обработчик передаёт ctx в базу и в исходящие вызовы, поэтому вся цепочка останавливается вместе. Вызов клиента без дедлайна может ждать вечно.",
+      "Health: сервис из google.golang.org/grpc/health отвечает на Check и Watch для балансеров и gRPC-проб Kubernetes. Перед остановкой health.Server.Shutdown переводит все сервисы в NOT_SERVING, и трафик уходит. Reflection позволяет grpcurl увидеть сервисы без .proto; это помощь в отладке, и в production его часто выключают.",
+      "Остановка: GracefulStop закрывает листенеры, не берёт новые RPC и ждёт текущие, включая стрим, который не кончается. Stop закрывает соединения и отменяет контексты RPC, не дожидаясь обработчиков. Но в grpc-go до v1.85.0 Stop, вызванный, пока GracefulStop уже ждёт обработчики, блокируется на той же блокировке, поэтому запасной путь ограничен по времени, только если обработчики соблюдают ctx; пример вызывает go srv.Stop() и возвращается."
+    ],
+    "versionNote": "Проверено на grpc-go v1.80.0 — последней версии, которой хватает Go 1.24: с v1.81.0 модулю нужен go 1.25, с v1.85.0 — go 1.26; go mod tidy записал в go.mod директиву go 1.24.0. grpc.NewClient — с v1.63.0. В v1.80.0 GracefulStop ждёт обработчики, держа блокировку сервера, и Stop, вызванный в это время, ждёт их же; поэтому Shutdown запускает Stop в горутине и возвращается в срок (тест: обработчик игнорирует ctx, у клиента истёк дедлайн). В v1.85.0 блокировку на время ожидания отпускают. Тест регистрирует ServiceDesc вручную вместо сгенерированного кода и поднимает сервер на bufconn. gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "gRPC: Basics tutorial for Go",
+        "url": "https://grpc.io/docs/languages/go/basics/"
+      },
+      {
+        "title": "gRPC: Deadlines",
+        "url": "https://grpc.io/docs/guides/deadlines/"
+      },
+      {
+        "title": "gRPC: Status codes and their use",
+        "url": "https://grpc.io/docs/guides/status-codes/"
+      },
+      {
+        "title": "grpc-go: Server.GracefulStop",
+        "url": "https://pkg.go.dev/google.golang.org/grpc#Server.GracefulStop"
+      },
+      {
+        "title": "grpc-go: package health",
+        "url": "https://pkg.go.dev/google.golang.org/grpc/health"
+      }
+    ],
+    "practice": {
+      "kind": "Найди утечку деталей",
+      "promptEN": "A GetBalance handler ends with return nil, status.Errorf(codes.Internal, \"query failed: %v\", err), where err is a PostgreSQL error carrying the SQL text. What does the client see, what is wrong, and what do you log instead?",
+      "promptRU": "Обработчик GetBalance заканчивается return nil, status.Errorf(codes.Internal, \"query failed: %v\", err), а err — ошибка PostgreSQL с текстом SQL. Что видит клиент, что не так и что вместо этого пишут в лог?",
+      "pointsEN": [
+        "The client gets the driver text: table, column and constraint names, sometimes values from the row — internal details, and with personal data a privacy leak.",
+        "Log the error once, with the method and the trace ID, and return status.Error(codes.Internal, \"internal error\"); returning the plain err is no better, it becomes codes.Unknown with the same text.",
+        "Map the expected cases to codes: no rows → NotFound, a unique violation → AlreadyExists, a context error → status.FromContextError, which gives DeadlineExceeded or Canceled."
+      ],
+      "pointsRU": [
+        "Клиент получает текст драйвера: имена таблиц, колонок и ограничений, иногда значения из строки — внутренние детали, а с персональными данными ещё и утечку.",
+        "Ошибку логируют один раз, с методом и trace ID, а возвращают status.Error(codes.Internal, \"internal error\"); вернуть просто err не лучше — он станет codes.Unknown с тем же текстом.",
+        "Ожидаемые случаи переводят в коды: нет строк → NotFound, нарушение уникальности → AlreadyExists, ошибка контекста → status.FromContextError, который даёт DeadlineExceeded или Canceled."
+      ],
+      "followUpEN": "Which codes may a client retry, and why is retrying Transfer dangerous without an idempotency key?",
+      "followUpRU": "Какие коды клиенту можно повторять и почему повтор Transfer без ключа идемпотентности опасен?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c62",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "How do you implement long polling in Go so that thousands of waiting clients don't each hammer the database?",
+    "qRU": "Как сделать long polling на Go, чтобы тысячи ждущих клиентов не нагружали базу каждый своим запросом?",
+    "shortEN": "A mobile app or another service often waits for a payment to change status. With long polling the server holds the request until the state changes or a soft timeout ends it with changed false, and the client asks again. The client sends the version it has seen, so a newer payment is answered at once. Instead of querying per handler, handlers register in a shared registry; one poller goroutine reads all awaited payments in one query per tick and wakes the requests whose payment changed. Over a per-pod limit the server answers 429; WriteTimeout must exceed the soft timeout.",
+    "anchorsEN": [
+      "a client waits for a payment status to change",
+      "hold until change or soft timeout → changed: false → ask again",
+      "seen=N: already newer → answer at once",
+      "shared registry + one poller: one query per tick",
+      "per-pod limit → 429 · WriteTimeout > soft timeout"
+    ],
+    "jvmEN": "In Spring MVC a long-poll endpoint returns DeferredResult: the servlet thread goes back to the pool, and another thread completes the response later; a WebAsyncTask or Callable would still hold an executor thread while it waits. In Go a goroutine per request is cheap, so the handler simply blocks in select. Either way only the waiting is cheap: without a shared poller or event source every waiting request turns into its own database loop.",
+    "detailsEN": [
+      "Choosing the transport: short polling is the simplest, but most requests come back empty and a change waits up to one interval. Long polling is plain HTTP, so it passes balancers, proxies and mobile networks. SSE and WebSocket keep one connection open and push many events; webhooks reverse the direction and suit servers that can accept calls. RFC 6202 calls 30 seconds a safer hold time than longer ones, because intermediaries cut long requests.",
+      "The version marker keeps the server stateless and the answer honest: the server compares versions instead of catching the moment of change. A change made before the request registered is still newer than seen, so it is not lost. If a replica lags, the poller reads the old version, the request keeps waiting, and the client never gets old data reported as new.",
+      "The registry: Register returns a channel with capacity 1 and a cancel func. Notify sends at most once per waiter and removes it under the mutex, so the send never blocks. The handler waits in select on that channel, a timer and r.Context().Done(); the deferred cancel frees the slot and the entry when the client leaves.",
+      "Load: the poller asks for every awaited ID in one query, WHERE id = ANY($1), split into chunks of, say, 1,000 IDs. An event, such as a Kafka message or PostgreSQL LISTEN/NOTIFY, can call Notify right away; a slow poll stays as a safety net for lost events.",
+      "Limits and timeouts: the per-pod cap answers 429 with Retry-After before any database read; without it memory, goroutines and connections grow with the clients. http.Server.WriteTimeout runs from the moment the request headers are read, so it must exceed the soft timeout, or the server drops the response and the client sees EOF. http.NewResponseController(w).SetWriteDeadline (Go 1.20) moves the deadline for one route.",
+      "Shutdown and herds: http.Server.Shutdown waits for active requests, and a held request stays active up to the soft timeout. On shutdown, answer every waiter with changed false, for example from a channel closed in RegisterOnShutdown, so that clients reconnect to another pod. Add jitter to the soft timeout, so thousands of clients do not come back in the same second."
+    ],
+    "practicalRU": "Неделя 10, системный дизайн: дизайн 2 «Payments / ledger» (w10-wed-1) — как клиент узнаёт итог перевода, и дизайн 3 «Notification service» (w10-thu-1) — long polling против SSE, WebSocket и вебхуков. Отмена через r.Context() — в c22, таймауты сервера — в c45.",
+    "code": "// Fragment of the fixture: the registry, one poller step and the handler.\n// remove, IDs, Len, RunPoller and writeJSON are omitted.\npackage longpoll\n\n// State is what the client sees; Version grows on every change.\ntype State struct {\n\tVersion int64  `json:\"version\"`\n\tStatus  string `json:\"status\"`\n}\n\n// Store reads several payments in one query, for example\n// SELECT id, version, status FROM payments WHERE id = ANY($1).\ntype Store interface {\n\tStates(ctx context.Context, ids []string) (map[string]State, error)\n}\n\nvar ErrTooManyWaiters = errors.New(\"too many waiting requests\")\n\ntype waiter struct {\n\tseen int64\n\tch   chan State\n}\n\n// Waiters is the registry of requests waiting on this pod.\ntype Waiters struct {\n\tmu    sync.Mutex\n\tbyID  map[string]map[*waiter]struct{}\n\tn     int\n\tlimit int\n}\n\nfunc NewWaiters(limit int) *Waiters {\n\treturn &Waiters{byID: make(map[string]map[*waiter]struct{}), limit: limit}\n}\n\n// Register adds a request that has already seen version seen of payment id.\n// The channel (capacity 1) receives one newer state; cancel removes the\n// request and may be called more than once.\nfunc (w *Waiters) Register(id string, seen int64) (<-chan State, func(), error) {\n\tw.mu.Lock()\n\tdefer w.mu.Unlock()\n\tif w.n >= w.limit {\n\t\treturn nil, nil, ErrTooManyWaiters\n\t}\n\twt := &waiter{seen: seen, ch: make(chan State, 1)}\n\tif w.byID[id] == nil {\n\t\tw.byID[id] = make(map[*waiter]struct{})\n\t}\n\tw.byID[id][wt] = struct{}{}\n\tw.n++\n\treturn wt.ch, func() { w.remove(id, wt) }, nil\n}\n\n// Notify wakes and removes the requests that have not seen st yet. Requests\n// that already saw this version, for example from a lagging replica, wait on.\nfunc (w *Waiters) Notify(id string, st State) {\n\tw.mu.Lock()\n\tdefer w.mu.Unlock()\n\tfor wt := range w.byID[id] {\n\t\tif st.Version > wt.seen {\n\t\t\twt.ch <- st // never blocks: the only send, into an empty buffer of 1\n\t\t\tw.removeLocked(id, wt)\n\t\t}\n\t}\n}\n\n// Poll reads every awaited payment with one query and wakes the waiters.\nfunc Poll(ctx context.Context, w *Waiters, store Store) error {\n\tids := w.IDs()\n\tif len(ids) == 0 {\n\t\treturn nil\n\t}\n\tstates, err := store.States(ctx, ids)\n\tif err != nil {\n\t\treturn err\n\t}\n\tfor id, st := range states {\n\t\tw.Notify(id, st)\n\t}\n\treturn nil\n}\n\n// Handler serves GET /payments/{id}/wait?seen=N.\ntype Handler struct {\n\tWaiters     *Waiters\n\tStore       Store\n\tSoftTimeout time.Duration // below the server's WriteTimeout\n\tLog         *slog.Logger\n}\n\ntype waitResponse struct {\n\tChanged bool   `json:\"changed\"`\n\tVersion int64  `json:\"version,omitempty\"`\n\tStatus  string `json:\"status,omitempty\"`\n}\n\nfunc (h *Handler) Routes(mux *http.ServeMux) {\n\tmux.HandleFunc(\"GET /payments/{id}/wait\", h.wait)\n}\n\nfunc (h *Handler) wait(w http.ResponseWriter, r *http.Request) {\n\tid := r.PathValue(\"id\")\n\tseen, err := strconv.ParseInt(r.URL.Query().Get(\"seen\"), 10, 64)\n\tif err != nil || seen < 0 {\n\t\thttp.Error(w, \"seen must be a non-negative integer\", http.StatusBadRequest)\n\t\treturn\n\t}\n\t// Reject before touching the database when the pod is full.\n\tupdates, cancel, err := h.Waiters.Register(id, seen)\n\tif err != nil {\n\t\tw.Header().Set(\"Retry-After\", \"1\")\n\t\thttp.Error(w, err.Error(), http.StatusTooManyRequests)\n\t\treturn\n\t}\n\tdefer cancel()\n\n\tstates, err := h.Store.States(r.Context(), []string{id})\n\tif err != nil {\n\t\tif r.Context().Err() == nil {\n\t\t\th.Log.Error(\"read payment\", \"id\", id, \"err\", err)\n\t\t\thttp.Error(w, \"internal error\", http.StatusInternalServerError)\n\t\t}\n\t\treturn\n\t}\n\tst, ok := states[id]\n\tif !ok {\n\t\thttp.NotFound(w, r)\n\t\treturn\n\t}\n\tif st.Version > seen { // already newer: answer at once\n\t\twriteJSON(w, waitResponse{Changed: true, Version: st.Version, Status: st.Status})\n\t\treturn\n\t}\n\n\ttimer := time.NewTimer(h.SoftTimeout)\n\tdefer timer.Stop()\n\tselect {\n\tcase st := <-updates:\n\t\twriteJSON(w, waitResponse{Changed: true, Version: st.Version, Status: st.Status})\n\tcase <-timer.C:\n\t\twriteJSON(w, waitResponse{Changed: false}) // the client asks again\n\tcase <-r.Context().Done():\n\t\t// The client went away; the deferred cancel removes the registration.\n\t}\n}\n\n// NewServer keeps WriteTimeout above the soft timeout: when WriteTimeout\n// expires first, the server cannot write the response and drops it.\nfunc NewServer(addr string, h http.Handler, softTimeout time.Duration) *http.Server {\n\treturn &http.Server{\n\t\tAddr:              addr,\n\t\tHandler:           h,\n\t\tReadHeaderTimeout: 5 * time.Second,\n\t\tWriteTimeout:      softTimeout + 10*time.Second,\n\t\tIdleTimeout:       60 * time.Second,\n\t}\n}",
+    "shortRU": "Мобильное приложение или другой сервис часто ждёт, когда платёж сменит статус. При long polling сервер держит запрос, пока состояние не изменится или мягкий таймаут не завершит его ответом changed false, и клиент спрашивает снова. Клиент присылает версию, которую уже видел, поэтому на более новый платёж сервер отвечает сразу. Вместо запросов из каждого обработчика обработчики регистрируются в общем реестре; одна горутина-поллер одним запросом за такт читает все ожидаемые платежи и будит запросы, чей платёж изменился. Сверх лимита на под сервер отвечает 429, а WriteTimeout должен быть больше мягкого таймаута.",
+    "jvmRU": "В Spring MVC эндпоинт long polling возвращает DeferredResult: поток сервлета возвращается в пул, а ответ позже завершает другой поток; WebAsyncTask или Callable всё равно заняли бы поток исполнителя на время ожидания. В Go горутина на запрос дешёвая, поэтому обработчик просто блокируется в select. В обоих случаях дёшево только ожидание: без общего поллера или источника событий каждый ждущий запрос превращается в свой цикл запросов к базе.",
+    "detailsRU": [
+      "Выбор транспорта: short polling проще всего, но большинство ответов пустые, а изменение ждёт до одного интервала. Long polling — обычный HTTP, поэтому проходит через балансеры, прокси и мобильные сети. SSE и WebSocket держат одно соединение и присылают много событий; вебхуки меняют направление и подходят серверам, которые могут принимать вызовы. RFC 6202 называет 30 секунд более безопасным временем удержания, чем большие значения, потому что промежуточные узлы обрывают долгие запросы.",
+      "Маркер версии делает сервер stateless, а ответ честным: сервер сравнивает версии, а не ловит момент изменения. Изменение, случившееся до регистрации запроса, всё равно новее seen, поэтому не теряется. Если реплика отстаёт, поллер читает старую версию, запрос ждёт дальше, и клиент не получит старые данные под видом новых.",
+      "Реестр: Register возвращает канал ёмкостью 1 и функцию снятия. Notify отправляет каждому ожидающему не больше одного раза и снимает его под мьютексом, поэтому отправка не блокируется. Обработчик ждёт в select на этом канале, таймере и r.Context().Done(); отложенная функция снятия освобождает место и запись, когда клиент уходит.",
+      "Нагрузка: поллер одним запросом спрашивает все ожидаемые ID, WHERE id = ANY($1), разбивая их на пачки, скажем, по 1 000. Событие, например сообщение Kafka или LISTEN/NOTIFY в PostgreSQL, может вызвать Notify сразу; медленный опрос остаётся страховкой на случай потерянных событий.",
+      "Лимиты и таймауты: лимит на под отвечает 429 с Retry-After ещё до чтения из базы; без него память, горутины и соединения растут вместе с числом клиентов. http.Server.WriteTimeout отсчитывается с момента чтения заголовков запроса, поэтому должен быть больше мягкого таймаута, иначе сервер сбросит ответ и клиент увидит EOF. http.NewResponseController(w).SetWriteDeadline (Go 1.20) сдвигает дедлайн для одного маршрута.",
+      "Остановка и толпа: http.Server.Shutdown ждёт активные запросы, а удерживаемый запрос активен до мягкого таймаута. При остановке всем ожидающим отвечают changed false, например по каналу, закрытому в RegisterOnShutdown, чтобы клиенты переподключились к другому поду. К мягкому таймауту добавляют случайный разброс, чтобы тысячи клиентов не вернулись в одну и ту же секунду."
+    ],
+    "versionNote": "Шаблоны ServeMux с методом и {id} и r.PathValue — Go 1.22; http.ResponseController — Go 1.20. Описание WriteTimeout, а также шаблоны и сопоставление маршрутов ServeMux в исходниках net/http Go 1.24.7 и 1.27.3 совпадают. Фикстура проверена: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3; при WriteTimeout короче мягкого таймаута клиент на обеих версиях получает EOF.",
+    "sources": [
+      {
+        "title": "RFC 6202: Known Issues and Best Practices for the Use of Long Polling and Streaming in Bidirectional HTTP",
+        "url": "https://www.rfc-editor.org/rfc/rfc6202"
+      },
+      {
+        "title": "Package net/http: Server (WriteTimeout)",
+        "url": "https://pkg.go.dev/net/http#Server"
+      },
+      {
+        "title": "Package net/http: ResponseController.SetWriteDeadline",
+        "url": "https://pkg.go.dev/net/http#ResponseController.SetWriteDeadline"
+      },
+      {
+        "title": "Go blog: Routing Enhancements for Go 1.22",
+        "url": "https://go.dev/blog/routing-enhancements"
+      },
+      {
+        "title": "MDN: Server-sent events",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events"
+      }
+    ],
+    "practice": {
+      "kind": "Оцени нагрузку",
+      "promptEN": "5,000 clients wait for a payment status, and each handler runs its own SELECT every 100 ms until the status changes. How many queries per second reach the database, and how do you redesign it?",
+      "promptRU": "5 000 клиентов ждут статус платежа, и каждый обработчик сам делает SELECT раз в 100 мс, пока статус не сменится. Сколько запросов в секунду приходит в базу и как это переделать?",
+      "pointsEN": [
+        "5,000 × 10 = 50,000 SELECTs per second, almost all returning the same row; the load grows with the number of waiting clients, not with the number of changes.",
+        "One poller per pod: every 100 ms one query with WHERE id = ANY($1) for all awaited IDs is 10 queries per second per pod; with 10 pods, 100.",
+        "Add the first read of every request: with a 20-second soft timeout the 5,000 clients come back about 250 times per second, so 250 single-row reads; the per-pod waiter limit with 429 caps the rest."
+      ],
+      "pointsRU": [
+        "5 000 × 10 = 50 000 SELECT в секунду, и почти все возвращают ту же строку; нагрузка растёт с числом ждущих клиентов, а не с числом изменений.",
+        "Один поллер на под: раз в 100 мс один запрос с WHERE id = ANY($1) по всем ожидаемым ID — это 10 запросов в секунду на под; при 10 подах — 100.",
+        "Плюс первое чтение каждого запроса: при мягком таймауте 20 секунд 5 000 клиентов возвращаются примерно 250 раз в секунду, то есть 250 чтений одной строки; лимит ожидающих на под и 429 ограничивают остальное."
+      ],
+      "followUpEN": "How do you wake the waiters on a change without polling at all, and why keep a slow poll anyway?",
+      "followUpRU": "Как будить ожидающих при изменении совсем без опроса и зачем всё равно оставить медленный опрос?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c63",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "senior",
+    "levelLabel": "🟡 Senior (Runtime)",
+    "simId": null,
+    "qEN": "Which channel patterns do you actually use in a Go service, and who closes each channel?",
+    "qRU": "Какие паттерны на каналах реально нужны в Go-сервисе и кто закрывает каждый канал?",
+    "shortEN": "A Go service needs a few channel patterns, and each channel has one owner on the sending side. The owner closes it only when receivers must know the end; then their range loops stop. In a worker pool, the producer closes the job channel; whoever waits for workers closes results. Pipeline stages close their outputs when inputs close, and every send sits in a select with ctx.Done(). A semaphore, make(chan struct{}, n), bounds concurrent work; with select and default, a handler answers 429 at once. A signal channel of capacity one merges changes into one wake-up; these two stay open.",
+    "anchorsEN": [
+      "one owner on the sending side: closes after the last send, only if receivers need the end",
+      "pool: producer closes jobs; whoever waits for workers closes results",
+      "pipeline: close cascades; every send in a select with ctx.Done()",
+      "semaphore make(chan struct{}, n): select + default → 429",
+      "signal channel of capacity 1: many changes, one wake-up; both stay open"
+    ],
+    "jvmEN": "In Java you take these from java.util.concurrent: an ExecutorService with a bounded queue as the pool, a Semaphore for limits, a BlockingQueue between stages. Kotlin coroutines add Channel and structured concurrency: a scope cancels its children and waits for them, and produce closes its channel when the coroutine completes. Go has no built-in structured concurrency: the author decides who owns each goroutine and who closes each channel, and errgroup comes closest to a coroutine scope.",
+    "detailsEN": [
+      "Ownership. close(ch) records that no more values will be sent: it is a message to receivers, not a cleanup, and a channel nobody closes is collected like any unreachable value. Close only when receivers need to know the end. With several senders none of them closes: a coordinator waits for all of them with a WaitGroup and then closes, or the senders stop by ctx and the channel stays open. A send on a closed channel panics, and so does a second close or closing a nil channel.",
+      "Worker pool (practice W3-1). Workers range over the job channel and exit when it is closed and drained; one goroutine calls wg.Wait() and then close(results). Size the pool by the resource behind it: database connections, a partner's rate limit, or the number of live instances of an external system, one worker each. errgroup.WithContext with SetLimit gives the same bound plus cancellation on the first error (W4-1); inside, SetLimit is a buffered channel, and TryGo is a select with default.",
+      "Pipeline (go.dev/blog/pipelines, practice W3-2). Closing cascades down: when the source closes, each stage's range ends and it closes its own output. Cancellation goes up: the consumer cancels ctx, and a stage blocked on a send leaves through ctx.Done(). If an input belongs to someone who may never close it, put the receive in the select too. A closed final output does not mean every stage has exited: the owner waits for all of them, for example with errgroup.",
+      "Semaphore. A buffered channel is the simplest one; golang.org/x/sync/semaphore adds weights, Acquire(ctx, n), which waits but can be cancelled, and TryAcquire(n), which never waits. In an HTTP handler, rejecting at once is usually better than waiting: a waiting request still holds its goroutine, its memory and the client's timeout, and under overload a queue only adds latency (Little's law, c13). 429 with Retry-After tells the client to back off.",
+      "Signal channel. The sender stores the new state first and then tries a non-blocking send; if a signal is already pending, it skips the send, because the receiver will read the state after that signal anyway. So the receiver never misses the latest state, the sender never blocks, and many changes cost one wake-up; intermediate values are skipped. One signal wakes one receiver: give each receiver its own channel. Uses: a config reload, waking the outbox relay before its next tick, cache invalidation. sync.Cond does a similar job (c56) but cannot be a case in a select with ctx.Done().",
+      "Common bugs. A goroutine per message without a limit: memory grows with load, and the downstream service gets all of it at once. An unbuffered error channel whose reader has left on a timeout: the goroutine blocks on its send forever (c12); a buffer of one or a select with ctx.Done() fixes it. A stage without ctx.Done() in its select hangs after cancellation. A receiver that closes the channel makes the next send panic."
+    ],
+    "practicalRU": "Неделя 3: практикум W3-1 (пул воркеров) и W3-2 (конвейер) — тот же контракт закрытия. Неделя 4: W4-1 ParallelFetch — errgroup.WithContext и SetLimit. Неделя 6, среда: relay-воркер outbox — одна горутина, у которой есть владелец, остановка по ctx и ретраи; разбудить его раньше тикера можно сигнальным каналом ёмкостью 1.",
+    "code": "// Package chanpatterns shows three channel patterns of a Go service: a signal\n// channel that merges changes, a semaphore that rejects at once, and a\n// pipeline whose stages close their outputs in a cascade.\npackage chanpatterns\n\nimport (\n\t\"context\"\n\t\"net/http\"\n\t\"sync\"\n)\n\n// Latest holds the newest state and wakes one consumer when it changes.\n// Changes made before the consumer wakes up merge into one signal.\ntype Latest[T any] struct {\n\tmu      sync.Mutex\n\tv       T\n\tchanged chan struct{} // capacity 1; never closed, the consumer stops by its ctx\n}\n\nfunc NewLatest[T any](v T) *Latest[T] {\n\treturn &Latest[T]{v: v, changed: make(chan struct{}, 1)}\n}\n\n// Set stores v first and signals second, so a woken consumer reads v or newer.\nfunc (l *Latest[T]) Set(v T) {\n\tl.mu.Lock()\n\tl.v = v\n\tl.mu.Unlock()\n\tselect {\n\tcase l.changed <- struct{}{}:\n\tdefault: // a signal is already pending: the consumer will read v anyway\n\t}\n}\n\nfunc (l *Latest[T]) Changed() <-chan struct{} { return l.changed }\n\nfunc (l *Latest[T]) Get() T {\n\tl.mu.Lock()\n\tdefer l.mu.Unlock()\n\treturn l.v\n}\n\n// Limit lets at most n requests run next at the same time. Request n+1\n// gets 429 at once instead of waiting in a queue it would time out in.\nfunc Limit(n int, next http.Handler) http.Handler {\n\tslots := make(chan struct{}, n)\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tselect {\n\t\tcase slots <- struct{}{}:\n\t\t\tdefer func() { <-slots }()\n\t\t\tnext.ServeHTTP(w, r)\n\t\tdefault:\n\t\t\tw.Header().Set(\"Retry-After\", \"1\")\n\t\t\thttp.Error(w, \"too many requests\", http.StatusTooManyRequests)\n\t\t}\n\t})\n}\n\n// Emit sends items in order. Only Emit sends to its output, so only Emit\n// closes it: after the last item, or as soon as ctx is cancelled.\nfunc Emit[T any](ctx context.Context, items []T) <-chan T {\n\tout := make(chan T)\n\tgo func() {\n\t\tdefer close(out)\n\t\tfor _, v := range items {\n\t\t\tselect {\n\t\t\tcase out <- v:\n\t\t\tcase <-ctx.Done():\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}()\n\treturn out\n}\n\n// Map sends f(v) for every v from in and closes its output when in is\n// closed, so closing cascades down the pipeline. The sender of in must\n// close it on cancellation too, as Emit does. The send sits in a select\n// with ctx.Done: without it a stage whose consumer has left hangs forever.\nfunc Map[In, Out any](ctx context.Context, in <-chan In, f func(In) Out) <-chan Out {\n\tout := make(chan Out)\n\tgo func() {\n\t\tdefer close(out)\n\t\tfor v := range in {\n\t\t\tselect {\n\t\t\tcase out <- f(v):\n\t\t\tcase <-ctx.Done():\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}()\n\treturn out\n}",
+    "shortRU": "Go-сервису хватает нескольких паттернов на каналах, и у каждого канала один владелец на стороне отправки. Владелец закрывает канал, только если читателям нужно узнать о конце; тогда их циклы range останавливаются. В пуле воркеров канал задач закрывает источник, а канал результатов — тот, кто дождался воркеров. Стадии конвейера закрывают свой выход, когда закрылся вход, и каждая отправка стоит в select с ctx.Done(). Семафор make(chan struct{}, n) ограничивает число одновременных работ; с select и default обработчик сразу отвечает 429. Сигнальный канал ёмкостью один склеивает изменения в одно пробуждение; эти два канала не закрывают.",
+    "jvmRU": "В Java всё это берут из java.util.concurrent: ExecutorService с ограниченной очередью как пул, Semaphore для лимитов, BlockingQueue между стадиями. Корутины Kotlin добавляют Channel и структурную конкурентность: scope отменяет дочерние корутины и дожидается их, а produce закрывает свой канал, когда корутина завершилась. Встроенной структурной конкурентности в Go нет: автор кода сам решает, кто владеет каждой горутиной и кто закрывает каждый канал, а ближе всего к scope корутин — errgroup.",
+    "detailsRU": [
+      "Владение. close(ch) фиксирует, что значений больше не будет: это сообщение читателям, а не освобождение ресурса, и канал, который никто не закрыл, собирается сборщиком мусора, как любое недостижимое значение. Закрывай, только если читателям нужно узнать о конце. Если отправителей несколько, не закрывает ни один: координатор дожидается всех через WaitGroup и тогда закрывает, или отправители останавливаются по ctx, а канал остаётся открытым. Отправка в закрытый канал вызывает panic, как и повторный close или close nil-канала.",
+      "Пул воркеров (практикум W3-1). Воркеры читают канал задач через range и выходят, когда он закрыт и пуст; одна горутина вызывает wg.Wait(), а потом close(results). Размер пула выбирают по ресурсу за ним: соединения с базой, лимит запросов партнёра или число живых экземпляров внешней системы, по воркеру на каждый. errgroup.WithContext с SetLimit даёт тот же лимит плюс отмену при первой ошибке (W4-1); внутри SetLimit — буферизованный канал, а TryGo — select с default.",
+      "Конвейер (go.dev/blog/pipelines, практикум W3-2). Закрытие идёт вниз каскадом: когда закрылся источник, range каждой стадии заканчивается, и она закрывает свой выход. Отмена идёт вверх: потребитель отменяет ctx, и стадия, заблокированная на отправке, выходит через ctx.Done(). Если вход принадлежит тому, кто может его так и не закрыть, приём тоже ставят в select. Закрытый последний выход не значит, что вышли все стадии: владелец дожидается всех, например через errgroup.",
+      "Семафор. Проще всего — буферизованный канал; golang.org/x/sync/semaphore добавляет веса, Acquire(ctx, n), который ждёт, но отменяется, и TryAcquire(n), который не ждёт никогда. В HTTP-обработчике сразу отказать обычно лучше, чем ждать: ожидающий запрос всё равно держит горутину, память и таймаут клиента, а при перегрузке очередь только добавляет задержку (закон Литтла, c13). 429 с Retry-After говорит клиенту отступить.",
+      "Сигнальный канал. Отправитель сначала сохраняет новое состояние, потом пробует неблокирующую отправку; если сигнал уже ждёт, он отправку пропускает, потому что получатель всё равно прочитает состояние после этого сигнала. Так получатель не пропустит последнее состояние, отправитель не блокируется, а много изменений стоят одного пробуждения; промежуточные значения пропускаются. Один сигнал будит одного получателя: каждому получателю — свой канал. Применения: перечитать конфиг, разбудить relay outbox раньше следующего тика, сбросить кэш. sync.Cond решает похожую задачу (c56), но не может быть веткой select с ctx.Done().",
+      "Частые ошибки. Горутина на каждое сообщение без лимита: память растёт с нагрузкой, а нижестоящий сервис получает её всю сразу. Небуферизованный канал ошибок, читатель которого ушёл по таймауту: горутина навсегда зависает на отправке (c12); помогает буфер на один элемент или select с ctx.Done(). Стадия без ctx.Done() в select зависает после отмены. Читатель, закрывший канал, обрекает следующую отправку на panic."
+    ],
+    "versionNote": "Правила close и отправки в закрытый канал сверены по спецификации Go 1.24.7 и 1.27.3 — они одинаковы. SetLimit и TryGo из golang.org/x/sync/errgroup устроены одинаково в v0.19.0 и v0.24.0. Пример: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3; дженерики — Go 1.18+.",
+    "sources": [
+      {
+        "title": "Go Concurrency Patterns: Pipelines and cancellation",
+        "url": "https://go.dev/blog/pipelines"
+      },
+      {
+        "title": "Go specification: Send statements",
+        "url": "https://go.dev/ref/spec#Send_statements"
+      },
+      {
+        "title": "Go specification: Close",
+        "url": "https://go.dev/ref/spec#Close"
+      },
+      {
+        "title": "Package golang.org/x/sync/errgroup",
+        "url": "https://pkg.go.dev/golang.org/x/sync/errgroup"
+      },
+      {
+        "title": "Package golang.org/x/sync/semaphore",
+        "url": "https://pkg.go.dev/golang.org/x/sync/semaphore"
+      }
+    ],
+    "practice": {
+      "kind": "Найди зависшую горутину",
+      "promptEN": "Fetch starts a goroutine that sends the result of call(ctx) into an unbuffered errCh, then selects on errCh and time.After(1 * time.Second). Under load, call takes three seconds. What happens on each timeout, and how do you fix it?",
+      "promptRU": "Fetch запускает горутину, которая отправляет результат call(ctx) в небуферизованный errCh, а потом делает select на errCh и time.After(1 * time.Second). Под нагрузкой call идёт три секунды. Что происходит при каждом таймауте и как это исправить?",
+      "pointsEN": [
+        "Fetch returns a timeout error and nobody reads errCh again; when call finishes, the goroutine blocks on its send forever: one leaked goroutine per timed-out request.",
+        "time.After stops only the waiting: call keeps running and holds its connection, because nothing cancelled its ctx.",
+        "Fix: make(chan error, 1), so the single send completes, and context.WithTimeout passed into call, so the work stops too; if call respects ctx, the goroutine is not needed: return call(ctx)."
+      ],
+      "pointsRU": [
+        "Fetch возвращает ошибку таймаута, и errCh больше никто не читает; когда call закончится, горутина навсегда зависнет на отправке: одна утёкшая горутина на каждый запрос с таймаутом.",
+        "time.After прекращает только ожидание: call продолжает работать и держит соединение, потому что его ctx никто не отменил.",
+        "Исправление: make(chan error, 1), чтобы единственная отправка завершилась, и context.WithTimeout, переданный в call, чтобы остановилась и работа; если call соблюдает ctx, горутина вообще не нужна: return call(ctx)."
+      ],
+      "followUpEN": "How would you find these goroutines in a running service?",
+      "followUpRU": "Как найти такие горутины в работающем сервисе?"
+    },
+    "quizIds": []
+  },
+  {
+    "id": "c64",
+    "mod": "m9",
+    "modName": "9. Go Service Architecture: Layout, DI, APIs, Concurrency",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "Which libraries make up a typical Go backend service, and why those?",
+    "qRU": "Из каких библиотек обычно собирают Go-бэкенд и почему именно из них?",
+    "shortEN": "A Go backend is usually not one framework like Spring but a set of small libraries around the standard library. The rule: standard library first, and a dependency only for a concrete need, since each one adds updates and vulnerabilities. A typical set is net/http or chi, pgx with pgxpool, sqlc or a query builder instead of an ORM, goose migrations, slog, OpenTelemetry and Prometheus, and franz-go or sarama for Kafka. Gaps are filled by golang.org/x packages: singleflight merges concurrent cache misses into one load. Choose by maintenance, net/http and context support, API stability and license, and check with govulncheck.",
+    "anchorsEN": [
+      "no single framework: small libraries around the standard library",
+      "standard library first; a dependency only for a concrete need",
+      "net/http or chi · pgx + pgxpool · sqlc or a builder, not an ORM · goose · slog · OTel + Prometheus · franz-go or sarama",
+      "golang.org/x fills gaps: singleflight merges concurrent misses",
+      "choose: maintained, net/http + context, stable API, license, govulncheck"
+    ],
+    "jvmEN": "In Java and Kotlin the stack comes from Spring Boot: starters for web, data, Kafka and actuator, with versions aligned by the Boot dependency management. In Go each layer is chosen separately and wired by hand in main, so an interviewer asks why this library and not another, and expects the trade-off, not just the name.",
+    "detailsEN": [
+      "HTTP and API contracts. Since Go 1.22 net/http matches methods and {id} wildcards, so many services need no router (c45). chi stays on net/http: handlers are http.Handler, and middleware is func(http.Handler) http.Handler. Gin and Echo pass their own Context type, which ties every handler to the framework. From an OpenAPI spec, oapi-codegen or ogen generate types and server interfaces; for gRPC, grpc-go with protobuf, and buf to lint the .proto files and run code generation.",
+      "PostgreSQL. pgx is a pure Go PostgreSQL driver: pgxpool is its connection pool, and its native interface supports COPY, LISTEN/NOTIFY and batches; pgx/v5/stdlib makes it a database/sql driver where a library needs *sql.DB (c47). On top of it: sqlc generates typed Go code from SQL queries and the schema, and squirrel or goqu build dynamic queries; pgx.CollectRows with RowToStructByName scans rows into structs, the job sqlx is often taken for. sqlx, squirrel and goqu are stable but rarely updated. GORM is less common in payment services: explicit SQL is easier to review and to check with EXPLAIN (c54). Migrations: goose or golang-migrate.",
+      "Kafka, Redis, cache. franz-go is written in pure Go and aims to cover every Kafka feature; IBM/sarama is the former Shopify/sarama; segmentio/kafka-go has a simpler API (mind how ReadMessage commits, c53); confluent-kafka-go wraps the C library librdkafka through cgo. Redis: go-redis, github.com/redis/go-redis/v9. In-process cache with eviction and limits: ristretto or ccache. singleflight stops a stampede of identical loads after a miss.",
+      "Logs, metrics, resilience. log/slog has been in the standard library since Go 1.21 (c48); zap is older and very fast, and its experimental zapslog package lets slog calls write through zap. Traces and metrics: OpenTelemetry; /metrics: prometheus/client_golang. Retries with exponential backoff and jitter: cenkalti/backoff; rate limits: golang.org/x/time/rate, a token bucket (W4-2); circuit breaker: sony/gobreaker.",
+      "Config, tests, money. Config comes from environment variables, read with koanf, or with envconfig, which is small and rarely updated. Tests: testing plus testify for assertions; mocks with go.uber.org/mock (mockgen), the maintained fork after golang/mock was archived in 2023; testcontainers-go starts real PostgreSQL and Kafka in Docker. testing/synctest, for code with timers, is experimental in Go 1.24 and stable from 1.25 (c38). Money: int64 in minor units or shopspring/decimal, never float64; IDs: google/uuid.",
+      "How to choose. Look at recent releases and how issues get answered, support for net/http and context.Context, the license, and the major version: from v2 it is part of the import path, as in pgx/v5, so a breaking change comes with a new path. A new release can raise your minimum Go version: golang.org/x/sync v0.20.0 requires Go 1.25. govulncheck narrows its report to vulnerable functions that your code can reach. In the 2025 Go Developer Survey, finding reliable modules was one of the top three frustrations (26%)."
+    ],
+    "practicalRU": "Неделя 5, среда: pgx/pgxpool и миграции goose или golang-migrate; четверг: slog (c48) и конфиг из переменных окружения. Неделя 8, среда: README с компромиссами — туда же ответы «почему эта библиотека», по две-три фразы на каждую.",
+    "code": "// Package cache shows golang.org/x/sync/singleflight filling a gap in the\n// standard library: concurrent cache misses for one key cause one load.\npackage cache\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"sync\"\n\t\"time\"\n\n\t\"golang.org/x/sync/singleflight\"\n)\n\ntype LoadFunc func(ctx context.Context, key string) (int64, error)\n\n// Cache keeps loaded values in memory. It never evicts: in a service that\n// job goes to a library such as ristretto or to Redis.\ntype Cache struct {\n\tload    LoadFunc\n\ttimeout time.Duration\n\tgroup   singleflight.Group\n\n\tmu    sync.Mutex\n\titems map[string]int64\n}\n\nfunc New(load LoadFunc, timeout time.Duration) *Cache {\n\treturn &Cache{load: load, timeout: timeout, items: make(map[string]int64)}\n}\n\n// Get returns the cached value or loads it. Concurrent misses for one key\n// share one load; a caller whose ctx ends stops waiting, and the load goes on.\nfunc (c *Cache) Get(ctx context.Context, key string) (int64, error) {\n\tif v, ok := c.cached(key); ok {\n\t\treturn v, nil\n\t}\n\tch := c.group.DoChan(key, func() (any, error) {\n\t\tif v, ok := c.cached(key); ok { // a load that has just finished stored it\n\t\t\treturn v, nil\n\t\t}\n\t\t// The load is shared, so one caller leaving must not cancel it for the rest.\n\t\tlctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), c.timeout)\n\t\tdefer cancel()\n\t\tv, err := c.load(lctx, key)\n\t\tif err != nil {\n\t\t\treturn nil, err // the current waiters get it; nothing is cached\n\t\t}\n\t\tc.mu.Lock()\n\t\tc.items[key] = v\n\t\tc.mu.Unlock()\n\t\treturn v, nil\n\t})\n\tselect {\n\tcase r := <-ch:\n\t\tif r.Err != nil {\n\t\t\treturn 0, fmt.Errorf(\"load %q: %w\", key, r.Err)\n\t\t}\n\t\treturn r.Val.(int64), nil\n\tcase <-ctx.Done():\n\t\treturn 0, ctx.Err() // ch has a buffer of one, so the load never blocks on us\n\t}\n}\n\nfunc (c *Cache) cached(key string) (int64, bool) {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tv, ok := c.items[key]\n\treturn v, ok\n}",
+    "shortRU": "Go-бэкенд обычно собирают не на одном фреймворке вроде Spring, а из небольших библиотек вокруг стандартной. Правило: сначала стандартная библиотека, а зависимость — только под конкретную нужду, потому что каждая добавляет обновления и уязвимости. Типичный набор — net/http или chi, pgx с pgxpool, sqlc или сборщик запросов вместо ORM, миграции goose, slog, OpenTelemetry и Prometheus, franz-go или sarama для Kafka. Пробелы закрывают пакеты golang.org/x: singleflight склеивает одновременные промахи кэша в одну загрузку. Выбирают по сопровождению, совместимости с net/http и context, стабильности API и лицензии и проверяют govulncheck.",
+    "jvmRU": "В Java и Kotlin стек задаёт Spring Boot: стартеры web, data, Kafka и actuator, а версии согласует управление зависимостями Boot. В Go каждый слой выбирают отдельно и связывают вручную в main, поэтому интервьюер спрашивает, почему эта библиотека, а не другая, и ждёт компромисса, а не только названия.",
+    "detailsRU": [
+      "HTTP и контракты API. С Go 1.22 net/http сопоставляет методы и шаблоны {id}, поэтому многим сервисам роутер не нужен (c45). chi остаётся на net/http: обработчики — это http.Handler, а middleware — func(http.Handler) http.Handler. Gin и Echo передают свой тип Context, и каждый обработчик оказывается привязан к фреймворку. По спецификации OpenAPI oapi-codegen или ogen генерируют типы и интерфейсы сервера; для gRPC — grpc-go с protobuf, а buf проверяет .proto-файлы и запускает генерацию кода.",
+      "PostgreSQL. pgx — драйвер PostgreSQL на чистом Go: pgxpool — его пул соединений, а нативный интерфейс поддерживает COPY, LISTEN/NOTIFY и пакеты запросов; pgx/v5/stdlib делает его драйвером database/sql там, где библиотеке нужен *sql.DB (c47). Поверх него: sqlc генерирует типизированный код на Go из SQL-запросов и схемы, а squirrel или goqu собирают динамические запросы; pgx.CollectRows с RowToStructByName раскладывает строки в структуры — то, ради чего часто берут sqlx. sqlx, squirrel и goqu стабильны, но обновляются редко. GORM в платёжных сервисах встречается реже: явный SQL проще ревьюить и проверять через EXPLAIN (c54). Миграции — goose или golang-migrate.",
+      "Kafka, Redis, кэш. franz-go написан на чистом Go и стремится покрыть все возможности Kafka; IBM/sarama — бывший Shopify/sarama; у segmentio/kafka-go API проще (следи за тем, когда ReadMessage фиксирует offset, c53); confluent-kafka-go — обёртка над C-библиотекой librdkafka через cgo. Redis — go-redis, github.com/redis/go-redis/v9. Кэш в памяти процесса с вытеснением и лимитами — ristretto или ccache. singleflight не даёт лавине одинаковых загрузок начаться после промаха.",
+      "Логи, метрики, устойчивость. log/slog входит в стандартную библиотеку с Go 1.21 (c48); zap старше и очень быстрый, а его экспериментальный пакет zapslog позволяет вызовам slog писать через zap. Трассы и метрики — OpenTelemetry; /metrics — prometheus/client_golang. Ретраи с экспоненциальной паузой и джиттером — cenkalti/backoff; лимиты — golang.org/x/time/rate, token bucket (W4-2); circuit breaker — sony/gobreaker.",
+      "Конфиг, тесты, деньги. Конфиг берут из переменных окружения через koanf или через envconfig — маленький и редко обновляемый. Тесты: testing плюс testify для проверок; моки — go.uber.org/mock (mockgen), сопровождаемый форк после архивации golang/mock в 2023 году; testcontainers-go поднимает настоящие PostgreSQL и Kafka в Docker. testing/synctest для кода с таймерами в Go 1.24 экспериментальный, а с 1.25 стабильный (c38). Деньги — int64 в минорных единицах или shopspring/decimal, никогда float64; идентификаторы — google/uuid.",
+      "Как выбирать. Смотри на свежие релизы и на то, как отвечают на issue, на поддержку net/http и context.Context, на лицензию и на мажорную версию: с v2 она входит в путь импорта, как в pgx/v5, поэтому несовместимое изменение приходит с новым путём. Новый релиз может поднять твою минимальную версию Go: golang.org/x/sync v0.20.0 требует Go 1.25. govulncheck сужает отчёт до уязвимых функций, до которых может дойти твой код. В опросе Go-разработчиков 2025 года поиск надёжных модулей вошёл в тройку главных трудностей (26%)."
+    ],
+    "versionNote": "log/slog и context.WithoutCancel — Go 1.21. singleflight взят из golang.org/x/sync v0.19.0 — последней версии, совместимой с Go 1.24 (v0.20.0 и новее требуют Go 1.25+); в v0.24.0 код singleflight тот же, только interface{} заменён на any. testing/synctest — эксперимент в Go 1.24 (GOEXPERIMENT=synctest), стабильный пакет с Go 1.25. Пример: gofmt, go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Package golang.org/x/sync/singleflight",
+        "url": "https://pkg.go.dev/golang.org/x/sync/singleflight"
+      },
+      {
+        "title": "pgx: PostgreSQL driver and toolkit for Go",
+        "url": "https://github.com/jackc/pgx"
+      },
+      {
+        "title": "Structured Logging with slog",
+        "url": "https://go.dev/blog/slog"
+      },
+      {
+        "title": "Results from the 2025 Go Developer Survey",
+        "url": "https://go.dev/blog/survey2025"
+      },
+      {
+        "title": "govulncheck",
+        "url": "https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck"
+      }
+    ],
+    "practice": {
+      "kind": "Обоснуй выбор",
+      "promptEN": "The interviewer asks: \"Why pgx and not GORM?\" and then \"Why slog and not zap?\" Give the arguments, and say when the answer would be the other way round.",
+      "promptRU": "Интервьюер спрашивает: «Why pgx and not GORM?», а потом «Why slog and not zap?». Приведи доводы и скажи, когда ответ был бы обратным.",
+      "pointsEN": [
+        "pgx: every query is SQL you can read in review and check with EXPLAIN, and PostgreSQL types, COPY and LISTEN/NOTIFY are at hand; sqlc can turn the queries into typed code.",
+        "GORM would win in a CRUD-heavy admin service with many simple tables, where development speed matters more than control over every query.",
+        "slog: standard since Go 1.21, a stable API and no dependency; zap is the answer when the service already uses it or a profile shows logging on a hot path, and zapslog lets slog calls write through zap."
+      ],
+      "pointsRU": [
+        "pgx: каждый запрос — это SQL, который читают на ревью и проверяют через EXPLAIN, а типы PostgreSQL, COPY и LISTEN/NOTIFY под рукой; sqlc превращает запросы в типизированный код.",
+        "GORM выиграл бы в CRUD-сервисе для админки с множеством простых таблиц, где скорость разработки важнее контроля над каждым запросом.",
+        "slog: стандарт с Go 1.21, стабильный API и ни одной зависимости; zap — ответ, когда сервис уже на нём или профиль показывает логирование на горячем пути, а zapslog позволяет вызовам slog писать через zap."
+      ],
+      "followUpEN": "How do you check that a new dependency brings no known vulnerability that affects your service?",
+      "followUpRU": "Как проверить, что новая зависимость не приносит известной уязвимости, которая затрагивает твой сервис?"
+    },
+    "quizIds": []
   }
 ];

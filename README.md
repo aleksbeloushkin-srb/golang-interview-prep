@@ -1,9 +1,9 @@
 # ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-54_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Flashcards](https://img.shields.io/badge/Flashcards-64_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Simulators](https://img.shields.io/badge/Simulators-10_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-39_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-47_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
 Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
@@ -51,7 +51,7 @@
 
 ---
 
-## 📚 Содержание модулей (54 карточки + 43 задачи)
+## 📚 Содержание модулей (64 карточки + 47 задач)
 
 ### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
 * Горутина против потока ОС: конкурентность, растущий стек, владение и завершение; без универсальной цены в наносекундах или оценки RSS по числу горутин.
@@ -114,6 +114,16 @@
 * Потребитель Kafka: offset после обработки, дедупликация по ID события, порядок внутри партиции; `ReadMessage` в kafka-go фиксирует offset при чтении.
 * Индексы, `EXPLAIN ANALYZE` и N+1.
 * Quiz q40–q43: «проверить, потом вставить» и молчащий `-race`, встречные переводы и дедлок, публикация после commit, offset до обработки. Программы выполнены Go 1.24.7 и 1.27.3.
+
+### Модуль 9: Архитектура Go-сервиса — раскладка, DI, REST, gRPC, long polling, каналы, стек (`C57 – C64`)
+* Раскладка: тонкий `cmd/`, логика в `internal/`, интерфейс-порт у потребителя, зависимости смотрят к домену; тест на направление импортов.
+* Сборка зависимостей: composition root вручную, Wire (кодоген, архивирован) и Fx (контейнер в рантайме), закрытие ресурсов в обратном порядке.
+* Между SIGTERM и выходом: readiness, `Shutdown` с дедлайном, дренаж воркеров, обратный порядок закрытия, код выхода; `context.Cause` у `NotifyContext` в 1.27.
+* REST: маршруты Go 1.22 или OpenAPI-first (oapi-codegen, ogen), порядок middleware request id → logging → recover.
+* gRPC: когда вместо REST, интерсепторы, `codes.Internal` без деталей, health, `GracefulStop` с запасным `Stop`.
+* Long polling: маркер увиденного состояния, общий цикл выборки вместо поллера на клиента, мягкий таймаут, лимит и 429.
+* Каналы в сервисе: склеивающий сигнальный канал, семафор с мгновенным отказом, конвейер с каскадным закрытием и отменой.
+* Стек библиотек и как его обосновать: pgx, slog/zap, `singleflight`, testify/mock. Примеры выполнены Go 1.24.7 и 1.27.3 под `-race`.
 
 ---
 

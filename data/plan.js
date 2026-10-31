@@ -189,8 +189,8 @@ const PLAN = {
         {
           label: "Вт", minutes: 90, tasks: [
             { id: "w3-tue-1", text: "Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3", "q45"] },
-            { id: "w3-tue-2", text: "W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w3-1", links: ["p-workerpool", "c12", "q15"] },
-            { id: "w3-tue-3", text: "W3-2 Pipeline generator → square → sink с остановкой через context", links: ["p-pipeline"] }
+            { id: "w3-tue-2", text: "W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w3-1", links: ["p-workerpool", "c12", "q15", "c63"] },
+            { id: "w3-tue-3", text: "W3-2 Pipeline generator → square → sink с остановкой через context", links: ["p-pipeline", "c63"] }
           ]
         },
         {
@@ -246,7 +246,7 @@ const PLAN = {
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
-            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["p-parallelfetch", "q16"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
+            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["p-parallelfetch", "q16", "c63"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
             { id: "w4-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
           ]
         },
@@ -313,19 +313,19 @@ const PLAN = {
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w5-mon-1", text: "ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope" },
-            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах" },
+            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах", links: ["c57", "c58"] },
             { id: "w5-mon-3", text: "LeetCode 230. Kth Smallest Element in a BST + проговор", lc: 230 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
+            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37", "c60"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }] },
             { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)", links: ["p-httperr", "c46", "q39"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w5-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
+            { id: "w5-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", links: ["c64"], refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
             { id: "w5-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["c47", "q18", "q19"] },
             { id: "w5-wed-3", text: "LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор", lc: 236 }
           ]
@@ -339,7 +339,7 @@ const PLAN = {
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w5-sat-1", text: "Перевод end-to-end: создание счетов, перевод, проверка балансов через curl" },
-            { id: "w5-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", talk: "proj-structure" },
+            { id: "w5-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", links: ["c57"], talk: "proj-structure" },
             { id: "w5-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
           ]
         }
@@ -383,7 +383,7 @@ const PLAN = {
         {
           label: "Ср", minutes: 90, tasks: [
             { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox"], talk: "outbox" },
-            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22"] },
+            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63"] },
             { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
           ]
         },
@@ -429,14 +429,14 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w7-mon-1", text: "proto + генерация (buf или protoc); gRPC Transfer и GetBalance", refs: [{ t: "gRPC Go quick start", u: "https://grpc.io/docs/languages/go/quickstart/" }] },
+            { id: "w7-mon-1", text: "proto + генерация (buf или protoc); gRPC Transfer и GetBalance", links: ["c61"], refs: [{ t: "gRPC Go quick start", u: "https://grpc.io/docs/languages/go/quickstart/" }] },
             { id: "w7-mon-2", text: "LeetCode 133. Clone Graph + проговор", lc: 133 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w7-tue-1", text: "Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы" },
-            { id: "w7-tue-2", text: "Проговор: «REST vs gRPC — when would you choose which?»", talk: "grpc-rest" }
+            { id: "w7-tue-1", text: "Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы", links: ["c61"] },
+            { id: "w7-tue-2", text: "Проговор: «REST vs gRPC — when would you choose which?»", links: ["c61", "c60"], talk: "grpc-rest" }
           ]
         },
         {
@@ -492,13 +492,13 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)" },
+            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)", links: ["c59", "c63", "c61"] },
             { id: "w8-tue-2", text: "GitHub Actions: lint, test -race, build Docker-образа" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше" },
+            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше", links: ["c58", "c64"] },
             { id: "w8-wed-2", text: "LeetCode 684. Redundant Connection (union-find) + проговор", lc: 684 }
           ]
         },
@@ -515,7 +515,7 @@ const PLAN = {
             { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском", talk: "deep-dive" },
             { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 },
             { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" },
-            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] }
+            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2", "c59"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] }
           ]
         }
       ],
@@ -611,13 +611,13 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)" },
+            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62"] },
             { id: "w10-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)" },
+            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62"] },
             { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
             { id: "w10-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
           ]
