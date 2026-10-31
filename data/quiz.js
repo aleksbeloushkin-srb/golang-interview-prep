@@ -286,26 +286,17 @@ const QUIZ_QUESTIONS = [
   // ЧАСТЬ 2: БОЕВОЙ CODE REVIEW — КОНТЕКСТЫ, ГОНКИ И КЭШИ (Q9 - Q14)
   // =========================================================================
   {
-    id: "q9",
-    cardIds: ["c12", "c13", "c10"],
-    title: "Задача 9: Результат после отмены запроса",
-    ru: "Хендлер уже вернулся по ctx.Done(). RPC затем завершился. Что произойдёт с дочерней горутиной и что исправляет буфер на один элемент?",
-    en: "The handler has already returned through ctx.Done(), and the RPC then finishes. What happens to the child goroutine, and what does a one-element buffer fix?",
-    code: `// Fragment: Req, Resp and doSlowRPC are application-defined.
-func handleRequest(ctx context.Context, req Req) (Resp, error) {
-    ch := make(chan Resp)
-    go func() {
-        ch <- doSlowRPC(req)
-    }()
-
-    select {
-    case res := <-ch:
-        return res, nil
-    case <-ctx.Done():
-        return Resp{}, ctx.Err()
-    }
-}`,
-    options: [
+    "id": "q9",
+    "cardIds": [
+      "c12",
+      "c13",
+      "c10"
+    ],
+    "title": "Задача 9: Результат после отмены запроса",
+    "ru": "Хендлер уже вернулся по ctx.Done(). RPC затем завершился. Что произойдёт с дочерней горутиной и что исправляет буфер на один элемент?",
+    "en": "The handler has already returned through ctx.Done(), and the RPC then finishes. What happens to the child goroutine, and what does a one-element buffer fix?",
+    "code": "// Fragment: Req, Resp and doSlowRPC are application-defined.\nfunc handleRequest(ctx context.Context, req Req) (Resp, error) {\n    ch := make(chan Resp)\n    go func() {\n        ch <- doSlowRPC(req)\n    }()\n\n    select {\n    case res := <-ch:\n        return res, nil\n    case <-ctx.Done():\n        return Resp{}, ctx.Err()\n    }\n}",
+    "options": [
       "Горутина завершится: при выходе хендлера рантайм закрывает локальный канал и принимает последнее значение.",
       "Отправка вызовет panic: отсутствие получателя означает, что канал автоматически стал закрытым.",
       "Горутина зависнет на отправке. Буфер на один результат устранит это ожидание, но не отменит сам RPC.",
@@ -313,13 +304,19 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
       "Горутина удержит поток ОС до появления читателя, поэтому здесь обязательно нужен отдельный пул потоков.",
       "Канал и горутина будут собраны GC: локальная переменная ch больше не доступна завершившемуся хендлеру."
     ],
-    correct: 2,
-    explanationRU: "Отправитель останется ждать: хендлер ушёл, а другого читателя у этого небуферизованного канала нет. Буфер на один элемент достаточен для единственной отправки результата. Он не отменяет RPC; для этого нужно передать context в поддерживающую отмену операцию. Если операция игнорирует отмену или не возвращается, горутина всё ещё может жить дольше запроса. Также стоит ограничить число одновременных вызовов. Ожидание на канале само по себе не закрепляет за горутиной отдельный поток ОС.",
-    speechEN: "The sender remains blocked because the handler has returned and nobody else receives from this unbuffered channel. A one-element buffer lets this single result be sent. It does not cancel the RPC, so I would also propagate context to an operation that supports cancellation and bound concurrency. A channel wait does not by itself occupy a dedicated OS thread.",
-    versionNote: "Предпосылка задачи — хендлер уже выбрал отмену. Если обе ветки готовы до выбора select, результат недетерминирован. Основной вывод одинаков для Go 1.17, 1.25 и 1.26.",
-    sources: [
-      {"title": "Go pipelines: stopping short", "url": "https://go.dev/blog/pipelines"},
-      {"title": "context.Context — Go 1.26.1", "url": "https://pkg.go.dev/context@go1.26.1#Context"}
+    "correct": 2,
+    "explanationRU": "Отправитель останется ждать: хендлер ушёл, а другого читателя у этого небуферизованного канала нет. Буфер на один элемент достаточен для единственной отправки результата. Он не отменяет RPC; для этого нужно передать context в поддерживающую отмену операцию. Если операция игнорирует отмену или не возвращается, горутина всё ещё может жить дольше запроса. Также стоит ограничить число одновременных вызовов. Ожидание на канале само по себе не закрепляет за горутиной отдельный поток ОС.",
+    "speechEN": "The sender remains blocked because the handler has returned and nobody else receives from this unbuffered channel. A one-element buffer lets this single result be sent. It does not cancel the RPC, so I would also propagate context to an operation that supports cancellation and bound concurrency. A channel wait does not by itself occupy a dedicated OS thread.",
+    "versionNote": "Предпосылка — хендлер уже выбрал отмену. Если обе ветки готовы до выбора select, результат недетерминирован. Вывод не менялся (Go 1.24.7, 1.26.1 и 1.27.3).",
+    "sources": [
+      {
+        "title": "Go pipelines: stopping short",
+        "url": "https://go.dev/blog/pipelines"
+      },
+      {
+        "title": "context.Context — Go 1.27.3",
+        "url": "https://pkg.go.dev/context@go1.27.3#Context"
+      }
     ]
   },
   {
@@ -340,15 +337,15 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     "explanationRU": "Входящий request context отменяется при возврате ServeHTTP, а также может отмениться раньше из-за отключения клиента или отмены HTTP/2. Сам WriteHeader не равен возврату handler. Фоновая send может успеть, поэтому «всегда падает ещё до отправки» неверно. Исправление зависит от требования: здесь выбран контракт «успешный ответ после успешной send», поэтому работа выполняется внутри handler. Для обязательного асинхронного аудита нужна надёжная передача в очередь/outbox, а не просто go. Для допустимой best-effort задачи можно отдельно организовать владельца, остановку сервиса, WithoutCancel и новый WithTimeout; WithoutCancel сохраняет values, но удаляет дедлайн/отмену/cause родителя и имеет nil Done. Отделённый контекст не гарантирует доставку и может удерживать значения запроса.",
     "speechEN": "The server cancels an incoming request context when ServeHTTP returns; client disconnect or HTTP/2 cancellation may cancel it earlier. Calling WriteHeader is not the same as returning. The background send may finish first, so failure before any send is not guaranteed. The fix depends on the requirement: this variant promises success only after send succeeds, and therefore performs it inside the handler. Mandatory asynchronous audit needs a durable queue or outbox handoff, not just go. An intentionally best-effort detached task needs an owner, shutdown handling, WithoutCancel and a fresh timeout. WithoutCancel preserves value lookup but removes the parent deadline, cancellation and cause; Done is nil. Detachment does not guarantee delivery and may retain request values.",
     "correctedCode": "package audit\n\nimport (\n\t\"context\"\n\t\"net/http\"\n)\n\n// Policy: report success only after send succeeds.\nfunc Handler(send func(context.Context) error) http.Handler {\n\treturn http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\tif err := send(r.Context()); err != nil {\n\t\t\thttp.Error(w, \"audit failed\", http.StatusInternalServerError)\n\t\t\treturn\n\t\t}\n\t\tw.WriteHeader(http.StatusNoContent)\n\t})\n}",
-    "versionNote": "WithoutCancel добавлен в Go 1.21, доступен в 1.25/1.26. Исправленный синхронный пример не требует этого API и применим к 1.17. В тесте используется настоящий httptest.Server, не прямой вызов handler.",
+    "versionNote": "WithoutCancel — с Go 1.21; поведение не менялось, проверено на Go 1.24.7, 1.26.1 и 1.27.3. Синхронному исправлению этот API не нужен. В тесте — настоящий httptest.Server, не прямой вызов handler.",
     "sources": [
       {
-        "title": "Request.Context — go1.26.1",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/net/http/request.go"
+        "title": "Request.Context — go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/request.go"
       },
       {
-        "title": "Context — go1.26.1",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+        "title": "Context — go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/context/context.go"
       }
     ],
     "cardIds": [
@@ -579,19 +576,19 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     "explanationRU": "WithContext отменяет дочерний контекст при первой ошибке задачи или при первом возврате Wait, даже успешном. Поэтому внутри save(ctx) ctx.Err() равен context.Canceled; фактический результат save зависит от того, как функция учитывает отмену. В этом конкретном коде g, ctx := не создаёт скрывающую переменную в новом блоке: параметр ctx переиспользуется в том же блоке функции и перезаписывается. Имя gCtx сохраняет parent для следующего этапа. Parent тоже может быть отменён или иметь истёкший дедлайн, так что исправление не обещает успеха save. Wait ждёт возврата всех функций; отмена не убивает горутину и не отменяет уже выполненные внешние эффекты.",
     "speechEN": "WithContext cancels the derived context on the first task error or when the first Wait returns, including success. Thus ctx.Err() inside save reports context.Canceled; whether save itself fails depends on how it handles cancellation. In this exact function, g, ctx := reuses and overwrites the ctx parameter in the same function block rather than shadowing it in a nested block. Naming the child gCtx preserves the parent for the next phase. The parent can still be canceled or expired, so this fix does not promise save will succeed. Wait waits for all functions to return; cancellation neither kills goroutines nor rolls back external side effects.",
     "correctedCode": "package checkout\n\nimport (\n\t\"context\"\n\t\"golang.org/x/sync/errgroup\"\n)\n\nfunc Process(ctx context.Context, check, load, save func(context.Context) error) error {\n\tg, gCtx := errgroup.WithContext(ctx)\n\tg.Go(func() error { return check(gCtx) })\n\tg.Go(func() error { return load(gCtx) })\n\tif err := g.Wait(); err != nil {\n\t\treturn err\n\t}\n\treturn save(ctx)\n}",
-    "versionNote": "errgroup — внешний модуль golang.org/x/sync, здесь проверена v0.20.0, а не «версия из Go 1.26». Примеры исполнялись на Go 1.26.1; для старого Go выбирают совместимую версию модуля.",
+    "versionNote": "errgroup — модуль golang.org/x/sync, не часть Go. v0.20.0 требует Go 1.25+, на Go 1.24 — v0.19.0 с тем же errgroup.go. Проверено на Go 1.24.7 (v0.19.0) и 1.27.3 (v0.20.0).",
     "sources": [
       {
         "title": "errgroup — v0.20.0",
         "url": "https://github.com/golang/sync/blob/v0.20.0/errgroup/errgroup.go"
       },
       {
-        "title": "Context — go1.26.1",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/context/context.go"
+        "title": "Context — go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/context/context.go"
       },
       {
-        "title": "Short variable declarations — go1.26.1",
-        "url": "https://github.com/golang/go/blob/go1.26.1/doc/go_spec.html"
+        "title": "Short variable declarations — go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/doc/go_spec.html"
       }
     ],
     "cardIds": [
@@ -617,15 +614,15 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     "correct": 1,
     "explanationRU": "Программа печатает cancelled и 1. Канал out заполнен, а закрытый done готов к чтению. Но build() вычисляется один раз до выбора ветки, поэтому calls увеличивается. Это правило языка для всех форм select; вызов selectgo нужен не всегда. Default и nil-канал также не откладывают вычисление отправляемого значения. Для долгой подготовки передай context в саму функцию и обрабатывай отмену внутри неё. Предварительный ctx.Err() помогает при уже видимой отмене, но не закрывает гонку с последующей работой. Если подготовка читает задачу из БД, сохранность зависит от транзакции и протокола подтверждения: нельзя автоматически объявлять любую прочитанную задачу потерянной.",
     "speechEN": "It prints cancelled and then 1. The send cannot proceed because out is full, while the closed done channel is ready to receive. However, build runs before case selection, so calls is incremented. This evaluation rule applies even to specialized select paths. For expensive preparation, I would pass context into the operation itself and define how reserved work is acknowledged or returned on cancellation.",
-    "versionNote": "Правило вычисления операндов действует в Go 1.17, 1.25 и 1.26. Полная программа проверена на Go 1.26.1; старые toolchain не запускались.",
+    "versionNote": "Правило вычисления операндов не менялось: программа проверена на Go 1.24.7 и 1.27.3, спецификация — на 1.24.7, 1.26.1 и 1.27.3.",
     "sources": [
       {
         "title": "Go specification: select",
         "url": "https://go.dev/ref/spec#Select_statements"
       },
       {
-        "title": "Compiler select lowering — Go 1.26.1",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/internal/walk/select.go"
+        "title": "Compiler select lowering — Go 1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/cmd/compile/internal/walk/select.go"
       }
     ],
     "cardIds": [

@@ -423,7 +423,7 @@ const CARDS = [
     "simId": "sim2",
     "qEN": "How do G, M and P relate to GOMAXPROCS?",
     "qRU": "Как G, M и P связаны с GOMAXPROCS?",
-    "shortEN": "GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4, at most four goroutines run Go code at the same moment. That is because GOMAXPROCS is the number of Ps, and a P is the right to run Go code. By default it equals the number of logical CPUs the process may use, and in the GMP model a goroutine (G) runs on an OS thread (M) only while that thread holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
+    "shortEN": "GOMAXPROCS limits parallel Go code: with GOMAXPROCS=4, at most four goroutines run Go code at the same moment. That is because GOMAXPROCS is the number of Ps, and a P is the right to run Go code. By default it follows the CPUs the process may use (since Go 1.25 also the cgroup limit); a goroutine (G) runs on an OS thread (M) only while that thread holds a P. Threads can still outnumber Ps, because a thread blocked for long in a system call or in cgo can lose its P to another thread.",
     "anchorsEN": [
       "GOMAXPROCS=4 → at most 4 Gs run Go code at once",
       "Ps = logical CPUs by default; GMP: G runs on M only while M holds a P",
@@ -438,7 +438,7 @@ const CARDS = [
     ],
     "practicalRU": "Начни со стандартной настройки рантайма, наблюдай throttling и задержки и подбирай значение на реальной нагрузке. Число 2 или количество CPU хоста не является универсальным рецептом для контейнера.",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"runtime\"\n)\n\nfunc main() {\n\t// A non-positive argument queries the setting without changing it.\n\tfmt.Println(\"parallel Go execution limit:\", runtime.GOMAXPROCS(0))\n\t// This is not the number of threads or an external-service concurrency limit.\n}",
-    "shortRU": "GOMAXPROCS ограничивает параллельное исполнение Go-кода: при GOMAXPROCS=4 его одновременно исполняют не больше четырёх горутин. Дело в том, что GOMAXPROCS — это число P, а P — право исполнять Go-код. По умолчанию их столько же, сколько логических CPU доступно процессу, а в модели GMP горутина (G) выполняется на потоке ОС (M), только пока этот поток держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
+    "shortRU": "GOMAXPROCS ограничивает параллельное исполнение Go-кода: при GOMAXPROCS=4 его одновременно исполняют не больше четырёх горутин. Дело в том, что GOMAXPROCS — это число P, а P — право исполнять Go-код. По умолчанию их столько, сколько CPU доступно процессу (с Go 1.25 — и лимит cgroup); горутина (G) выполняется на потоке ОС (M), только пока этот поток держит P. Потоков всё равно может быть больше, чем P: поток, надолго заблокированный в системном вызове или в cgo, может потерять свой P, и его получит другой поток.",
     "jvmRU": "В отличие от размера пула потоков в Java, GOMAXPROCS не ограничивает ни число горутин, ни число потоков — только параллельное исполнение Go-кода. Это ближе к параллелизму ForkJoinPool, на котором работают виртуальные потоки Java.",
     "detailsRU": [
       "P — объект рантайма, а не физический CPU или навсегда закреплённое ядро. ОС распределяет M по доступным CPU. В выражении «планирование M:N» буквы M и N обозначают количества, а не имена типов рантайма.",
@@ -446,15 +446,15 @@ const CARDS = [
       "Go 1.25 ввёл учитывающий контейнеры GOMAXPROCS по умолчанию и периодические обновления. На Linux политика учитывает CPU affinity, квоту cgroup и логические CPU. Явная настройка через окружение или runtime.GOMAXPROCS отключает автообновления; важны настройки совместимости и версия языка модуля.",
       "GOMAXPROCS не ограничивает конкурентность приложения. Пулу БД, обращениям к внешнему сервису и приёму запросов нужны свои бюджеты. При GOMAXPROCS=1 всё ещё возможны чередование операций и гонки данных."
     ],
-    "versionNote": "В 1.17 стандартный runtime не имел современной container-aware политики. В 1.25 она появилась; 1.26 сохраняет этот API. Для совместимого поведения старых модулей см. containermaxprocs/updatemaxprocs в документации runtime.",
+    "versionNote": "В Go 1.24 GOMAXPROCS по умолчанию — число CPU по affinity, без автообновления. С Go 1.25 на Linux учитывается лимит CPU cgroup и есть автообновление (при go 1.25+ в go.mod). Проверено на Go 1.24.7, 1.26.1 и 1.27.3.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/HACKING.md",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/HACKING.md"
+        "title": "go1.27.3: runtime/HACKING.md",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/HACKING.md"
       },
       {
-        "title": "go1.26.1: runtime/debug.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+        "title": "go1.27.3: runtime/debug.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/debug.go"
       },
       {
         "title": "go1.25.0: runtime/debug.go",
@@ -513,23 +513,23 @@ const CARDS = [
       "Если точка небезопасна, вытеснение ждёт или повторяется. У кода рантайма, внешнего C-кода и механизмов платформы разные ограничения. Вытеснение — только запрос: оно не отменяет операцию горутины и не освобождает её блокировки.",
       "runtime.Gosched добровольно уступает исполнение, но не создаёт гарантию порядка событий приложения. Для порядка нужны каналы, блокировки или другая синхронизация, а в длительных циклах приложения отмену нужно проверять явно."
     ],
-    "versionNote": "Асинхронное вытеснение появилось в Go 1.14, то есть уже есть в 1.17; поддержка зависит от платформы. Порог и описанный Unix-путь проверены по Go 1.26.1, не являются гарантией языка.",
+    "versionNote": "Асинхронное вытеснение — с Go 1.14, кроме wasm и plan9. Порог 10 мс и Unix-путь через SIGURG не менялись: проверено на Go 1.24.7, 1.26.1 и 1.27.3. Это не гарантия языка.",
     "sources": [
       {
         "title": "Go 1.14: runtime",
         "url": "https://go.dev/doc/go1.14#runtime"
       },
       {
-        "title": "go1.26.1: runtime/preempt.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/preempt.go"
+        "title": "go1.27.3: runtime/preempt.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/preempt.go"
       },
       {
-        "title": "go1.26.1: runtime/signal_unix.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/signal_unix.go"
+        "title": "go1.27.3: runtime/signal_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/signal_unix.go"
       },
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       }
     ],
     "practice": {
@@ -565,7 +565,7 @@ const CARDS = [
     ],
     "jvmEN": "Like Java’s ForkJoinPool, each P has its own queue and idle workers steal. Unlike ForkJoinPool, which by default takes its own tasks LIFO, a P runs its local queue FIFO, and only the one-slot runnext acts as a LIFO shortcut.",
     "detailsEN": [
-      "In Go 1.26.1, findRunnable handles special work such as GC coordination and timers before parts of ordinary queue selection. The simplified sequence “global, local, poll, steal” is not a complete priority contract.",
+      "findRunnable handles special work such as GC coordination and timers before parts of ordinary queue selection. The simplified sequence “global, local, poll, steal” is not a complete priority contract.",
       "Every 61st tick (schedtick % 61 == 0), if the global queue is not empty, findRunnable takes exactly one G from it (globrunqget) before the local queue. When the local queue is empty, it takes a batch instead (globrunqgetbatch): at most half the local queue’s capacity (256 / 2 = 128) and at most the global size / GOMAXPROCS + 1; it runs the first and puts the rest into the local queue. A tick is not a millisecond: the runnext path inherits the time slice without incrementing schedtick.",
       "runqgrab takes ceil(n/2) entries from the head of a victim’s ordinary local queue, using CAS to claim them. Concurrent changes can cause retries. runqsteal returns one of the batch for execution and queues the rest; stealing runnext is a separate possibility when allowed. Only runnable goroutines move; a running one is never stolen.",
       "For a stable victim queue [A,B,C,D,E], head on the left, the batch is [A,B,C]. runqsteal returns C and queues A,B on the thief; D,E remain on the victim. This is a source-level example under stated assumptions, not a prediction of application output."
@@ -575,20 +575,20 @@ const CARDS = [
     "shortRU": "Каждый раз, когда горутина перестаёт выполняться, планировщик ищет следующую примерно в таком порядке. Сначала runnext и локальная очередь своего P, потом глобальная очередь, netpoller и только потом другие P. Равновесие держат два правила: на каждом 61-м тике P сначала берёт одну горутину из глобальной очереди, чтобы глобальная работа не голодала, а при перехвате забирается половина локальной очереди жертвы с головы. Перемещаются только готовые горутины; исполняющуюся не перехватить.",
     "jvmRU": "Как в ForkJoinPool в Java, у каждого P своя очередь, а свободные воркеры перехватывают работу. В отличие от ForkJoinPool, который по умолчанию берёт свои задачи по LIFO, P исполняет локальную очередь по FIFO, и только слот runnext работает как LIFO-ярлык.",
     "detailsRU": [
-      "В Go 1.26.1 findRunnable обрабатывает специальную работу, например координацию GC и таймеры, до части обычного выбора очередей. Упрощённая последовательность «общая, локальная, сеть, кража» не является полным контрактом приоритетов.",
+      "findRunnable обрабатывает специальную работу, например координацию GC и таймеры, до части обычного выбора очередей. Упрощённая последовательность «общая, локальная, сеть, кража» не является полным контрактом приоритетов.",
       "На каждом 61-м тике (schedtick % 61 == 0), если глобальная очередь не пуста, findRunnable берёт из неё ровно одну G (globrunqget) раньше локальной очереди. Когда локальная очередь пуста, берётся пачка (globrunqgetbatch): не больше половины ёмкости локальной очереди (256 / 2 = 128) и не больше «размер глобальной / GOMAXPROCS + 1»; первую G он исполняет, остальные кладёт в локальную очередь. Тик — не миллисекунда: путь через runnext наследует квант и не увеличивает schedtick.",
       "runqgrab берёт ceil(n/2) элементов с головы обычной локальной очереди жертвы и закрепляет их через CAS. Конкурентные изменения могут вызвать повтор. runqsteal возвращает один элемент пачки для исполнения, остальные ставит в очередь; перехват runnext — отдельная возможность, когда она разрешена. Перемещаются только готовые горутины; исполняющуюся не перехватить.",
       "Для неизменной очереди жертвы [A,B,C,D,E] с головой слева пачка равна [A,B,C]. runqsteal возвращает C, а A,B ставит в очередь забирающего P; D,E остаются у жертвы. Это пример по исходникам при заданных условиях, а не предсказание вывода приложения."
     ],
-    "versionNote": "Конкретный путь описан по 1.26.1 и сопоставлен с 1.25.0. В Go 1.17 имя findrunnable было со строчной r, а проверка %61 находилась в schedule. Не переносить расположение функций между версиями механически.",
+    "versionNote": "Порядок, %61, пачка до 128 и n − n/2 одинаковы в Go 1.24.7, 1.26.1 и 1.27.3. В Go 1.24 обе выборки из GRQ делает globrunqget(pp, max); globrunqgetbatch — с 1.25. В Go 1.17: findrunnable, %61 в schedule.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
-        "title": "go1.25.0: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+        "title": "go1.24.7: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.24.7/src/runtime/proc.go"
       },
       {
         "title": "go1.17: runtime/proc.go",
@@ -633,8 +633,8 @@ const CARDS = [
     "jvmEN": "This is the same idea as a Java virtual thread unmounting on blocking I/O. But where a virtual thread pins its carrier during a native call, Go detaches the P from the blocked thread, so the other goroutines keep running.",
     "detailsEN": [
       "On the standard Unix pollable-socket path, a read that would block waits through the runtime netpoller. There is no dedicated blocked OS thread per waiting socket. This is not a promise about every net.Conn implementation, every file or every platform.",
-      "In Go 1.25, ordinary entersyscall detaches M from P and puts P in _Psyscall. The runtime can retake it; a quick return may reclaim it. entersyscallblock explicitly hands off P for a known blocking call. Handoff is not guaranteed at the instant every syscall starts.",
-      "In Go 1.26.1, ordinary entersyscall can keep M and P attached while G is in _Gsyscall; _Psyscall is now the unused slot _Psyscall_unused. Retaking uses setBlockOnExitSyscall to hold the G state, validate the links, detach P and then permit return to proceed. Known-blocking and GC paths can give up P sooner.",
+      "Before Go 1.26, ordinary entersyscall detaches M from P and puts P in _Psyscall. The runtime can retake it; a quick return may reclaim it. entersyscallblock hands off P for a known blocking call. Handoff is not guaranteed at the instant every syscall starts.",
+      "Since Go 1.26, ordinary entersyscall can keep M and P attached while G is in _Gsyscall; _Psyscall became the unused _Psyscall_unused. Retaking uses setBlockOnExitSyscall to hold the G state, validate the links, detach P and then permit return to proceed. Known-blocking and GC paths can give up P sooner.",
       "A returning call needs a P before normal user Go execution resumes. If none is available, the goroutine can become runnable and wait. cgo can occupy threads even while computing rather than waiting; GOMAXPROCS does not cap that foreign CPU work.",
       "A new thread is not necessarily created for each call: idle threads may be reused. Still, unbounded blocking calls can exhaust resources or hit the runtime thread limit (initially 10,000, configurable with debug.SetMaxThreads). Limit operations at their owner, not by assuming a fixed goroutine-to-thread ratio."
     ],
@@ -644,36 +644,36 @@ const CARDS = [
     "jvmRU": "Та же идея, что у виртуального потока Java, который отсоединяется от носителя на блокирующем вводе-выводе. Но там, где виртуальный поток в нативном вызове закрепляет за собой поток-носитель (pinning), Go отцепляет P от заблокированного потока, и остальные горутины продолжают работать.",
     "detailsRU": [
       "В стандартном Unix-пути поллируемого сокета чтение, которое заблокировалось бы, ожидает через netpoller рантайма. Отдельный заблокированный поток на каждый ожидающий сокет не нужен. Это не обещание для каждой реализации net.Conn, каждого файла или каждой платформы.",
-      "В Go 1.25 обычный entersyscall отсоединяет M от P и переводит P в _Psyscall. Рантайм может забрать P, а быстрый возврат — вернуть его. entersyscallblock явно передаёт P для заведомо блокирующего вызова. Передача не гарантирована в момент начала любого syscall.",
-      "В Go 1.26.1 обычный entersyscall может оставить M и P связанными, пока G находится в _Gsyscall; прежний _Psyscall стал неиспользуемым слотом _Psyscall_unused. При изъятии setBlockOnExitSyscall удерживает состояние G, проверяет связи, отсоединяет P и затем разрешает продолжение возврата. Заведомо блокирующий путь и GC могут отдать P раньше.",
+      "До Go 1.26 обычный entersyscall отсоединяет M от P и переводит P в _Psyscall. Рантайм может забрать P, а быстрый возврат — вернуть его. entersyscallblock передаёт P для заведомо блокирующего вызова. Передача не гарантирована в момент начала любого syscall.",
+      "С Go 1.26 обычный entersyscall может оставить M и P связанными, пока G находится в _Gsyscall; прежний _Psyscall стал неиспользуемым слотом _Psyscall_unused. При изъятии setBlockOnExitSyscall удерживает состояние G, проверяет связи, отсоединяет P и затем разрешает продолжение возврата. Заведомо блокирующий путь и GC могут отдать P раньше.",
       "После возврата нужен P, прежде чем продолжится обычный пользовательский Go-код. Если P нет, горутина может стать runnable и ждать. cgo может занимать потоки даже вычислениями, а не ожиданием; GOMAXPROCS не ограничивает такую работу внешнего кода.",
       "Для каждого вызова необязательно создаётся новый поток: свободные могут переиспользоваться. Но неограниченные блокирующие вызовы способны исчерпать ресурсы или предел потоков рантайма (изначально 10 000, настраивается debug.SetMaxThreads). Ограничивай операции у их владельца, не предполагая фиксированного отношения горутин к потокам."
     ],
-    "versionNote": "Существенная граница 1.25 → 1.26: _Psyscall больше не действующее состояние P. Старый путь 1.17/1.25 нельзя выдавать за схему 1.26.1. RawSyscall и особые runtime-пути здесь не моделируются.",
+    "versionNote": "В Go 1.24 и 1.25 entersyscall снимает P и ставит _Psyscall; с Go 1.26 (проверено на 1.26.1 и 1.27.3) P остаётся _Prunning, syscall виден по _Gsyscall. RawSyscall и runtime-пути не показаны.",
     "sources": [
       {
         "title": "go1.25.0: runtime/proc.go",
         "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
       },
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
-        "title": "go1.26.1: runtime/runtime2.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+        "title": "go1.27.3: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/runtime2.go"
       },
       {
-        "title": "go1.26.1: internal/poll/fd_unix.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/poll/fd_unix.go"
+        "title": "go1.27.3: internal/poll/fd_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/internal/poll/fd_unix.go"
       },
       {
-        "title": "go1.26.1: runtime/cgocall.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/cgocall.go"
+        "title": "go1.27.3: runtime/cgocall.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/cgocall.go"
       },
       {
-        "title": "go1.26.1: runtime/debug/garbage.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug/garbage.go"
+        "title": "go1.27.3: runtime/debug/garbage.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/debug/garbage.go"
       }
     ],
     "practice": {
@@ -722,15 +722,11 @@ const CARDS = [
       "Цепочка горутин может снова и снова заменять runnext, разделяя один тик. Вытеснение через sysmon помогает не монополизировать P. Ёмкость в один элемент сама по себе не доказывает справедливость; рантайм отключает оптимизацию без sysmon и может рандомизировать её использование в некоторых сборках.",
       "Горутины, которые передают друг другу работу, часто продолжают исполняться на том же ядре с прогретым кешем; это тенденция, а не гарантия. Корректная синхронизация должна работать и без runnext, и при переходе горутины на другой P."
     ],
-    "versionNote": "Описаны runqput/runqget/execute/retake Go 1.26.1; соответствующие механизмы есть и в 1.25.0. Это внутреннее планирование, а не контракт языка или точная модель кешей CPU.",
+    "versionNote": "runnext (runqput/runqget/execute/retake) не менялся: проверено на Go 1.24.7, 1.26.1 и 1.27.3. Это внутреннее планирование, не контракт языка и не модель кешей CPU.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
-      },
-      {
-        "title": "go1.25.0: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       }
     ],
     "practice": {
@@ -772,23 +768,23 @@ const CARDS = [
     "detailsEN": [
       "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
       "A running or blocked goroutine can keep reachable objects alive. Losing the caller's channel variable does not collect the goroutine. A deliberately long-lived service goroutine is not a leak merely because it waits.",
-      "Compare goroutine profiles over time and after load subsides. debug=1 gives grouped text stacks; debug=2 gives a stack dump with goroutine states. A stack shows where work is waiting, not by itself why it cannot finish. Go 1.26 adds an experimental goroutineleak profile (GOEXPERIMENT=goroutineleakprofile, also /debug/pprof/goroutineleak): the GC finds goroutines blocked on a channel or lock that no runnable goroutine can reach, so they can never wake up; Go 1.27 enables it by default."
+      "Compare goroutine profiles over time and after load subsides. debug=1 gives grouped text stacks; debug=2 gives a stack dump with goroutine states. A stack shows where work is waiting, not by itself why it cannot finish. Go 1.26 adds an experimental goroutineleak profile (GOEXPERIMENT=goroutineleakprofile, also /debug/pprof/goroutineleak): the GC finds goroutines blocked on a channel or lock that no runnable goroutine can reach, so they can never wake up; in Go 1.27 it is always on."
     ],
     "detailsRU": [
       "Частый случай — отправка единственного результата после ухода вызывающей стороны. Буфер на один элемент позволяет именно этой отправке завершиться; он не останавливает RPC и не делает безопасными повторные отправки. Ограничивай параллелизм и предусматривай остановку длительной работы.",
       "Работающая или заблокированная горутина может удерживать достижимые объекты. Потеря переменной канала у вызывающего кода не уничтожает горутину. Долгоживущая служебная горутина не становится утечкой только потому, что ждёт.",
-      "Сравнивай профили горутин во времени и после снижения нагрузки. debug=1 даёт сгруппированные текстовые стеки, debug=2 — дамп со состояниями горутин. Стек показывает место ожидания, но сам по себе не объясняет, почему работа не завершится. В Go 1.26 появился экспериментальный профиль goroutineleak (GOEXPERIMENT=goroutineleakprofile, также /debug/pprof/goroutineleak): GC находит горутины, заблокированные на канале или блокировке, до которых не может дотянуться ни одна работающая горутина, — значит, они не проснутся никогда; в Go 1.27 он включён по умолчанию."
+      "Сравнивай профили горутин во времени и после снижения нагрузки. debug=1 даёт сгруппированные текстовые стеки, debug=2 — дамп со состояниями горутин. Стек показывает место ожидания, но сам по себе не объясняет, почему работа не завершится. В Go 1.26 появился экспериментальный профиль goroutineleak (GOEXPERIMENT=goroutineleakprofile, также /debug/pprof/goroutineleak): GC находит горутины, заблокированные на канале или блокировке, до которых не может дотянуться ни одна работающая горутина, — значит, они не проснутся никогда; в Go 1.27 он доступен всегда."
     ],
     "practicalRU": "Начни с повторяющихся стеков и проверь владельца каждой горутины: кто прекращает отправку, кто закрывает очередь и кто дожидается завершения. Проверку остановки строй на наблюдаемом завершении работы; один таймаут запроса не означает, что дочерняя работа уже закончилась.",
-    "versionNote": "В Go 1.25 доступны обычные goroutine-профили. В Go 1.26 профиль goroutineleak включается экспериментом GOEXPERIMENT=goroutineleakprofile; это дополнительная диагностика, не гарантия обнаружения всех утечек. В Go 1.27 профиль goroutineleak доступен без эксперимента (runtime/pprof, /debug/pprof/goroutineleak); он находит горутины, заблокированные на примитивах, недостижимых из работающих горутин, и может пропустить утечки через глобальные переменные.",
+    "versionNote": "В Go 1.24 и 1.25 профиля goroutineleak нет, только goroutine. В Go 1.26 он включается GOEXPERIMENT=goroutineleakprofile; в Go 1.27 доступен всегда (runtime/pprof, /debug/pprof/goroutineleak), а main, ждущая в select{}, в отчёт не попадает. Он находит горутины, заблокированные на примитивах, недостижимых из работающих горутин, может пропустить утечки через глобальные переменные и находит не все утечки. Проверено на Go 1.24.7, 1.26.1 и 1.27.3.",
     "sources": [
       {
         "title": "Go: pipelines and cancellation",
         "url": "https://go.dev/blog/pipelines"
       },
       {
-        "title": "pprof formats — Go 1.26.1",
-        "url": "https://pkg.go.dev/runtime/pprof@go1.26.1#Profile.WriteTo"
+        "title": "pprof formats — Go 1.27.3",
+        "url": "https://pkg.go.dev/runtime/pprof@go1.27.3#Profile.WriteTo"
       },
       {
         "title": "Go 1.26 release notes",

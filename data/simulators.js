@@ -986,7 +986,7 @@ const SIMULATORS = [
   {
     "id": "sim2",
     "title": "Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание",
-    "subtitle": "Одиннадцать учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall, сеть и GOMAXPROCS — отдельные сценарии; шаг 10 — вся картина и ответ за минуту, шаг 11 — пять частых вопросов и где упрощают. Go 1.26.1 с явным сравнением 1.25.",
+    "subtitle": "11 учебных кадров, не единая трасса программы. Шаги 2–3 и 4–5 — пары «до → после»; syscall, сеть и GOMAXPROCS — отдельные сценарии; шаг 10 — вся картина и ответ за минуту, шаг 11 — пять частых вопросов и где упрощают. Go 1.24.7–1.27.3; syscall — до и с Go 1.26.",
     "cardId": "c9",
     "cardLabel": "Q9: поиск и перехват работы →",
     "steps": [
@@ -1087,7 +1087,7 @@ const SIMULATORS = [
               }
             ],
             "list": {
-              "title": "Где P1 ищет следующую G (findRunnable, Go 1.26.1, упрощённо)",
+              "title": "Где P1 ищет следующую G (findRunnable, упрощённо)",
               "ordered": true,
               "items": [
                 "Таймеры P1: запустить сработавшие (например, разбудить G после time.Sleep)",
@@ -1256,8 +1256,8 @@ const SIMULATORS = [
         "desc": "Продолжение шага 2: обработчик обнаружил допустимую точку и подготовил возврат через asyncPreempt. После возобновления этот путь сохраняет регистры и входит в планировщик. В обычном пути уступки G1 становится runnable; следующий выбор зависит от доступной работы. Это не отменяет G1 и не снимает её блокировки.",
         "descEN": "Continuing step 2, the handler found a safe point and arranged asyncPreempt on resumption. That path saves registers and enters the scheduler. In the ordinary yield path G1 becomes runnable; the next selection depends on available work. Preemption neither cancels G1 nor releases its locks.",
         "predict": {
-          "promptEN": "G1 has been preempted at a safe point. Where does it go after an ordinary preemption in Go 1.26.1, and what happens to a mutex it holds?",
-          "promptRU": "G1 вытеснили в безопасной точке. Куда она попадёт при обычном вытеснении в Go 1.26.1 и что будет с мьютексом, который она держит?"
+          "promptEN": "G1 has been preempted at a safe point. Where does it go after an ordinary preemption in Go 1.26+, and what happens to a mutex it holds?",
+          "promptRU": "G1 вытеснили в безопасной точке. Куда она попадёт при обычном вытеснении с Go 1.26 и что будет с мьютексом, который она держит?"
         },
         "board": [
           {
@@ -1304,7 +1304,7 @@ const SIMULATORS = [
                     "queue": true
                   }
                 ],
-                "note": "Go 1.26.1: если вытеснение совпало с остановкой мира (STW — для GC или по другой причине), gopreempt_m кладёт G1 в runnext P1; в Go 1.25 этот путь всегда ведёт в GRQ."
+                "note": "С Go 1.26: если вытеснение совпало с остановкой мира (STW по любой причине), gopreempt_m кладёт G1 в runnext P1; в Go 1.24 и 1.25 этот путь всегда ведёт в GRQ."
               }
             ],
             "list": {
@@ -1600,12 +1600,12 @@ const SIMULATORS = [
         }
       },
       {
-        "title": "6. Syscall: различие Go 1.25 и 1.26",
-        "desc": "Новый сценарий: G1 входит в обычный runtime-aware syscall на M1. В Go 1.25 связь M–P снимается, а P получает _Psyscall. В Go 1.26.1 обычный вход может сохранить связь M1–P1, а G1 переходит в _Gsyscall; отдельного действующего состояния Psyscall больше нет. Для изъятия P рантайм удерживает состояние G, проверяет связи и безопасно отсоединяет P. Заведомо блокирующий entersyscallblock отдаёт P отдельным путём.",
-        "descEN": "In a new syscall scenario, Go 1.25 detaches M from P and marks P _Psyscall. In Go 1.26.1, ordinary entry can retain M–P attachment while G is _Gsyscall. Retaking P holds the G state, validates the links and detaches P safely. The known-blocking entry path gives up P separately.",
+        "title": "6. Syscall: до Go 1.26 и с Go 1.26",
+        "desc": "Новый сценарий: G1 входит в обычный runtime-aware syscall на M1. До Go 1.26 связь M–P снимается, а P получает _Psyscall. С Go 1.26 обычный вход может сохранить связь M1–P1, а G1 переходит в _Gsyscall; отдельного действующего состояния Psyscall больше нет. Для изъятия P рантайм удерживает состояние G, проверяет связи и безопасно отсоединяет P. Заведомо блокирующий entersyscallblock отдаёт P отдельным путём.",
+        "descEN": "In a new syscall scenario, pre-1.26 Go detaches M from P and marks P _Psyscall. Since Go 1.26, ordinary entry can retain M–P attachment while G is _Gsyscall. Retaking P holds the G state, validates the links and detaches P. The known-blocking entry path gives up P separately.",
         "board": [
           {
-            "caption": "Go 1.25 · обычный вход",
+            "caption": "До 1.26 · обычный вход",
             "hl": [
               "G1"
             ],
@@ -1648,11 +1648,11 @@ const SIMULATORS = [
                 "M1 ↔ P1: связь снята при входе; M1 помнит P1 в m.oldp и при выходе попробует вернуть его",
                 "P1 помечен _Psyscall"
               ],
-              "title": "Go 1.25: при входе в syscall"
+              "title": "До 1.26: при входе в syscall"
             }
           },
           {
-            "caption": "Go 1.26.1 · обычный вход",
+            "caption": "С Go 1.26 · обычный вход",
             "hl": [
               "G1"
             ],
@@ -1689,13 +1689,13 @@ const SIMULATORS = [
                 "Изъятие P: setBlockOnExitSyscall → takeP → resume → handoffp",
                 "_Psyscall_unused — бывшее состояние, сейчас не используется"
               ],
-              "title": "Go 1.26.1: при входе в syscall"
+              "title": "С Go 1.26: при входе в syscall"
             }
           }
         ],
         "boxes": [
           {
-            "title": "Go 1.25 · обычный вход",
+            "title": "До 1.26 · обычный вход",
             "rows": [
               {
                 "k": "G1",
@@ -1715,7 +1715,7 @@ const SIMULATORS = [
             ]
           },
           {
-            "title": "Go 1.26.1 · обычный вход",
+            "title": "С Go 1.26 · обычный вход",
             "rows": [
               {
                 "k": "G1",
@@ -1735,7 +1735,7 @@ const SIMULATORS = [
             ]
           },
           {
-            "title": "Go 1.26.1 · изъятие",
+            "title": "С Go 1.26 · изъятие",
             "rows": [
               {
                 "k": "Зафиксировать",
@@ -2298,7 +2298,7 @@ const SIMULATORS = [
                 "title": "sysmon",
                 "tag": "поток без P",
                 "slots": [],
-                "note": "Долгий запуск → запрос вытеснения; долгий syscall → забрать P; опрос сети; GOMAXPROCS — не чаще раза в секунду."
+                "note": "Долгий запуск → запрос вытеснения; долгий syscall → забрать P; опрос сети; GOMAXPROCS — раз в ≥1 с, с Go 1.25."
               },
               {
                 "kind": "other",
@@ -2333,8 +2333,8 @@ const SIMULATORS = [
       },
       {
         "title": "11. Пять частых вопросов и где упрощают",
-        "desc": "Короткие ответы на пять вопросов, которые чаще всего задают про планировщик, и формулировки из популярных объяснений, которые на интервью лучше уточнить. Ответы сверены с исходниками Go 1.26.1; это не цитаты конкретного автора. Сначала ответь сам вслух, потом сверяйся.",
-        "descEN": "Short answers to the five most common scheduler questions, and phrasings from popular explanations that are worth making more precise in an interview. The answers were checked against the Go 1.26.1 source; they are not quotes from any particular author. Answer aloud first, then compare.",
+        "desc": "Короткие ответы на пять вопросов, которые чаще всего задают про планировщик, и формулировки из популярных объяснений, которые на интервью лучше уточнить. Ответы сверены по Go 1.24.7–1.27.3; это не цитаты конкретного автора. Сначала ответь сам вслух, потом сверяйся.",
+        "descEN": "Short answers to the five most common scheduler questions, and phrasings from popular explanations that are worth making more precise in an interview. The answers were checked on Go 1.24.7–1.27.3; they are not quotes from any particular author. Answer aloud first, then compare.",
         "predict": {
           "promptEN": "Answer aloud before opening: how does the scheduler work, what is GOMAXPROCS, why are there more threads than GOMAXPROCS, what changed in Go 1.14, and how is fairness ensured?",
           "promptRU": "Ответь вслух до раскрытия: как работает планировщик, что такое GOMAXPROCS, почему потоков больше GOMAXPROCS, что изменилось в Go 1.14 и как обеспечивается справедливость?"
@@ -2368,7 +2368,7 @@ const SIMULATORS = [
                 "«Крадёт ровно половину» → n − ⌊n/2⌋, то есть половину с округлением вверх, с головы очереди",
                 "«Потоки никогда не останавливают» → свободный M недолго ищет работу (spinning, примерно не больше половины занятых P) или ждёт в netpoll, потом засыпает (stopm); поток не уничтожается, а ждёт повторного использования",
                 "«Стек горутины 2–8 КБ» → новая G стартует с 2 КиБ (Linux), переиспользуемая — с адаптивного размера; стек растёт копированием",
-                "«GOMAXPROCS = лимит CPU контейнера» → min(CPU по affinity, max(⌈лимит⌉, 2)); requests не учитываются"
+                "«GOMAXPROCS = лимит CPU контейнера» → с 1.25 min(CPU по affinity, max(⌈лимит⌉, 2)); без request"
               ]
             }
           }
@@ -2386,32 +2386,32 @@ const SIMULATORS = [
     "boardLegend": "G — горутина, M — поток ОС, P — право исполнять Go-код (их GOMAXPROCS). Очереди: голова слева. Рамка и слово «изменилось» отмечают фишки, которые сдвинулись на этом шаге.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
         "title": "go1.25.0: runtime/proc.go",
         "url": "https://github.com/golang/go/blob/go1.25.0/src/runtime/proc.go"
       },
       {
-        "title": "go1.26.1: runtime/runtime2.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+        "title": "go1.27.3: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/runtime2.go"
       },
       {
-        "title": "go1.26.1: runtime/preempt.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/preempt.go"
+        "title": "go1.27.3: runtime/preempt.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/preempt.go"
       },
       {
-        "title": "go1.26.1: runtime/signal_unix.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/signal_unix.go"
+        "title": "go1.27.3: runtime/signal_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/signal_unix.go"
       },
       {
-        "title": "go1.26.1: internal/poll/fd_unix.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/internal/poll/fd_unix.go"
+        "title": "go1.27.3: internal/poll/fd_unix.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/internal/poll/fd_unix.go"
       },
       {
-        "title": "go1.26.1: runtime/cgroup_linux.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/cgroup_linux.go"
+        "title": "go1.27.3: runtime/cgroup_linux.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/cgroup_linux.go"
       }
     ]
   },

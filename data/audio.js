@@ -38,9 +38,9 @@ const AUDIO = {
       "heart": "audio/en/card-c7-jvm-heart-cc49008d.mp3"
     },
     "card:c7:short": {
-      "hash": "f8cb60aa",
-      "michael": "audio/en/card-c7-short-michael-877e9855.mp3",
-      "heart": "audio/en/card-c7-short-heart-4485dd8b.mp3"
+      "hash": "eaf915bb",
+      "michael": "audio/en/card-c7-short-michael-c34b84dc.mp3",
+      "heart": "audio/en/card-c7-short-heart-161317a2.mp3"
     },
     "card:c12:jvm": {
       "hash": "b71dea61",
