@@ -471,7 +471,7 @@ const PRACTICE = [
       "Отправка результата тоже может зависнуть навсегда, если потребитель ушёл: отправляй в select вместе с <-ctx.Done().",
       "wg.Add — до запуска горутин, а не внутри них. В Go 1.25+ есть wg.Go(func), он сам делает Add и Done."
     ],
-    "talkEN": "A worker pool runs jobs with bounded concurrency and must stop cleanly on cancellation. I start a fixed number of workers, so the bound holds by construction. Each worker receives jobs and sends results inside a select with ctx.Done, so it never blocks forever on a channel; fn itself must respect ctx. The caller owns the jobs channel and closes it. Only the workers send on results, so the pool closes it: one extra goroutine waits on a WaitGroup for all workers, then closes results. Backpressure comes for free: with an unbuffered results channel, a slow consumer makes the workers wait.",
+    "talkEN": "A worker pool runs jobs with bounded concurrency and must stop cleanly on cancellation. I start a fixed number of workers, so the bound holds by construction. Each worker receives jobs and sends results inside a select with ctx.Done, so it never blocks forever on a channel; fn itself must respect ctx. The caller owns the jobs channel and closes it. Several workers send on results, so none may close it: one extra goroutine waits on a WaitGroup for all workers, then closes results. Backpressure comes for free: with an unbuffered results channel, a slow consumer makes the workers wait.",
     "pitfalls": [
       "close(results) в каждом воркере → panic: close of closed channel.",
       "wg.Add внутри горутины → Wait может вернуться раньше, чем воркер начал работу.",

@@ -1281,15 +1281,15 @@ const PLAN = {
     },
     "w3-tue-1": {
       hook: "nil blocks forever; a buffer only absorbs bursts; closed: send panics, receive drains, then zero, false.",
-      en: "A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the side that owns sending closes the channel, once, after the last send."
+      en: "A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the sending side closes it, once, after the last send."
     },
     "w3-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
-      en: "A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range loop ends. Every goroutine that sends or receives also selects on ctx.Done, so cancelling ctx releases all of them; a consumer that stops early must cancel."
+      en: "A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range loop ends. Workers and the producer select on ctx.Done at every send and receive, so cancelling ctx releases all of them; a consumer that stops early must cancel."
     },
     "w3-tue-3": {
       hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
-      en: "The pipeline has three stages, generator, square and sink, and stops through a context. Each stage reads from its input, writes to an output it owns, and closes that output when the input runs out. Every send selects on ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
+      en: "The pipeline has three stages, generator, square and sink, and stops through a context. Generator and square each own their output and close it when they return. Every send sits in a select with ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
     },
     "w3-wed-1": {
       hook: "Random among ready cases; checking ctx first is not priority.",
@@ -1297,15 +1297,15 @@ const PLAN = {
     },
     "w3-wed-2": {
       hook: "One forwarder per input; close output after all forwarders finish.",
-      en: "Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A WaitGroup tracks the forwarders, and one more goroutine closes the output after all of them return. Each forward selects on ctx.Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
+      en: "Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A WaitGroup tracks the forwarders, and one more goroutine closes the output after all of them return. Each forwarder selects on ctx.Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
     },
     "w3-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex; Cond.Wait goes in a for loop.",
-      en: "The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic.AddInt64 on a counter, and one balance can also use a CompareAndSwap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs one Mutex around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns."
+      en: "The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic.AddInt64 on a counter, and one balance can also use a CompareAndSwap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs a lock around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns."
     },
     "w3-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
-      en: "A pipeline is a chain of stages connected by channels, such as gen → square → print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send also selects on a done channel or ctx.Done, and cancelling it releases all of them."
+      en: "A pipeline is a chain of stages connected by channels, such as gen → square → print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send sits in a select with done or ctx.Done; closing done or cancelling ctx frees them all."
     },
     "w3-thu-3": {
       hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",
@@ -1321,7 +1321,7 @@ const PLAN = {
     },
     "w3-thu-2": {
       hook: "Same result three ways; choose by clarity and measured contention; never leak internal state.",
-      en: "A counter and a cache both hold shared state, but they need different guards. A counter built with a Mutex, with atomic.Int64 or with one owner goroutine gives the same result under -race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
+      en: "A counter and a cache both hold shared state, but the cache adds an aliasing trap. A counter built with a Mutex, with atomic.Int64 or with one owner goroutine gives the same result under -race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
     }
   },
 

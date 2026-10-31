@@ -750,7 +750,7 @@ const CARDS = [
     "simId": null,
     "qEN": "How would you find and prevent a goroutine leak?",
     "qRU": "Как найти утечку горутин и обеспечить их завершение?",
-    "shortEN": "A goroutine leak is like a memory leak: a goroutine outlives its work and never finishes. Usually it is stuck on a channel, a lock or I/O with no timeout; the GC never collects it. So every goroutine needs an exit: whoever starts one must be able to stop it. Since Go 1.27, the goroutineleak profile lists goroutines blocked on a channel, mutex or WaitGroup that no running goroutine can reach. Other leaks, for example on I/O, show up as a stack group that keeps growing in the goroutine profile. In tests, go.uber.org/goleak fails the test if goroutines are left behind.",
+    "shortEN": "A goroutine leak is like a memory leak: a goroutine outlives its work and never finishes. Usually it is stuck on a channel, a lock or I/O with no timeout; the GC never collects it. So every goroutine needs an exit: whoever starts one must be able to stop it. Since Go 1.27, the goroutineleak profile lists goroutines blocked on a channel, mutex or WaitGroup that the GC finds unreachable. Other leaks, for example on I/O, show up as a stack group that keeps growing in the goroutine profile. In tests, go.uber.org/goleak fails the test if goroutines are left behind.",
     "anchorsEN": [
       "like a memory leak: outlives its work, never ends",
       "stuck on a channel, lock or I/O; the GC never collects it",
@@ -759,7 +759,7 @@ const CARDS = [
       "goleak in tests"
     ],
     "jvmEN": "In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have IDs in dumps but no names and no public ID API, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.",
-    "shortRU": "Утечка горутины похожа на утечку памяти: горутина пережила свою работу и уже не завершится. Обычно она застряла на канале, блокировке или вводе-выводе без таймаута; GC горутины не собирает. Поэтому каждой горутине нужен выход: кто её запустил, тот должен уметь её остановить. Начиная с Go 1.27 профиль goroutineleak показывает горутины, заблокированные на канале, мьютексе или WaitGroup, до которых не может дотянуться ни одна работающая горутина. Остальные утечки, например на вводе-выводе, видны как группа стеков, которая всё растёт в профиле горутин. В тестах go.uber.org/goleak роняет тест, если остались горутины.",
+    "shortRU": "Утечка горутины похожа на утечку памяти: горутина пережила свою работу и уже не завершится. Обычно она застряла на канале, блокировке или вводе-выводе без таймаута; GC горутины не собирает. Поэтому каждой горутине нужен выход: кто её запустил, тот должен уметь её остановить. Начиная с Go 1.27 профиль goroutineleak показывает горутины, которые ждут недостижимый для GC канал, мьютекс или WaitGroup. Остальные утечки, например на вводе-выводе, видны как группа стеков, которая всё растёт в профиле горутин. В тестах go.uber.org/goleak роняет тест, если остались горутины.",
     "jvmRU": "В Java зависший платформенный поток виден в дампе потоков под своим именем. У горутин в дампах есть номера, но нет имён и публичного API для ID, поэтому утечку находят, группируя одинаковые стеки или по меткам pprof, и следят, какая группа растёт.",
     "detailsEN": [
       "A common case is one result sent after the caller has left. A one-element buffer lets that single send finish; it does not stop the RPC or make repeated sends safe. Bound concurrency and give long-running work a shutdown path.",
