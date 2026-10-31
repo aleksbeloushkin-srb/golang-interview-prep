@@ -1023,3 +1023,7 @@ p + .tts { margin-top: 6px; }
 }
 .card-grades.hidden, .grade-criteria.hidden { display: none; }
 /* «← Назад», «Далее →»: стрелка и подпись в одной обёртке <span> — один элемент inline-flex, обычный пробел и перенос по нему */
+
+/* Карточки по схеме: длинные вопросы — столбиком */
+.diagram-cards { flex-direction: column; align-items: flex-start; gap: 0; margin-top: 18px; }
+.diagram-cards a { padding: 6px 0; }

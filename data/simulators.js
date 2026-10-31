@@ -1152,8 +1152,8 @@ const SIMULATORS = [
       },
       {
         "title": "2. Запросить вытеснение — ещё не переключить",
-        "desc": "Отдельный сценарий: G1 исполняется на M1 с P1. Sysmon наблюдает неизменный schedtick; порог forcePreemptNS равен 10 мс в проверенной реализации. Он запрашивает вытеснение. На поддерживаемом Unix-пути используется SIGURG, но точная задержка и успешность этой попытки не гарантированы.",
-        "descEN": "In this scenario G1 runs on M1 with P1. Sysmon observes an unchanged scheduling tick and can request preemption using the checked 10 ms threshold. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
+        "desc": "Отдельный сценарий: G1 исполняется на M1 с P1. Sysmon видит, что schedtick не менялся 10 мс (порог forcePreemptNS), и запрашивает вытеснение. На поддерживаемом Unix-пути используется SIGURG, но точная задержка и успешность этой попытки не гарантированы.",
+        "descEN": "In this scenario G1 runs on M1 with P1. Sysmon sees that the scheduling tick has not moved for 10 ms (forcePreemptNS) and requests preemption. Supported Unix paths use SIGURG. Issuing a request does not mean execution has already switched.",
         "board": [
           {
             "hl": [
@@ -3884,7 +3884,7 @@ const SIMULATORS = [
     "steps": [
       {
         "title": "1. Какой путь создаёт компилятор?",
-        "desc": "Не каждый select вызывает selectgo. Здесь считаем ветки с операциями, а default учитываем отдельно. Имена справа описывают проверенную реализацию компилятора, а не обещание языка.",
+        "desc": "Не каждый select вызывает selectgo. Здесь считаем ветки с операциями, а default учитываем отдельно. Имена справа — детали реализации компилятора, а не обещание языка.",
         "descEN": "The compiler chooses a path from the shape of the select. Count channel cases separately from default; these helper names are implementation details.",
         "boxes": [],
         "check": {
@@ -12367,7 +12367,7 @@ const CHEATSHEET_ROWS = [
   {
     "topic": "1. Горутина vs Поток ОС и Стек",
     "how": "Горутина → очередь → исполнение. <code>go</code> вычисляет аргументы у вызывающего; <code>newproc</code> подготавливает G и стек на <code>g0</code>. Готовность к запуску ещё не исполнение.",
-    "markers": "Базовый <code>stackMin</code> — 2 КиБ в проверенной реализации; реальный размер и память процесса зависят от нагрузки. Нет универсальной цены переключения в нс.",
+    "markers": "Базовый <code>stackMin</code> — 2 КиБ в текущем runtime; реальный размер и память процесса зависят от нагрузки. Нет универсальной цены переключения в нс.",
     "cardId": "c1",
     "simId": "sim1"
   },
@@ -12414,7 +12414,7 @@ const CHEATSHEET_ROWS = [
   {
     topic: "8. CAS: условное атомарное обновление",
     how: "<code>CAS(old, new)</code>: сравнить текущее значение с old и условно записать new одной атомарной операцией. Возвращает true/false; ожидание и повтор — отдельная политика.",
-    markers: "На amd64 в проверенном пути — <code>LOCK CMPXCHG</code>; arm64 имеет другие пути. Атомарность одного значения не делает весь алгоритм атомарным. Детали Mutex — в карточке Q21.",
+    markers: "На amd64 это инструкция <code>LOCK CMPXCHG</code>; arm64 имеет другие пути. Атомарность одного значения не делает весь алгоритм атомарным. Детали Mutex — в карточке Q21.",
     cardId: "c20", simId: "sim5"
   },
   {
@@ -12431,7 +12431,7 @@ const CHEATSHEET_ROWS = [
   },
   {
     topic: "11. Интерфейсы (iface / eface) и Open-Coded Defer",
-    how: "Интерфейс хранит динамический тип и значение; два слова в проверенной реализации. <code>defer</code>: сохранить функцию/аргументы → при выходе выполнить в обратном порядке. Реализация зависит от сборки.",
+    how: "Интерфейс хранит динамический тип и значение; два машинных слова. <code>defer</code>: сохранить функцию/аргументы → при выходе выполнить в обратном порядке. Реализация зависит от сборки.",
     markers: "Typed nil ≠ nil-интерфейс. Именованный результат задаётся до defer и может быть изменён им. <code>recover</code> действует в той же горутине. Ресурсы с defer в цикле ждут выхода из функции, а не конца итерации.",
     cardId: "c33", simId: null
   },
@@ -12440,5 +12440,35 @@ const CHEATSHEET_ROWS = [
     how: "<code>unique</code> и <code>iter</code> — 1.23; <code>weak</code>/<code>AddCleanup</code> — 1.24; стабильный <code>synctest</code>, <code>FlightRecorder</code> и container-aware defaults — 1.25. Контракты здесь применимы и к 1.26.",
     markers: "Ранний выход из <code>iter.Pull</code> требует <code>stop</code>. Cleanup не обещает срок; fake time требует durable blocking; явный GOMAXPROCS отключает автообновления; размер/возраст trace — не точная гарантия.",
     cardId: "c38", simId: "sim2"
+  },
+  {
+    topic: "13. sync.Mutex: быстрый путь, ожидание, голодание",
+    how: "Слово <code>state</code> плюс семафор. <code>Lock</code>: один CAS → короткий спин → сон на семафоре. <code>Unlock</code> будит не больше одного ждущего; в нормальном режиме он соревнуется с новичками и часто проигрывает.",
+    markers: "Ждал больше 1 мс и снова проиграл → режим голодания: прямая передача первому в очереди. 1 мс — порог режима, не таймаут. Мьютекс не реентерабелен и не хранит владельца; неуспешный <code>TryLock</code> ничего не синхронизирует.",
+    cardId: "c21", simId: "sim8"
+  },
+  {
+    topic: "14. Битовые операции: маски, флаги, SWAR",
+    how: "Флаги — биты одного слова: <code>x &amp; mask != 0</code> проверяет, <code>x | mask</code> ставит, <code>x &amp;^ mask</code> снимает. Для степени двойки <code>i &amp; (n-1)</code> заменяет <code>i % n</code> (при неотрицательном i).",
+    markers: "В Go <code>&amp;</code> связывает сильнее, чем <code>==</code> (не как в C). Swiss map сравнивает 8 байт ctrl сразу: на amd64 — SIMD, на arm64 — точный SWAR, на остальных — общий SWAR, у которого возможен ложный кандидат; ключ всё равно сравнивают. Атомарные <code>And</code>/<code>Or</code> — с Go 1.23.",
+    cardId: "c31", simId: "sim9"
+  },
+  {
+    topic: "15. HTTP-запрос в net/http",
+    how: "Accept → своя горутина на соединение; в HTTP/1.1 запросы соединения идут по одному в ней, в HTTP/2 у каждого запроса своя горутина. <code>r.Context()</code> отменяется при обрыве клиента или возврате handler.",
+    markers: "Нулевые таймауты — это отсутствие лимита: задать <code>ReadHeaderTimeout</code>, <code>ReadTimeout</code>, <code>WriteTimeout</code>, <code>IdleTimeout</code>. <code>Shutdown(ctx)</code> закрывает listener и ждёт активные запросы. Паника в горутине, запущенной из handler, роняет процесс.",
+    cardId: "c45", simId: "sim10"
+  },
+  {
+    topic: "16. Deadlock, livelock, starvation и sync.Cond",
+    how: "Deadlock — круг ожиданий; нужны все четыре условия Коффмана: взаимное исключение, удержание с ожиданием, нет вытеснения, циклическое ожидание. Единый порядок блокировок ломает круг.",
+    markers: "«all goroutines are asleep» — только когда встала вся программа и не под <code>-race</code>; в сервере ищи в дампе горутин <code>[sync.Mutex.Lock]</code>. Livelock — повторы в такт (лечит jitter). <code>sync.Cond</code>: <code>for !ready { c.Wait() }</code>, для закрытия — Broadcast (c56).",
+    cardId: "c55", simId: "sim11"
+  },
+  {
+    topic: "17. Канал, мьютекс или одна горутина",
+    how: "Данные видит одна горутина → без блокировки (confinement, глубокие копии). Передача владения → канал. Состояние типа с инвариантом → мьютекс внутри типа. Несколько событий, отмена, таймаут → <code>select</code>.",
+    markers: "У канала в <code>hchan</code> своя блокировка рантайма, поэтому обычно он не быстрее мьютекса. Отправленный указатель — общий доступ, не копия. Atomic — одна переменная, не инвариант. Горячее место по профилю → мьютекс или atomic могут выиграть у канала.",
+    cardId: "c15", simId: "sim12"
   }
 ];

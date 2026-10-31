@@ -156,19 +156,20 @@ function relatedQuizHtml(cardId) {
   return `<nav class="related-links" aria-label="Задачи по теме">${questions.map(q => `<a href="#/quiz/${q.id}">${escapeHtml(q.title)}</a>`).join("")}</nav>`;
 }
 
-// Links between cards and diagrams.
-const CARD_TO_SIM = {
-  c1: "sim1", c3: "sim1", c4: "sim1", c5: "sim1", c6: "sim1",
-  c7: "sim2", c8: "sim2", c9: "sim2", c10: "sim2", c11: "sim1",
-  c13: "sim3", c16: "sim3", c17: "sim3",
-  c18: "sim4", c19: "sim4",
-  c20: "sim5", c21: "sim8",
-  c23: "sim6", c24: "sim6", c25: "sim6", c26: "sim6", c27: "sim6", c28: "sim6",
-  c30: "sim7", c31: "sim7", c32: "sim7", c37: "sim1", c38: "sim2"
-};
-
+// Links between cards and diagrams: one source of truth, card.simId in data/cards.js.
 function getCardSimId(card) {
-  return CARD_TO_SIM[card.id] || card.simId || null;
+  return card.simId || null;
+}
+
+// Cards a diagram explains: every card whose simId points here, plus the diagram's own main card.
+function diagramCardsHtml(sim) {
+  if (typeof CARDS === "undefined") return "";
+  const cards = CARDS.filter(c => c.simId === sim.id || c.id === sim.cardId);
+  if (!cards.length) return "";
+  return `<nav class="related-links diagram-cards" aria-label="Карточки по этой схеме">
+    <strong>Карточки по этой схеме:</strong>
+    ${cards.map(c => `<a href="#/cards/${c.id}">${escapeHtml(c.id.toUpperCase())}: ${escapeHtml(c.qRU || c.qEN)}</a>`).join("")}
+  </nav>`;
 }
 
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
@@ -560,6 +561,7 @@ function initSimulators() {
         <button type="button" class="btn btn-sm" data-step-direction="-1">← Шаг назад</button>
         <button type="button" class="btn btn-sm" data-step-direction="1">Следующий шаг →</button>
       </div>
+      ${diagramCardsHtml(sim)}
       ${referencesHtml(sim)}
     `;
     container.appendChild(card);
