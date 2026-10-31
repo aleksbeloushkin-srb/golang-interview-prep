@@ -5,8 +5,8 @@ const QUIZ_QUESTIONS = [
   {
     "id": "q1",
     "title": "Задача 1: Три функции после завершения цикла",
-    "ru": "В модуле с go 1.25 или go 1.26 что напечатает программа? Что изменится при старой семантике цикла до Go 1.22?",
-    "en": "In a module declaring go 1.25 or go 1.26, what does this program print? How would pre-Go 1.22 loop semantics change the result?",
+    "ru": "В модуле с go 1.22 или новее что напечатает программа? Что изменится при старой семантике цикла до Go 1.22?",
+    "en": "In a module declaring go 1.22 or later, what does this program print? How would pre-Go 1.22 loop semantics change the result?",
     "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tstart := make(chan struct{})\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\t<-start\n\t\t\tfmt.Println(i)\n\t\t}()\n\t}\n\tclose(start)\n\twg.Wait()\n}",
     "options": [
       "0, 1, 2 строго по порядку: WaitGroup заставляет горутины завершаться в порядке их создания.",
@@ -17,10 +17,10 @@ const QUIZ_QUESTIONS = [
       "По одному 0, 1 и 2 во всех версиях: каждый вызов go автоматически копирует переменные замыкания."
     ],
     "correct": 4,
-    "explanationRU": "В Go 1.25/1.26 с соответствующей версией языка модуль печатает 0, 1 и 2 по одному разу, в произвольном порядке. Переменная i объявлена через := в заголовке for: начиная с семантики Go 1.22 у каждой итерации своя переменная. WaitGroup обеспечивает завершение всех трёх горутин, но не порядок печати. При старой семантике все замыкания используют одну i. Именно в этом примере они читают её только после close(start), когда цикл уже довёл i до 3, поэтому получится 3, 3, 3 без гонки на i. Без такого барьера прежний пример с Sleep не гарантировал ни эти значения, ни завершение печати и мог содержать data race. Семантика переменной сама по себе не обещает конкретного размещения в куче. Для самопроверки: объяви i до цикла и используй for i = 0; ... — тогда при сохранённом барьере все три строки будут 3 и в новой версии. Ниже явная передача аргумента сохраняет значения итераций и при старой семантике.",
+    "explanationRU": "В Go 1.22+ с соответствующей версией языка модуль печатает 0, 1 и 2 по одному разу, в произвольном порядке. Переменная i объявлена через := в заголовке for: начиная с семантики Go 1.22 у каждой итерации своя переменная. WaitGroup обеспечивает завершение всех трёх горутин, но не порядок печати. При старой семантике все замыкания используют одну i. Именно в этом примере они читают её только после close(start), когда цикл уже довёл i до 3, поэтому получится 3, 3, 3 без гонки на i. Без такого барьера прежний пример с Sleep не гарантировал ни эти значения, ни завершение печати и мог содержать data race. Семантика переменной сама по себе не обещает конкретного размещения в куче. Для самопроверки: объяви i до цикла и используй for i = 0; ... — тогда при сохранённом барьере все три строки будут 3 и в новой версии. Ниже явная передача аргумента сохраняет значения итераций и при старой семантике.",
     "speechEN": "It prints 0, 1 and 2 once each, in any order. With Go 1.22 or later language semantics, a loop variable declared with := is separate for each iteration. WaitGroup ensures completion, not ordering. Under the old semantics all closures share i, but this example makes them wait until the loop finishes, so all print 3 without racing on i. Declaring i outside the loop and using = would also share one variable today. Passing i as an argument makes the intended per-call value explicit across these versions.",
     "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"sync\"\n)\n\nfunc main() {\n\tstart := make(chan struct{})\n\tvar wg sync.WaitGroup\n\tfor i := 0; i < 3; i++ {\n\t\twg.Add(1)\n\t\tgo func(value int) {\n\t\t\tdefer wg.Done()\n\t\t\t<-start\n\t\t\tfmt.Println(value)\n\t\t}(i)\n\t}\n\tclose(start)\n\twg.Wait()\n}",
-    "versionNote": "Семантика итераций изменилась в Go 1.22 и зависит от версии языка пакета, обычно заданной go.mod. Для Go 1.25/1.26 здесь одинаковый результат. Форма с аргументом совместима и с Go 1.17. Тесты выполнены Go 1.26.1; старые правила дополнительно проверены режимом языка go1.17 текущего компилятора, не запуском toolchain 1.17.",
+    "versionNote": "Семантика итераций изменилась в Go 1.22 и зависит от версии языка пакета, обычно заданной go.mod. Для go 1.22 и новее результат одинаковый. Форма с аргументом совместима и с Go 1.17. Проверено toolchain Go 1.24.7 и 1.27.3; старые правила — строкой go 1.17 или go 1.21 в go.mod, без запуска toolchain 1.17.",
     "sources": [
       {
         "title": "Go 1.22: language changes",
@@ -39,8 +39,8 @@ const QUIZ_QUESTIONS = [
         "url": "https://go.dev/ref/mem#chan"
       },
       {
-        "title": "sync.WaitGroup — Go 1.26.1",
-        "url": "https://pkg.go.dev/sync@go1.26.1#WaitGroup"
+        "title": "sync.WaitGroup — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#WaitGroup"
       }
     ],
     "cardIds": [
@@ -539,15 +539,15 @@ func handleRequest(ctx context.Context, req Req) (Resp, error) {
     "explanationRU": "Получается цикл ожидания: RunAll ждёт Done всех горутин; хотя бы одна из шести не может закончить отправку в буфер на пять мест; чтение начинается только после Wait. В исправлении отдельный координатор ждёт завершения отправителей и закрывает out, пока вызывающая горутина читает результаты. Порядок результатов не гарантирован. Буфер len(tasks) тоже достаточен для ровно одной отправки на задачу, но расходует память на всю пачку и связывает корректность с этим условием. Здесь по горутине на задачу — это не ограниченный пул; лимит параллелизма и отмена нужны отдельно для длительной работы. Закрытие не ждёт опустошения буфера, а range читает оставшиеся значения до конца.",
     "speechEN": "RunAll waits for every sender, but a sender needs buffer space that only RunAll can free. I would receive results while a separate coordinator waits and closes the channel after all senders finish. This removes the wait cycle. Result order is unspecified, and the example still launches one goroutine per task.",
     "correctedCode": "// Function fragment; import \"sync\".\nfunc RunAll(tasks []int) []int {\n\tout := make(chan int, 5)\n\tvar wg sync.WaitGroup\n\tfor _, task := range tasks {\n\t\twg.Add(1)\n\t\tgo func(n int) {\n\t\t\tdefer wg.Done()\n\t\t\tout <- n * n\n\t\t}(task)\n\t}\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(out)\n\t}()\n\tvar results []int\n\tfor value := range out {\n\t\tresults = append(results, value)\n\t}\n\treturn results\n}",
-    "versionNote": "Пример использует API, доступный в Go 1.17, 1.25 и 1.26. Аргумент n передаётся явно: результат не зависит от изменения loop variables в Go 1.22. Завершение проверяется без Sleep.",
+    "versionNote": "Add/Done/Wait — с Go 1.0, проверено на Go 1.24.7, 1.26.1 и 1.27.3; wg.Go — с Go 1.25. Аргумент n передаётся явно: результат не зависит от изменения loop variables в Go 1.22.",
     "sources": [
       {
         "title": "Go pipelines: fan-out, fan-in",
         "url": "https://go.dev/blog/pipelines"
       },
       {
-        "title": "sync.WaitGroup — Go 1.26.1",
-        "url": "https://pkg.go.dev/sync@go1.26.1#WaitGroup"
+        "title": "sync.WaitGroup — Go 1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#WaitGroup"
       },
       {
         "title": "Go specification: close",

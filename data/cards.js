@@ -35,23 +35,23 @@ const CARDS = [
       "Резерв адресного пространства под стек потока, выделенная физическая память и RSS — разные величины. Переключение горутин идёт в пространстве пользователя, без системного вызова. Цена переключения зависит от машины и нагрузки: её измеряют, а не заучивают в наносекундах.",
       "Оператор go ничего не возвращает: ни ID, ни дескриптора, ни результата. Дождаться горутину можно через WaitGroup, errgroup или канал; у каждой горутины должен быть владелец и путь завершения. Это ожидание — wg.Wait, g.Wait или приём из канала — и есть точка соединения (join point) для разветвления, которое начал go: без неё main может вернуться раньше, чем горутина вообще начнёт работу. Внутренний номер у горутины есть (виден в трассах стека), но язык намеренно его не отдаёт. Возврат из main не ждёт остальные горутины."
     ],
-    "versionNote": "Семантика go применима к 1.17/1.25/1.26. Размеры и распределение стеков — детали runtime; источники реализации здесь Go 1.26.1.",
+    "versionNote": "Семантика go не менялась. Размеры и распределение стеков — детали runtime; проверено на Go 1.24.7, 1.26.1 и 1.27.3.",
     "sources": [
       {
         "title": "Go specification: go statements",
         "url": "https://go.dev/ref/spec#Go_statements"
       },
       {
-        "title": "go1.26.1: runtime/stack.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+        "title": "go1.27.3: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/stack.go"
       },
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
-        "title": "go1.26.1: runtime/debug.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug.go"
+        "title": "go1.27.3: runtime/debug.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/debug.go"
       },
       {
         "title": "Go FAQ: Why is there no goroutine ID?",
@@ -172,19 +172,19 @@ const CARDS = [
       "newproc запрашивает размещение в runnext через runqput(..., true), но условия рантайма могут привести к обычной очереди. Затем newproc вызывает wakep, и простаивающий P может забрать горутину перехватом. Позже планировщик переводит G из runnable в running. Язык не обещает немедленного исполнения или порядка запуска FIFO.",
       "У рантайма есть внутренние ID горутин, но язык не предоставляет дескриптор горутины, публичный API текущего ID или операцию убийства другой горутины. Используй явные ID запросов, отмену и сигналы завершения; разбор stack dump не заменяет API идентификации."
     ],
-    "versionNote": "Порядок вычисления go — гарантия языка во всех рассматриваемых версиях. newproc1/gfget/runnext — Go 1.26.1; сигнатуры внутренних функций не являются API. В Go 1.17 нет современной startingStackSize-политики.",
+    "versionNote": "Порядок вычисления go — гарантия языка. newproc1/gfget/runnext — детали runtime, не API; проверено на Go 1.24.7, 1.26.1 и 1.27.3. Адаптивный стартовый стек — с Go 1.19, в Go 1.17 его нет.",
     "sources": [
       {
         "title": "Go specification: go statements",
         "url": "https://go.dev/ref/spec#Go_statements"
       },
       {
-        "title": "go1.26.1: runtime/proc.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "go1.27.3: runtime/proc.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
-        "title": "go1.26.1: runtime/stack.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+        "title": "go1.27.3: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/stack.go"
       },
       {
         "title": "go1.17: runtime/proc.go",
@@ -243,19 +243,19 @@ const CARDS = [
       "Неиспользуемые спаны стеков могут вернуться в кучу. Уменьшение стека, освобождение спана и возврат физических страниц ОС — разные события; ни одно не обещает немедленного соответствующего падения RSS.",
       "StackSys включает полученную рантаймом память стеков, в том числе некоторые стеки потоков ОС, но не учитывает каждый стек C. ReadMemStats выдаёт общие счётчики рантайма, а не отчёт о выделениях отдельной горутины."
     ],
-    "versionNote": "Поля MemStats — публичная документация; устройство stack spans и кешей проверено по Go 1.26.1. Счётчики не эквивалентны RSS ни в Go 1.17, ни в 1.25/1.26.",
+    "versionNote": "Поля MemStats — публичная документация; устройство stack spans и кешей не менялось, проверено на Go 1.24.7, 1.26.1 и 1.27.3. Счётчики — не RSS.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/mstats.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/mstats.go"
+        "title": "go1.27.3: runtime/mstats.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/mstats.go"
       },
       {
-        "title": "go1.26.1: runtime/stack.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+        "title": "go1.27.3: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/stack.go"
       },
       {
-        "title": "go1.26.1: runtime/runtime2.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/runtime2.go"
+        "title": "go1.27.3: runtime/runtime2.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/runtime2.go"
       }
     ],
     "practice": {
@@ -292,7 +292,7 @@ const CARDS = [
     "jvmEN": "A Java platform thread stack cannot grow past -Xss: deep recursion ends with StackOverflowError, 1 MiB by default on 64-bit Linux. In Go the same recursion keeps working, because the stack doubles by copying, until the 1 GB limit, and then the program dies instead of throwing an error you can catch.",
     "detailsEN": [
       "Stack checks lead through morestack/newstack on the growth path. Not every function has the same prologue: small leaf functions and nosplit code have special rules. A tripped guard can also request preemption, not just allocation.",
-      "For normal growth, Go 1.26.1 starts with twice the old size and can double again until the needed frame fits. copystack relocates active frames and uses pointer maps to fix references; channel-related references require coordinated updates too.",
+      "For normal growth, newstack starts with twice the old size and can double again until the needed frame fits. copystack relocates active frames and uses pointer maps to fix references; channel-related references require coordinated updates too.",
       "Shrinking is a separate operation at safe points. The GC can halve a stack when usage including a safety allowance is below one quarter, subject to minimum size and safety checks. Returning from a call does not itself guarantee shrinking.",
       "The default per-goroutine growth limit is 1 GB on 64-bit systems and 250 MB on 32-bit systems; because sizes double, the largest stack under the 64-bit default is 512 MiB; debug.SetMaxStack changes the limit for future growth. Exceeding it crashes the program. A uintptr is an integer, not a GC-tracked pointer you may keep across arbitrary operations."
     ],
@@ -302,19 +302,19 @@ const CARDS = [
     "jvmRU": "Стек платформенного потока Java не растёт дальше -Xss: глубокая рекурсия заканчивается StackOverflowError, по умолчанию на 1 МиБ на 64-битном Linux. В Go та же рекурсия продолжает работать — стек удваивается копированием — до предела в 1 ГБ, а потом программа погибает, а не бросает ошибку, которую можно поймать.",
     "detailsRU": [
       "Путь роста проходит через morestack/newstack. Не у каждой функции одинаковый пролог: у небольших листовых функций и nosplit-кода особые правила. Срабатывание guard может также означать запрос вытеснения, а не только выделение памяти.",
-      "Для обычного роста Go 1.26.1 начинает с удвоенного размера и при необходимости удваивает снова, чтобы вместить нужный кадр. copystack переносит активные кадры и исправляет ссылки по картам указателей; ссылки, связанные с каналами, тоже требуют согласованного обновления.",
+      "Для обычного роста newstack начинает с удвоенного размера и при необходимости удваивает снова, чтобы вместить нужный кадр. copystack переносит активные кадры и исправляет ссылки по картам указателей; ссылки, связанные с каналами, тоже требуют согласованного обновления.",
       "Уменьшение — отдельная операция в безопасных точках. GC может уменьшить стек вдвое, если использование с защитным запасом меньше четверти, с учётом минимального размера и проверок безопасности. Сам возврат из вызова не гарантирует уменьшения.",
       "Стандартный предел роста одной горутины — 1 ГБ на 64-битных системах и 250 МБ на 32-битных; так как размер удваивается, наибольший стек при 64-битном пределе — 512 МиБ; debug.SetMaxStack меняет предел будущего роста. Превышение аварийно завершает программу. uintptr — целое число, а не отслеживаемый GC указатель, который можно сохранять через произвольные операции."
     ],
-    "versionNote": "Копируемые стеки есть в 1.17/1.25/1.26. Конкретные пороги, карты и алгоритм описаны по Go 1.26.1; тест результата не доказывает конкретный момент перемещения стека.",
+    "versionNote": "Пороги, удвоение, карты указателей и уменьшение стека не менялись: проверено на Go 1.24.7, 1.26.1 и 1.27.3. Тест результата не доказывает момент перемещения стека.",
     "sources": [
       {
-        "title": "go1.26.1: runtime/stack.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+        "title": "go1.27.3: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/stack.go"
       },
       {
-        "title": "go1.26.1: runtime/debug/garbage.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/debug/garbage.go"
+        "title": "go1.27.3: runtime/debug/garbage.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/debug/garbage.go"
       },
       {
         "title": "unsafe.Pointer: conversion rules",
@@ -358,29 +358,37 @@ const CARDS = [
     "detailsEN": [
       "A register is a small CPU storage location used during execution. RSP is an address, not the stack itself; R14 is a pointer to Go runtime metadata, not the whole goroutine. RIP changes as instructions and control transfers execute.",
       "Each M has a g0 used for system-stack work. On amd64, gogo installs the current G, restores SP, BP and closure context, clears selected saved fields, and jumps to the saved PC. It is not a fixed four-instruction operation.",
-      "mcall saves the caller’s continuation and switches to g0 to call a runtime function. g.sched is saved continuation state, not a dump of every CPU register. Switching goroutines is distinct from an OS thread context switch. So few saved values are enough because a voluntary switch happens at a call, where Go’s ABI keeps nothing in callee-saved registers; asynchronous preemption first saves every register on the goroutine’s stack.",
+      "mcall saves the caller’s continuation and switches to g0 to call a runtime function. g.sched is saved continuation state, not a dump of every CPU register. Switching goroutines is distinct from an OS thread context switch. So few saved values are enough because a voluntary switch happens at a call, where Go’s ABI keeps nothing in callee-saved registers; asynchronous preemption first saves every register in memory.",
       "Register names and conventions are architecture-dependent. This diagram uses amd64; on arm64 Go uses R28 for the current G. Neither the g0 stack nor every goroutine stack has one universally fixed size."
     ],
     "detailsRU": [
       "Регистр — небольшое хранилище процессора, используемое при выполнении. RSP содержит адрес, а не сам стек; R14 — указатель на данные runtime, а не всю горутину. RIP меняется при выполнении инструкций и переходов.",
       "У каждого M есть g0 для работы на системном стеке. На amd64 gogo устанавливает текущую G, восстанавливает SP, BP и контекст замыкания, очищает часть сохранённых полей и переходит к сохранённому PC. Это не операция ровно из четырёх инструкций.",
-      "mcall сохраняет место продолжения вызывающей стороны и переключается на g0 для вызова функции runtime. g.sched — сохранённое состояние продолжения, а не снимок всех регистров CPU. Переключение горутин отличается от переключения потоков ОС. Немногих сохранённых значений хватает, потому что добровольное переключение происходит на вызове, где ABI Go ничего не держит в регистрах, сохраняемых вызываемой функцией; при асинхронном вытеснении все регистры сначала сохраняются на стеке горутины.",
+      "mcall сохраняет место продолжения вызывающей стороны и переключается на g0 для вызова функции runtime. g.sched — сохранённое состояние продолжения, а не снимок всех регистров CPU. Переключение горутин отличается от переключения потоков ОС. Немногих сохранённых значений хватает, потому что добровольное переключение происходит на вызове, где ABI Go ничего не держит в регистрах, сохраняемых вызываемой функцией; при асинхронном вытеснении все регистры сначала сохраняются в памяти.",
       "Имена регистров и соглашения зависят от архитектуры. Эта схема — про amd64; на arm64 Go использует R28 для текущей G. Размер стека g0 и каждой пользовательской горутины не является одной универсальной константой."
     ],
     "practicalRU": "Опора для памяти: «кто выполняется — где стек — откуда продолжить». Для amd64 это R14, RSP и сохранённый PC с переходом в RIP. По одному кадру systemstack или mcall нельзя установить причину сбоя: нужен стек вызовов и контекст.",
-    "versionNote": "Схема runtime/ABI для Go 1.26.1, amd64; сравнение роли текущей G на arm64. ABIInternal может меняться. Условные адреса и сокращённые действия не являются готовым ассемблером или обещанием времени переключения.",
+    "versionNote": "Схема amd64, проверено на Go 1.24.7, 1.26.1 и 1.27.3. Асинхронное вытеснение в Go 1.24 клало все регистры на стек, с Go 1.26 векторные — в g.xRegs. Адреса условные, действия сокращены: это не ассемблер.",
     "sources": [
       {
-        "title": "Go 1.26.1: internal ABI",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/abi-internal.md"
+        "title": "Go 1.27.3: internal ABI",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/cmd/compile/abi-internal.md"
       },
       {
-        "title": "Go 1.26.1: gogo / mcall on amd64",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/asm_amd64.s"
+        "title": "Go 1.27.3: gogo / mcall on amd64",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/asm_amd64.s"
       },
       {
-        "title": "Go 1.26.1: scheduler",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "Go 1.27.3: scheduler",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
+      },
+      {
+        "title": "go1.24.7: runtime/preempt_amd64.s",
+        "url": "https://github.com/golang/go/blob/go1.24.7/src/runtime/preempt_amd64.s"
+      },
+      {
+        "title": "go1.27.3: runtime/preempt_xreg.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/preempt_xreg.go"
       }
     ],
     "practice": {

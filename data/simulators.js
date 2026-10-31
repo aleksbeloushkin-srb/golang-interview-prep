@@ -5,31 +5,31 @@ const SIMULATORS = [
   {
     "id": "sim1",
     "title": "Диаграмма 1: Кто выполняется, где стек, откуда продолжить",
-    "subtitle": "Семь шагов: аргументы → G и стек → сохранённый контекст → очередь → исполнение → завершение → ответ за минуту. Модель Go 1.26.1/amd64; адреса символические, скорость не измеряется.",
+    "subtitle": "Семь шагов: аргументы → G и стек → сохранённый контекст → очередь → исполнение → завершение → ответ за минуту. amd64, Go 1.24–1.27; адреса символические, скорость не измеряется.",
     "cardId": "c6",
     "cardLabel": "Q6: регистры простыми словами →",
     "learningHint": "Кто — текущая G (R14); где стек — адрес RSP; откуда продолжить — PC, загружаемый в поток инструкций. R14 на g0 и M.curg — не одно и то же: системный стек обслуживает пользовательскую G. На arm64 имена и соглашения другие.",
     "boardLegend": "M1 — поток ОС; P1 — право исполнять Go-код, его держит M1. R14 — какая G сейчас текущая, RSP — чей стек, RIP — какой код. Рамка и слово «изменилось» отмечают то, что поменялось на этом шаге.",
     "sources": [
       {
-        "title": "Go 1.26.1: ABIInternal",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/cmd/compile/abi-internal.md"
+        "title": "Go 1.27.3: ABIInternal",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/cmd/compile/abi-internal.md"
       },
       {
-        "title": "Go 1.26.1: gogo/mcall",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/asm_amd64.s"
+        "title": "Go 1.27.3: gogo/mcall",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/asm_amd64.s"
       },
       {
-        "title": "Go 1.26.1: newproc1/execute/gfput",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/proc.go"
+        "title": "Go 1.27.3: newproc1/execute/gfput",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/proc.go"
       },
       {
         "title": "Go specification: go statements",
         "url": "https://go.dev/ref/spec#Go_statements"
       },
       {
-        "title": "go1.26.1: runtime/stack.go",
-        "url": "https://github.com/golang/go/blob/go1.26.1/src/runtime/stack.go"
+        "title": "go1.27.3: runtime/stack.go",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/stack.go"
       }
     ],
     "steps": [
@@ -973,8 +973,8 @@ const SIMULATORS = [
         "check": {
           "promptEN": "Follow-up: how big is a goroutine stack, and what happens when it runs out?",
           "promptRU": "Уточняющий вопрос: какого размера стек горутины и что будет, когда места не хватит?",
-          "answerEN": "A new G starts with 2 KiB on Linux/amd64; a reused G may get a larger starting size based on the average stack use the GC observed. Each function prologue compares SP with stackguard0; when space runs out, morestack allocates a stack twice as large and copies the frames, adjusting pointers into the stack. The GC can shrink an underused stack. The limit is 1 GB on 64-bit; beyond it the runtime prints “goroutine stack exceeds 1000000000-byte limit” and stops with “fatal error: stack overflow”.",
-          "answerRU": "Новая G начинает с 2 КиБ на Linux/amd64; переиспользованная может получить больший стартовый размер — по среднему использованию стека, которое видел GC. Пролог каждой функции сравнивает SP со stackguard0; если места мало, morestack выделяет стек вдвое больше и копирует кадры, исправляя указатели внутрь стека. GC может уменьшить недогруженный стек. Предел — 1 ГБ на 64-битных системах; дальше рантайм печатает «goroutine stack exceeds 1000000000-byte limit» и останавливает программу: «fatal error: stack overflow»."
+          "answerEN": "A new G starts with 2 KiB on Linux/amd64; a reused G may get a larger starting size based on the average stack use the GC observed. The prologue compares SP with stackguard0; when space runs out, morestack allocates a stack at least twice as large and copies the frames, adjusting pointers into the stack. The GC can shrink an underused stack. The limit is 1 GB on 64-bit; beyond it the runtime prints “goroutine stack exceeds 1000000000-byte limit” and stops with “fatal error: stack overflow”.",
+          "answerRU": "Новая G начинает с 2 КиБ на Linux/amd64; переиспользованная может получить больший стартовый размер — по среднему использованию стека, которое видел GC. Пролог сравнивает SP со stackguard0; если места мало, morestack выделяет стек минимум вдвое больше и копирует кадры, исправляя указатели внутрь стека. GC может уменьшить недогруженный стек. Предел — 1 ГБ на 64-битных системах; дальше рантайм печатает «goroutine stack exceeds 1000000000-byte limit» и останавливает программу: «fatal error: stack overflow»."
         }
       }
     ]
