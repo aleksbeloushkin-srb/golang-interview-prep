@@ -18,9 +18,9 @@ const AUDIO = {
       "heart": "audio/en/card-c1-jvm-heart-150d1355.mp3"
     },
     "card:c1:short": {
-      "hash": "e5d87721",
-      "michael": "audio/en/card-c1-short-michael-40de57b7.mp3",
-      "heart": "audio/en/card-c1-short-heart-a62f01b1.mp3"
+      "hash": "ad2037af",
+      "michael": "audio/en/card-c1-short-michael-7371e6b4.mp3",
+      "heart": "audio/en/card-c1-short-heart-54d4cec6.mp3"
     },
     "card:c2:jvm": {
       "hash": "d55f6cf5",
@@ -48,9 +48,9 @@ const AUDIO = {
       "heart": "audio/en/card-c12-jvm-heart-06971808.mp3"
     },
     "card:c12:short": {
-      "hash": "55cf511a",
-      "michael": "audio/en/card-c12-short-michael-143bf6dc.mp3",
-      "heart": "audio/en/card-c12-short-heart-42a4eede.mp3"
+      "hash": "647e0886",
+      "michael": "audio/en/card-c12-short-michael-b06d5154.mp3",
+      "heart": "audio/en/card-c12-short-heart-fb379406.mp3"
     },
     "card:c13:jvm": {
       "hash": "8dac936d",
@@ -78,9 +78,9 @@ const AUDIO = {
       "heart": "audio/en/card-c15-jvm-heart-1c6c4a62.mp3"
     },
     "card:c15:short": {
-      "hash": "03d75286",
-      "michael": "audio/en/card-c15-short-michael-5ddd33e5.mp3",
-      "heart": "audio/en/card-c15-short-heart-c046b5ff.mp3"
+      "hash": "1908ef04",
+      "michael": "audio/en/card-c15-short-michael-e5f041ce.mp3",
+      "heart": "audio/en/card-c15-short-heart-ebe84e3c.mp3"
     },
     "card:c16:jvm": {
       "hash": "03146667",
@@ -473,64 +473,64 @@ const AUDIO = {
       "heart": "audio/en/plan-w2-wed-2-heart-0fe7941b.mp3"
     },
     "plan:w3-mon-1": {
-      "hash": "b8baf96a",
-      "michael": "audio/en/plan-w3-mon-1-michael-f323e5b2.mp3",
-      "heart": "audio/en/plan-w3-mon-1-heart-12743fbc.mp3"
+      "hash": "4a1de081",
+      "michael": "audio/en/plan-w3-mon-1-michael-0076987b.mp3",
+      "heart": "audio/en/plan-w3-mon-1-heart-9f497ccd.mp3"
     },
     "plan:w3-mon-2": {
-      "hash": "bba6f6d6",
-      "michael": "audio/en/plan-w3-mon-2-michael-227f7c53.mp3",
-      "heart": "audio/en/plan-w3-mon-2-heart-90796cf5.mp3"
+      "hash": "8ceedd39",
+      "michael": "audio/en/plan-w3-mon-2-michael-f6efe1a4.mp3",
+      "heart": "audio/en/plan-w3-mon-2-heart-822fe352.mp3"
     },
     "plan:w3-sat-1": {
-      "hash": "bf848b0c",
-      "michael": "audio/en/plan-w3-sat-1-michael-4546bd5d.mp3",
-      "heart": "audio/en/plan-w3-sat-1-heart-1511fd87.mp3"
+      "hash": "1d2d8d76",
+      "michael": "audio/en/plan-w3-sat-1-michael-328a8fc2.mp3",
+      "heart": "audio/en/plan-w3-sat-1-heart-bdc0d5ec.mp3"
     },
     "plan:w3-sat-4": {
-      "hash": "1a28f7ff",
-      "michael": "audio/en/plan-w3-sat-4-michael-9608e161.mp3",
-      "heart": "audio/en/plan-w3-sat-4-heart-8cbbe557.mp3"
+      "hash": "4b3c0a24",
+      "michael": "audio/en/plan-w3-sat-4-michael-9996df56.mp3",
+      "heart": "audio/en/plan-w3-sat-4-heart-747a8c7c.mp3"
     },
     "plan:w3-thu-1": {
-      "hash": "a000f3e1",
-      "michael": "audio/en/plan-w3-thu-1-michael-99e9b82a.mp3",
-      "heart": "audio/en/plan-w3-thu-1-heart-cde65278.mp3"
+      "hash": "06dce705",
+      "michael": "audio/en/plan-w3-thu-1-michael-a2abcc24.mp3",
+      "heart": "audio/en/plan-w3-thu-1-heart-c6e89f3a.mp3"
     },
     "plan:w3-thu-2": {
-      "hash": "4df9d7a3",
-      "michael": "audio/en/plan-w3-thu-2-michael-fbdd8a75.mp3",
-      "heart": "audio/en/plan-w3-thu-2-heart-b4f17763.mp3"
+      "hash": "ee69e933",
+      "michael": "audio/en/plan-w3-thu-2-michael-804b5519.mp3",
+      "heart": "audio/en/plan-w3-thu-2-heart-f74917eb.mp3"
     },
     "plan:w3-thu-3": {
-      "hash": "1c515272",
-      "michael": "audio/en/plan-w3-thu-3-michael-86a87a78.mp3",
-      "heart": "audio/en/plan-w3-thu-3-heart-cddcbb9e.mp3"
+      "hash": "df7f3896",
+      "michael": "audio/en/plan-w3-thu-3-michael-3f198d32.mp3",
+      "heart": "audio/en/plan-w3-thu-3-heart-64d8acd0.mp3"
     },
     "plan:w3-tue-1": {
-      "hash": "7dddd596",
-      "michael": "audio/en/plan-w3-tue-1-michael-55e764ec.mp3",
-      "heart": "audio/en/plan-w3-tue-1-heart-9c3f771e.mp3"
+      "hash": "f508c65b",
+      "michael": "audio/en/plan-w3-tue-1-michael-5accd0b5.mp3",
+      "heart": "audio/en/plan-w3-tue-1-heart-c9d4ffe3.mp3"
     },
     "plan:w3-tue-2": {
-      "hash": "e04c8ac5",
-      "michael": "audio/en/plan-w3-tue-2-michael-3e0aed50.mp3",
-      "heart": "audio/en/plan-w3-tue-2-heart-9e2ad37e.mp3"
+      "hash": "1312e543",
+      "michael": "audio/en/plan-w3-tue-2-michael-91e3200e.mp3",
+      "heart": "audio/en/plan-w3-tue-2-heart-2ea9c404.mp3"
     },
     "plan:w3-tue-3": {
-      "hash": "e301be6a",
-      "michael": "audio/en/plan-w3-tue-3-michael-a1b35fcb.mp3",
-      "heart": "audio/en/plan-w3-tue-3-heart-eec21859.mp3"
+      "hash": "0e104ffc",
+      "michael": "audio/en/plan-w3-tue-3-michael-7fde3bb5.mp3",
+      "heart": "audio/en/plan-w3-tue-3-heart-2147ea23.mp3"
     },
     "plan:w3-wed-1": {
-      "hash": "a241ec26",
-      "michael": "audio/en/plan-w3-wed-1-michael-1726a77e.mp3",
-      "heart": "audio/en/plan-w3-wed-1-heart-3370ec40.mp3"
+      "hash": "08c18dd8",
+      "michael": "audio/en/plan-w3-wed-1-michael-47f48ba8.mp3",
+      "heart": "audio/en/plan-w3-wed-1-heart-cd286c1e.mp3"
     },
     "plan:w3-wed-2": {
-      "hash": "1a0ac195",
-      "michael": "audio/en/plan-w3-wed-2-michael-42f1e134.mp3",
-      "heart": "audio/en/plan-w3-wed-2-heart-494e09de.mp3"
+      "hash": "cb1d4fef",
+      "michael": "audio/en/plan-w3-wed-2-michael-500a1b22.mp3",
+      "heart": "audio/en/plan-w3-wed-2-heart-66208ce4.mp3"
     },
     "practice:p-account:talk": {
       "hash": "b14fd304",
@@ -538,9 +538,9 @@ const AUDIO = {
       "heart": "audio/en/practice-p-account-talk-heart-5722cd4c.mp3"
     },
     "practice:p-counter:talk": {
-      "hash": "56f645c0",
-      "michael": "audio/en/practice-p-counter-talk-michael-db9abc61.mp3",
-      "heart": "audio/en/practice-p-counter-talk-heart-ed56d0ef.mp3"
+      "hash": "abfee62a",
+      "michael": "audio/en/practice-p-counter-talk-michael-66eab8ee.mp3",
+      "heart": "audio/en/practice-p-counter-talk-heart-b5c5bf18.mp3"
     },
     "practice:p-deferpanic:talk": {
       "hash": "b4a6387c",
@@ -548,9 +548,9 @@ const AUDIO = {
       "heart": "audio/en/practice-p-deferpanic-talk-heart-60c139c4.mp3"
     },
     "practice:p-fanin:talk": {
-      "hash": "b3aaeb1e",
-      "michael": "audio/en/practice-p-fanin-talk-michael-290e206a.mp3",
-      "heart": "audio/en/practice-p-fanin-talk-heart-1a639738.mp3"
+      "hash": "a8be1fb9",
+      "michael": "audio/en/practice-p-fanin-talk-michael-e1ca2e4f.mp3",
+      "heart": "audio/en/practice-p-fanin-talk-heart-c64e0635.mp3"
     },
     "practice:p-generics:talk": {
       "hash": "d0a2c487",
@@ -563,9 +563,9 @@ const AUDIO = {
       "heart": "audio/en/practice-p-money-talk-heart-5d8ecb7d.mp3"
     },
     "practice:p-pipeline:talk": {
-      "hash": "b2d375e6",
-      "michael": "audio/en/practice-p-pipeline-talk-michael-d13552b8.mp3",
-      "heart": "audio/en/practice-p-pipeline-talk-heart-2cef6a9a.mp3"
+      "hash": "5ca52fb6",
+      "michael": "audio/en/practice-p-pipeline-talk-michael-6ef89978.mp3",
+      "heart": "audio/en/practice-p-pipeline-talk-heart-42d5a10a.mp3"
     },
     "practice:p-removeslice:talk": {
       "hash": "d65c9afb",
@@ -573,9 +573,9 @@ const AUDIO = {
       "heart": "audio/en/practice-p-removeslice-talk-heart-63b54c18.mp3"
     },
     "practice:p-safecache:talk": {
-      "hash": "b7eec551",
-      "michael": "audio/en/practice-p-safecache-talk-michael-b0512225.mp3",
-      "heart": "audio/en/practice-p-safecache-talk-heart-ab21974b.mp3"
+      "hash": "ac610564",
+      "michael": "audio/en/practice-p-safecache-talk-michael-9a0114da.mp3",
+      "heart": "audio/en/practice-p-safecache-talk-heart-4676eb48.mp3"
     },
     "practice:p-txsum:talk": {
       "hash": "e5f6925d",
@@ -588,9 +588,9 @@ const AUDIO = {
       "heart": "audio/en/practice-p-validation-talk-heart-475173a0.mp3"
     },
     "practice:p-workerpool:talk": {
-      "hash": "ed620787",
-      "michael": "audio/en/practice-p-workerpool-talk-michael-9219c1ab.mp3",
-      "heart": "audio/en/practice-p-workerpool-talk-heart-44ce9e1d.mp3"
+      "hash": "6cd87c9d",
+      "michael": "audio/en/practice-p-workerpool-talk-michael-47587542.mp3",
+      "heart": "audio/en/practice-p-workerpool-talk-heart-50ac5630.mp3"
     }
   }
 };
