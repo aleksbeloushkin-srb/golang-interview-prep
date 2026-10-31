@@ -471,7 +471,7 @@ const PRACTICE = [
       "Отправка результата тоже может зависнуть навсегда, если потребитель ушёл: отправляй в select вместе с <-ctx.Done().",
       "wg.Add — до запуска горутин, а не внутри них. В Go 1.25+ есть wg.Go(func), он сам делает Add и Done."
     ],
-    "talkEN": "I start a fixed number of workers, so concurrency is bounded by construction. Each worker selects on the jobs channel and ctx.Done, and it sends its result in a select with ctx.Done as well, so it never blocks forever on a channel; fn itself must respect ctx. Only the pool sends on the results channel, so only the pool closes it: one extra goroutine waits on a WaitGroup for all workers and then closes results. The caller owns the jobs channel and closes it. Backpressure comes for free: with an unbuffered results channel, a slow consumer simply makes the workers wait.",
+    "talkEN": "A worker pool runs jobs with bounded concurrency and must stop cleanly on cancellation. I start a fixed number of workers, so the bound holds by construction. Each worker receives jobs and sends results inside a select with ctx.Done, so it never blocks forever on a channel; fn itself must respect ctx. The caller owns the jobs channel and closes it. Only the workers send on results, so the pool closes it: one extra goroutine waits on a WaitGroup for all workers, then closes results. Backpressure comes for free: with an unbuffered results channel, a slow consumer makes the workers wait.",
     "pitfalls": [
       "close(results) в каждом воркере → panic: close of closed channel.",
       "wg.Add внутри горутины → Wait может вернуться раньше, чем воркер начал работу.",
@@ -543,7 +543,7 @@ const PRACTICE = [
       "for n := range in удобен, но не замечает отмену, пока ждёт следующего значения.",
       "Закрытый in в Sum — ещё не «поток кончился»: при отмене Square тоже закрывает выход. Перед возвратом суммы проверь ctx.Err()."
     ],
-    "talkEN": "Generate and Square each own their output channel: each starts one goroutine, defers closing the output, and returns the channel; Sum runs in the caller's goroutine. Every send and every receive sits in a select with ctx.Done, so when the consumer cancels, every stage returns and closes its output, and nothing stays blocked. Closing flows downstream; cancellation reaches all stages through the shared context. Because cancellation also closes the channels, Sum checks ctx.Err when its input closes: a closed channel with a live context is a finished stream, otherwise the run was aborted.",
+    "talkEN": "This pipeline has three stages, Generate, Square and Sum, and must stop cleanly when the consumer cancels. Generate and Square each start one goroutine that owns its output channel and defers closing it; Sum runs in the caller's goroutine. Every send and receive sits in a select with ctx.Done, so on cancel every stage returns and nothing stays blocked. Closing flows downstream; cancellation reaches all stages through the shared context. Because cancellation also closes the channels, Sum checks ctx.Err when its input closes: a live context means the stream finished, otherwise the run was aborted.",
     "pitfalls": [
       "Стадия без отмены: потребитель ушёл — генератор навсегда заблокирован на отправке.",
       "Закрыть выход стадии со стороны потребителя не даст компилятор: стадии возвращают <-chan int. С chan int это был бы panic у отправителя — закрывает только отправитель.",
@@ -605,7 +605,7 @@ const PRACTICE = [
       "Отдельная горутина: wg.Wait(), затем close(out).",
       "Почему nil-вход опасен? Чтение из nil-канала блокирует навсегда, и WaitGroup не дождётся этой горутины, пока ctx не отменён."
     ],
-    "talkEN": "One goroutine per input forwards values to a shared output. Because several goroutines send on the output, none of them may close it; a separate goroutine waits on a WaitGroup and closes the output once every forwarder has returned. A forwarder returns when its input is closed or the context is done. Merge never closes the inputs because it does not own them, and it skips nil inputs, which would block forever.",
+    "talkEN": "Fan-in merges several input channels into one output. One goroutine per input forwards values to the shared output. Because several goroutines send on the output, none of them may close it; a separate goroutine waits on a WaitGroup and closes the output once every forwarder has returned. A forwarder returns when its input is closed or the context is done. Merge never closes the inputs because it does not own them, and it skips nil inputs, which would block forever.",
     "pitfalls": [
       "close(out) в каждой пересылающей горутине → panic: close of closed channel или send on closed channel.",
       "wg.Add внутри горутины → close может случиться раньше первой пересылки.",
@@ -666,7 +666,7 @@ const PRACTICE = [
       "У ChanCounter один select-цикл: запрос Inc, запрос значения (с каналом для ответа) и done.",
       "Inc у ChanCounter возвращается, когда владелец принял запрос, — поэтому следующий Value увидит изменение."
     ],
-    "talkEN": "For a single number, an atomic add is the simplest and usually the cheapest. A mutex is the general tool, and I need it as soon as an invariant spans more than one field. The channel version gives the state to one owner goroutine and serializes access through messages; it is the most expensive per operation here, but the pattern pays off when the owner does more than count, for example batching or I/O. All three are correct under the race detector; which one is faster depends on contention and the number of CPUs, so I measure instead of assuming.",
+    "talkEN": "The same counter can be built three ways: with an atomic, a mutex or an owner goroutine. For a single number, an atomic add is the simplest and usually the cheapest. A mutex is the general tool, needed once an invariant spans more than one field. The channel version gives the state to one owner goroutine and serializes access through messages; it costs the most per operation, but pays off when the owner does more than count, such as batching or I/O. All three pass the race detector; which is fastest depends on contention and CPU count, so I measure.",
     "pitfalls": [
       "Value без блокировки у MutexCounter — гонка данных, даже если «только читаю».",
       "Копирование MutexCounter или AtomicCounter по значению — копия независима; go vet (copylocks) предупредит.",
@@ -731,7 +731,7 @@ const PRACTICE = [
       "Копию входа сделай до Lock — под блокировкой меньше работы.",
       "Set существующего ключа: сначала вычти размер старого значения."
     ],
-    "talkEN": "The cache keeps a map and a byte total that must always agree, so both change under the same lock, and readers take a read lock. The subtle part is aliasing: an item holds slices, and a slice shares its backing array. If Get returned the stored item, a caller could modify cache memory without any lock, which is a data race and silently changes cached data behind the lock. So I copy on the way in and on the way out. RWMutex pays off only when reads dominate and read sections are long enough to outweigh its extra cost; otherwise a plain Mutex is as fast or faster, so I'd benchmark.",
+    "talkEN": "SafeCache keeps a map and a byte total that must always agree. So both change under the same write lock, and readers take a read lock. The subtle part is aliasing: an item holds slices, and a slice shares its backing array. If Get returned the stored item, a caller could change cache memory without any lock, which is a data race. So I copy on the way in and on the way out. RWMutex pays off only when reads dominate and read sections are long; otherwise a plain Mutex is as fast or faster, so I'd benchmark.",
     "pitfalls": [
       "Вернуть сохранённый Item без копии → гонка данных, когда вызывающий его меняет.",
       "Менять map под RLock → гонка: RLock разрешает только чтение.",
