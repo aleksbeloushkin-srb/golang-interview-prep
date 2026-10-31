@@ -15,15 +15,15 @@
 |---|---|---|---|---|---|---|---|---|---|
 | [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.6 | `-race` → «dash race» |  |  |  |  |  |  |
 | [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.6 | `-race` → «dash race» |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 37.9 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 38.4 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 38.6 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 39.2 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 18.0 | IDs → «I-D's», pprof |  |  |  |  |  |  |
 | [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 17.9 | IDs → «I-D's», pprof |  |  |  |  |  |  |
-| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 35.2 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
-| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 36.3 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
+| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 34.7 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
+| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 36.2 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
 | [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 45.5 | hchan, confinement |  |  |  |  |  |  |
 | [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 46.4 | hchan, confinement |  |  |  |  |  |  |
-| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
+| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.3 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
 | [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.3 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
@@ -35,28 +35,28 @@
 | [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 46.4 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
 | [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 17.1 | `-Xmx` |  |  |  |  |  |  |
 | [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 17.5 | `-Xmx` |  |  |  |  |  |  |
-| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 48.2 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
-| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 50.0 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
+| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 49.7 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
+| [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 51.4 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.8 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
 | [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 36.0 | `s[1:3]` |  |  |  |  |  |  |
-| [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 26.4 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
+| [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 26.5 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
 | [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 26.9 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 28.3 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 28.7 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.5 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
 | [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 43.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
-| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 40.0 | «directly», «panicking goroutine» |  |  |  |  |  |  |
-| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 41.6 | «directly», «panicking goroutine» |  |  |  |  |  |  |
+| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 40.1 | «directly», «panicking goroutine» |  |  |  |  |  |  |
+| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 41.7 | «directly», «panicking goroutine» |  |  |  |  |  |  |
 | [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 26.0 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
 | [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 26.5 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
 | [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 40.9 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
 | [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 41.2 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
-| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.8 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
+| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.7 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
 | [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 43.9 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
-| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 25.6 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
-| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 25.9 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 25.7 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 26.0 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
 | [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 36.7 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 38.2 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 47.1 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
@@ -117,14 +117,14 @@
 | [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 16.2 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 12.5 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 12.6 |  |  |  |  |  |  |  |
-| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 36.2 |  |  |  |  |  |  |  |
-| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 36.8 |  |  |  |  |  |  |  |
+| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 36.0 |  |  |  |  |  |  |  |
+| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 36.6 |  |  |  |  |  |  |  |
 | [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 11.3 |  |  |  |  |  |  |  |
 | [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 11.6 |  |  |  |  |  |  |  |
 | [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 13.8 |  |  |  |  |  |  |  |
 | [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 14.6 |  |  |  |  |  |  |  |
-| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 28.1 |  |  |  |  |  |  |  |
-| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 28.4 |  |  |  |  |  |  |  |
+| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 28.2 |  |  |  |  |  |  |  |
+| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 28.8 |  |  |  |  |  |  |  |
 | [card:c19:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) | Michael | 28.4 |  |  |  |  |  |  |  |
 | [card:c19:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) | Heart | 29.4 |  |  |  |  |  |  |  |
 | [card:c20:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 17.3 |  |  |  |  |  |  |  |
@@ -133,8 +133,8 @@
 | [card:c21:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 21.2 |  |  |  |  |  |  |  |
 | [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 22.4 |  |  |  |  |  |  |  |
-| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 28.2 |  |  |  |  |  |  |  |
-| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 28.5 |  |  |  |  |  |  |  |
+| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 28.3 |  |  |  |  |  |  |  |
+| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 28.6 |  |  |  |  |  |  |  |
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 17.2 |  |  |  |  |  |  |  |
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 14.0 |  |  |  |  |  |  |  |
@@ -149,8 +149,8 @@
 | [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 43.6 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 22.6 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 23.5 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.2 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.3 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.4 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.7 |  |  |  |  |  |  |  |
 | [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 19.2 |  |  |  |  |  |  |  |
 | [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 20.2 |  |  |  |  |  |  |  |
 | [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 16.2 |  |  |  |  |  |  |  |
@@ -179,8 +179,8 @@
 | [card:c43:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 19.5 |  |  |  |  |  |  |  |
 | [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 23.2 |  |  |  |  |  |  |  |
 | [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 23.9 |  |  |  |  |  |  |  |
-| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 31.1 |  |  |  |  |  |  |  |
-| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 32.7 |  |  |  |  |  |  |  |
+| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 31.3 |  |  |  |  |  |  |  |
+| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 32.8 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 23.5 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 23.8 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
@@ -250,29 +250,29 @@
 
 Текст для речи отличается от экранного только чтением кода и чисел. Если смысл расходится с экраном — это ошибка, её нужно отметить.
 
-**card:c2:short** (хеш текста `c88f5462`)
+**card:c2:short** (хеш текста `6e075d49`)
 
-> Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked, and that is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which dash race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
+> Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked. That is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which dash race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
 
-**card:c7:short** (хеш текста `52a3505d`)
+**card:c7:short** (хеш текста `f8cb60aa`)
 
-> Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment, because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of logical C-P-U's the process may use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
+> Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment. That is because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of logical C-P-U's the process may use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
 
 **card:c12:jvm** (хеш текста `b71dea61`)
 
 > In Java a stuck platform thread shows up in a thread dump under its name. Goroutines have I-D's in dumps but no names and no public I-D A-P-I, so you find a leak by grouping identical stacks, or by pprof labels, and watching which group grows.
 
-**card:c12:short** (хеш текста `3494688c`)
+**card:c12:short** (хеш текста `55cf511a`)
 
-> A leaked goroutine has outlived its work and can never finish, usually because it is blocked on a channel, a lock or I-O without a timeout. The G-C never collects a goroutine, so every goroutine must end in one of three ways: its work is done, it hits an error, or it is told to stop. The rule: whoever starts a goroutine must be able to stop it. I find a leak by a stack group that keeps growing in the goroutine profile; in tests, Uber's go-leak library fails the test if goroutines are left behind.
+> A leaked goroutine has outlived its work and can never finish. Usually it is blocked on a channel, a lock or I-O without a timeout. The G-C never collects a goroutine, so every goroutine must end in one of three ways: its work is done, it hits an error, or it is told to stop. The rule: whoever starts a goroutine must be able to stop it. I find a leak by a stack group that keeps growing in the goroutine profile; in tests, Uber's go-leak library fails the test if goroutines are left behind.
 
 **card:c15:short** (хеш текста `03d75286`)
 
 > Both coordinate goroutines, but they answer different questions: who owns the data, and what must change together. Use a channel to hand over ownership or signal an event, for example a producer passing jobs to workers, and a mutex to protect shared state with an invariant, such as a balance, where the check and the update must happen under one lock. A channel is not lock-free either: its runtime struct, hchan, has its own runtime lock, not a sync dot Mutex, that sends and receives take. And the third option needs no lock on the data at all: confinement, where only one goroutine touches the data or each one gets its own copy; a sent pointer is not a copy.
 
-**card:c17:short** (хеш текста `7a2bca70`)
+**card:c17:short** (хеш текста `bd685eac`)
 
-> If a receiver is already waiting, the send skips the buffer: the sending goroutine copies the value straight into the receiver's variable, usually on its stack, under the channel lock. If nobody waits and there is room, the value goes into the buffer, which lives on the heap. With no room, the sender parks: on an unbuffered channel a receiver later copies the value from the sender's stack; on a full buffer it takes the oldest value and moves the sender's into the freed slot. It is safe because a goroutine parked on a channel has active Stack Chans set, so moving its stack requires the same channel locks.
+> If a receiver is already waiting, the send skips the buffer. The sending goroutine copies the value straight into the receiver's variable, usually on its stack, under the channel lock. If nobody waits and there is room, the value goes into the buffer, which lives on the heap. With no room, the sender parks: on an unbuffered channel a receiver later copies the value from the sender's stack; on a full buffer it takes the oldest value and moves the sender's into the freed slot. It is safe because a goroutine parked on a channel has active Stack Chans set, so moving its stack requires the same channel locks.
 
 **card:c20:short** (хеш текста `143c18ce`)
 
@@ -282,9 +282,9 @@
 
 > Inside, sync dot Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one C-A-S that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than one millisecond and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so one millisecond is a mode threshold, not a timeout.
 
-**card:c23:short** (хеш текста `41b8c485`)
+**card:c23:short** (хеш текста `c4489bb9`)
 
-> The stack is each goroutine's own memory for function calls: values that stay local to a call live in its frame and disappear when the function returns, so allocating there is nearly free. The heap is shared memory for values that must outlive the call or be reachable from elsewhere; the runtime allocator hands it out, and the G-C later frees what is no longer used. That is the fundamental difference: the stack cleans up after itself, the heap needs the G-C, and every heap allocation brings the next G-C cycle closer. Returning a pointer to a local usually moves it to the heap. Measure: G-C flags dash m shows what escapes, and bench-mem counts real allocations.
+> The stack is each goroutine's own memory for function calls. Values that stay local to a call live in its frame and disappear when the function returns, so allocating there is nearly free. The heap is shared memory for values that must outlive the call or be reachable from elsewhere; the runtime allocator hands it out, and the G-C later frees what is no longer used. That is the fundamental difference: the stack cleans up after itself, the heap needs the G-C, and every heap allocation brings the next G-C cycle closer. Returning a pointer to a local usually moves it to the heap. Measure: G-C flags dash m shows what escapes, and bench-mem counts real allocations.
 
 **card:c25:short** (хеш текста `b449c2c9`)
 
@@ -294,9 +294,9 @@
 
 > Go has no X-M-X: by default the heap simply grows as needed, and GO-MEM-LIMIT acts as a soft version of it. There is no catchable Out Of Memory Error either: when memory really runs out, the runtime aborts or the O-S kills the process.
 
-**card:c27:short** (хеш текста `60e43d1d`)
+**card:c27:short** (хеш текста `4a54cda8`)
 
-> Two knobs trade memory for G-C C-P-U: GO-G-C says how much the heap may grow between cycles, and GO-MEM-LIMIT says how much memory you would like to stay under. At the default GO-G-C=100 the heap goal is about twice the live data, plus stacks and globals, so 200 megabytes live means a goal near 400 megabytes, and the cycle starts earlier so marking finishes by then. GO-MEM-LIMIT is a soft limit: near it the G-C runs more often, but it cannot prevent O-O-M, because live data cannot be collected. Latency usually comes from mark assists: a goroutine that allocates during marking and runs out of assist credit does some G-C work itself before it gets its memory.
+> Two knobs trade memory for G-C C-P-U: GO-G-C and GO-MEM-LIMIT. GO-G-C says how much the heap may grow between cycles, and GO-MEM-LIMIT says how much memory you would like to stay under. At the default GO-G-C=100 the heap goal is about twice the live data, plus stacks and globals, so 200 megabytes live means a goal near 400 megabytes, and the cycle starts earlier so marking finishes by then. GO-MEM-LIMIT is a soft limit: near it the G-C runs more often, but it cannot prevent O-O-M, because live data cannot be collected. Latency usually comes from mark assists: a goroutine that allocates during marking and runs out of assist credit does some G-C work itself before it gets its memory.
 
 **card:c29:jvm** (хеш текста `5f8119f2`)
 
@@ -306,9 +306,9 @@
 
 > A slice is only a view onto data stored in an array, not the data itself. Its structure is a pointer to the array, a length and a capacity, and a string is a pointer and a length over immutable bytes. So slicing s from one to three copies no elements: it is a new view over the same array, and a change through one slice is visible through the other. append writes in place when the resulting length fits in the capacity, and otherwise copies into a new, larger array, so always use the slice that append returns.
 
-**card:c30:short** (хеш текста `5ac47b1b`)
+**card:c30:short** (хеш текста `a41b1b48`)
 
-> A Go map is a hash table; before Go one 24 it was an array of two to the power B buckets of eight slots, with overflow buckets chained when a bucket filled up. The low bits of the hash chose the bucket, and a one-byte top hash filtered candidates before the keys were compared. Past an average load of 6.5 per bucket the map doubled, and the copying, called evacuation, was spread over later writes.
+> A Go map is a hash table. Before Go one 24 it was an array of two to the power B buckets of eight slots, with overflow buckets chained when a bucket filled up. The low bits of the hash chose the bucket, and a one-byte top hash filtered candidates before the keys were compared. Past an average load of 6.5 per bucket the map doubled, and the copying, called evacuation, was spread over later writes.
 
 **card:c33:short** (хеш текста `a6be640d`)
 
@@ -318,9 +318,9 @@
 
 > Say we have a Counter whose Set method has a pointer receiver, and a Setter interface with Set. Calling the method and satisfying the interface follow different rules: c dot Set compiles on a Counter variable, but var s Setter equals c does not. The call works because Go rewrites it as: take the address of c, then call Set, which needs an addressable value: an element of map of K to Counter or a function result of type Counter cannot do it, while a pointer to Counter needs no address. The assignment fails because interfaces check method sets: Counter's has only its value-receiver methods, the method set of pointer to Counter has both.
 
-**card:c35:short** (хеш текста `f06df0f0`)
+**card:c35:short** (хеш текста `3368240e`)
 
-> defer schedules a call for when the surrounding function returns or panics, so cleanup such as closing a file or unlocking a mutex sits right next to the code that needs it. Deferred calls run in last-in, first-out order, and their arguments are evaluated at the defer statement. They run after the results are set, so a deferred closure can still change a named result. A panic unwinds the stack and runs those deferred calls; recover stops it only when called directly in a deferred function of the panicking goroutine, and an unrecovered panic in any goroutine crashes the program.
+> defer schedules a call for when the surrounding function returns or panics. So cleanup, such as closing a file or unlocking a mutex, sits right next to the code that needs it. Deferred calls run in last-in, first-out order, and their arguments are evaluated at the defer statement. They run after the results are set, so a deferred closure can still change a named result. A panic unwinds the stack and runs those deferred calls; recover stops it only when called directly in a deferred function of the panicking goroutine, and an unrecovered panic in any goroutine crashes the program.
 
 **card:c39:jvm** (хеш текста `50ac7db6`)
 
@@ -330,13 +330,13 @@
 
 > In Go an error is a value that travels up the call stack, and each layer adds context to it. You wrap it with F-M-T dot Error-f and percent w: the message gets the context, and the original error stays inside. Higher up, errors dot Is asks whether this is a known error, such as Err Not Found, even when it is wrapped. errors dot As asks whether there is an error of a given type inside, such as pointer to Query Error, and hands you the first match so you can read its fields. errors dot Join, Go one 20, combines several errors into one that Is and As can still search.
 
-**card:c40:short** (хеш текста `dc7b71a1`)
+**card:c40:short** (хеш текста `6d2a12a2`)
 
-> Every type in Go has a zero value: var n int gives you zero, and you get the empty string for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: assigning to a nil map, m of k equals v, panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync dot Mutex and strings dot Builder work without any setup.
+> Every type in Go has a zero value: var n int gives you zero. You get the empty string for strings, false for bools, nil for pointers, slices, maps, channels, funcs and interfaces, and zeroed elements and fields for arrays and structs. Safe: a nil slice works like an empty one for len, range and append, and reading a nil map returns the zero value. Not safe: assigning to a nil map, m of k equals v, panics, and a nil channel blocks forever on send or receive and panics on close. Good types make the zero value useful: sync dot Mutex and strings dot Builder work without any setup.
 
-**card:c41:short** (хеш текста `208ccb81`)
+**card:c41:short** (хеш текста `cfeff26d`)
 
-> A Go string is bytes, not characters: len of s and s of i work on bytes, while range decodes U-T-F-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually U-T-F-8. Convert to a slice of runes when you need code points by position, and build strings in a loop with strings dot Builder.
+> A Go string is bytes, not characters. len of s and s of i work on bytes, while range decodes U-T-F-8 and gives each rune, a Unicode code point, with its starting byte index. That is because a string is an immutable sequence of bytes, usually U-T-F-8. Convert to a slice of runes when you need code points by position, and build strings in a loop with strings dot Builder.
 
 **card:c43:short** (хеш текста `1707ad52`)
 
@@ -458,9 +458,9 @@
 
 > A Java thread blocked on a lock or a queue waits in one place at a time. Go needs a separate record per wait because select lets one goroutine sit in several channel queues at once.
 
-**card:c16:short** (хеш текста `34eb3020`)
+**card:c16:short** (хеш текста `06ea6351`)
 
-> A channel has two wait queues, one for receivers, the receive queue, and one for senders, the send queue, and what stands in them is a sudog: a waiting ticket, one per operation a goroutine waits on. The goroutine itself is not enough: in a select it can wait on several channels at once, so it holds a ticket in each queue. A ticket records the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly. When one case wins, the other tickets are withdrawn, and all of them return to a per-P cache.
+> A channel has two wait queues, one for receivers, the receive queue, and one for senders, the send queue. What stands in them is a sudog: a waiting ticket, one per operation a goroutine waits on. The goroutine itself is not enough: in a select it can wait on several channels at once, so it holds a ticket in each queue. A ticket records the goroutine, the channel and where the value comes from or goes to, so a partner can copy it directly. When one case wins, the other tickets are withdrawn, and all of them return to a per-P cache.
 
 **card:c17:jvm** (хеш текста `4b5aca71`)
 
@@ -470,9 +470,9 @@
 
 > Java has no direct equivalent: the closest are Completable Future dot any Of or an N-I-O Selector for sockets. In Go select works on any channels, including timers and ctx dot Done.
 
-**card:c18:short** (хеш текста `3a849cb1`)
+**card:c18:short** (хеш текста `5e791b70`)
 
-> select waits on several channel operations at once and runs one ready case, chosen at random among the ready ones, so the order in the source gives no priority. A default case runs only when nothing is ready, and a nil channel case is never ready. To prefer cancellation, check ctx dot Err, or do a non-blocking select on ctx dot Done, before the main select: that narrows the window but is still not a strict priority.
+> select waits on several channel operations at once and runs one ready case. It is chosen at random among the ready ones, so the order in the source gives no priority. A default case runs only when nothing is ready, and a nil channel case is never ready. To prefer cancellation, check ctx dot Err, or do a non-blocking select on ctx dot Done, before the main select: that narrows the window but is still not a strict priority.
 
 **card:c19:short** (хеш текста `9a8b2726`)
 
@@ -490,9 +490,9 @@
 
 > Wait Group is like a reusable Count Down Latch whose count you can raise with Add; Once is like a lazy holder or double-checked initialization; Context is like an explicit, passed-along version of thread interruption with a deadline. Go passes Context as the first argument instead of keeping it in a Thread Local.
 
-**card:c22:short** (хеш текста `b578da70`)
+**card:c22:short** (хеш текста `a2da08ac`)
 
-> All three coordinate goroutines, but each does one job: Wait Group waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values to the work. They do not replace each other: Wait Group does not cancel, Context does not wait, and Once does not retry a failed initialization. A handler often uses all three.
+> All three coordinate goroutines, but each does one job. Wait Group waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values to the work. They do not replace each other: Wait Group does not cancel, Context does not wait, and Once does not retry a failed initialization. A handler often uses all three.
 
 **card:c23:jvm** (хеш текста `22422ab2`)
 
@@ -522,9 +522,9 @@
 
 > Java's G1 uses a snapshot-at-the-beginning barrier, which matches only the deletion half of Go's; it needs no insertion half because it scans thread stacks in a stop-the-world pause, while Go scans stacks concurrently. G1 also needs card marking because it is generational and moves objects; Go's collector does neither.
 
-**card:c28:short** (хеш текста `7fbb7bbc`)
+**card:c28:short** (хеш текста `03e4334e`)
 
-> The hybrid write barrier is code the compiler adds to pointer writes outside the stack; while the G-C marks, it keeps the running program from hiding a live object. The danger: your code copies the only pointer to an unmarked object into an already scanned object and overwrites the original, so the G-C would free a live object. The barrier shades the old target of the write and, while the current stack is grey, the new one too: a deletion and an insertion barrier combined, hence hybrid. So stack writes need no barrier, and each stack is scanned once.
+> The hybrid write barrier is code the compiler adds to pointer writes outside the stack. While the G-C marks, the barrier keeps the running program from hiding a live object. The danger: your code copies the only pointer to an unmarked object into an already scanned object and overwrites the original, so the G-C would free a live object. The barrier shades the old target of the write and, while the current stack is grey, the new one too: a deletion and an insertion barrier combined, hence hybrid. So stack writes need no barrier, and each stack is scanned once.
 
 **card:c30:jvm** (хеш текста `6df5ab69`)
 
@@ -582,9 +582,9 @@
 
 > Table-driven tests play the role of J Unit 5 Parameterized Test, t dot Run is like a dynamic or nested test, and t dot Cleanup is like After Each registered from inside the test. There are no assertion functions in the standard library: you compare values and call t dot Error-f to continue or t dot Fatal-f to stop.
 
-**card:c44:short** (хеш текста `1dfeb4e7`)
+**card:c44:short** (хеш текста `d07b2443`)
 
-> A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases in a slice of structs and runs each with t dot Run, so failures name the case and -run can select one. t dot Helper marks a helper so failures point at the caller's line. t dot Parallel lets subtests run concurrently after the parent's function returns, so give them only per-case data and register shared teardown with t dot Cleanup, not defer.
+> A table-driven test is the usual Go way to check many inputs with one test function. It lists named cases in a slice of structs and runs each with t dot Run, so failures name the case and -run can select one. t dot Helper marks a helper so failures point at the caller's line. t dot Parallel lets subtests run concurrently after the parent's function returns, so give them only per-case data and register shared teardown with t dot Cleanup, not defer.
 
 **card:c47:jvm** (хеш текста `774abf85`)
 
