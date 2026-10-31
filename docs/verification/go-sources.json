@@ -1,0 +1,2491 @@
+[
+ {
+  "item": "c1",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackMin",
+  "fact": "A goroutine starts with a small stack of at least 2 KiB (stackMin = 2048 on Linux/amd64) that grows on demand.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "The Go runtime, not the OS, creates goroutines: newproc1 reuses a dead G from gfget or allocates one with malg(stackMin) and makes it runnable.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "jvmEN",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "preemptM",
+  "fact": "The runtime can preempt a goroutine in the middle of a loop by signalling its thread (asynchronous preemption).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/debug.go",
+  "symbol": "GOMAXPROCS",
+  "fact": "GOMAXPROCS limits how many OS threads execute user Go code at once; it is not the number of goroutines or threads.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "A reused goroutine may start with a larger stack sized from the average stack use the GC observed, never below fixedStack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g",
+  "fact": "Each goroutine has a runtime descriptor, the struct runtime.g.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g.goid",
+  "fact": "The runtime numbers goroutines internally in g.goid; no public API exposes the number.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/traceback.go",
+  "symbol": "goroutineheader",
+  "fact": "Stack traces print the internal number as \"goroutine N\".",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c1",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "A go statement evaluates the function value and arguments in the calling goroutine, runs the call in a new goroutine and returns nothing (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "go f(x) evaluates f and x in the calling goroutine and runs the call in a new goroutine (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc",
+  "fact": "newproc runs on the system stack, creates the G with newproc1, queues it with runqput(pp, newg, true) and then calls wakep once mainStarted.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackMin",
+  "fact": "A newly allocated G gets the minimum stack, 2 KiB on Linux.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "newproc1 takes a dead G from gfget or creates one with malg(stackMin).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "gfget",
+  "fact": "A reused G whose stack is not startingStackSize gets it freed and a new startingStackSize stack allocated, so reuse does not promise zero allocations.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "The starting size for reused Gs is recomputed at each GC from average scanned stack usage, unless GODEBUG adaptivestackstart=0.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/runtime1.go",
+  "symbol": "parseRuntimeDebugVars",
+  "fact": "GODEBUG adaptivestackstart is on by default (debug.adaptivestackstart = 1).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "symbol renamed only: in 1.24.7 the default is set in parsedebugvars, in 1.26.1+ in parseRuntimeDebugVars; default 1 in all three"
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "newproc1 sets newg.sched.sp and newg.sched.pc = goexit + PCQuantum before calling gostartcallfn.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/sys_x86.go",
+  "symbol": "gostartcall",
+  "fact": "On amd64, gostartcall pushes the saved PC (goexit) onto the new stack as the return address and stores fn in sched.pc and the closure in sched.ctxt.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "runqput(pp, gp, true) prefers runnext but uses the ordinary queue without sysmon or, randomly, under -race.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "wakep",
+  "fact": "After queuing, newproc calls wakep so an idle P can start and steal the new G.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c3",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g.goid",
+  "fact": "The runtime has internal goroutine IDs (g.goid) but exposes no public current-ID API.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackalloc",
+  "fact": "stackalloc serves small stacks from the per-P mcache.stackcache or stackpool free lists and larger ones from stackLarge or a dedicated span, never through mallocgc.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/mheap.go",
+  "symbol": "allocManual",
+  "fact": "Stack spans are manually managed spans from allocManual, not swept GC heap objects and not counted in heapInUse.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "copystack",
+  "fact": "A growing stack is copied to a new, larger allocation, so its address changes.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "shortEN",
+  "file": "src/runtime/mstats.go",
+  "symbol": "MemStats.StackInuse",
+  "fact": "MemStats.StackInuse is bytes in stack spans, not bytes used by live frames.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/mcache.go",
+  "symbol": "mcache.stackcache",
+  "fact": "The per-P free-stack cache lives in mcache.stackcache, one list per size order.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "gobuf.sp",
+  "fact": "g.sched.sp is the saved resume stack pointer.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "stack.lo",
+  "fact": "g.stack.lo and g.stack.hi bound the allocated stack region.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/stack.go",
+  "symbol": "freeStackSpans",
+  "fact": "Unused stack spans are returned to the heap at the end of GC.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c4",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/mstats.go",
+  "symbol": "MemStats.StackSys",
+  "fact": "StackSys is StackInuse plus OS-thread stack memory obtained directly from the OS, and does not count every C stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "When the prologue's stack check fails, morestack calls newstack, which allocates a stack at least twice the old size and copies the frames.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "adjustpointers",
+  "fact": "copystack fixes pointers into the old stack using the compiler's stack pointer maps.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/cmd/compile/internal/escape/solve.go",
+  "symbol": "outlives",
+  "fact": "Escape analysis keeps pointers to stack objects out of the heap, so user heap objects never point into a stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "main",
+  "fact": "runtime.main sets maxstacksize to 1000000000 bytes on 64-bit systems and 250000000 on 32-bit systems.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "shortEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "Growth beyond maxstacksize prints \"goroutine stack exceeds N-byte limit\" and throws \"stack overflow\".",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "jvmEN",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "Exceeding the stack limit is a fatal throw that cannot be recovered.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[0]",
+  "file": "src/cmd/internal/obj/x86/obj6.go",
+  "symbol": "preprocess",
+  "fact": "On amd64, small frameless leaf functions and NOSPLIT functions get no stack-split check in the prologue.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "When stackguard0 == stackPreempt, newstack handles a preemption request instead of growing the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "newstack starts with twice the old size and doubles again until funcMaxSPDelta + stackGuard fits.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "syncadjustsudogs",
+  "fact": "When a G has active channel references, copystack locks the channels and adjusts sudog pointers into the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/stack.go",
+  "symbol": "shrinkstack",
+  "fact": "shrinkstack halves the stack only if usage (hi - sp + stackNosplit) is below a quarter, the half is at least fixedStack and isShrinkStackSafe allows it.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/mgcmark.go",
+  "symbol": "scanstack",
+  "fact": "The GC shrinks stacks while scanning them, or defers it to a synchronous safe point through preemptShrink.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/proc.go",
+  "symbol": "main",
+  "fact": "The default per-goroutine limit is 1 GB on 64-bit and 250 MB on 32-bit systems.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackalloc",
+  "fact": "Stack sizes are powers of two, so the largest stack under the 1000000000-byte default is 2^29 bytes = 512 MiB.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/debug/garbage.go",
+  "symbol": "SetMaxStack",
+  "fact": "debug.SetMaxStack sets the per-goroutine limit for future growth, returns the previous value, and exceeding it crashes the program.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c5",
+  "field": "detailsEN[3]",
+  "file": "src/unsafe/unsafe.go",
+  "symbol": "Pointer",
+  "fact": "A uintptr is an integer, not a pointer the GC tracks or adjusts when a stack moves.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/cmd/internal/obj/x86/a.out.go",
+  "symbol": "REGG",
+  "fact": "On amd64 the current G is in R14 under ABIInternal.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "gogo stores the G in TLS and R14, restores SP, BP and the closure context, clears those gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "mcall",
+  "fact": "mcall saves the caller's PC, SP and BP in g.sched, switches R14 and SP to g0 and calls the scheduler function there (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "m.g0",
+  "fact": "Each M has a g0 whose stack is the thread's system stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "On g0 the scheduler calls execute, which marks the G running and calls gogo(&gp.sched).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "code",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "gobuf",
+  "fact": "g.sched is a gobuf holding sp, pc, g, ctxt, lr and bp: continuation state, not every CPU register.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gobuf also has a ret field (removed in Go 1.25); 1.26.1 and 1.27.3: sp, pc, g, ctxt, lr, bp"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "On amd64, gogo restores SP, BP and the closure context, clears selected gobuf fields and jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/cmd/compile/abi-internal.md",
+  "symbol": "Function call argument and result passing",
+  "fact": "Go's internal ABI has no callee-save registers, so a voluntary switch at a call needs only the continuation state (Markdown section, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/preempt_amd64.s",
+  "symbol": "asyncPreempt",
+  "fact": "Asynchronous preemption first saves every register on the goroutine's stack (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.24.7: asyncPreempt saves flags, GP registers and X0-X15 on the goroutine stack (ADJSP $368); 1.26.1+ (since Go 1.26): only flags and GP registers go on the stack (ADJSP $112), vector registers go to p.xRegs.scratch and xRegSave moves them to off-stack gp.xRegs.state"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/preempt_xreg.go",
+  "symbol": "xRegSave",
+  "fact": "On amd64, arm64 and loong64, asynchronous preemption saves the vector registers outside the goroutine stack, in per-G state gp.xRegs.state.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "absent in 1.24.7: file added in Go 1.26 (also absent in the 1.25.1 tree); before that the vector registers were saved on the goroutine stack"
+ },
+ {
+  "item": "c6",
+  "field": "detailsEN[3]",
+  "file": "src/cmd/internal/obj/arm64/a.out.go",
+  "symbol": "REGG",
+  "fact": "On arm64 the current G is in R28.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[0].desc",
+  "file": "doc/go_spec.html",
+  "symbol": "Go_statements",
+  "fact": "G1 evaluates the function value and arguments of go doWork(n); the new goroutine runs the call (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[0].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "runnext is a single slot: a new G from go takes it, and the previous occupant moves to the tail of the local runq.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].desc",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "systemstack",
+  "fact": "systemstack switches R14 and SP to g0 while m.curg still points to the user G (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc1",
+  "fact": "G2 comes from the free pool (gfget) or is newly allocated (malg).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[1].board",
+  "file": "src/runtime/stack.go",
+  "symbol": "gcComputeStartingStackSize",
+  "fact": "A new G gets 2 KiB on Linux/amd64; a pooled G gets the adaptive starting size, never below 2 KiB.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[2].desc",
+  "file": "src/cmd/compile/internal/typecheck/stmt.go",
+  "symbol": "normalizeGoDeferCall",
+  "fact": "For go doWork(n) the compiler evaluates n in the caller and wraps the call in a generated closure (main.main.gowrap1) that holds the copy.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[2].desc",
+  "file": "src/runtime/sys_x86.go",
+  "symbol": "gostartcall",
+  "fact": "On amd64, goexit is pushed as the wrapper's return address; sched.pc becomes the wrapper entry and sched.ctxt the closure.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[3].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "Without sysmon (wasm) runnext is not used; under -race the runtime puts the G in the ordinary queue with probability 1/2.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "execute moves the G from runnable to running and calls gogo.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].desc",
+  "file": "src/runtime/asm_amd64.s",
+  "symbol": "gogo",
+  "fact": "gogo restores the current G, SP, BP and closure context, then jumps to the saved PC (assembly TEXT symbol).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: gogo also loads gobuf.ret into AX and clears it; gobuf.ret was removed in Go 1.25, so 1.26.1/1.27.3 restore only SP, ctxt, BP and PC"
+ },
+ {
+  "item": "sim1",
+  "field": "steps[4].boxes",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "schedtick is incremented only when the time slice is not inherited.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "goexit1",
+  "fact": "After the function returns, goexit calls goexit1, which calls mcall(goexit0) to switch to g0.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "gdestroy",
+  "fact": "goexit0 calls gdestroy, which sets _Gdead and calls gfput, and then calls schedule.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[5].board",
+  "file": "src/runtime/proc.go",
+  "symbol": "gfput",
+  "fact": "gfput puts the dead G into the free pool and frees its stack if it is not startingStackSize.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[6].check",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "On overflow the runtime prints \"goroutine stack exceeds 1000000000-byte limit\" and throws \"stack overflow\"; growth at least doubles the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim1",
+  "field": "steps[6].check",
+  "file": "src/runtime/stack.go",
+  "symbol": "shrinkstack",
+  "fact": "The GC can shrink an underused stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "explanationRU",
+  "file": "src/cmd/compile/internal/noder/writer.go",
+  "symbol": "distinctVars",
+  "fact": "Per-iteration loop variables apply when the file's Go version is at least go1.22; older language versions share one variable.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "ru",
+  "file": "src/cmd/go/internal/gover/toolchain.go",
+  "symbol": "TooNewError",
+  "fact": "A module declaring go 1.25 or go 1.26 needs a toolchain at least that new; with GOTOOLCHAIN=local, Go 1.24.7 refuses to build it.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7 cannot build a module that declares go 1.25 or 1.26 (go.mod requires go >= 1.25); with go 1.22-1.24 in go.mod it prints the same 0, 1, 2"
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "For_clause",
+  "fact": "Since Go 1.22 each iteration of a for clause has its own variable; before, iterations shared one (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "doc/go_mem.html",
+  "symbol": "chan",
+  "fact": "Closing a channel is synchronized before a receive that returns because the channel is closed (memory model section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q1",
+  "field": "sources",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Wait",
+  "fact": "WaitGroup.Wait blocks until the counter reaches zero; it ensures completion, not order.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "explanationRU",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Wait",
+  "fact": "Wait blocks until every Done; a sender blocked on a full buffer never calls Done, so reading only after Wait hangs.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "versionNote",
+  "file": "src/sync/waitgroup.go",
+  "symbol": "Go",
+  "fact": "WaitGroup.Go(func()) exists from Go 1.25 (api/go1.25.txt); the example uses only Add, Done and Wait, which exist from Go 1.0.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "WaitGroup.Go is absent in 1.24.7 and present in 1.26.1 and 1.27.3, whose docs recommend it over Add/Done; Add, Done and Wait are in all three"
+ },
+ {
+  "item": "q15",
+  "field": "explanationRU",
+  "file": "src/runtime/chan.go",
+  "symbol": "chansend",
+  "fact": "A send on a full buffered channel blocks until a receiver frees a slot.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q15",
+  "field": "sources",
+  "file": "doc/go_spec.html",
+  "symbol": "Close",
+  "fact": "close does not wait for the buffer to drain; receives return the remaining values, then zero values (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "procresize",
+  "fact": "GOMAXPROCS is the number of Ps: procresize keeps exactly gomaxprocs Ps, and a G runs Go code on an M only while that M holds a P.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "schedinit",
+  "fact": "By default GOMAXPROCS equals the number of logical CPUs the process may use (sched_getaffinity count).",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.26.1 and 1.27.3: with go >= 1.25 in go.mod on Linux the default is defaultGOMAXPROCS = min(affinity CPUs, max(ceil(cgroup quota/period), 2)), so it can be below the CPUs the process may use; 1.24.7: always the affinity count."
+ },
+ {
+  "item": "c7",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "retake",
+  "fact": "A thread blocked for long in a system call or cgo can lose its P: sysmon retakes the P and hands it off (handoffp).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "p.runnext",
+  "fact": "Each P has a separate one-slot runnext in addition to its local queue.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "p.runq",
+  "fact": "Each P has a local run queue of 256 entries.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/cgroup_linux.go",
+  "symbol": "defaultGOMAXPROCS",
+  "fact": "Since Go 1.25 the Linux default GOMAXPROCS considers the affinity CPU count and the cgroup CPU quota.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "sysmonUpdateGOMAXPROCS",
+  "fact": "Since Go 1.25 sysmon periodically recomputes the default GOMAXPROCS and applies changes unless it was set explicitly.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/debug.go",
+  "symbol": "GOMAXPROCS",
+  "fact": "Setting GOMAXPROCS by environment variable or runtime.GOMAXPROCS sets customGOMAXPROCS and disables automatic updates.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: runtime.GOMAXPROCS only changes the value; there are no automatic updates to disable."
+ },
+ {
+  "item": "c7",
+  "field": "detailsEN[2]",
+  "file": "src/internal/godebugs/table.go",
+  "symbol": "All",
+  "fact": "containermaxprocs and updatemaxprocs are GODEBUG settings with Changed: 25, Old: \"0\", so the module language version (go 1.24 and below) restores the old behaviour.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: the table has neither setting."
+ },
+ {
+  "item": "c7",
+  "field": "code",
+  "file": "src/runtime/debug.go",
+  "symbol": "GOMAXPROCS",
+  "fact": "runtime.GOMAXPROCS(n) with n < 1 returns the current value without changing it.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c7",
+  "field": "practice.pointsEN[1]",
+  "file": "src/runtime/cgocall.go",
+  "symbol": "cgocall",
+  "fact": "A cgo call runs foreign code between entersyscall and exitsyscall, so its P can be retaken and the foreign CPU work is not capped by GOMAXPROCS.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "forcePreemptNS",
+  "fact": "sysmon requests preemption after a goroutine has run about 10 ms (forcePreemptNS = 10 ms) on the same schedtick.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "shortEN",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "sigPreempt",
+  "fact": "On Unix the asynchronous preemption signal is SIGURG.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "shortEN",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "preemptM",
+  "fact": "preemptM sends sigPreempt to the M running the goroutine (at most one pending signal).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "shortEN",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "doSigPreempt",
+  "fact": "The SIGURG handler checks wantAsyncPreempt and isAsyncSafePoint and only then injects a call to asyncPreempt.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "retake",
+  "fact": "retake compares pp.schedtick with sysmontick.schedtick and calls preemptone after forcePreemptNS; goroutines run via runnext share one schedtick.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "preemptone",
+  "fact": "Cooperative preemption sets gp.preempt and gp.stackguard0 = stackPreempt; preemptM is added only when preemptMSupported and GODEBUG asyncpreemptoff=0.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/stack.go",
+  "symbol": "newstack",
+  "fact": "A prologue stack check that sees stackPreempt enters newstack, which calls gopreempt_m (or preemptPark) instead of growing the stack.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/preempt.go",
+  "symbol": "asyncPreempt2",
+  "fact": "After asyncPreempt saves registers, asyncPreempt2 enters the scheduler through gopreempt_m (or preemptPark for a suspend request).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "sigPreempt",
+  "fact": "Since Go 1.14 the runtime sends SIGURG to running threads, so slow syscalls made directly can see EINTR more often.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "versionNote",
+  "file": "src/runtime/os_wasm.go",
+  "symbol": "preemptMSupported",
+  "fact": "Asynchronous preemption depends on the platform: preemptMSupported is false on wasm (and on plan9, src/runtime/os_plan9.go).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c8",
+  "field": "versionNote",
+  "file": "src/runtime/preempt.go",
+  "symbol": "asyncPreempt2",
+  "fact": "Asynchronous preemption (preempt.go) exists since Go 1.14; the go1.13 tag has no preempt.go.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "findRunnable looks at timers and GC work, the every-61st-tick global G, runnext and the local queue, a global batch, non-blocking netpoll, then steals from other Ps.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "globrunqget",
+  "fact": "Every 61st tick (schedtick % 61 == 0) with a non-empty global queue findRunnable takes exactly one G from it before the local queue.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "findRunnable handles timers, the trace reader and GC worker scheduling before ordinary queue selection, so “global, local, poll, steal” is not a full priority contract (same in all three, not only 1.26.1).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "globrunqgetbatch",
+  "fact": "With an empty local queue findRunnable takes a batch from the global queue (globrunqgetbatch): at most len(runq)/2 = 128 and at most size/gomaxprocs + 1; it runs the first and queues the rest locally.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no globrunqgetbatch; globrunqget(pp, 0) applies the same limits and runqputs the rest, and the 61-tick path calls globrunqget(pp, 1). Behaviour is the same, only the function name and signature differ (globrunqgetbatch exists since 1.25.0)."
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "execute increments schedtick only when inheritTime is false, so the runnext path inherits the time slice.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqgrab",
+  "fact": "runqgrab takes n - n/2 entries from the head of the victim’s runq and commits with CAS on runqhead, retrying on concurrent changes; runnext is taken only when stealRunNextG.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqsteal",
+  "fact": "runqsteal returns the last grabbed G for execution and publishes the rest in the thief’s runq.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "stealWork",
+  "fact": "Stealing runnext (and running another P’s timers) is attempted only on the last of four steal passes.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqsteal",
+  "fact": "For a stable victim queue [A,B,C,D,E] the batch is [A,B,C]; runqsteal returns C and queues A,B; D,E stay.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "jvmEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqget",
+  "fact": "A P consumes its local queue FIFO from the head, after checking runnext first.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "code",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqgrab",
+  "fact": "n = 5 gives n - n/2 = 3 entries taken from the head.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c9",
+  "field": "practice.pointsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqgrab",
+  "fact": "Five runnable Gs: the thief takes three from the head (n - n/2 with integer division).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "shortEN",
+  "file": "src/internal/poll/fd_unix.go",
+  "symbol": "Read",
+  "fact": "On a pollable fd, a read that gets EAGAIN waits through pd.waitRead (the netpoller) instead of blocking the thread.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/netpoll.go",
+  "symbol": "netpollblock",
+  "fact": "The waiting goroutine is parked (gopark) on the pollDesc; no OS thread is held per waiting socket.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "handoffp",
+  "fact": "A retaken P is given to another M (startm) only if there is work; otherwise it goes to the idle list.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "retake",
+  "fact": "During a long syscall or cgo call sysmon takes the thread’s P (after at least one sysmon tick) and hands it off.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "reentersyscall",
+  "fact": "In Go 1.25 (and 1.24) ordinary entersyscall detaches M from P, records m.oldp and puts P in _Psyscall.",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.24.7 (and 1.25.0): reentersyscall clears pp.m/m.p, stores m.oldp and sets P to _Psyscall; 1.26.1 and 1.27.3: M and P stay attached, only G goes to _Gsyscall and _Psyscall is renamed _Psyscall_unused."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "_Psyscall",
+  "fact": "_Psyscall is a live P state while a G is in an ordinary syscall.",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.26.1 and 1.27.3: the constant is _Psyscall_unused and no P enters it."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "exitsyscallfast",
+  "fact": "A quick return may reclaim the old P: exitsyscallfast CASes oldp from _Psyscall to _Pidle and rewires it.",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.26.1 and 1.27.3: exitsyscallfast is gone; exitsyscall keeps a still-attached P, otherwise exitsyscallTryGetP(oldp) reclaims it through setBlockOnExitSyscall/takeP."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "entersyscallblock",
+  "fact": "entersyscallblock hands off the P immediately for a known-blocking call (handoffp(releasep())).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "_Psyscall_unused",
+  "fact": "Since Go 1.26 _Psyscall is the defunct slot _Psyscall_unused.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: the constant is _Psyscall and is the live syscall state."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "reentersyscall",
+  "fact": "Since Go 1.26 ordinary entersyscall keeps M and P attached and only switches G to _Gsyscall.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7 (and 1.25.0): reentersyscall clears pp.m/m.p, stores m.oldp and sets P to _Psyscall; 1.26.1 and 1.27.3: M and P stay attached, only G goes to _Gsyscall and _Psyscall is renamed _Psyscall_unused."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "setBlockOnExitSyscall",
+  "fact": "Retaking takes the G’s scan bit in _Gsyscall, validates the G–M–P links, then takeP, resume and handoffp.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: absent; retake CASes the P from _Psyscall to _Pidle."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "retake",
+  "fact": "retake looks only at _Prunning Ps and detects a syscall from the G state.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: retake checks P status _Prunning or _Psyscall."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "entersyscallHandleGCWait",
+  "fact": "If a stop-the-world is pending at syscall entry, the P is given up immediately (GC path).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: entersyscall_gcwait moves the already-detached _Psyscall P to _Pgcstop."
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[3]",
+  "file": "src/runtime/proc.go",
+  "symbol": "exitsyscall",
+  "fact": "A returning syscall needs a P before user Go code resumes; with none free the G becomes runnable on the global queue and the M stops (stopm) or waits if locked (no-P path: exitsyscall0 in 1.24.7, exitsyscallNoP in 1.26.1/1.27.3).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[4]",
+  "file": "src/runtime/proc.go",
+  "symbol": "checkmcount",
+  "fact": "Exceeding sched.maxmcount crashes with “thread exhaustion”.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[4]",
+  "file": "src/runtime/debug/garbage.go",
+  "symbol": "SetMaxThreads",
+  "fact": "The thread limit starts at 10,000 and is changed with debug.SetMaxThreads (API since Go 1.2).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "detailsEN[4]",
+  "file": "src/runtime/proc.go",
+  "symbol": "stopm",
+  "fact": "Idle Ms are parked on the idle list (mput) and reused, not created per call.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c10",
+  "field": "practice.pointsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "exitsyscall",
+  "fact": "After a retake with no free P the G is queued and the M stops; it may resume on another M.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "newproc",
+  "fact": "The go statement puts the new G into runnext (runqput with next=true).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "shortEN",
+  "file": "src/runtime/proc.go",
+  "symbol": "ready",
+  "fact": "Waking a goroutine (goready → ready) puts it into runnext of the waking P.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "shortEN",
+  "file": "src/runtime/chan.go",
+  "symbol": "send",
+  "fact": "A channel send to a waiting receiver wakes it with goready.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqput",
+  "fact": "With next=true runqput CAS-replaces runnext and moves the previous occupant to the ordinary queue; a full queue goes to runqputslow.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqget",
+  "fact": "runqget checks runnext before the local queue and returns inheritTime=true for it.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "execute",
+  "fact": "execute does not increment schedtick when inheritTime is true.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "haveSysmon",
+  "fact": "runqput disables the runnext optimization when there is no sysmon (wasm).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "randomizeScheduler",
+  "fact": "In race builds runqput randomly skips runnext (randomizeScheduler = raceenabled).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c11",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/proc.go",
+  "symbol": "retake",
+  "fact": "sysmon preempts a chain of runnext goroutines that share one schedtick.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c12",
+  "field": "shortEN",
+  "file": "src/runtime/pprof/pprof.go",
+  "symbol": "lockProfiles",
+  "fact": "Since Go 1.27 the goroutineleak profile is a built-in profile.",
+  "verified": [
+   "1.27.3"
+  ],
+  "differs": "1.26.1: registered only when built with GOEXPERIMENT=goroutineleakprofile. 1.24.7: no goroutineleak profile and no leak-detection GC."
+ },
+ {
+  "item": "c12",
+  "field": "shortEN",
+  "file": "src/runtime/mgc.go",
+  "symbol": "isMaybeRunnable",
+  "fact": "Leak detection reports goroutines blocked on channel operations/select, sync.Mutex/RWMutex, sync.WaitGroup or sync.Cond whose primitive the GC finds unreachable.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no goroutineleak profile and no leak-detection GC."
+ },
+ {
+  "item": "c12",
+  "field": "shortEN",
+  "file": "src/runtime/mgc.go",
+  "symbol": "isMaybeRunnable",
+  "fact": "Other waits, for example I/O in the netpoller, are treated as maybe runnable and never reported as leaked.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no goroutineleak profile and no leak-detection GC."
+ },
+ {
+  "item": "c12",
+  "field": "shortEN",
+  "file": "src/runtime/pprof/pprof.go",
+  "symbol": "writeGoroutine",
+  "fact": "Leaks the profile cannot see remain visible as a growing stack group in the ordinary goroutine profile.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c12",
+  "field": "jvmEN",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "g.goid",
+  "fact": "Goroutines have internal IDs (g.goid, printed in tracebacks) but no exported API returns them.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c12",
+  "field": "detailsEN[0]",
+  "file": "src/runtime/chan.go",
+  "symbol": "chansend",
+  "fact": "A send into a channel with free buffer space completes without a receiver.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c12",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/pprof/pprof.go",
+  "symbol": "writeGoroutine",
+  "fact": "goroutine profile: debug=1 gives grouped text stacks, debug=2 a full stack dump with goroutine states.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c12",
+  "field": "detailsEN[2]",
+  "file": "src/internal/goexperiment/flags.go",
+  "symbol": "Flags.GoroutineLeakProfile",
+  "fact": "In Go 1.26 the goroutineleak profile is gated by GOEXPERIMENT=goroutineleakprofile.",
+  "verified": [
+   "1.26.1"
+  ],
+  "differs": "1.27.3: the experiment flag is removed (GOEXPERIMENT=goroutineleakprofile is “unknown”), the profile is always available; 1.24.7: absent."
+ },
+ {
+  "item": "c12",
+  "field": "detailsEN[2]",
+  "file": "src/net/http/pprof/pprof.go",
+  "symbol": "profileDescriptions",
+  "fact": "net/http/pprof lists and serves /debug/pprof/goroutineleak when the profile exists.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.26.1: description added in init only with the experiment; 1.27.3: unconditional; 1.24.7: absent."
+ },
+ {
+  "item": "c12",
+  "field": "detailsEN[2]",
+  "file": "src/runtime/mgc.go",
+  "symbol": "findGoroutineLeaks",
+  "fact": "Goroutines blocked on primitives that no maybe-runnable goroutine can reach are marked _Gleaked and can never wake up.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.27.3 additionally keeps the main goroutine blocked in select{} out of the report (1.26.1 reports it); 1.24.7: no goroutineleak profile and no leak-detection GC."
+ },
+ {
+  "item": "c12",
+  "field": "versionNote",
+  "file": "src/runtime/mgc.go",
+  "symbol": "isMaybeRunnable",
+  "fact": "A primitive reachable from a global variable is marked, so a goroutine blocked on it is not reported (leaks through globals can be missed).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no goroutineleak profile and no leak-detection GC."
+ },
+ {
+  "item": "c12",
+  "field": "code",
+  "file": "src/runtime/chan.go",
+  "symbol": "chansend",
+  "fact": "With make(chan error, 1) the single send completes even after the caller has returned.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[0].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "findRunnable checks GC, timers and other runtime work before ordinary queues; with schedtick % 61 == 0 and a non-empty GRQ it takes one G first; a GRQ batch only when the local queue is empty.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[0].board[0].lanes[2].note",
+  "file": "src/runtime/time.go",
+  "symbol": "goroutineReady",
+  "fact": "A fired time.Sleep timer readies the sleeping G via goready → ready(next=true), i.e. into runnext of the P that ran the timer.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[0].board[0].list",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "Order: timers, GC worker, 61-tick GRQ G, runnext + runq, GRQ batch, netpoll(0), stealing (same in all three; the list title says only Go 1.26.1).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[0].board[0].list.items[4]",
+  "file": "src/runtime/proc.go",
+  "symbol": "globrunqgetbatch",
+  "fact": "GRQ batch: at most half the local queue (128) and the per-P share; the first runs, the rest go to runq.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: same limits inside globrunqget(pp, 0); globrunqgetbatch exists since 1.25.0."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[1].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "forcePreemptNS",
+  "fact": "sysmon requests preemption when schedtick has not changed for 10 ms (forcePreemptNS).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[1].board[0].lanes[1].note",
+  "file": "src/runtime/proc.go",
+  "symbol": "preemptone",
+  "fact": "sysmon calls preemptone for P1, which sets gp.preempt and stackguard0 = stackPreempt for its current G.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[1].board[0].list.items[1]",
+  "file": "src/runtime/signal_unix.go",
+  "symbol": "sigPreempt",
+  "fact": "On supported Unix paths the request is delivered with SIGURG.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[2].board[0].lanes[1].note",
+  "file": "src/runtime/proc.go",
+  "symbol": "goschedImpl",
+  "fact": "Since Go 1.26 a preempted G is put into runnext of its P when a stop-the-world is pending (sched.gcwaiting); otherwise it goes to the GRQ.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7 (and 1.25.0): goschedImpl always puts the preempted G on the GRQ (globrunqput)."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[2].board[0].list.items[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "gopreempt_m",
+  "fact": "Ordinary async preemption: asyncPreempt → gopreempt_m → goschedImpl → globrunqput.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[3].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqgrab",
+  "fact": "runqgrab computes n - n/2 = 3 and claims the head prefix with CAS; concurrent changes cause a retry.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[3].board[0].lanes[1].note",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "An M starts spinning to steal only while 2*nmspinning < gomaxprocs - npidle (about half of the busy Ps).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[4].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "runqsteal",
+  "fact": "runqsteal returns the last element of the grabbed batch (C) and queues A and B on P2.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[5].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "reentersyscall",
+  "fact": "Old protocol (“Go 1.25”): ordinary syscall entry detaches M from P and marks P _Psyscall.",
+  "verified": [
+   "1.24.7"
+  ],
+  "differs": "1.24.7 (and 1.25.0): reentersyscall clears pp.m/m.p, stores m.oldp and sets P to _Psyscall; 1.26.1 and 1.27.3: M and P stay attached, only G goes to _Gsyscall and _Psyscall is renamed _Psyscall_unused."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[5].board[0].list.items[0]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "m.oldp",
+  "fact": "The M remembers its P in m.oldp across a syscall and tries to get it back first on exit.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[5].board[1].list.items[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "setBlockOnExitSyscall",
+  "fact": "New protocol (“Go 1.26.1”): P stays _Prunning, the syscall is seen from G’s _Gsyscall, retake runs setBlockOnExitSyscall → takeP → resume → handoffp.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: absent; retake CASes the _Psyscall P to _Pidle."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[5].board[1].list.items[0]",
+  "file": "src/runtime/proc.go",
+  "symbol": "stopTheWorldWithSema",
+  "fact": "A stop-the-world can also detach the P from a G in a syscall (through setBlockOnExitSyscall).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: stopTheWorldWithSema CASes _Psyscall Ps to _Pgcstop."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[5].board[1].list.items[2]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "_Psyscall_unused",
+  "fact": "_Psyscall_unused is the former state and is no longer used.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: the live constant is _Psyscall."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[6].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "exitsyscall",
+  "fact": "Resuming user Go code after a syscall requires a P; without one G1 goes to the GRQ and M1 stops (stopm), or waits if locked.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[6].board[1].list.items[4]",
+  "file": "src/runtime/proc.go",
+  "symbol": "checkmcount",
+  "fact": "More than debug.SetMaxThreads (default 10,000, sched.maxmcount) threads crashes the program with “thread exhaustion”.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[7].board[1].lanes[1].note",
+  "file": "src/runtime/proc.go",
+  "symbol": "injectglist",
+  "fact": "Without a P (sysmon), injectglist puts the ready Gs on the GRQ and starts idle Ps.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[7].board[1].list.items[1]",
+  "file": "src/runtime/proc.go",
+  "symbol": "findRunnable",
+  "fact": "A thread with a P that polls in findRunnable runs the first ready G itself and injects the rest (local runq or GRQ).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[8].desc",
+  "file": "src/runtime/cgroup_linux.go",
+  "symbol": "adjustCgroupGOMAXPROCS",
+  "fact": "Default = min(affinity CPUs, max(ceil(quota/period), 2)): limit 2.5 on 16 CPUs gives 3; request does not count.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[8].desc",
+  "file": "src/runtime/proc.go",
+  "symbol": "sysmon",
+  "fact": "sysmon rechecks the default at most once per second (lastgomaxprocs + 1e9), only when updatemaxprocs is on.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[8].desc",
+  "file": "src/internal/godebugs/table.go",
+  "symbol": "All",
+  "fact": "The container-aware default needs go 1.25 or later in go.mod (containermaxprocs/updatemaxprocs Changed: 25).",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: settings absent."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[8].desc",
+  "file": "src/runtime/debug.go",
+  "symbol": "GOMAXPROCS",
+  "fact": "An explicit GOMAXPROCS (environment or runtime.GOMAXPROCS) disables automatic updates.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[9].board[0].list.items[2]",
+  "file": "src/runtime/runtime2.go",
+  "symbol": "p.runq",
+  "fact": "Each P has a local run queue of up to 256 Gs.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[9].board[0].lanes[5].note",
+  "file": "src/runtime/proc.go",
+  "symbol": "sysmon",
+  "fact": "sysmon requests preemption of long runs, retakes Ps from long syscalls, polls the network and updates GOMAXPROCS at most once per second.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: sysmon has no GOMAXPROCS update (the other three duties are the same)."
+ },
+ {
+  "item": "sim2",
+  "field": "steps[10].board[0].list.items[3]",
+  "file": "src/runtime/proc.go",
+  "symbol": "preemptone",
+  "fact": "Async preemption is skipped with GODEBUG=asyncpreemptoff=1 or when preemptMSupported is false (wasm, plan9).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[10].board[1].list.items[8]",
+  "file": "src/runtime/stack.go",
+  "symbol": "stackMin",
+  "fact": "A brand-new G gets a 2 KiB stack (malg(stackMin)); a reused G gets startingStackSize (adaptive, adaptivestackstart=1 by default).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[10].board[1].list.items[8]",
+  "file": "src/runtime/proc.go",
+  "symbol": "gfget",
+  "fact": "gfget reallocates a reused G’s stack at startingStackSize when its size differs.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[10].board[1].list.items[4]",
+  "file": "src/runtime/proc.go",
+  "symbol": "exitsyscall",
+  "fact": "After a syscall the M first tries its old P, then any idle P; otherwise G goes to the GRQ and the M sleeps (or waits for its G when locked).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "sim2",
+  "field": "steps[10].board[1].list.items[9]",
+  "file": "src/runtime/cgroup_linux.go",
+  "symbol": "adjustCgroupGOMAXPROCS",
+  "fact": "GOMAXPROCS default = min(affinity CPUs, max(ceil(limit), 2)); requests are ignored.",
+  "verified": [
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.24.7: no container-aware default (no cgroup_linux.go, no containermaxprocs/updatemaxprocs); GOMAXPROCS defaults to the affinity CPU count and is never updated automatically."
+ },
+ {
+  "item": "q9",
+  "field": "explanationRU",
+  "file": "src/runtime/chan.go",
+  "symbol": "chansend",
+  "fact": "A send on an unbuffered channel with no receiver parks the sender forever; a one-element buffer lets the single send complete (ran on 1.24.7 and 1.27.3).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q9",
+  "field": "explanationRU",
+  "file": "src/runtime/proc.go",
+  "symbol": "gopark",
+  "fact": "A channel wait parks the G; it does not hold an OS thread.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q10",
+  "field": "explanationRU",
+  "file": "src/net/http/request.go",
+  "symbol": "Context",
+  "fact": "For incoming server requests the context is canceled when the connection closes, the HTTP/2 request is canceled, or ServeHTTP returns (doc unchanged; httptest run on 1.24.7 and 1.27.3).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q10",
+  "field": "explanationRU",
+  "file": "src/context/context.go",
+  "symbol": "WithoutCancel",
+  "fact": "WithoutCancel keeps values, has no deadline, Err or cause, and its Done channel is nil (API since Go 1.21, api/go1.21.txt).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q16",
+  "field": "explanationRU",
+  "file": "src/context/context.go",
+  "symbol": "Canceled",
+  "fact": "After the derived context is canceled, ctx.Err() reports context.Canceled.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q16",
+  "field": "explanationRU",
+  "file": "src/cmd/compile/internal/types2/assignments.go",
+  "symbol": "shortVarDecl",
+  "fact": "g, ctx := in the function body redeclares the parameter ctx in the same block and assigns to it (no new shadowing variable).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q17",
+  "field": "explanationRU",
+  "file": "src/cmd/compile/internal/walk/order.go",
+  "symbol": "stmt",
+  "fact": "In a select, every send value is evaluated into a temporary before a case is chosen (program prints “cancelled” and 1 on 1.24.7 and 1.27.3).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q17",
+  "field": "explanationRU",
+  "file": "src/cmd/compile/internal/walk/select.go",
+  "symbol": "walkSelectCases",
+  "fact": "Zero-case, one-case and default selects are lowered without selectgo, with the same evaluation order.",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ }
+]
