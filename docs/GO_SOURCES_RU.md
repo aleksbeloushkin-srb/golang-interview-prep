@@ -4,7 +4,7 @@
 
 С выходом новой версии Go: `node scripts/go-sources.mjs diff <старый GOROOT> <новый GOROOT>` печатает факты, у которых изменился исходник, — их и сверять.
 
-Всего утверждений: 195; элементов сайта: 19.
+Всего утверждений: 205; элементов сайта: 21.
 
 ## c1
 
@@ -295,3 +295,23 @@
 |---|---|---|---|---|---|
 | explanationRU | `src/cmd/compile/internal/walk/order.go` | `stmt` | In a select, every send value is evaluated into a temporary before a case is chosen (program prints “cancelled” and 1 on 1.24.7 and 1.27.3). | 1.24.7, 1.26.1, 1.27.3 | — |
 | explanationRU | `src/cmd/compile/internal/walk/select.go` | `walkSelectCases` | Zero-case, one-case and default selects are lowered without selectgo, with the same evaluation order. | 1.24.7, 1.26.1, 1.27.3 | — |
+
+## c65
+
+| Поле | Исходник | Символ | Факт | Проверено | Различия |
+|---|---|---|---|---|---|
+| shortEN | `doc/go_spec.html` | `Struct_types` | A field declared with a type but no field name is an embedded field; a field or method f of it is promoted if x.f is a legal selector (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | 1.27.3 replaces "Promoted fields act like ordinary fields of a struct except that they cannot be used as field names in composite literals" with "Promoted fields act like ordinary fields of a struct." (see Composite_literals) |
+| shortEN | `doc/go_spec.html` | `Selectors` | A promoted method call goes to the embedded field: p.M0() is ((*p).T0).M0(), so the receiver is the embedded value, not the outer struct (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+| detailsEN[0] | `doc/go_spec.html` | `Assignability` | A struct value is not assignable to the type it embeds: V and T are different named types and T is not an interface (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | 1.27.3 adds an assignability rule for generic functions to function types; the rules that apply to struct values are unchanged |
+| detailsEN[2] | `doc/go_spec.html` | `Selectors` | x.f denotes the f at the shallowest depth; if there is not exactly one f at that depth, the selector expression is illegal (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+| detailsEN[3] | `doc/go_spec.html` | `Struct_types` | Embedding T puts promoted T-receiver methods in the method sets of S and *S and *T-receiver methods only in *S; embedding *T puts both in S and *S (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+| detailsEN[3] | `doc/go_spec.html` | `Selectors` | Evaluating x.f for a nil pointer x and a field f panics; calling a method on a nil interface value panics (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+| detailsEN[4] | `doc/go_spec.html` | `Composite_literals` | A struct literal key may be any valid field selector for a possibly promoted field, but not through embedded pointer types [Go 1.27] (spec section id, not a Go declaration). | 1.27.3 | 1.24.7 and 1.26.1: each key must be a field name declared in the struct type, so a promoted field cannot be a key; the 1.24.7 to 1.26.1 differences in this section are editorial |
+| detailsEN[5] | `doc/go_spec.html` | `Struct_types` | An embedded field may be an interface type name; it is specified as a type name T, and only non-interface types may be embedded as *T (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+
+## q52
+
+| Поле | Исходник | Символ | Факт | Проверено | Различия |
+|---|---|---|---|---|---|
+| explanationRU | `doc/go_spec.html` | `Selectors` | A method declared on the outer struct (depth 0) is chosen over a promoted method (depth 1); only names at the same shallowest depth are ambiguous (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |
+| explanationRU | `doc/go_spec.html` | `Method_sets` | Further method-set rules for structs with embedded fields are in Struct types; a type implements an interface whose methods are all in its method set (spec section id, not a Go declaration). | 1.24.7, 1.26.1, 1.27.3 | — |

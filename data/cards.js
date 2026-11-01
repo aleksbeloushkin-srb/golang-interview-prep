@@ -3347,6 +3347,99 @@ const CARDS = [
       "followUpRU": "Почему t.Fatal нельзя вызывать из горутины, которую запустил тест?"
     }
   },
+  {
+    "id": "c65",
+    "mod": "m6",
+    "modName": "6. Go Idioms: Errors, Types, Strings, Tests",
+    "level": "base",
+    "levelLabel": "🟢 Base (Entry/Mid)",
+    "simId": null,
+    "qEN": "How does embedding differ from inheritance, and what trap does it set for a Java or Kotlin developer?",
+    "qRU": "Чем встраивание отличается от наследования и какую ловушку оно ставит Java- и Kotlin-разработчику?",
+    "shortEN": "Go has no inheritance: to reuse a type, you embed it in a struct without a field name. Its fields and methods are promoted: if Premium embeds Account, p.Charge(1000) works and means p.Account.Charge(1000). That is composition, not subtyping: a Premium is not an Account, there is no super, and a Fee declared on Premium only hides Account's Fee. Inside Charge the receiver is the Account, so its call a.Fee() still reaches Account's Fee. A method call is dynamic only through an interface value, so pass the step that varies as an interface or a function.",
+    "anchorsEN": [
+      "no inheritance: embed a type without a field name",
+      "promoted: p.Charge(1000) = p.Account.Charge(1000)",
+      "composition, not subtyping: no super; Premium.Fee only hides",
+      "receiver is the Account → a.Fee() is Account’s Fee",
+      "dynamic call only via an interface: pass one or a func"
+    ],
+    "jvmEN": "In Java, Premium extends Account makes a Premium an Account, and methods are virtual by default: Account.charge() calling fee() runs Premium.fee(), and super.fee() reaches the parent. Go embedding has none of this. Closest is Kotlin delegation, class Premium(a: Account) : Billing by a: the compiler writes forwarding methods, and an override in Premium is not seen from inside a, which is the same trap. But by forwards only the members of a declared interface, while Go promotes every method and field of the embedded type.",
+    "shortRU": "В Go нет наследования: чтобы переиспользовать тип, его встраивают в структуру без имени поля. Его поля и методы продвигаются: если Premium встраивает Account, p.Charge(1000) работает и означает p.Account.Charge(1000). Это композиция, а не подтип: Premium — не Account, super нет, а Fee, объявленный у Premium, лишь скрывает Fee у Account. Внутри Charge получатель — Account, поэтому его вызов a.Fee() по-прежнему попадает в Fee у Account. Метод вызывается динамически только через значение-интерфейс, поэтому шаг, который меняется, передают интерфейсом или функцией.",
+    "jvmRU": "В Java Premium extends Account делает Premium подтипом Account, а методы по умолчанию виртуальные: Account.charge(), вызывая fee(), выполнит Premium.fee(), а super.fee() дойдёт до родителя. У встраивания в Go ничего этого нет. Ближе всего делегирование в Kotlin, class Premium(a: Account) : Billing by a: компилятор пишет пересылающие методы, а override в Premium изнутри a не виден — та же ловушка. Но by пересылает только члены объявленного интерфейса, а Go продвигает все методы и поля встроенного типа.",
+    "detailsEN": [
+      "Promotion is a selector rule. p.Charge(1000) is shorthand for p.Account.Charge(1000); if Account had a field ID, p.ID would mean p.Account.ID. The embedded field is an ordinary field named after its type, so p.Account is always reachable. Premium is a separate type: passing p to func show(a Account) fails with \"cannot use p (variable of struct type Premium) as Account value\"; pass p.Account. Promoted methods do count for interfaces: Premium satisfies interface{ Charge(int64) int64 } without declaring Charge.",
+      "The template-method trap. In Java, Account.charge() calling fee() would run Premium.fee(). In Go, a.Fee() inside Account.Charge is a call on an Account, chosen at compile time; the method does not know it was reached through a Premium. Each fix makes the varying step a value the caller chooses: an interface parameter (Charge(fees FeePolicy, amount) in the code), an interface field (type Account struct{ Fees FeePolicy }), or a function field (Fee func() int64).",
+      "Shadowing and depth. A selector takes the name at the shallowest depth: Premium.Fee (depth 0) hides Account.Fee (depth 1), which stays reachable as p.Account.Fee(). Two embedded types with the same name at the same depth do not break the declaration; only using the name is an error, \"ambiguous selector s.Log\", and such a name is not promoted, so the struct does not implement an interface that needs it (q34). The compiler catches this case; the template-method trap compiles silently.",
+      "*T or T, and nil. Which promoted methods reach Outer and which only *Outer follows the method-set rules in C34; embedding *T puts the methods of both T and *T on Outer itself. An embedded *T starts as nil: a promoted field or a value-receiver method then panics with a nil pointer dereference, and a pointer-receiver method runs with a nil receiver and panics once it touches a field. Set the pointer in a constructor.",
+      "Struct literals. Before Go 1.27 a key must name a top-level field: Premium{Account: Account{ID: \"7\"}}. Since Go 1.27, with go 1.27 in go.mod, a key may also be a promoted field, Premium{ID: \"7\"}, but not one reached through an embedded pointer. With an older go line, Go 1.27.3 rejects Premium{ID: \"7\"} and says the promoted field requires go1.27.",
+      "Embedding an interface. type countingReader struct{ io.ReadCloser; n int } with its own Read wraps any ReadCloser: a decorator that replaces Read and forwards Close to the wrapped value. A test fake can embed the whole interface, type fakeStore struct{ Store }, and implement only Get: it satisfies Store, but a call to Put goes to the nil embedded interface and panics with a nil pointer dereference. The compiler no longer reports missing methods. grpc-go's generated UnimplementedXxxServer is the safer variant: its methods answer codes.Unimplemented instead of panicking (C61).",
+      "Typical interview questions: is embedding inheritance (no: a field plus promotion); can Outer be passed as Inner (no: pass o.Inner or accept an interface); which receiver does a promoted method get (the inner value); what do two embedded methods with one name do (ambiguous only when used). Embed for small, explicit composition, such as a decorator or a wrapper that forwards most methods. Embedding sync.Mutex in an exported type also exports Lock and Unlock. Avoid deep chains, where a reader must walk several levels to see which method runs."
+    ],
+    "detailsRU": [
+      "Продвижение — правило селекторов. p.Charge(1000) — сокращение для p.Account.Charge(1000); будь у Account поле ID, p.ID означало бы p.Account.ID. Встроенное поле — обычное поле с именем своего типа, поэтому p.Account доступен всегда. Premium — отдельный тип: передать p в func show(a Account) нельзя, ошибка «cannot use p (variable of struct type Premium) as Account value»; передавай p.Account. Для интерфейсов продвинутые методы засчитываются: Premium реализует interface{ Charge(int64) int64 }, не объявляя Charge.",
+      "Ловушка шаблонного метода. В Java Account.charge(), вызывая fee(), выполнил бы Premium.fee(). В Go a.Fee() внутри Account.Charge — вызов у Account, выбранный при компиляции; метод не знает, что до него дошли через Premium. Каждое исправление делает меняющийся шаг значением, которое выбирает вызывающий: параметр-интерфейс (Charge(fees FeePolicy, amount) в коде), поле-интерфейс (type Account struct{ Fees FeePolicy }) или поле-функция (Fee func() int64).",
+      "Затенение и глубина. Селектор берёт имя с наименьшей глубины: Premium.Fee (глубина 0) скрывает Account.Fee (глубина 1), который остаётся доступен как p.Account.Fee(). Два встроенных типа с одинаковым именем на одной глубине объявлению не мешают; ошибка — только обращение к имени, «ambiguous selector s.Log», и такое имя не продвигается, поэтому структура не реализует интерфейс, которому оно нужно (q34). Этот случай ловит компилятор; ловушка шаблонного метода компилируется молча.",
+      "*T или T и nil. Какие продвинутые методы получает Outer, а какие только *Outer, решают правила наборов методов из C34; при встраивании *T методы и T, и *T есть у самого Outer. Встроенный *T сначала nil: продвинутое поле или метод с получателем-значением тогда паникуют с nil pointer dereference, а метод с получателем-указателем выполняется с nil-получателем и паникует, как только обратится к полю. Задавай указатель в конструкторе.",
+      "Литералы структур. До Go 1.27 ключ должен называть поле верхнего уровня: Premium{Account: Account{ID: \"7\"}}. С Go 1.27 при go 1.27 в go.mod ключом может быть и продвинутое поле, Premium{ID: \"7\"}, но не поле, до которого идут через встроенный указатель. При более старой строке go Go 1.27.3 отвергает Premium{ID: \"7\"} и пишет, что продвинутому полю нужен go1.27.",
+      "Встраивание интерфейса. type countingReader struct{ io.ReadCloser; n int } со своим Read оборачивает любой ReadCloser: декоратор, который заменяет Read и пересылает Close обёрнутому значению. Тестовая подделка может встроить весь интерфейс, type fakeStore struct{ Store }, и реализовать только Get: Store она реализует, но вызов Put уходит в nil-интерфейс и паникует с nil pointer dereference. О недостающих методах компилятор больше не сообщает. Сгенерированный в grpc-go UnimplementedXxxServer — более безопасный вариант: его методы отвечают codes.Unimplemented, а не паникуют (C61).",
+      "Типичные вопросы на интервью: наследование ли это (нет: поле плюс продвижение); можно ли передать Outer вместо Inner (нет: передай o.Inner или принимай интерфейс); какой получатель у продвинутого метода (внутреннее значение); что делают два встроенных метода с одним именем (неоднозначны, только если к ним обратиться). Встраивай для небольшой явной композиции, например декоратора или обёртки, которая пересылает большинство методов. Встроенный sync.Mutex в экспортируемом типе экспортирует и Lock с Unlock. Избегай глубоких цепочек, где читателю приходится пройти несколько уровней, чтобы понять, какой метод выполнится."
+    ],
+    "practicalRU": "Для Java/Kotlin-разработчика: встраивание — это поле плюс сокращённая запись, а не extends. Если базовый метод должен вызвать «переопределённый» шаг, этот шаг — зависимость: передай интерфейс или функцию. Компилятор поймает неоднозначное имя при обращении и передачу Outer вместо Inner, но не ловушку шаблонного метода — её проверяют тестом.",
+    "code": "package main\n\nimport \"fmt\"\n\n// Account plays the base class: Charge calls Fee, hoping a \"subclass\" overrides it.\n// Amounts are in minor units (cents).\ntype Account struct{}\n\nfunc (Account) Fee() int64 { return 100 }\n\nfunc (a Account) Charge(amount int64) int64 { return amount + a.Fee() }\n\n// Premium embeds Account and declares its own Fee.\ntype Premium struct{ Account }\n\nfunc (Premium) Fee() int64 { return 0 }\n\n// The fix: pass the varying step in; a call through an interface is dynamic.\ntype FeePolicy interface{ Fee() int64 }\n\nfunc Charge(fees FeePolicy, amount int64) int64 { return amount + fees.Fee() }\n\nfunc main() {\n\tp := Premium{}\n\tfmt.Println(p.Fee())         // 0: Premium.Fee hides Account.Fee\n\tfmt.Println(p.Charge(1000))  // 1100: runs p.Account.Charge, where a.Fee() is Account.Fee\n\tfmt.Println(Charge(p, 1000)) // 1000: the interface call reaches Premium.Fee\n\t// var a Account = p         // compile error: Premium is not an Account\n}",
+    "versionNote": "Встраивание, продвижение, селекторы и наборы методов — с Go 1.0; не менялись: разделы спецификации Selectors и Method sets в Go 1.24.7, 1.26.1 и 1.27.3 совпадают, правила встраивания в Struct types и Interface types те же. Изменилось одно: с Go 1.27 (при go 1.27 в go.mod) ключом литерала структуры может быть продвинутое поле — Outer{ID: \"7\"} вместо Outer{Inner: Inner{ID: \"7\"}}, но не через встроенный указатель. Пример: gofmt, go vet, go test на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Go specification: struct types (embedded fields, promoted methods)",
+        "url": "https://go.dev/ref/spec#Struct_types"
+      },
+      {
+        "title": "Go specification: selectors (depth, ambiguity)",
+        "url": "https://go.dev/ref/spec#Selectors"
+      },
+      {
+        "title": "Go specification: method sets",
+        "url": "https://go.dev/ref/spec#Method_sets"
+      },
+      {
+        "title": "Go specification: interface types",
+        "url": "https://go.dev/ref/spec#Interface_types"
+      },
+      {
+        "title": "Go specification: composite literals (promoted fields as keys, Go 1.27)",
+        "url": "https://go.dev/ref/spec#Composite_literals"
+      },
+      {
+        "title": "Effective Go: embedding",
+        "url": "https://go.dev/doc/effective_go#embedding"
+      },
+      {
+        "title": "Kotlin documentation: delegation",
+        "url": "https://kotlinlang.org/docs/delegation.html"
+      }
+    ],
+    "practice": {
+      "kind": "Перенеси с Java",
+      "promptEN": "In Java, Premium extends Account and overrides fee(), and Account.charge(amount) returns amount + fee(). You port it to Go with embedding. What does Premium{}.Charge(1000) return, why, and how do you change the design so that Premium pays no fee?",
+      "promptRU": "В Java Premium extends Account и переопределяет fee(), а Account.charge(amount) возвращает amount + fee(). Ты переносишь это в Go через встраивание. Что вернёт Premium{}.Charge(1000), почему и как изменить устройство, чтобы Premium не платил комиссию?",
+      "pointsEN": [
+        "1100: p.Charge(1000) is p.Account.Charge(1000), and a.Fee() inside it is Account.Fee.",
+        "Embedding gives no virtual dispatch; a method call is dynamic only through an interface value.",
+        "Make the fee a value the caller chooses: Charge(fees FeePolicy, amount), a FeePolicy field or a func field."
+      ],
+      "pointsRU": [
+        "1100: p.Charge(1000) — это p.Account.Charge(1000), и a.Fee() внутри — Account.Fee.",
+        "Встраивание не даёт виртуальной диспетчеризации; метод вызывается динамически только через значение-интерфейс.",
+        "Сделай комиссию значением, которое выбирает вызывающий: Charge(fees FeePolicy, amount), поле FeePolicy или поле-функция."
+      ],
+      "followUpEN": "Premium embeds *Account instead, and someone writes var p Premium; p.Charge(1000). What happens, and how do you prevent it?",
+      "followUpRU": "Пусть Premium встраивает *Account, и кто-то пишет var p Premium; p.Charge(1000). Что произойдёт и как это предотвратить?"
+    },
+    "quizIds": [
+      "q34",
+      "q52"
+    ]
+  },
   // ==========================================
   // МОДУЛЬ 7: СЕРВИС НА GO — HTTP, ОШИБКИ, SQL, ЛОГИ (C45 - C48)
   // ==========================================
@@ -3495,6 +3588,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
+    "extraSims": [
+      {
+        "simId": "sim10",
+        "step": 4
+      }
+    ],
     "qEN": "What is *sql.DB, and how do you keep connections and transactions from leaking?",
     "qRU": "Что такое *sql.DB и как не допустить утечки соединений и транзакций?",
     "shortEN": "In Go you talk to a database through database/sql, and the main object is *sql.DB. It is a connection pool, not a single connection: get it once from sql.Open at startup, share it, since it is safe for concurrent use, and set limits. Pass the request context to every query with QueryContext and ExecContext. Leaks come from objects that hold a connection: a Rows holds one until it is closed, so after checking the query error, defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: BeginTx(ctx, nil), check the error, defer tx.Rollback(), run every statement on tx, then Commit.",
@@ -3691,6 +3790,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
+    "extraSims": [
+      {
+        "simId": "sim11",
+        "step": 5
+      }
+    ],
     "qEN": "How do you transfer money between two accounts safely under concurrency, without deadlocks?",
     "qRU": "Как безопасно перевести деньги между двумя счетами при конкурентных запросах и без дедлоков?",
     "shortEN": "A transfer changes two balances, so it needs one transaction that locks both rows in a stable order. It locks them by ascending account ID with SELECT … FOR UPDATE, then checks the balance and updates both rows. Locking in request order can deadlock: A→B holds A and waits for B while B→A holds B and waits for A; PostgreSQL detects the cycle and aborts one transaction with SQLSTATE 40P01. A stable order removes the cycle; still retry 40P01, and keep the transaction short.",
@@ -4190,6 +4295,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
+    "extraSims": [
+      {
+        "simId": "sim10",
+        "step": 7
+      }
+    ],
     "qEN": "What should a Go service do between SIGTERM and exit?",
     "qRU": "Что должен сделать Go-сервис между SIGTERM и выходом?",
     "shortEN": "When Kubernetes stops a pod, the service gets SIGTERM and, by default, thirty seconds before SIGKILL. In that window it must finish its work and lose nothing. signal.NotifyContext turns the signal into a cancelled context; after that, order matters. First the service reports not ready and keeps serving a few seconds, while load balancers stop sending it requests. Then http.Server.Shutdown with a deadline closes the listener and waits for requests in flight. Then the service cancels its workers and consumers and waits for them. It closes resources in reverse order, logs and traces last, and exits non-zero if anything failed.",
@@ -4435,6 +4546,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
+    "extraSims": [
+      {
+        "simId": "sim12",
+        "step": 4
+      }
+    ],
     "qEN": "How do you implement long polling in Go so that thousands of waiting clients don't each hammer the database?",
     "qRU": "Как сделать long polling на Go, чтобы тысячи ждущих клиентов не нагружали базу каждый своим запросом?",
     "shortEN": "A mobile app or another service often waits for a payment to change status. With long polling the server holds the request until the state changes or a soft timeout ends it with changed false, and the client asks again. The client sends the version it has seen, so a newer payment is answered at once. Instead of querying per handler, handlers register in a shared registry; one poller goroutine reads all awaited payments in one query per tick and wakes the requests whose payment changed. Over a per-pod limit the server answers 429; WriteTimeout must exceed the soft timeout.",
@@ -4515,6 +4632,12 @@ const CARDS = [
     "level": "senior",
     "levelLabel": "🟡 Senior (Runtime)",
     "simId": null,
+    "extraSims": [
+      {
+        "simId": "sim3",
+        "step": 8
+      }
+    ],
     "qEN": "Which channel patterns do you actually use in a Go service, and who closes each channel?",
     "qRU": "Какие паттерны на каналах реально нужны в Go-сервисе и кто закрывает каждый канал?",
     "shortEN": "A Go service needs a few channel patterns, and each channel has one owner on the sending side. The owner closes it only when receivers must know the end; then their range loops stop. In a worker pool, the producer closes the job channel; whoever waits for workers closes results. Pipeline stages close their outputs when inputs close, and every send sits in a select with ctx.Done(). A semaphore, make(chan struct{}, n), bounds concurrent work; with select and default, a handler answers 429 at once. A signal channel of capacity one merges changes into one wake-up; these two stay open.",

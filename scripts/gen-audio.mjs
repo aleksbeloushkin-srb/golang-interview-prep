@@ -28,6 +28,13 @@ export const VOICES = {
 // Точечные правки произношения, когда общих правил не хватает: [было в тексте для речи, стало].
 // Каждая правка меняет только чтение, не смысл: сверяется с экранным текстом при ревью.
 const SPEECH_FIXES = {
+  'card:c65:short': [
+    ['p dot Charge, 1000, works and means p dot Account dot Charge, 1000', 'p dot Charge of 1000 works and means p dot Account dot Charge of 1000'],
+    ['so its call a dot Fee still reaches', 'so its call to Fee on the receiver still reaches']
+  ],
+  'card:c65:jvm': [
+    ['class Premium, a: Account: Billing by a', 'class Premium that implements Billing by a, its Account parameter']
+  ],
   'plan:w1-wed-1': [
     ['switch v colon-equals x., type, runs', 'switch v colon-equals x dot type runs'],
     ['the F-M-T interface with String string', 'the F-M-T interface with a String method that returns a string']

@@ -1267,7 +1267,8 @@ func WriteReport(path string, payload []byte) (err error) {
       }
     ],
     "cardIds": [
-      "c34"
+      "c34",
+      "c65"
     ]
   },
   {
@@ -1705,6 +1706,43 @@ func WriteReport(path string, payload []byte) (err error) {
     ],
     "cardIds": [
       "c56"
+    ]
+  },
+  {
+    "id": "q52",
+    "title": "Задача 52: «Переопределённый» метод и встраивание",
+    "ru": "SMS встраивает Notifier и объявляет свой Channel. Что напечатает программа?",
+    "en": "SMS embeds Notifier and declares its own Channel. What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Notifier struct{}\n\nfunc (Notifier) Channel() string { return \"email\" }\n\nfunc (n Notifier) Send(msg string) string { return n.Channel() + \": \" + msg }\n\ntype SMS struct{ Notifier }\n\nfunc (SMS) Channel() string { return \"sms\" }\n\ntype Sender interface{ Send(msg string) string }\n\nfunc main() {\n\ts := SMS{}\n\tvar snd Sender = s\n\tfmt.Println(s.Channel())\n\tfmt.Println(s.Send(\"paid\"))\n\tfmt.Println(snd.Send(\"paid\"))\n}",
+    "options": [
+      "sms, sms: paid, sms: paid — SMS.Channel переопределяет метод, как в Java.",
+      "sms, email: paid, sms: paid — вызов через интерфейс динамический и доходит до SMS.Channel.",
+      "sms, email: paid, email: paid.",
+      "Ошибка компиляции: SMS не реализует Sender, у Send получатель Notifier.",
+      "Ошибка компиляции: ambiguous selector s.Channel — Channel есть и у SMS, и у Notifier.",
+      "email, email: paid, email: paid — метод встроенного типа побеждает."
+    ],
+    "correct": 2,
+    "explanationRU": "SMS.Channel на глубине 0 затеняет Notifier.Channel на глубине 1, поэтому s.Channel() — «sms»; неоднозначности нет, она бывает только на одной глубине. Send объявлен только у Notifier и продвинут: s.Send(\"paid\") — это s.Notifier.Send(\"paid\"), его получатель — Notifier, и n.Channel() внутри — статический вызов Notifier.Channel: «email: paid». SMS реализует Sender через продвинутый Send. Вызов через интерфейс действительно динамический, но выбирает он метод Send типа SMS, а это тот же продвинутый Notifier.Send. Виртуальной диспетчеризации через встраивание нет; меняющийся шаг передают интерфейсом — в исправленном варианте это поле ch Channel.",
+    "speechEN": "It prints sms, then email: paid twice. SMS's own Channel hides the promoted one, so s.Channel() is sms. But Send belongs to Notifier: s.Send is s.Notifier.Send, its receiver is the Notifier, and the call to Channel inside it is Notifier's. The interface call is dynamic, but it picks SMS's Send, which is that same promoted method. Embedding has no virtual dispatch, so pass the varying step in as an interface.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\n// Channel is the step that varies; Notifier gets it as a field.\ntype Channel interface{ Name() string }\n\ntype Email struct{}\n\nfunc (Email) Name() string { return \"email\" }\n\ntype SMS struct{}\n\nfunc (SMS) Name() string { return \"sms\" }\n\ntype Notifier struct{ ch Channel }\n\n// n.ch.Name() is a call through an interface, so it reaches the channel that was passed in.\nfunc (n Notifier) Send(msg string) string { return n.ch.Name() + \": \" + msg }\n\nfunc main() {\n\tfmt.Println(Notifier{ch: SMS{}}.Send(\"paid\"))\n\tfmt.Println(Notifier{ch: Email{}}.Send(\"paid\"))\n}",
+    "versionNote": "Правила продвижения методов, селекторов и наборов методов — с Go 1.0, не менялись: разделы Selectors и Method sets спецификации в Go 1.24.7, 1.26.1 и 1.27.3 совпадают. Обе программы выполнены на Go 1.24.7 и 1.27.3 (go vet, go test): исходная печатает sms, email: paid, email: paid, исправленная — sms: paid, email: paid.",
+    "sources": [
+      {
+        "title": "Go specification: selectors (depth, ambiguity)",
+        "url": "https://go.dev/ref/spec#Selectors"
+      },
+      {
+        "title": "Go specification: struct types: promoted fields and methods",
+        "url": "https://go.dev/ref/spec#Struct_types"
+      },
+      {
+        "title": "Effective Go: embedding",
+        "url": "https://go.dev/doc/effective_go#embedding"
+      }
+    ],
+    "cardIds": [
+      "c65"
     ]
   }
 ];

@@ -623,7 +623,7 @@ function renderSimStep(simIdx, stepIdx) {
   const boardEl = document.getElementById(`${sim.id}-board`);
   if (descEl.nextElementSibling !== boardEl) boardEl.before(descEl);
   descEl.textContent = step.desc;
-  boardEl.innerHTML = step.board ? boardHtml(step.board, sim.boardLegend) : "";
+  boardEl.innerHTML = step.board ? boardHtml(step.board, sim.boardLegend, step.formula) : "";
   if (step.predict && step.board) {
     boardEl.innerHTML = `<div class="board-predict">
         <h4>Сначала предскажи сам</h4>
@@ -680,16 +680,30 @@ function renderSimStep(simIdx, stepIdx) {
 /* --- Схема-доска: дорожки P/очередей, фишки G и «Что изменилось» ---
    Данные: board = [{ caption?, lanes: [{ kind, title, tag?, state?, slots: [{ label, items, queue? }], note? }],
    hl?: [id], list?: { title, items, ordered? } }]. Элемент: "G1" или { g: "G1", flag: "..." }.
-   Изменения выделяются рамкой и словом «изменилось», не только цветом. */
+   Изменения выделяются рамкой и значком «Δ» (для читалки — слово «изменилось»), не только цветом;
+   особая подпись панели (hlLabel, например «кандидат») пишется словом. Дорожка с изменением получает рамку. */
 // Части фишки разделены пробелами: во flex-контейнере их не видно, а читалка не склеит «G1runnable».
 function boardChipHtml(item, hl, hlLabel, hlQuiet) {
   const g = typeof item === "string" ? item : item.g;
   const flag = typeof item === "string" ? "" : item.flag;
-  const changed = hl.includes(g) || (typeof item === "object" && item.hl === true);
-  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? ` <span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed && !hlQuiet ? ` <span class="g-changed">${escapeHtml(hlLabel || "изменилось")}</span>` : ""}${changed && hlQuiet ? ` <span class="visually-hidden">выделено</span>` : ""}</li>`;
+  const changed = boardItemChanged(item, hl);
+  const mark = hlLabel
+    ? ` <span class="g-changed">${escapeHtml(hlLabel)}</span>`
+    : ` <span class="g-delta" aria-hidden="true">Δ</span><span class="visually-hidden">изменилось</span>`;
+  return `<li class="g-chip${changed ? " is-changed" : ""}"><span class="g-id">${escapeHtml(g)}</span>${flag ? ` <span class="g-flag">${escapeHtml(flag)}</span>` : ""}${changed && !hlQuiet ? mark : ""}${changed && hlQuiet ? ` <span class="visually-hidden">выделено</span>` : ""}</li>`;
 }
 
-function boardLaneHtml(lane, hl, hlLabel, hlQuiet) {
+function boardItemChanged(item, hl) {
+  const g = typeof item === "string" ? item : item.g;
+  return hl.includes(g) || (typeof item === "object" && item.hl === true);
+}
+
+function boardLaneChanged(lane, hl) {
+  return (lane.slots || []).some(slot => (slot.items || []).some(item => boardItemChanged(item, hl)));
+}
+
+// outline: рамка у дорожки с изменением; не ставится, если изменилось всё (рамка ничего не выделит) или hlQuiet.
+function boardLaneHtml(lane, hl, hlLabel, hlQuiet, outline) {
   const slots = (lane.slots || []).map(slot => {
     const items = slot.items || [];
     const list = items.length
@@ -698,27 +712,33 @@ function boardLaneHtml(lane, hl, hlLabel, hlQuiet) {
     return `<div class="board-slot"><span class="board-slot-label">${escapeHtml(slot.label)}</span>${list}</div>`;
   }).join("");
   const label = [lane.title, lane.tag, lane.state].filter(Boolean).join(", ");
-  return `<section class="board-lane lane-${escapeHtml(lane.kind || "other")}" aria-label="${escapeHtml(label)}">
+  const hasChange = outline && !hlQuiet && boardLaneChanged(lane, hl);
+  return `<section class="board-lane lane-${escapeHtml(lane.kind || "other")}${hasChange ? " has-change" : ""}" aria-label="${escapeHtml(label)}">
     <div class="board-lane-head"><strong>${escapeHtml(lane.title)}</strong>${lane.tag ? `<span class="board-tag">${escapeHtml(lane.tag)}</span>` : ""}${lane.state ? `<code class="board-state">${escapeHtml(lane.state)}</code>` : ""}</div>
     ${slots}
     ${lane.note ? `<p class="board-note">${escapeHtml(lane.note)}</p>` : ""}
   </section>`;
 }
 
-function boardHtml(board, legend) {
+// formula — шаг одной строкой «событие → действие → состояние»; внутри доски, поэтому на шагах
+// с predict она открывается вместе с ответом.
+function boardHtml(board, legend, formula) {
   const panels = Array.isArray(board) ? board : [board];
   return `<div class="board-wrap">
+    ${formula ? `<p class="board-formula"><span class="board-formula-label">Шаг коротко:</span> ${escapeHtml(formula)}</p>` : ""}
     ${legend && panels.some(panel => (panel.lanes || []).length) ? `<p class="board-legend">${escapeHtml(legend)}</p>` : ""}
     <div class="board-panels${panels.length > 1 ? " is-compare" : ""}">
       ${panels.map(panel => {
         const hl = panel.hl || [];
+        const lanes = panel.lanes || [];
+        const outline = !lanes.every(lane => boardLaneChanged(lane, hl));
         const list = panel.list && panel.list.items && panel.list.items.length ? `<div class="board-changes">
           <h4>${escapeHtml(panel.list.title || "Что изменилось")}</h4>
           <${panel.list.ordered ? "ol" : "ul"}>${panel.list.items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</${panel.list.ordered ? "ol" : "ul"}>
         </div>` : "";
         return `<figure class="board-panel">
           ${panel.caption ? `<figcaption class="board-caption">${escapeHtml(panel.caption)}</figcaption>` : ""}
-          ${(panel.lanes || []).length ? `<div class="board-lanes">${panel.lanes.map(lane => boardLaneHtml(lane, hl, panel.hlLabel, panel.hlQuiet === true)).join("")}</div>` : ""}
+          ${(panel.lanes || []).length ? `<div class="board-lanes">${lanes.map(lane => boardLaneHtml(lane, hl, panel.hlLabel, panel.hlQuiet === true, outline)).join("")}</div>` : ""}
           ${list}
         </figure>`;
       }).join("")}

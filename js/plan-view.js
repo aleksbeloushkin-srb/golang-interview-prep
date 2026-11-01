@@ -255,6 +255,7 @@ function planTaskItem(task, week) {
     planAcceptBlock(task),
     planModelBlock(task),
     lcNode,
+    task.talk && typeof talkTrainerNode === "function" ? talkTrainerNode(task.talk) : null,
     task.talk ? planTalkBlock(task.talk) : null
   ]);
 }
@@ -389,13 +390,13 @@ function planTodayBanner(today) {
     const counts = planWeekCounts(week);
     return planEl("p", { id: "plan-today", className: "plan-today", role: "status" }, [
       `Сегодня — неделя ${today.weekNumber}, резервный день. Невыполненных обязательных задач недели: ${counts.total - counts.done}. `,
-      planEl("a", { href: `#/plan/${week.id}`, text: "Открыть неделю →" })
+      planEl("a", { href: `#/plan/${week.id}`, text: "Открыть неделю\u00a0→" })
     ]);
   }
   const counts = planCounts(day.tasks);
   return planEl("p", { id: "plan-today", className: "plan-today", role: "status" }, [
     `Сегодня — неделя ${today.weekNumber}, ${day.label}: ${day.minutes} мин, осталось ${counts.total - counts.done} из ${counts.total} обязательных. `,
-    planEl("a", { href: `#/plan/${week.id}/${today.dayKey}`, text: "К задачам дня →" })
+    planEl("a", { href: `#/plan/${week.id}/${today.dayKey}`, text: "К задачам дня\u00a0→" })
   ]);
 }
 

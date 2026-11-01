@@ -255,6 +255,10 @@ export function validateContent(data) {
       if (!step || typeof step !== 'object') { errors.push(`${label}: expected object`); return; }
       fields(step, ['title', 'desc'], label);
       if (step.board !== undefined) errors.push(...validateBoard(step.board, label));
+      if (step.formula !== undefined) {
+        require(typeof step.formula === 'string' && step.formula.trim() && step.formula.length <= 100, `${label}: formula must be a non-empty string of at most 100 characters`);
+        require(step.board !== undefined, `${label}: formula is shown inside the board, so the step needs a board`);
+      }
       if (step.predict !== undefined) {
         if (!step.predict || typeof step.predict !== 'object') errors.push(`${label}: invalid predict`);
         else fields(step.predict, ['promptEN', 'promptRU'], `${label}.predict`);
