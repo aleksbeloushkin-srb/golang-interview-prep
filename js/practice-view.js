@@ -91,6 +91,11 @@ function practiceList(items, attrs) {
   return practiceEl("ul", attrs, items.map(item => practiceEl("li", { text: item })));
 }
 
+// Текст с `кодом` в обратных кавычках: нечётные куски — элементы <code>, всё через textContent.
+function practiceInlineCode(text) {
+  return text.split("`").map((part, i) => (i % 2 ? practiceEl("code", { text: part }) : part)).filter(part => part !== "");
+}
+
 // Решённые на сервере задачи: { "p-money": { passedAt } } в localStorage (уходит в синхронизацию).
 const PRACTICE_SOLVED_KEY = "go_prep_practice_v1";
 const PRACTICE_DRAFT_PREFIX = "go_prep_practice_draft_"; // sessionStorage: переживает переход на вход
@@ -283,6 +288,10 @@ function renderPracticeTask(view, task) {
         practiceCode(task.files.tests.code, `Тесты ${task.files.tests.name}`)
       ])
     ]),
+    Array.isArray(task.invariantsRU) && task.invariantsRU.length ? practiceEl("details", { className: "practice-invariants" }, [
+      practiceEl("summary", { text: "3 проверки перед отправкой — открыть, когда решение готово" }),
+      practiceEl("ul", { className: "practice-invariants-list" }, task.invariantsRU.map(line => practiceEl("li", {}, practiceInlineCode(line))))
+    ]) : null,
     practiceServerCheck(task),
     practiceSection("Подсказки — по одной", task.hints.map((hint, i) => practiceEl("details", { className: "practice-hint" }, [
       practiceEl("summary", { text: `Подсказка ${i + 1}` }),

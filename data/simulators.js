@@ -292,7 +292,8 @@ const SIMULATORS = [
           "promptRU": "Что такое g0 и какая горутина здесь новая?",
           "answerEN": "g0 is the thread’s system-stack goroutine; it is not created per go statement. G2 is the new user goroutine.",
           "answerRU": "g0 — системная горутина потока; она не создаётся для каждого оператора go. Новая пользовательская горутина здесь — G2."
-        }
+        },
+        "formula": "go f(x) → systemstack, g0 → newproc1: G2 из gfget или malg(stackMin), стек ≥ 2 КиБ"
       },
       {
         "title": "3. Сохранить стартовый контекст",
@@ -551,7 +552,8 @@ const SIMULATORS = [
           "promptRU": "Что состояние runnable говорит G1 о завершении G2?",
           "answerEN": "Nothing: runnable is eligibility for execution. Use explicit synchronization to wait for completion.",
           "answerRU": "Ничего: runnable означает готовность исполняться. Чтобы дождаться завершения, нужна явная синхронизация."
-        }
+        },
+        "formula": "newproc → runqput(P1, G2, next = true) → G2 в runnext, прежняя G5 — в хвост runq"
       },
       {
         "title": "5. Восстановить и перейти",
@@ -668,7 +670,8 @@ const SIMULATORS = [
         "predict": {
           "promptEN": "The scheduler picked G2. What will R14, RSP and RIP hold after gogo, and why is changing RIP alone not enough?",
           "promptRU": "Планировщик выбрал G2. Что окажется в R14, RSP и RIP после gogo и почему одного RIP мало?"
-        }
+        },
+        "formula": "execute: G2 runnable → running → gogo: R14 = G2, SP = sched.sp, JMP на sched.pc"
       },
       {
         "title": "6. Завершить G2",
@@ -1249,7 +1252,8 @@ const SIMULATORS = [
           "promptRU": "Делает ли получение SIGURG любую инструкцию безопасной для вытеснения?",
           "answerEN": "No. The runtime checks whether the interrupted point is safe.",
           "answerRU": "Нет. Рантайм проверяет безопасность прерванной точки."
-        }
+        },
+        "formula": "schedtick P1 не менялся ≥ 10 мс → sysmon: preemptone + SIGURG → G1 ещё выполняется"
       },
       {
         "title": "3. Безопасная точка → сохранение → планировщик",
@@ -1597,7 +1601,8 @@ const SIMULATORS = [
           "promptRU": "Было бы извлечение C прямо из исполняемого слота P1 той же операцией?",
           "answerEN": "No. This steals runnable queue entries, not a currently running goroutine.",
           "answerRU": "Нет. Здесь забирают готовые элементы очереди, а не исполняющуюся горутину."
-        }
+        },
+        "formula": "runqgrab взял n − n/2 = 3 с головы → runqsteal: C к запуску на P2, A и B — в runq P2"
       },
       {
         "title": "6. Syscall: до Go 1.26 и с Go 1.26",
@@ -2759,7 +2764,8 @@ const SIMULATORS = [
           "promptRU": "Значит ли activeStackChans, что стек больше нельзя двигать?",
           "answerEN": "No. The runtime can coordinate with the channel locks and adjust sudog pointers while copying the stack.",
           "answerRU": "Нет. Runtime согласует копирование с блокировками каналов и поправляет указатели sudog."
-        }
+        },
+        "formula": "gopark → park_m: G1 → waiting → activeStackChans = true, parkingOnChan = false → unlock"
       },
       {
         "title": "3. Передать значение",
@@ -2920,7 +2926,8 @@ const SIMULATORS = [
         "predict": {
           "promptEN": "G1 sleeps in recvq of an unbuffered channel. G2 sends 42. Where does 42 go, and does G1 run the line after <-ch right away?",
           "promptRU": "G1 спит в recvq небуферизованного канала. G2 отправляет 42. Куда попадёт 42 и выполнит ли G1 сразу строку после <-ch?"
-        }
+        },
+        "formula": "G2: lock, recvq.dequeue() → sudog G1 → sendDirect: 42 в x на стеке G1 → G1 ещё WAITING"
       },
       {
         "title": "4. Разрешить запуск",
@@ -4398,7 +4405,8 @@ const SIMULATORS = [
         "predict": {
           "promptEN": "No case is ready and there is no default. How many sudogs does selectgo create for the three receives, where do they go, and when are the channel locks released?",
           "promptRU": "Готовых нет, default нет. Сколько sudog создаст selectgo для трёх чтений, куда они попадут и когда отпустятся блокировки каналов?"
-        }
+        },
+        "formula": "Нет готовых, нет default → sudog на каждый case, порядок lockorder → gopark(selparkcommit)"
       },
       {
         "title": "5. Два отправителя: кто заберёт ожидание?",
@@ -4591,7 +4599,8 @@ const SIMULATORS = [
         "predict": {
           "promptEN": "G1 waits in three queues. G2 sends on chC and G3 on chA at almost the same time. How many values does G1 receive, and what does the losing sender do?",
           "promptRU": "G1 ждёт в трёх очередях. G2 отправляет в chC, G3 — в chA почти одновременно. Сколько значений получит G1 и что сделает проигравший отправитель?"
-        }
+        },
+        "formula": "Два отправителя → CAS(selectDone, 0, 1): выигравший будит G1, проигравший пропускает sudog"
       },
       {
         "title": "6. Очистить записи и вернуться в нужный case",
@@ -5704,7 +5713,8 @@ const SIMULATORS = [
           "promptRU": "Доказывает ли успех CAS, что значение раньше не менялось?",
           "answerEN": "No. A → B → A can match A again. CAS compares the current value, not its history.",
           "answerRU": "Нет. После A → B → A сравнение с A снова может пройти. CAS проверяет текущее значение, а не историю."
-        }
+        },
+        "formula": "LOCK CMPXCHGL CX, 0(BX): [BX] = AX → записать CX, ZF = 1; иначе AX = [BX] → SETEQ"
       },
       {
         "title": "5. CAS-цикл: прочитать → вычислить → CAS → повторить",
@@ -6782,7 +6792,8 @@ const SIMULATORS = [
               }
             ]
           }
-        ]
+        ],
+        "formula": "A.Next = B.Next, B.Next = nil → барьер учёл старые цели D, C и новую C → C станет серым"
       },
       {
         "title": "6. Mark termination (STW #2) и фоновый sweep",
@@ -7659,7 +7670,8 @@ const SIMULATORS = [
           "promptRU": "Если в слоте 2 будет «java», а все empty станут deleted, докажет ли эта группа отсутствие ключа?",
           "answerEN": "No. After rejecting both candidate keys, probing must continue because the group has no empty slot. With an empty slot, the unsuccessful search could stop.",
           "answerRU": "Нет. После отклонения обоих кандидатов нужно продолжить пробирование: в группе нет empty. Если бы empty был, неуспешный поиск мог бы завершиться."
-        }
+        },
+        "formula": "matchH2(2A) → кандидаты 0 и 2 → rust ≠ go, go = go → значение; empty — стоп лишь при промахе"
       },
       {
         "title": "4. Рост: одна группа → таблица → split",
@@ -8835,7 +8847,8 @@ const SIMULATORS = [
           "promptRU": "Можно ли вызвать Unlock из другой горутины, не той, что делала Lock?",
           "answerEN": "Yes: a locked Mutex is not associated with a goroutine. But unlocking an unlocked mutex is a fatal runtime error, not a recoverable panic.",
           "answerRU": "Да: заблокированный Mutex не привязан к горутине. Но Unlock незаблокированного — фатальная ошибка рантайма, recover не поможет."
-        }
+        },
+        "formula": "unlockSlow: W = 1, ждущих − 1, Semrelease → G3 спорит с G4; G4 на CPU часто берёт L первой"
       },
       {
         "title": "6. Режим голодания: прямая передача",
@@ -8948,7 +8961,8 @@ const SIMULATORS = [
         "predict": {
           "promptEN": "G3 lost to a newcomer again and has now waited more than 1 ms. What changes at the next Unlock, and where does a new G4 go?",
           "promptRU": "G3 снова проиграла новичку и ждёт уже больше 1 мс. Что изменится при следующем Unlock и куда встанет новая G4?"
-        }
+        },
+        "formula": "Разбуженная ждала > 1 мс и снова проиграла → S = 1 → Unlock отдаёт голове, новые — в хвост"
       },
       {
         "title": "7. Ответ за минуту и ловушки",
@@ -10069,7 +10083,8 @@ const SIMULATORS = [
           "promptRU": "Почему ложное срабатывание не ломает поиск?",
           "answerEN": "The mask yields candidates, not answers: the key in each candidate slot is still compared. False positives are rare and only appear next to a real match.",
           "answerRU": "Маска даёт кандидатов, а не ответ: ключ в слоте всё равно сравнивается. Ложные кандидаты редки и бывают только рядом с настоящим совпадением."
-        }
+        },
+        "formula": "v = ctrl ^ (H2 × 0x01…): совпавшие байты → 00 → (v − 0x01…) &^ v & 0x80… → слоты 0 и 2"
       },
       {
         "title": "6. Обход найденных битов",
@@ -10846,7 +10861,8 @@ const SIMULATORS = [
           "promptRU": "Что изменится, если handler передаст в запрос context.Background()?",
           "answerEN": "The query runs to the end and keeps a pool connection busy for a response nobody will read.",
           "answerRU": "Запрос доработает до конца и будет держать соединение из пула ради ответа, который никто не прочитает."
-        }
+        },
+        "formula": "Клиент ушёл → backgroundRead: EOF → cancelCtx → r.Context() Canceled → QueryContext прерван"
       },
       {
         "title": "5. Handler вернулся → контекст отменён всегда, соединение ждёт",
@@ -11460,7 +11476,8 @@ const SIMULATORS = [
           "promptRU": "Поможет ли третье ядро или GOMAXPROCS побольше?",
           "answerEN": "No. Both goroutines are parked waiting for each other; more Ps or cores give them nothing to run on. Only breaking the cycle helps.",
           "answerRU": "Нет. Обе горутины запаркованы и ждут друг друга; лишние P или ядра им не помогут. Помогает только разорвать круг."
-        }
+        },
+        "formula": "G1 с a вызывает b.mu.Lock(), G2 с b — a.mu.Lock() → обе в [sync.Mutex.Lock] → круг"
       },
       {
         "title": "3. Четыре условия Коффмана — все выполнены",
@@ -11780,7 +11797,8 @@ const SIMULATORS = [
           "promptRU": "Что будет без проверки from == to?",
           "answerEN": "The goroutine locks the same mutex twice and waits for itself forever, because sync.Mutex is not reentrant. Reject from == to before locking.",
           "answerRU": "Горутина возьмёт один и тот же мьютекс дважды и будет вечно ждать саму себя: sync.Mutex не реентерабелен. Отсекай from == to до блокировок."
-        }
+        },
+        "formula": "Обе начинают с меньшего ID (a) → G2 ждёт a, ничего не держа → круга нет, G1 берёт b"
       },
       {
         "title": "6. Livelock: вежливые и в такт",
@@ -12490,5 +12508,11 @@ const CHEATSHEET_ROWS = [
     how: "Read Committed — свой снимок у каждого запроса; Repeatable Read и Serializable — один снимок и 40001 при конфликте, транзакцию повторяют целиком. Перевод: одна транзакция, <code>SELECT … FOR UPDATE</code> по возрастанию ID счёта; 40P01 всё равно повторяют.",
     markers: "Idempotency-Key занимают атомарно: <code>INSERT … ON CONFLICT DO NOTHING</code> в транзакции перевода; тот же ключ с другим телом — 422. Событие — строкой outbox в той же транзакции; доставка at-least-once, потребитель отсеивает дубли по ID события. Порядок в Kafka — только внутри партиции.",
     cardId: "c50", simId: null
+  },
+  {
+    topic: "21. Архитектура Go-сервиса: пакеты, DI, SIGTERM, REST/gRPC, каналы",
+    how: "<code>cmd/ledger/main.go</code> тонкий, остальное — в <code>internal/</code> по предметным областям; handler → use case → домен, интерфейс объявляет потребитель; сборка — руками в одной функции. SIGTERM: <code>signal.NotifyContext</code> → «не готов», пауза → <code>Shutdown</code> → воркеры → ресурсы в обратном порядке.",
+    markers: "<code>Shutdown</code> — со своим дедлайном: с отменённым контекстом сигнала он не ждёт запросы. gRPC часто берут между своими сервисами, REST с JSON — для браузеров и публичных API. Long polling — один поллер на все ожидания. Канал закрывает владелец-отправитель; при нескольких — тот, кто дождался всех.",
+    cardId: "c59", simId: null
   }
 ];

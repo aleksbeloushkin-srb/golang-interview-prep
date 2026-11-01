@@ -2487,5 +2487,133 @@
    "1.27.3"
   ],
   "differs": null
+ },
+ {
+  "item": "c65",
+  "field": "shortEN",
+  "file": "doc/go_spec.html",
+  "symbol": "Struct_types",
+  "fact": "A field declared with a type but no field name is an embedded field; a field or method f of it is promoted if x.f is a legal selector (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.27.3 replaces \"Promoted fields act like ordinary fields of a struct except that they cannot be used as field names in composite literals\" with \"Promoted fields act like ordinary fields of a struct.\" (see Composite_literals)"
+ },
+ {
+  "item": "c65",
+  "field": "shortEN",
+  "file": "doc/go_spec.html",
+  "symbol": "Selectors",
+  "fact": "A promoted method call goes to the embedded field: p.M0() is ((*p).T0).M0(), so the receiver is the embedded value, not the outer struct (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[0]",
+  "file": "doc/go_spec.html",
+  "symbol": "Assignability",
+  "fact": "A struct value is not assignable to the type it embeds: V and T are different named types and T is not an interface (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": "1.27.3 adds an assignability rule for generic functions to function types; the rules that apply to struct values are unchanged"
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[2]",
+  "file": "doc/go_spec.html",
+  "symbol": "Selectors",
+  "fact": "x.f denotes the f at the shallowest depth; if there is not exactly one f at that depth, the selector expression is illegal (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[3]",
+  "file": "doc/go_spec.html",
+  "symbol": "Struct_types",
+  "fact": "Embedding T puts promoted T-receiver methods in the method sets of S and *S and *T-receiver methods only in *S; embedding *T puts both in S and *S (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[3]",
+  "file": "doc/go_spec.html",
+  "symbol": "Selectors",
+  "fact": "Evaluating x.f for a nil pointer x and a field f panics; calling a method on a nil interface value panics (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[4]",
+  "file": "doc/go_spec.html",
+  "symbol": "Composite_literals",
+  "fact": "A struct literal key may be any valid field selector for a possibly promoted field, but not through embedded pointer types [Go 1.27] (spec section id, not a Go declaration).",
+  "verified": [
+   "1.27.3"
+  ],
+  "differs": "1.24.7 and 1.26.1: each key must be a field name declared in the struct type, so a promoted field cannot be a key; the 1.24.7 to 1.26.1 differences in this section are editorial"
+ },
+ {
+  "item": "c65",
+  "field": "detailsEN[5]",
+  "file": "doc/go_spec.html",
+  "symbol": "Struct_types",
+  "fact": "An embedded field may be an interface type name; it is specified as a type name T, and only non-interface types may be embedded as *T (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q52",
+  "field": "explanationRU",
+  "file": "doc/go_spec.html",
+  "symbol": "Selectors",
+  "fact": "A method declared on the outer struct (depth 0) is chosen over a promoted method (depth 1); only names at the same shallowest depth are ambiguous (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
+ },
+ {
+  "item": "q52",
+  "field": "explanationRU",
+  "file": "doc/go_spec.html",
+  "symbol": "Method_sets",
+  "fact": "Further method-set rules for structs with embedded fields are in Struct types; a type implements an interface whose methods are all in its method set (spec section id, not a Go declaration).",
+  "verified": [
+   "1.24.7",
+   "1.26.1",
+   "1.27.3"
+  ],
+  "differs": null
  }
 ]

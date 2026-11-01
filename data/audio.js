@@ -367,6 +367,16 @@ const AUDIO = {
       "michael": "audio/en/card-c56-short-michael-9427bb3c.mp3",
       "heart": "audio/en/card-c56-short-heart-269efc62.mp3"
     },
+    "card:c65:jvm": {
+      "hash": "9a7d6e52",
+      "michael": "audio/en/card-c65-jvm-michael-2f603489.mp3",
+      "heart": "audio/en/card-c65-jvm-heart-5a7264ef.mp3"
+    },
+    "card:c65:short": {
+      "hash": "fa28a725",
+      "michael": "audio/en/card-c65-short-michael-61ad42fc.mp3",
+      "heart": "audio/en/card-c65-short-heart-d9b04baa.mp3"
+    },
     "plan:w1-mon-1": {
       "hash": "851cb195",
       "michael": "audio/en/plan-w1-mon-1-michael-9cc6d79b.mp3",

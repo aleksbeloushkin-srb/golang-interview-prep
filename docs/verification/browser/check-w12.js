@@ -15,7 +15,7 @@ const base = "http://127.0.0.1:8765/";
     await p.goto(base + "#/cards"); await p.waitForTimeout(400);
     await p.evaluate(() => setFilter('m6')); await p.waitForTimeout(200);
     const m6 = await p.evaluate(() => ({ module: document.getElementById("card-module").textContent, chip: document.querySelector('[data-filter="m6"]').textContent, count: CARDS.filter(c => c.mod === "m6").length }));
-    ok(`${w}: m6 filter shows module 6`, m6.module.startsWith("6.") && m6.chip.includes(`(${m6.count})`) && m6.count === 6, JSON.stringify(m6));
+    ok(`${w}: m6 filter shows module 6`, m6.module.startsWith("6.") && m6.chip.includes(`(${m6.count})`) && m6.count === 7, JSON.stringify(m6)); // c65 joined m6 in v80
     for (const id of ["c39", "c40", "c41", "c42", "c43", "c44"]) {
       await p.goto(base + "#/cards/" + id); await p.waitForTimeout(200);
       const r = await p.evaluate(id => {
@@ -30,7 +30,7 @@ const base = "http://127.0.0.1:8765/";
     // Quiz: tab count and each new task, answer reveal for one.
     await p.goto(base + "#/quiz"); await p.waitForTimeout(300);
     const tab = await p.textContent('[data-route="quiz"]');
-    ok(`${w}: quiz tab count`, /\b47$/.test(tab.trim()), tab);
+    ok(`${w}: quiz tab count`, /\b52$/.test(tab.trim()), tab);
     for (const id of ["q28", "q29", "q30", "q31", "q32", "q33", "q34", "q35"]) {
       await p.goto(base + "#/quiz/" + id); await p.waitForTimeout(250);
       const r = await p.evaluate(id => {

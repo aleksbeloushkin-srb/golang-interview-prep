@@ -33,6 +33,8 @@ const failures = [
   ['predict without board', d => { const st = d.simulators.flatMap(s => s.steps).find(s => !s.board); st.predict = { promptEN: 'x', promptRU: 'y' }; }, /predict requires a board/],
   ['predict without RU prompt', d => { const st = d.simulators.flatMap(s => s.steps).find(s => s.board); st.predict = { promptEN: 'x' }; }, /promptRU/],
   ['partial step answer', d => { delete d.simulators.flatMap(s => s.steps).find(s => s.check).check.answerEN; }, /answerEN/],
+  ['step formula too long', d => { d.simulators.flatMap(s => s.steps).find(s => s.board).formula = 'x'.repeat(101); }, /formula must be/],
+  ['step formula without board', d => { d.simulators.flatMap(s => s.steps).find(s => !s.board).formula = 'a → b'; }, /formula is shown inside the board/],
 ];
 for (const [name, mutate, expected] of failures) {
   test('rejects ' + name, () => {
@@ -90,6 +92,7 @@ const practiceFailures = [
   ['missing fixture file', p => { p[0].fixture = 'docs/verification/fixtures/practice/nope'; }, /fixture file .* is missing/],
   ['empty setup command', p => { p[0].setup = ['']; }, /setup must be a non-empty list/],
   ['extra commands that are not a list', p => { p[0].extraRun = 'go build'; }, /extraRun must be a non-empty list/],
+  ['two invariants instead of three', p => { p[0].invariantsRU = ['a', 'b']; }, /invariantsRU must be exactly 3/],
 ];
 for (const [name, mutate, expected] of practiceFailures) {
   test('practice: rejects ' + name, () => {

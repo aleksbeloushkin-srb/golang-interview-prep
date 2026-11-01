@@ -7,7 +7,7 @@ const { chromium } = require("playwright");
     const errors = []; p.on("pageerror", e => errors.push(e.message)); p.on("console", m => m.type() === "error" && errors.push(m.text()));
     await p.goto("http://127.0.0.1:8765/#/quiz"); await p.waitForTimeout(500);
     const tab = await p.textContent('[data-route="quiz"]');
-    ok(`${w}: tab count`, /\b47$/.test(tab.trim()), tab);
+    ok(`${w}: tab count`, /\b52$/.test(tab.trim()), tab);
     for (const id of ["q23", "q24", "q25", "q26", "q27"]) {
       await p.goto(`http://127.0.0.1:8765/#/quiz/${id}`); await p.waitForTimeout(300);
       const r = await p.evaluate(id => {

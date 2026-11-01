@@ -699,7 +699,7 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 /* --- План 13 недель (#/plan) --- */
 .plan-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .plan-today { padding: 10px 12px; border-left: 4px solid var(--accent); background: rgba(56, 189, 248, 0.08); border-radius: 6px; }
-.plan-today a { color: var(--accent); white-space: nowrap; }
+.plan-today a { color: var(--accent); overflow-wrap: anywhere; }
 .plan-weeks { display: flex; flex-wrap: wrap; gap: 8px; }
 .plan-chip { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; min-width: 64px; justify-content: center; }
 .plan-chip.is-current { border-color: var(--amber); }
@@ -759,6 +759,26 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .plan-accept { margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--border); font-size: 0.9rem; overflow-wrap: anywhere; }
 .plan-accept p { margin: 2px 0; }
 .plan-gap { color: var(--muted); }
+/* Тренажёр проговора (js/talk-trainer.js): кнопка под задачей и окно-шторка */
+.talk-trainer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; }
+.talk-last { font-size: 0.82rem; }
+.talk-sheet { max-height: 92vh; overflow-y: auto; }
+.talk-body > * + * { margin-top: 10px; }
+.talk-progress { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.talk-step-time.is-over { color: var(--amber); font-weight: 700; }
+.talk-step-name { font-size: 1.2rem; }
+.talk-step-name:focus-visible, #talk-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.talk-phrase em { color: var(--text); }
+.talk-model { padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg); border-radius: 6px; overflow-wrap: anywhere; }
+.talk-rates { border: 0; padding: 0; margin-top: 14px; }
+.talk-rates legend { font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+.talk-rate { min-height: 44px; }
+.talk-rate-said { border-color: var(--green); }
+.talk-rate-partial { border-color: var(--amber); }
+.talk-results { padding-left: 20px; }
+.talk-result-said::marker { color: var(--green); }
+.talk-result-partial::marker { color: var(--amber); }
+.talk-weak { overflow-wrap: anywhere; }
 .plan-model summary { font-size: 0.9rem; }
 .plan-model p { margin: 6px 0; overflow-wrap: anywhere; }
 
@@ -794,7 +814,13 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .g-chip.is-changed { border: 2px solid var(--amber); background: rgba(245, 158, 11, 0.14); }
 .g-flag { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; font-size: 0.75rem; color: var(--muted); }
 .g-changed { font-size: 0.7rem; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 0.03em; }
+/* Значок изменения: янтарная плашка с тёмной «Δ» читается на любом фоне фишки, включая белую и чёрную дорожки GC */
+.g-delta { display: inline-grid; place-items: center; min-width: 1.45em; height: 1.45em; padding: 0 3px; border-radius: 5px; background: var(--amber); color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; font-size: 0.78rem; font-weight: 800; line-height: 1; align-self: center; }
+/* Дорожка, где на шаге что-то изменилось: янтарная рамка; левая полоса сохраняет цвет вида дорожки */
+.board-lane.has-change { border-top-color: var(--amber); border-right-color: var(--amber); border-bottom-color: var(--amber); box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.35); }
 .board-note { margin-top: 6px; font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.board-formula { margin-bottom: 10px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.85rem; overflow-wrap: anywhere; }
+.board-formula-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; font-weight: 700; color: var(--accent); }
 .board-changes { margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--amber); background: rgba(245, 158, 11, 0.06); border-radius: 6px; }
 .board-changes h4 { font-size: 0.85rem; margin-bottom: 6px; }
 .board-changes ol, .board-changes ul { padding-left: 20px; margin: 0; }
@@ -837,6 +863,10 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .lane-black .g-flag { color: #cbd5e1; }
 
 /* --- Практикум (#/practice) --- */
+.practice-invariants { margin: 16px 0 0; padding: 10px 12px; border: 1px solid var(--border); border-left: 3px solid var(--green); border-radius: 8px; background: var(--surface); }
+.practice-invariants > summary { cursor: pointer; font-weight: 600; }
+.practice-invariants-list { margin-top: 8px; padding-left: 20px; overflow-wrap: anywhere; }
+.practice-invariants-list code { overflow-wrap: anywhere; word-break: break-word; }
 .practice-index { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
 .practice-index-item { padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); min-width: 0; }
 .practice-index-item p { margin-top: 6px; color: #cbd5e1; overflow-wrap: anywhere; }

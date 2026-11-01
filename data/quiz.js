@@ -1267,7 +1267,8 @@ func WriteReport(path string, payload []byte) (err error) {
       }
     ],
     "cardIds": [
-      "c34"
+      "c34",
+      "c65"
     ]
   },
   {
@@ -1705,6 +1706,200 @@ func WriteReport(path string, payload []byte) (err error) {
     ],
     "cardIds": [
       "c56"
+    ]
+  },
+  {
+    "id": "q48",
+    "title": "Задача 48: rows.Next() вернул false посреди выборки",
+    "ru": "У мерчанта три платежа. Драйвер отдал две строки, и соединение с базой оборвалось. Что вернёт PaymentIDs и кто узнает об обрыве?",
+    "en": "The merchant has three payments. The driver returns two rows, then the database connection breaks. What does PaymentIDs return, and who learns about the failure?",
+    "code": "package store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n)\n\n// PaymentIDs returns the IDs of a merchant's payments.\nfunc PaymentIDs(ctx context.Context, db *sql.DB, merchant string) ([]int64, error) {\n\trows, err := db.QueryContext(ctx,\n\t\t`SELECT id FROM payments WHERE merchant = $1 ORDER BY id`, merchant)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer rows.Close()\n\n\tvar ids []int64\n\tfor rows.Next() {\n\t\tvar id int64\n\t\tif err := rows.Scan(&id); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tids = append(ids, id)\n\t}\n\treturn ids, nil\n}",
+    "options": [
+      "Ошибку соединения из rows.Scan: после сбоя следующий Scan вернёт ошибку, и функция её отдаст.",
+      "Все три ID: database/sql заметит обрыв и повторит запрос на другом соединении из пула.",
+      "Два ID и nil: Next вернул false, как в конце выборки, а ошибку хранит только rows.Err(), его не проверили.",
+      "Два ID и nil, и соединение останется занятым: после ошибки Next defer rows.Close() не выполняется."
+    ],
+    "correct": 2,
+    "explanationRU": "Next возвращает false в двух случаях: строки кончились или следующую строку получить не удалось; отличает их только rows.Err(). Его не проверили, и вызывающий получит два ID из трёх с nil — неполный список, неотличимый от полного. До Scan дело не доходит: цикл уже закончился. Повтор на другом соединении database/sql делает, только пока QueryContext получает соединение и запускает запрос, и лишь при driver.ErrBadConn; посреди чтения строк повтора нет. Соединение не утекает: при ошибке драйвера Rows закрываются сами, а defer rows.Close() всё равно выполнится. Исправление — проверить rows.Err() после цикла и вернуть ошибку с контекстом через %w; в c47 то же коротко: return out, rows.Err().",
+    "speechEN": "Next returns false both at the end of the rows and when reading the next row fails; only Rows.Err tells the two apart. This code never checks it, so the caller gets two of the three IDs and a nil error: a partial list that looks complete. The connection is not leaked, because Rows closes itself on a driver error. The fix is to check Rows.Err after the loop and return the error with context.",
+    "correctedCode": "package store\n\nimport (\n\t\"context\"\n\t\"database/sql\"\n\t\"fmt\"\n)\n\n// PaymentIDs returns the IDs of a merchant's payments.\nfunc PaymentIDs(ctx context.Context, db *sql.DB, merchant string) ([]int64, error) {\n\trows, err := db.QueryContext(ctx,\n\t\t`SELECT id FROM payments WHERE merchant = $1 ORDER BY id`, merchant)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tdefer rows.Close()\n\n\tvar ids []int64\n\tfor rows.Next() {\n\t\tvar id int64\n\t\tif err := rows.Scan(&id); err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tids = append(ids, id)\n\t}\n\t// Next returns false at the end and on an error; only Err tells them apart.\n\tif err := rows.Err(); err != nil {\n\t\treturn nil, fmt.Errorf(\"payment ids of %s: %w\", merchant, err)\n\t}\n\treturn ids, nil\n}",
+    "versionNote": "QueryContext — с Go 1.8. Контракт Next/Err и повтор только при driver.ErrBadConn до выдачи Rows не менялись: сверено по database/sql в Go 1.24.7 и 1.27.3 (в 1.27 появился driver.RowsColumnScanner, его ошибка идёт тем же путём). Фикстура: настоящий database/sql и маленький драйвер, у которого Next ломается после двух строк; go vet, go test -race на обеих версиях. PostgreSQL и сеть не проверяются.",
+    "sources": [
+      {
+        "title": "database/sql: Rows.Next — go1.27.3",
+        "url": "https://pkg.go.dev/database/sql@go1.27.3#Rows.Next"
+      },
+      {
+        "title": "database/sql: Rows.Err — go1.27.3",
+        "url": "https://pkg.go.dev/database/sql@go1.27.3#Rows.Err"
+      },
+      {
+        "title": "database/sql/driver: ErrBadConn — go1.27.3",
+        "url": "https://pkg.go.dev/database/sql/driver@go1.27.3#ErrBadConn"
+      },
+      {
+        "title": "database/sql: Rows.nextLocked и DB.retry — исходник go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/database/sql/sql.go"
+      }
+    ],
+    "cardIds": [
+      "c47"
+    ]
+  },
+  {
+    "id": "q49",
+    "title": "Задача 49: ListenAndServe вернулся, Shutdown ещё работает",
+    "ru": "Приходит SIGTERM; один запрос ещё обрабатывается, работы у него на секунду. Получит ли клиент ответ и с каким кодом завершится процесс?",
+    "en": "SIGTERM arrives while one request still has a second of work left. Will the client get its response, and with what exit code does the process end?",
+    "code": "package main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\t\"time\"\n)\n\n// addr and routes() are defined in another file of the package.\nfunc main() {\n\tctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\n\tdefer stop()\n\tsrv := &http.Server{Addr: addr, Handler: routes(), ReadHeaderTimeout: 5 * time.Second}\n\n\tgo func() {\n\t\t<-ctx.Done()\n\t\tsctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)\n\t\tdefer cancel()\n\t\tif err := srv.Shutdown(sctx); err != nil {\n\t\t\tlog.Printf(\"shutdown: %v\", err)\n\t\t}\n\t}()\n\n\tif err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {\n\t\tlog.Fatal(err)\n\t}\n}",
+    "options": [
+      "Получит: ListenAndServe возвращает ErrServerClosed только после того, как Shutdown дождётся активных запросов.",
+      "Получит: после возврата из main рантайм ждёт работающие горутины, в том числе ту, что вызвала Shutdown.",
+      "Не получит: Shutdown дали context.Background() с таймаутом; с сигнальным ctx он дождался бы запроса.",
+      "Не получит: ListenAndServe возвращается сразу после закрытия listener, main выходит, процесс завершается с кодом 0."
+    ],
+    "correct": 3,
+    "explanationRU": "Shutdown сначала закрывает listener, и ListenAndServe в этот момент сразу возвращает ErrServerClosed; документация net/http просит не выходить из программы, а дождаться возврата Shutdown. Здесь main на этом заканчивается, а программа на Go завершается вместе с main и другие горутины не ждёт. Shutdown и обработчик обрываются, клиент получает EOF, а код выхода 0 выглядит как чистая остановка; таймаут 20 секунд не успевает сыграть роль. Сигнальный ctx в Shutdown сделал бы хуже: он уже отменён, и при активном запросе Shutdown сразу вернул бы ошибку (c59). Исправление: горутина отдаёт результат Shutdown в канал с буфером 1, main ждёт его после ListenAndServe и при ошибке выходит с ненулевым кодом.",
+    "speechEN": "Shutdown closes the listener first, and at that moment ListenAndServe returns ErrServerClosed. Here main then returns, and a Go program exits when main returns, without waiting for other goroutines. The request in flight is cut off, the client sees EOF, and the exit code is zero, which looks like a clean stop. The fix is for main to wait for the result of Shutdown before it returns.",
+    "correctedCode": "package main\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"log\"\n\t\"net/http\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n\t\"time\"\n)\n\n// addr and routes() are defined in another file of the package.\nfunc main() {\n\tctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)\n\tdefer stop()\n\tsrv := &http.Server{Addr: addr, Handler: routes(), ReadHeaderTimeout: 5 * time.Second}\n\n\tshutdownErr := make(chan error, 1)\n\tgo func() {\n\t\t<-ctx.Done()\n\t\tsctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)\n\t\tdefer cancel()\n\t\tshutdownErr <- srv.Shutdown(sctx)\n\t}()\n\n\tif err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {\n\t\tlog.Fatal(err)\n\t}\n\t// ListenAndServe returns as soon as Shutdown closes the listener;\n\t// requests in flight finish only while main waits here.\n\tif err := <-shutdownErr; err != nil {\n\t\tlog.Fatalf(\"shutdown: %v\", err)\n\t}\n}",
+    "versionNote": "Shutdown — с Go 1.8, signal.NotifyContext — с Go 1.16. Поведение Shutdown и ListenAndServe и правило выхода из main не менялись: сверено по net/http и спецификации Go 1.24.7 и 1.27.3. Фикстура запускает настоящий main в дочернем процессе и шлёт SIGTERM во время запроса: в исходной версии клиент получает EOF и код выхода 0, в исправленной — 200. Под -race дочерний процесс идёт с GORACE=atexit_sleep_ms=0: иначе race-бинарник около секунды ждёт в os.Exit, и медленный запрос успевает закончиться.",
+    "sources": [
+      {
+        "title": "net/http: Server.Shutdown — go1.27.3",
+        "url": "https://pkg.go.dev/net/http@go1.27.3#Server.Shutdown"
+      },
+      {
+        "title": "Go specification: Program execution",
+        "url": "https://go.dev/ref/spec#Program_execution"
+      },
+      {
+        "title": "os/signal: NotifyContext — go1.27.3",
+        "url": "https://pkg.go.dev/os/signal@go1.27.3#NotifyContext"
+      },
+      {
+        "title": "net/http: Server.Shutdown — исходник go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/net/http/server.go"
+      }
+    ],
+    "cardIds": [
+      "c59",
+      "c45"
+    ]
+  },
+  {
+    "id": "q50",
+    "title": "Задача 50: уведомление запросу, который уже ушёл",
+    "ru": "Запрос только что вышел из select — по таймауту или потому, что клиент ушёл, — и ещё не выполнил отложенный cancel. В этот момент поллер вызывает Notify для этого платежа. Что произойдёт и что исправить?",
+    "en": "A waiting request has just left its select, on timeout or because the client went away, and has not yet run its deferred cancel. At that moment the poller calls Notify for this payment. What happens, and what is the fix?",
+    "code": "package notify\n\nimport (\n\t\"io\"\n\t\"net/http\"\n\t\"sync\"\n\t\"time\"\n)\n\n// Hub wakes long-polling requests when a payment changes status.\ntype Hub struct {\n\tmu      sync.Mutex\n\twaiters map[string]map[chan string]struct{}\n}\n\nfunc NewHub() *Hub { return &Hub{waiters: make(map[string]map[chan string]struct{})} }\n\n// Register adds a waiter for payment id; cancel removes it.\nfunc (h *Hub) Register(id string) (<-chan string, func()) {\n\tch := make(chan string)\n\th.mu.Lock()\n\tdefer h.mu.Unlock()\n\tif h.waiters[id] == nil {\n\t\th.waiters[id] = make(map[chan string]struct{})\n\t}\n\th.waiters[id][ch] = struct{}{}\n\treturn ch, func() {\n\t\th.mu.Lock()\n\t\tdefer h.mu.Unlock()\n\t\tdelete(h.waiters[id], ch)\n\t\tif len(h.waiters[id]) == 0 {\n\t\t\tdelete(h.waiters, id)\n\t\t}\n\t}\n}\n\n// Notify is called by the poller goroutine when payment id changes status.\nfunc (h *Hub) Notify(id, status string) {\n\th.mu.Lock()\n\tdefer h.mu.Unlock()\n\tfor ch := range h.waiters[id] {\n\t\tch <- status\n\t}\n\tdelete(h.waiters, id) // every waiter got its status\n}\n\n// Wait serves GET /payments/{id}/wait.\nfunc (h *Hub) Wait(w http.ResponseWriter, r *http.Request) {\n\tupdates, cancel := h.Register(r.PathValue(\"id\"))\n\tdefer cancel()\n\tselect {\n\tcase status := <-updates:\n\t\tio.WriteString(w, status)\n\tcase <-time.After(25 * time.Second):\n\t\tw.WriteHeader(http.StatusNoContent) // the client asks again\n\tcase <-r.Context().Done():\n\t}\n}",
+    "options": [
+      "Утекают таймеры: каждый time.After живёт 25 секунд. Замена на NewTimer со Stop уберёт и зависание Notify.",
+      "Notify навсегда ждёт на ch <- status, держа h.mu; cancel ушедшего ждёт h.mu, за ним все новые Register. Нужен буфер 1.",
+      "Отправка паникует: при выходе хендлера рантайм закрывает его канал, и ch <- status попадает в закрытый канал.",
+      "Notify зависнет, но хватит select с default вокруг отправки: буфер не нужен, и ожидающие ничего не потеряют."
+    ],
+    "correct": 1,
+    "explanationRU": "Отправка в небуферизованный канал ждёт получателя, а он уже вышел из select. Поллер ждёт, держа h.mu, а отложенный cancel этого запроса ждёт h.mu — цикл ожидания. Рантайм его не заметит: «all goroutines are asleep» срабатывает, только когда заблокированы все горутины. Следом встаёт каждый новый Register. На счастливом пути ошибки не видно: пока хендлер в select, отправка проходит. Исправление — make(chan string, 1): Notify шлёт ожидающему не больше одного значения и под той же блокировкой удаляет его, так что отправка не ждёт. select с default не зависнет, но потеряет статус запроса, который ещё не дошёл до select (например, читает состояние из базы, как в c62). time.After ни при чём: с Go 1.23 GC забирает таймеры без ссылок (q11).",
+    "speechEN": "The poller sends on an unbuffered channel, so it waits for a receiver, but this receiver has already left its select. The poller waits while holding the hub mutex, and the leaving request needs that mutex for its deferred cancel, so both wait forever, and so does every new Register. The happy path hides it. The fix is a buffer of one: Notify sends each waiter at most one value and removes it at once, so the send never blocks.",
+    "correctedCode": "package notify\n\nimport (\n\t\"io\"\n\t\"net/http\"\n\t\"sync\"\n\t\"time\"\n)\n\n// Hub wakes long-polling requests when a payment changes status.\ntype Hub struct {\n\tmu      sync.Mutex\n\twaiters map[string]map[chan string]struct{}\n}\n\nfunc NewHub() *Hub { return &Hub{waiters: make(map[string]map[chan string]struct{})} }\n\n// Register adds a waiter for payment id; cancel removes it.\nfunc (h *Hub) Register(id string) (<-chan string, func()) {\n\tch := make(chan string, 1) // Notify sends at most once, then removes the waiter\n\th.mu.Lock()\n\tdefer h.mu.Unlock()\n\tif h.waiters[id] == nil {\n\t\th.waiters[id] = make(map[chan string]struct{})\n\t}\n\th.waiters[id][ch] = struct{}{}\n\treturn ch, func() {\n\t\th.mu.Lock()\n\t\tdefer h.mu.Unlock()\n\t\tdelete(h.waiters[id], ch)\n\t\tif len(h.waiters[id]) == 0 {\n\t\t\tdelete(h.waiters, id)\n\t\t}\n\t}\n}\n\n// Notify is called by the poller goroutine when payment id changes status.\nfunc (h *Hub) Notify(id, status string) {\n\th.mu.Lock()\n\tdefer h.mu.Unlock()\n\tfor ch := range h.waiters[id] {\n\t\tch <- status // never blocks: the only send, into an empty buffer of 1\n\t}\n\tdelete(h.waiters, id) // every waiter got its status\n}\n\n// Wait serves GET /payments/{id}/wait.\nfunc (h *Hub) Wait(w http.ResponseWriter, r *http.Request) {\n\tupdates, cancel := h.Register(r.PathValue(\"id\"))\n\tdefer cancel()\n\tselect {\n\tcase status := <-updates:\n\t\tio.WriteString(w, status)\n\tcase <-time.After(25 * time.Second):\n\t\tw.WriteHeader(http.StatusNoContent) // the client asks again\n\tcase <-r.Context().Done():\n\t}\n}",
+    "versionNote": "Правила отправки в канал не менялись: сверено по спецификации Go 1.24.7 и 1.27.3. Шаблон «GET /payments/{id}/wait» и r.PathValue — Go 1.22; про таймеры без ссылок — документация time.After и NewTimer в 1.24.7 и 1.27.3. Фикстура: три варианта Hub — исходный (тест по goroutine-профилю видит Notify в [chan send], cancel и новый Register в [sync.Mutex.Lock]), с буфером 1 и с select default (статус теряется); go vet, go test -race на обеих версиях.",
+    "sources": [
+      {
+        "title": "Go specification: Send statements",
+        "url": "https://go.dev/ref/spec#Send_statements"
+      },
+      {
+        "title": "time.After — go1.27.3",
+        "url": "https://pkg.go.dev/time@go1.27.3#After"
+      },
+      {
+        "title": "time: After и NewTimer — исходник go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/time/sleep.go"
+      },
+      {
+        "title": "sync.Mutex — go1.27.3",
+        "url": "https://pkg.go.dev/sync@go1.27.3#Mutex"
+      }
+    ],
+    "cardIds": [
+      "c62"
+    ]
+  },
+  {
+    "id": "q51",
+    "title": "Задача 51: каждый воркер закрывает out",
+    "ru": "Долгоживущий сервис вызывает Squares([]int{1, 2, 3, 4, 5, 6}). Что произойдёт? А с пустым списком?",
+    "en": "A long-running service calls Squares([]int{1, 2, 3, 4, 5, 6}). What happens? And with an empty list?",
+    "code": "package squares\n\nimport \"sync\"\n\n// Squares returns n*n for every n, computed by three workers.\nfunc Squares(nums []int) []int {\n\tjobs := make(chan int)\n\tout := make(chan int)\n\tvar wg sync.WaitGroup\n\tfor range 3 {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tdefer close(out)\n\t\t\tfor n := range jobs {\n\t\t\t\tout <- n * n\n\t\t\t}\n\t\t}()\n\t}\n\tgo func() {\n\t\tdefer close(jobs)\n\t\tfor _, n := range nums {\n\t\t\tjobs <- n\n\t\t}\n\t}()\n\n\tvar res []int\n\tfor v := range out {\n\t\tres = append(res, v)\n\t}\n\treturn res\n}",
+    "options": [
+      "Первый закончивший воркер закроет out, следующий close или отправка другого воркера вызовет panic — процесс упадёт; с пустым списком тоже.",
+      "Вернутся все шесть квадратов: повторный close закрытого канала ничего не делает, а range ждёт последнего close.",
+      "Squares зависнет: range по out заканчивается только после третьего close, а он не наступит.",
+      "Вернётся часть квадратов без паники: range кончится на первом close, а остальные воркеры тихо выйдут."
+    ],
+    "correct": 0,
+    "explanationRU": "У out три отправителя, и каждый закрывает его в defer. Первый воркер, у которого кончились задачи, закрывает out, и range у читателя заканчивается — возможно, не дождавшись всех результатов. Затем второй close даёт panic «close of closed channel», а отправка воркера, который ещё считал, — «send on closed channel»; что случится первым, зависит от расписания. Паника в горутине без recover завершает весь процесс, даже если Squares уже вернул результат, полный или нет. С пустым списком все три воркера сразу доходят до close, и второй close паникует всегда. Исправление по правилу c63: при нескольких отправителях их ждёт через wg.Wait() отдельная горутина, и закрывает out только она.",
+    "speechEN": "The out channel has three senders, and each one closes it in a defer. The first worker to finish closes it, and the receiving loop ends, maybe before every result has arrived. Then a second close, or a send by a worker that is still running, panics, and an unrecovered panic in any goroutine crashes the process. With an empty list the second close always panics. The fix: one goroutine waits for all senders with a WaitGroup, then closes out.",
+    "correctedCode": "package squares\n\nimport \"sync\"\n\n// Squares returns n*n for every n, computed by three workers.\nfunc Squares(nums []int) []int {\n\tjobs := make(chan int)\n\tout := make(chan int)\n\tvar wg sync.WaitGroup\n\tfor range 3 {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor n := range jobs {\n\t\t\t\tout <- n * n\n\t\t\t}\n\t\t}()\n\t}\n\tgo func() {\n\t\tdefer close(jobs)\n\t\tfor _, n := range nums {\n\t\t\tjobs <- n\n\t\t}\n\t}()\n\t// Three goroutines send to out, so none of them closes it: one closer\n\t// waits for all of them.\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(out)\n\t}()\n\n\tvar res []int\n\tfor v := range out {\n\t\tres = append(res, v)\n\t}\n\treturn res\n}",
+    "versionNote": "Правила close и отправки в закрытый канал не менялись: сверено по спецификации и runtime/chan.go Go 1.24.7 и 1.27.3; for range 3 — Go 1.22. Фикстура запускает Squares в дочернем процессе, потому что панику в горутине тест не перехватит: с пустым списком — всегда «close of closed channel», с шестью числами в прогонах встречались обе паники, а Squares иногда успевал вернуть результат (полный или неполный) до падения. Исправленный вариант: go test -race -count=100 на обеих версиях.",
+    "sources": [
+      {
+        "title": "Go specification: Close",
+        "url": "https://go.dev/ref/spec#Close"
+      },
+      {
+        "title": "Go specification: Handling panics",
+        "url": "https://go.dev/ref/spec#Handling_panics"
+      },
+      {
+        "title": "runtime: closechan и chansend — исходник go1.27.3",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/runtime/chan.go"
+      },
+      {
+        "title": "Go blog: Pipelines and cancellation",
+        "url": "https://go.dev/blog/pipelines"
+      }
+    ],
+    "cardIds": [
+      "c63"
+    ]
+  },
+  {
+    "id": "q52",
+    "title": "Задача 52: «Переопределённый» метод и встраивание",
+    "ru": "SMS встраивает Notifier и объявляет свой Channel. Что напечатает программа?",
+    "en": "SMS embeds Notifier and declares its own Channel. What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\ntype Notifier struct{}\n\nfunc (Notifier) Channel() string { return \"email\" }\n\nfunc (n Notifier) Send(msg string) string { return n.Channel() + \": \" + msg }\n\ntype SMS struct{ Notifier }\n\nfunc (SMS) Channel() string { return \"sms\" }\n\ntype Sender interface{ Send(msg string) string }\n\nfunc main() {\n\ts := SMS{}\n\tvar snd Sender = s\n\tfmt.Println(s.Channel())\n\tfmt.Println(s.Send(\"paid\"))\n\tfmt.Println(snd.Send(\"paid\"))\n}",
+    "options": [
+      "sms, sms: paid, sms: paid — SMS.Channel переопределяет метод, как в Java.",
+      "sms, email: paid, sms: paid — вызов через интерфейс динамический и доходит до SMS.Channel.",
+      "sms, email: paid, email: paid.",
+      "Ошибка компиляции: SMS не реализует Sender, у Send получатель Notifier.",
+      "Ошибка компиляции: ambiguous selector s.Channel — Channel есть и у SMS, и у Notifier.",
+      "email, email: paid, email: paid — метод встроенного типа побеждает."
+    ],
+    "correct": 2,
+    "explanationRU": "SMS.Channel на глубине 0 затеняет Notifier.Channel на глубине 1, поэтому s.Channel() — «sms»; неоднозначности нет, она бывает только на одной глубине. Send объявлен только у Notifier и продвинут: s.Send(\"paid\") — это s.Notifier.Send(\"paid\"), его получатель — Notifier, и n.Channel() внутри — статический вызов Notifier.Channel: «email: paid». SMS реализует Sender через продвинутый Send. Вызов через интерфейс действительно динамический, но выбирает он метод Send типа SMS, а это тот же продвинутый Notifier.Send. Виртуальной диспетчеризации через встраивание нет; меняющийся шаг передают интерфейсом — в исправленном варианте это поле ch Channel.",
+    "speechEN": "It prints sms, then email: paid twice. SMS's own Channel hides the promoted one, so s.Channel() is sms. But Send belongs to Notifier: s.Send is s.Notifier.Send, its receiver is the Notifier, and the call to Channel inside it is Notifier's. The interface call is dynamic, but it picks SMS's Send, which is that same promoted method. Embedding has no virtual dispatch, so pass the varying step in as an interface.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\n// Channel is the step that varies; Notifier gets it as a field.\ntype Channel interface{ Name() string }\n\ntype Email struct{}\n\nfunc (Email) Name() string { return \"email\" }\n\ntype SMS struct{}\n\nfunc (SMS) Name() string { return \"sms\" }\n\ntype Notifier struct{ ch Channel }\n\n// n.ch.Name() is a call through an interface, so it reaches the channel that was passed in.\nfunc (n Notifier) Send(msg string) string { return n.ch.Name() + \": \" + msg }\n\nfunc main() {\n\tfmt.Println(Notifier{ch: SMS{}}.Send(\"paid\"))\n\tfmt.Println(Notifier{ch: Email{}}.Send(\"paid\"))\n}",
+    "versionNote": "Правила продвижения методов, селекторов и наборов методов — с Go 1.0, не менялись: разделы Selectors и Method sets спецификации в Go 1.24.7, 1.26.1 и 1.27.3 совпадают. Обе программы выполнены на Go 1.24.7 и 1.27.3 (go vet, go test): исходная печатает sms, email: paid, email: paid, исправленная — sms: paid, email: paid.",
+    "sources": [
+      {
+        "title": "Go specification: selectors (depth, ambiguity)",
+        "url": "https://go.dev/ref/spec#Selectors"
+      },
+      {
+        "title": "Go specification: struct types: promoted fields and methods",
+        "url": "https://go.dev/ref/spec#Struct_types"
+      },
+      {
+        "title": "Effective Go: embedding",
+        "url": "https://go.dev/doc/effective_go#embedding"
+      }
+    ],
+    "cardIds": [
+      "c65"
     ]
   }
 ];
