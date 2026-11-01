@@ -92,6 +92,7 @@ const practiceFailures = [
   ['missing fixture file', p => { p[0].fixture = 'docs/verification/fixtures/practice/nope'; }, /fixture file .* is missing/],
   ['empty setup command', p => { p[0].setup = ['']; }, /setup must be a non-empty list/],
   ['extra commands that are not a list', p => { p[0].extraRun = 'go build'; }, /extraRun must be a non-empty list/],
+  ['two invariants instead of three', p => { p[0].invariantsRU = ['a', 'b']; }, /invariantsRU must be exactly 3/],
 ];
 for (const [name, mutate, expected] of practiceFailures) {
   test('practice: rejects ' + name, () => {

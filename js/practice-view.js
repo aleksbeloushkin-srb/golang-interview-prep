@@ -283,6 +283,10 @@ function renderPracticeTask(view, task) {
         practiceCode(task.files.tests.code, `Тесты ${task.files.tests.name}`)
       ])
     ]),
+    Array.isArray(task.invariantsRU) && task.invariantsRU.length ? practiceEl("details", { className: "practice-invariants" }, [
+      practiceEl("summary", { text: "3 проверки перед отправкой — открыть, когда решение готово" }),
+      practiceList(task.invariantsRU, { className: "practice-invariants-list" })
+    ]) : null,
     practiceServerCheck(task),
     practiceSection("Подсказки — по одной", task.hints.map((hint, i) => practiceEl("details", { className: "practice-hint" }, [
       practiceEl("summary", { text: `Подсказка ${i + 1}` }),

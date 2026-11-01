@@ -172,6 +172,7 @@ export function validatePractice(practice, data, plan, readFixture) {
     for (const id of task.links || []) require(site.has(id), `${label}: unknown site ID ${id}`);
     for (const ref of task.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `${label}: reference needs title and https URL`);
     for (const key of ['setup', 'extraRun']) if (task[key] !== undefined) require(texts(task[key]), `${label}: ${key} must be a non-empty list of commands`);
+    if (task.invariantsRU !== undefined) require(texts(task.invariantsRU) && task.invariantsRU.length === 3, `${label}: invariantsRU must be exactly 3 texts`);
     for (const kind of ['starter', 'tests', 'solution']) {
       const file = task.files?.[kind];
       require(file && /^[a-z0-9_]+\.go$/.test(file.name || '') && text(file.code), `${label}: files.${kind} needs a .go name and code`);
