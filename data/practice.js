@@ -472,6 +472,11 @@ const PRACTICE = [
       "wg.Add — до запуска горутин, а не внутри них. В Go 1.25+ есть wg.Go(func), он сам делает Add и Done."
     ],
     "talkEN": "A worker pool runs jobs with bounded concurrency and must stop cleanly on cancellation. I start a fixed number of workers, so the bound holds by construction. Each worker receives jobs and sends results inside a select with ctx.Done, so it never blocks forever on a channel; fn itself must respect ctx. The caller owns the jobs channel and closes it. Several workers send on results, so none may close it: one extra goroutine waits on a WaitGroup for all workers, then closes results. Backpressure comes for free: with an unbuffered results channel, a slow consumer makes the workers wait.",
+    "invariantsRU": [
+      "`results` закрывает только `Process`: одна горутина после `wg.Wait()`, не воркер.",
+      "Воркер ждёт `jobs` и отправляет результат — оба раза в `select` с `<-ctx.Done()`.",
+      "Ровно `workers` горутин (`< 1` → 1), `wg.Add` до `go`; без читателя они ждут, а не копят."
+    ],
     "pitfalls": [
       "close(results) в каждом воркере → panic: close of closed channel.",
       "wg.Add внутри горутины → Wait может вернуться раньше, чем воркер начал работу.",
@@ -544,6 +549,11 @@ const PRACTICE = [
       "Закрытый in в Sum — ещё не «поток кончился»: при отмене Square тоже закрывает выход. Перед возвратом суммы проверь ctx.Err()."
     ],
     "talkEN": "This pipeline has three stages, Generate, Square and Sum, and must stop cleanly when the consumer cancels. Generate and Square each start one goroutine that owns its output channel and defers closing it; Sum runs in the caller's goroutine. Every send and receive sits in a select with ctx.Done, so on cancel every stage returns and nothing stays blocked. Closing flows downstream; cancellation reaches all stages through the shared context. Because cancellation also closes the channels, Sum checks ctx.Err when its input closes: a live context means the stream finished, otherwise the run was aborted.",
+    "invariantsRU": [
+      "Каждая стадия сама закрывает свой выход: `defer close(out)` первой строкой горутины.",
+      "Каждая отправка и каждое ожидание `in` — в `select` с `<-ctx.Done()`, не голый `range`.",
+      "`Sum`: закрытый `in` при `ctx.Err() != nil` → `0, ctx.Err()`, а не частичная сумма."
+    ],
     "pitfalls": [
       "Стадия без отмены: потребитель ушёл — генератор навсегда заблокирован на отправке.",
       "Закрыть выход стадии со стороны потребителя не даст компилятор: стадии возвращают <-chan int. С chan int это был бы panic у отправителя — закрывает только отправитель.",
@@ -606,6 +616,11 @@ const PRACTICE = [
       "Почему nil-вход опасен? Чтение из nil-канала блокирует навсегда, и WaitGroup не дождётся этой горутины, пока ctx не отменён."
     ],
     "talkEN": "Fan-in merges several input channels into one output. One goroutine per input forwards values to the shared output. Because several goroutines send on the output, none of them may close it; a separate goroutine waits on a WaitGroup and closes the output once every forwarder has returned. A forwarder returns when its input is closed or the context is done. Merge never closes the inputs because it does not own them, and it skips nil inputs, which would block forever.",
+    "invariantsRU": [
+      "`out` закрывает одна горутина после `wg.Wait()`; пересылающие горутины его не закрывают.",
+      "`wg.Add` до `go`; nil-вход пропустить — он не закроется; без входов `out` закрыт сразу.",
+      "Чтение входа и отправка в `out` — в `select` с `<-ctx.Done()`; входы не закрывать."
+    ],
     "pitfalls": [
       "close(out) в каждой пересылающей горутине → panic: close of closed channel или send on closed channel.",
       "wg.Add внутри горутины → close может случиться раньше первой пересылки.",
@@ -667,6 +682,11 @@ const PRACTICE = [
       "Inc у ChanCounter возвращается, когда владелец принял запрос, — поэтому следующий Value увидит изменение."
     ],
     "talkEN": "The same counter can be built three ways: with an atomic, a mutex or an owner goroutine. For a single number, an atomic add is the simplest and usually the cheapest. A mutex is the general tool, needed once an invariant spans more than one field. The channel version gives the state to one owner goroutine and serializes access through messages; it costs the most per operation, but pays off when the owner does more than count, such as batching or I/O. All three pass the race detector; which is fastest depends on contention and CPU count, so I measure.",
+    "invariantsRU": [
+      "`MutexCounter.Value` — под тем же `mu`, что `Inc`: чтение без блокировки — тоже гонка.",
+      "Счётчики — только по указателю: копия с `sync.Mutex` или `atomic.Int64` независима.",
+      "`ChanCounter`: `n` трогает только горутина-владелец; `Close` её останавливает."
+    ],
     "pitfalls": [
       "Value без блокировки у MutexCounter — гонка данных, даже если «только читаю».",
       "Копирование MutexCounter или AtomicCounter по значению — копия независима; go vet (copylocks) предупредит.",
@@ -732,6 +752,11 @@ const PRACTICE = [
       "Set существующего ключа: сначала вычти размер старого значения."
     ],
     "talkEN": "SafeCache keeps a map and a byte total that must always agree. So both change under the same write lock, and readers take a read lock. The subtle part is aliasing: an item holds slices, and a slice shares its backing array. If Get returned the stored item, a caller could change cache memory without any lock, which is a data race. So I copy on the way in and on the way out. RWMutex pays off only when reads dominate and read sections are long; otherwise a plain Mutex is as fast or faster, so I'd benchmark.",
+    "invariantsRU": [
+      "`bytes` меняется под тем же `Lock`, что и map; при замене ключа вычесть старый размер.",
+      "Срезы копировать на входе (`Set`) и на выходе (`Get`, `Snapshot`): наружу — не память кеша.",
+      "Изменения — под `Lock`, чтения — под `RLock`; «повысить» `RLock` до `Lock` нельзя."
+    ],
     "pitfalls": [
       "Вернуть сохранённый Item без копии → гонка данных, когда вызывающий его меняет.",
       "Менять map под RLock → гонка: RLock разрешает только чтение.",
@@ -803,6 +828,11 @@ const PRACTICE = [
       "«Новые вызовы не начинаются»: проверяй gctx.Err() в цикле перед g.Go и в самой горутине — она могла ждать места, пока группа уже упала."
     ],
     "talkEN": "I use errgroup.WithContext with SetLimit. SetLimit bounds concurrency, and Go blocks until a slot is free. The group's context is cancelled on the first error, so I pass it to every fetch and check it before starting new work, which means no new calls after a failure. Wait returns the first error only after all started goroutines have returned, so nothing outlives Fetch. Results keep their order because each goroutine writes only its own index of a preallocated slice. After Wait, the group's context is done, so I never use it again.",
+    "invariantsRU": [
+      "В `fetch` — `gctx` из `errgroup.WithContext`, не родительский `ctx`: ошибка отменит остальных.",
+      "`g.SetLimit(limit)` (`< 1` → 1); `gctx.Err()` — перед `g.Go` и в начале горутины.",
+      "Горутина пишет только `bodies[i]`; после `g.Wait()` проверить и родительский `ctx.Err()`."
+    ],
     "pitfalls": [
       "Передать в fetch родительский ctx вместо gctx → первая ошибка не отменяет остальных.",
       "Собирать результаты через append из горутин → гонка данных и потерянный порядок.",
@@ -874,6 +904,11 @@ const PRACTICE = [
       "time.NewTimer и Stop при отмене, а не time.After в цикле: так таймер не живёт после выхода (до Go 1.23 он ещё и держал память)."
     ],
     "talkEN": "A token bucket holds up to burst tokens and refills at rate per second. I don't run a ticker goroutine; I store the token count and the time of the last refill, and on every call I add the tokens earned since then, capped at burst. Allow takes a token if there is one and never blocks. Wait computes how long until the next whole token, sleeps without holding the lock, in a select with ctx.Done, and tries again. The state is behind one mutex, so concurrent callers never get more than the tokens available. In production I would use golang.org/x/time/rate, which also offers Reserve and WaitN.",
+    "invariantsRU": [
+      "Пополнение: `tokens = min(burst, tokens + elapsed × rate)`; `tokens` — `float64`, не целое.",
+      "Пополнение, проверка и списание токена — под одним `mu`; `Allow` никогда не ждёт.",
+      "`Wait` ждёт без блокировки: `select` с таймером и `<-ctx.Done()`, `Stop` при отмене."
+    ],
     "pitfalls": [
       "Целочисленные токены → при малом интервале восполнение округляется в ноль и лимитер «залипает».",
       "Нет верхней границы → после долгой паузы приходит шквал запросов.",
@@ -953,6 +988,11 @@ const PRACTICE = [
       "Ждать воркеров с таймаутом: wg.Wait() в горутине, которая закрывает done, и select на done и ctx.Done()."
     ],
     "talkEN": "On SIGTERM, signal.NotifyContext cancels the root context. I call Shutdown with a timeout: it closes the listener, so new connections are refused, and waits for in-flight requests. Only then do I cancel the workers, because a request that is still running may hand them a job; their context is derived with WithoutCancel so the signal alone doesn't stop them. I wait for the workers within the same deadline and close the database last, after nothing can use it. If the deadline passes, I force-close the connections and report an error that wraps DeadlineExceeded. The order is the point: stop intake, drain, then release dependencies.",
+    "invariantsRU": [
+      "Порядок: `Shutdown` HTTP → отмена и ожидание воркеров → `Close` последним и один раз.",
+      "Контекст воркеров — `WithCancel(WithoutCancel(ctx))`: сигнал сам их не отменяет.",
+      "Один `WithTimeout` на всю остановку; ошибка `Shutdown` → `srv.Close()`; `ErrServerClosed` — норма."
+    ],
     "pitfalls": [
       "srv.Close() вместо Shutdown → запросы в полёте обрываются.",
       "Отменить воркеров вместе с сигналом → запрос в полёте блокируется, отдавая работу, и Shutdown висит до таймаута.",
@@ -1033,6 +1073,11 @@ const PRACTICE = [
       "Почему не NumGoroutine? Он считает и чужие горутины — рантайма, тестового фреймворка, HTTP keep-alive, — поэтому число скачет. Профиль показывает, чьи это горутины."
     ],
     "talkEN": "A goroutine leaks when it has no way to finish: here the losers block forever sending to a channel that nobody reads after the first answer. In a service I would see it in the goroutine profile from net/http/pprof: with debug=1 identical stacks are grouped, and a count that keeps growing in FirstLeaky.func1 points straight at the send. The fix is a buffered channel with room for every answer, so late goroutines can send and exit, plus cancelling the context on return, so slow backends stop early. I verify the fix by checking that no goroutine from First is left in the profile, not by comparing NumGoroutine.",
+    "invariantsRU": [
+      "Буфер канала ответов — `len(backends)`, а не 1: каждый опоздавший отправит и выйдет.",
+      "`defer cancel()` производного ctx: медленные бэкенды узнают, что ответ уже есть.",
+      "Без бэкендов — `ErrNoBackends`; ждать в `select` с `<-ctx.Done()`; канал не закрывать."
+    ],
     "pitfalls": [
       "Только cancel без буфера → бэкенд, который не слушает ctx, всё равно навсегда блокируется на отправке.",
       "Только буфер без cancel → утечки нет, но медленные бэкенды работают зря до конца.",
@@ -1406,6 +1451,11 @@ const PRACTICE = [
       "from == to отклоняй сразу: sync.Mutex не реентерабелен, второй Lock той же горутины повиснет."
     ],
     "talkEN": "Each account has its own mutex, so transfers between different pairs run in parallel. A transfer locks both accounts in ascending ID order, whatever its direction; with request order, A to B and B to A each hold one lock and wait for the other forever. The balance is checked under both locks, so two transfers cannot spend the same money. Total locks every account in the same order, so it never sees money in flight. The test runs a hundred goroutines under the race detector and fails by timeout if anything deadlocks. In PostgreSQL I do the same with SELECT FOR UPDATE in ID order, and still retry 40P01.",
+    "invariantsRU": [
+      "Блокировки — по возрастанию ID при любом направлении; `from == to` отсечь до `Lock`.",
+      "Баланс проверять после взятия обеих блокировок, а не до: иначе деньги тратят дважды.",
+      "`Total` берёт блокировки всех счетов в том же порядке; по одному счёту — «деньги в пути»."
+    ],
     "pitfalls": [
       "Блокировки в порядке from, to → встречные переводы зависают навсегда.",
       "Проверка баланса до блокировки → несколько переводов тратят одни и те же деньги, баланс уходит в минус.",
@@ -1483,6 +1533,11 @@ const PRACTICE = [
       "Нехватка средств — бизнес-ответ, его сохраняют; ошибка базы — нет: удали ключ, чтобы повтор выполнил перевод."
     ],
     "talkEN": "The client sends an Idempotency-Key with each transfer. The store claims the key atomically: the lookup and the insert of an in-progress entry happen under one lock, so two concurrent requests cannot both decide the key is new. The transfer itself runs outside the lock. A repeat with the same key and the same request gets the stored response; the fingerprint is a hash of the decoded request, so whitespace does not matter. The same key with a different body gets 422, and a repeat while the first is still running gets 409 with Retry-After. Business outcomes like insufficient funds are stored; infrastructure failures release the key so a retry can run. In PostgreSQL the claim is an insert with on conflict do nothing in the transfer's transaction.",
+    "invariantsRU": [
+      "Поиск ключа и запись «в работе» — в одной критической секции `Do`, без `Unlock` между ними.",
+      "`fn` — после `Unlock`; ошибка `fn` удаляет ключ; сохраняются только ответы 201 и 409.",
+      "Повтор в работе → 409 сразу, не ждать; другой отпечаток → 422, хеш — от разобранного JSON."
+    ],
     "pitfalls": [
       "Проверить ключ, отпустить блокировку, потом вставить → два одновременных запроса оба переводят деньги.",
       "fn под блокировкой хранилища → один медленный перевод останавливает все остальные ключи.",
@@ -1563,6 +1618,11 @@ const PRACTICE = [
       "Потерянное подтверждение (брокер сохранил, но вернул ошибку) даёт повторную отправку — это нормально для at-least-once; дубликаты отсеивает Consumer по ID."
     ],
     "talkEN": "The transfer and its event are written in one transaction, so there is never a transfer without an event or an event without a transfer. A relay goroutine polls the outbox, publishes unsent events in ID order with the sender's account as the key, and marks an event sent only after the broker acknowledged it. If a send fails, it stops the batch and retries that event first, so the order holds. A lost acknowledgement makes it send the event again, so delivery is at-least-once, and the consumer deduplicates by event ID; in a real service the ID and the effect commit in one transaction. The relay never holds the database during a network call, and it stops when its context is cancelled.",
+    "invariantsRU": [
+      "Перевод и событие — под одним `db.mu`; `Publish` вызывать уже без этой блокировки.",
+      "`MarkSent` — только после успешного `Publish`; ошибка → `return` из пачки, не `continue`.",
+      "`Consumer.Handle` отсеивает дубликаты по `ev.ID`; `Run` выходит по `<-ctx.Done()`."
+    ],
     "pitfalls": [
       "Пометить отправленным до Publish → при сбое отправки событие теряется навсегда.",
       "continue вместо return после ошибки → событие уходит позже следующих, порядок по счёту ломается.",

@@ -24,6 +24,22 @@ const { chromium } = require("playwright");
     await p.goto(`${base}#/quiz/q52`); await p.waitForTimeout(400);
     ok(`${w}: q52 opens`, await p.evaluate(() => /SMS|Notifier/.test(document.body.innerText)));
 
+    // q48–q51 открываются и висят на своих карточках.
+    for (const [qid, cid] of [["q48", "c47"], ["q49", "c59"], ["q50", "c62"], ["q51", "c63"]]) {
+      await p.goto(`${base}#/cards/${cid}`); await p.waitForTimeout(250);
+      ok(`${w}: ${cid} lists ${qid}`, !!(await p.$(`#card-sim-link a[href*="${qid}"]`)));
+    }
+    await p.goto(`${base}#/quiz/q50`); await p.waitForTimeout(300);
+    ok(`${w}: q50 no overflow`, (await overflow()) <= 0);
+
+    // Практикум: «3 проверки» свёрнуты, код в <code>, обратных кавычек не видно; у задач без инвариантов блока нет.
+    await p.goto(`${base}#/practice/p-workerpool`); await p.waitForTimeout(400);
+    const inv = await p.evaluate(() => { const d = document.querySelector(".practice-invariants"); return d && { open: d.open, items: d.querySelectorAll("li").length, codes: d.querySelectorAll("li code").length, ticks: d.textContent.includes("`") }; });
+    ok(`${w}: p-workerpool invariants`, inv && !inv.open && inv.items === 3 && inv.codes > 0 && !inv.ticks, JSON.stringify(inv));
+    ok(`${w}: practice no overflow`, (await overflow()) <= 0);
+    await p.goto(`${base}#/practice/p-money`); await p.waitForTimeout(300);
+    ok(`${w}: p-money has no invariants`, !(await p.$(".practice-invariants")));
+
     // Кнопки карточек на шаги диаграмм.
     for (const [id, sim, step] of [["c47", "sim10", 4], ["c50", "sim11", 5], ["c59", "sim10", 7], ["c62", "sim12", 4], ["c63", "sim3", 8]]) {
       await p.goto(`${base}#/cards/${id}`); await p.waitForTimeout(250);

@@ -1,9 +1,9 @@
 # ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-64_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Flashcards](https://img.shields.io/badge/Flashcards-65_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Simulators](https://img.shields.io/badge/Simulators-10_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-47_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-52_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
 Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
@@ -26,7 +26,7 @@
 * 🔬 **[Диаграммы рантайма (10 пошаговых схем)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[База знаний (все 54 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[Шпаргалка по рантайму](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[Quiz: ловушки в коде (43 задачи)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+* 🧠 **[Quiz: ловушки в коде (52 задачи)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 📚 Содержание модулей (64 карточки + 47 задач)
+## 📚 Содержание модулей (65 карточек + 52 задачи)
 
 ### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
 * Горутина против потока ОС: конкурентность, растущий стек, владение и завершение; без универсальной цены в наносекундах или оценки RSS по числу горутин.

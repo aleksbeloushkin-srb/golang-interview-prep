@@ -120,7 +120,7 @@ const { chromium } = require("playwright");
     tabs: [...document.querySelectorAll(".nav-tabs .tab-btn")].map(t => t.textContent.replace(/\s+/g, " ").trim()), cur: document.querySelector('.nav-tabs [aria-current="page"]').dataset.route,
     rows: new Set([...document.querySelectorAll(".nav-tabs .tab-btn")].map(t => Math.round(t.getBoundingClientRect().top))).size }));
   ok("1280: top tabs, no bottom bar", desk.top && !desk.bottom, JSON.stringify(desk));
-  ok("1280: tab labels and counts", desk.tabs.join("|") === "План|Карточки 64|Диаграммы 12|Quiz 47|Практикум|База знаний|Шпаргалка", desk.tabs.join("|"));
+  ok("1280: tab labels and counts", desk.tabs.join("|") === "План|Карточки 65|Диаграммы 12|Quiz 52|Практикум|База знаний|Шпаргалка", desk.tabs.join("|"));
   ok("1280: tabs fit one row, quiz current", desk.rows === 1 && desk.cur === "quiz", JSON.stringify(desk));
   await d.goto(base + "#/practice"); await d.waitForTimeout(300);
   const focusRing = await d.evaluate(() => { const h = document.getElementById("practice-title"); return { focused: document.activeElement === h, outline: getComputedStyle(h).outlineStyle }; });
