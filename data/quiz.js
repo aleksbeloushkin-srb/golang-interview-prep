@@ -1901,5 +1901,123 @@ func WriteReport(path string, payload []byte) (err error) {
     "cardIds": [
       "c65"
     ]
+  },
+  {
+    "id": "q53",
+    "title": "Задача 53: maps.Clone и ошибка без параметров",
+    "ru": "Обработчик ошибок копирует параметры доменной ошибки, чтобы не менять общую ошибку, и добавляет request_id. Вторая ошибка — общая переменная без параметров. Что напечатает программа?",
+    "en": "An error handler copies a domain error's parameters, so that the shared error stays unchanged, and adds request_id. The second error is a shared variable without parameters. What does the program print?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"maps\"\n)\n\n// AppError is a domain error with parameters for the log and the response.\ntype AppError struct {\n\tCode   string\n\tParams map[string]string\n}\n\nfunc (e *AppError) Error() string { return e.Code }\n\n// ErrInsufficientFunds is a shared error value without parameters.\nvar ErrInsufficientFunds = &AppError{Code: \"insufficient_funds\"}\n\n// logParams copies the error's parameters, so the shared error stays\n// unchanged, and adds the request ID.\nfunc logParams(err *AppError, requestID string) map[string]string {\n\tparams := maps.Clone(err.Params)\n\tparams[\"request_id\"] = requestID\n\treturn params\n}\n\nfunc main() {\n\tlimit := &AppError{Code: \"limit_exceeded\", Params: map[string]string{\"limit\": \"1000\"}}\n\tfmt.Println(logParams(limit, \"r-1\"))\n\tfmt.Println(logParams(ErrInsufficientFunds, \"r-2\"))\n}",
+    "options": [
+      "map[limit:1000 request_id:r-1] и map[request_id:r-2] — maps.Clone всегда возвращает новую map, которую можно заполнять.",
+      "map[limit:1000 request_id:r-1] и map[] — запись в nil map молча игнорируется.",
+      "map[limit:1000 request_id:r-1], затем panic: assignment to entry in nil map — maps.Clone(nil) возвращает nil.",
+      "Сразу panic: maps.Clone паникует, если ему передать nil map.",
+      "map[limit:1000 request_id:r-1] и map[request_id:r-2], но request_id попадает и в limit.Params: Clone копирует ссылку.",
+      "Ошибка компиляции: maps.Clone не принимает поле структуры типа map[string]string."
+    ],
+    "correct": 2,
+    "explanationRU": "maps.Clone возвращает копию, но nil сохраняет: на nil map он возвращает nil (в исходниках так и написано: «Preserve nil in case it matters»). У limit параметры есть, копия заполняется, а сама ошибка не меняется. У ErrInsufficientFunds поле Params не задано, это nil, копия тоже nil, и запись params[\"request_id\"] паникует: assignment to entry in nil map (c40: читать nil map можно, писать нельзя). Ломается редкий путь — ошибка без параметров, который тесты часто не покрывают; в HTTP-обработчике net/http перехватит panic и оборвёт соединение, и вместо ответа об ошибке клиент получит обрыв. Исправление — создать map самим: make(map[string]string, len(err.Params)+1) и maps.Copy, который из nil-источника ничего не копирует. Исправленная программа печатает map[limit:1000 request_id:r-1] и map[request_id:r-2].",
+    "speechEN": "It prints the first map and then panics: assignment to entry in nil map. maps.Clone preserves nil, so cloning the nil parameters of the shared error gives a nil map, and writing to it panics. Reading a nil map is fine, writing is not. Make the map yourself with room for one more entry, copy the parameters into it with maps.Copy, and then add the request ID.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"maps\"\n)\n\n// AppError is a domain error with parameters for the log and the response.\ntype AppError struct {\n\tCode   string\n\tParams map[string]string\n}\n\nfunc (e *AppError) Error() string { return e.Code }\n\n// ErrInsufficientFunds is a shared error value without parameters.\nvar ErrInsufficientFunds = &AppError{Code: \"insufficient_funds\"}\n\n// logParams copies the error's parameters into a new map, so the shared\n// error stays unchanged, and adds the request ID.\nfunc logParams(err *AppError, requestID string) map[string]string {\n\tparams := make(map[string]string, len(err.Params)+1)\n\tmaps.Copy(params, err.Params) // copying from a nil map copies nothing\n\tparams[\"request_id\"] = requestID\n\treturn params\n}\n\nfunc main() {\n\tlimit := &AppError{Code: \"limit_exceeded\", Params: map[string]string{\"limit\": \"1000\"}}\n\tfmt.Println(logParams(limit, \"r-1\"))\n\tfmt.Println(logParams(ErrInsufficientFunds, \"r-2\"))\n}",
+    "versionNote": "maps.Clone и maps.Copy — Go 1.21; ветка «nil → nil» в maps.Clone в исходниках Go 1.24.7 и 1.27.3 одинакова. Обе программы выполнены на Go 1.24.7 и 1.27.3 (gofmt, go vet, go test -race -count=20): исходная печатает map[limit:1000 request_id:r-1] и падает с panic: assignment to entry in nil map (код выхода 2), исправленная печатает map[limit:1000 request_id:r-1] и map[request_id:r-2].",
+    "sources": [
+      {
+        "title": "Package maps: Clone",
+        "url": "https://pkg.go.dev/maps#Clone"
+      },
+      {
+        "title": "maps.Clone — исходник go1.27.3 (Preserve nil)",
+        "url": "https://github.com/golang/go/blob/go1.27.3/src/maps/maps.go"
+      },
+      {
+        "title": "Go specification: map types (a nil map has no elements to add)",
+        "url": "https://go.dev/ref/spec#Map_types"
+      }
+    ],
+    "cardIds": [
+      "c71",
+      "c40"
+    ]
+  },
+  {
+    "id": "q54",
+    "title": "Задача 54: «сработал ли таймер» через len(t.C)",
+    "ru": "Батчер сбрасывает пачку платежей не реже раза в миллисекунду и проверяет, сработал ли таймер, через len(flush.C). В go.mod — go 1.24. Что напечатает программа на Go 1.24.7 и 1.27.3?",
+    "en": "A batcher flushes payments at least every millisecond and checks whether the timer has fired with len(flush.C). go.mod says go 1.24. What does the program print on Go 1.24.7 and 1.27.3?",
+    "code": "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tflush := time.NewTimer(time.Millisecond) // flush the batch at least every millisecond\n\tbatch := []string{\"pay-1\", \"pay-2\"}\n\ttime.Sleep(20 * time.Millisecond) // a slow payment: the flush time is long past\n\n\tfmt.Println(\"len:\", len(flush.C), \"cap:\", cap(flush.C))\n\tif len(flush.C) > 0 { // \"the timer has fired\"\n\t\tfmt.Println(\"flush\", len(batch))\n\t} else {\n\t\tfmt.Println(\"keep collecting\")\n\t}\n}",
+    "options": [
+      "len: 1 cap: 1, затем flush 2 — таймер сработал, и значение лежит в буфере канала.",
+      "len: 0 cap: 0, затем keep collecting — канал таймера синхронный, len и cap у него всегда 0.",
+      "len: 0 cap: 1, затем keep collecting — буфер есть, но Sleep не даёт таймеру сработать.",
+      "len: 1 cap: 1 на Go 1.24.7 и len: 0 cap: 0 на Go 1.27.3 — каналы таймеров стали синхронными в Go 1.27.",
+      "Ошибка компиляции: len и cap нельзя применять к каналу только для чтения.",
+      "Deadlock: len(flush.C) ждёт, пока в канале появится значение."
+    ],
+    "correct": 1,
+    "explanationRU": "С Go 1.23 канал таймера синхронный. Внутри у него по-прежнему буфер на одно значение, но len и cap для каналов таймеров всегда возвращают 0: так рантайм может незаметно отменять отправку при Stop и Reset, и устаревшее значение больше не приходит. Поэтому проверка len(flush.C) > 0 не срабатывает никогда, и батчер копит платежи, пока пачка не заполнится. Было: до Go 1.23 канал с буфером 1, после срабатывания len равен 1, и такой код работал. В Go 1.23–1.26 старое поведение возвращают go 1.22 и ниже в go.mod главного модуля или GODEBUG=asynctimerchan=1. В Go 1.27 настройку удалили: каналы синхронные при любом go.mod, а GODEBUG=asynctimerchan=1 останавливает программу при старте. Release notes Go 1.23 советуют вместо опроса len неблокирующее чтение — select с веткой default; оно видит сработавший таймер при любом виде канала. В настоящем батчере таймер — просто ветка общего select рядом с каналом платежей (c18).",
+    "speechEN": "It prints len zero, cap zero, then keep collecting. Since Go 1.23 a timer channel is synchronous: len and cap of a timer channel always report zero, so checking len to see whether the timer fired never works. Before 1.23 the channel had a buffer of one, and this code worked. Use a non-blocking receive instead: a select with the timer case and a default.",
+    "correctedCode": "package main\n\nimport (\n\t\"fmt\"\n\t\"time\"\n)\n\nfunc main() {\n\tflush := time.NewTimer(time.Millisecond) // flush the batch at least every millisecond\n\tbatch := []string{\"pay-1\", \"pay-2\"}\n\ttime.Sleep(20 * time.Millisecond) // a slow payment: the flush time is long past\n\n\tselect {\n\tcase <-flush.C: // the timer has fired: the receive succeeds at once\n\t\tfmt.Println(\"flush\", len(batch))\n\tdefault:\n\t\tfmt.Println(\"keep collecting\")\n\t}\n}",
+    "versionNote": "Было → стало. До Go 1.23 канал таймера буферизован (ёмкость 1), после срабатывания len(t.C) == 1. С Go 1.23 при go ≥ 1.23 в go.mod канал синхронный, len и cap всегда 0; в Go 1.23–1.26 старое поведение возвращают go ≤ 1.22 в go.mod или GODEBUG=asynctimerchan=1; в Go 1.27 настройка удалена. Проверено запуском: Go 1.24.7 — len: 0 cap: 0, keep collecting; на нём же с GODEBUG=asynctimerchan=1 или с go 1.22 в go.mod — len: 1 cap: 1, flush 2. Go 1.27.3 — len: 0 cap: 0, keep collecting и при go 1.24, и при go 1.22; с GODEBUG=asynctimerchan=1 — fatal error: removed GODEBUG \"asynctimerchan\" set to old value \"1\" (код выхода 2). Исправленная печатает flush 2 во всех режимах. Фикстура: go vet, go test -race -count=20 на Go 1.24.7 и 1.27.3, проверки GODEBUG разделены тегом сборки go1.27.",
+    "sources": [
+      {
+        "title": "Go 1.23 release notes: timer changes (len and cap now return 0)",
+        "url": "https://go.dev/doc/go1.23#timer-changes"
+      },
+      {
+        "title": "Go 1.27 release notes: asynctimerchan removed",
+        "url": "https://go.dev/doc/go1.27#runtime"
+      },
+      {
+        "title": "time.NewTimer — go1.24.7 (asynctimerchan=1 restores the buffered channel)",
+        "url": "https://pkg.go.dev/time@go1.24.7#NewTimer"
+      },
+      {
+        "title": "time.NewTimer — go1.27.3",
+        "url": "https://pkg.go.dev/time@go1.27.3#NewTimer"
+      }
+    ],
+    "cardIds": [
+      "c18",
+      "c13"
+    ]
+  },
+  {
+    "id": "q55",
+    "title": "Задача 55: LogValue у указателя, в лог — значение",
+    "ru": "У типа Token есть LogValue, который прячет токен. Обработчик логирует поле запроса req.Token. Что попадёт в лог?",
+    "en": "Token has a LogValue method that hides the token. The handler logs the request field req.Token. What ends up in the log?",
+    "code": "package main\n\nimport (\n\t\"log/slog\"\n\t\"os\"\n)\n\n// Token is a bearer token; LogValue keeps it out of the logs.\ntype Token string\n\nfunc (t *Token) LogValue() slog.Value { return slog.StringValue(\"[REDACTED]\") }\n\ntype AuthRequest struct {\n\tUser  string\n\tToken Token\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{\n\t\tReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {\n\t\t\tif a.Key == slog.TimeKey {\n\t\t\t\treturn slog.Attr{} // drop the time so the output is stable\n\t\t\t}\n\t\t\treturn a\n\t\t},\n\t}))\n\treq := AuthRequest{User: \"aleks\", Token: \"tok-8f3a91\"}\n\tlog.Info(\"auth\", \"user\", req.User, \"token\", req.Token)\n}",
+    "options": [
+      "level=INFO msg=auth user=aleks token=[REDACTED] — slog сам берёт адрес, как при вызове pointer-метода у переменной.",
+      "Ошибка компиляции: Token не реализует slog.LogValuer.",
+      "panic: LogValue вызван на nil-указателе.",
+      "level=INFO msg=auth user=aleks token=tok-8f3a91 — значение Token не реализует LogValuer, и токен уходит в лог.",
+      "level=INFO msg=auth user=aleks token=\"\" — TextHandler не печатает именованные строковые типы.",
+      "level=INFO msg=auth user=aleks token=[REDACTED], но go vet предупреждает о pointer receiver."
+    ],
+    "correct": 3,
+    "explanationRU": "slog проверяет, реализует ли значение атрибута интерфейс slog.LogValuer, и только тогда вызывает LogValue. req.Token — значение типа Token, а LogValue объявлен у *Token. В набор методов типа Token методы с pointer receiver не входят (c34), поэтому значение интерфейс не реализует, и slog печатает его как обычную строку: токен уходит в лог. Сокращение «у адресуемой переменной можно вызвать pointer-метод» работает для прямого вызова tok.LogValue(), а не для проверки интерфейса: в аргумент ...any попадает копия, и её адрес никто не берёт. Компилятор и go vet молчат, потому что аргументы — ...any. Исправление — value receiver: func (Token) LogValue() slog.Value; тогда интерфейс реализуют и Token, и *Token. Метод String у того же типа закрывает fmt и тексты ошибок (c71). Исправленная программа печатает token=[REDACTED].",
+    "speechEN": "The token goes into the log in plain text. LogValue is declared on the pointer type, and slog checks whether the value itself implements LogValuer. The method set of a Token value doesn't include pointer methods, so slog prints the string as it is, and neither the compiler nor go vet complains. Declare LogValue with a value receiver, so both Token and its pointer are redacted.",
+    "correctedCode": "package main\n\nimport (\n\t\"log/slog\"\n\t\"os\"\n)\n\n// Token is a bearer token. LogValue has a value receiver, so both Token\n// and *Token implement slog.LogValuer.\ntype Token string\n\nfunc (Token) LogValue() slog.Value { return slog.StringValue(\"[REDACTED]\") }\n\ntype AuthRequest struct {\n\tUser  string\n\tToken Token\n}\n\nfunc main() {\n\tlog := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{\n\t\tReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {\n\t\t\tif a.Key == slog.TimeKey {\n\t\t\t\treturn slog.Attr{} // drop the time so the output is stable\n\t\t\t}\n\t\t\treturn a\n\t\t},\n\t}))\n\treq := AuthRequest{User: \"aleks\", Token: \"tok-8f3a91\"}\n\tlog.Info(\"auth\", \"user\", req.User, \"token\", req.Token)\n}",
+    "versionNote": "log/slog и LogValuer — Go 1.21, правила наборов методов — с Go 1.0; Value.Resolve и AnyValue в log/slog Go 1.24.7 и 1.27.3 совпадают. Обе программы выполнены на Go 1.24.7 и 1.27.3, go vet молчит: исходная печатает level=INFO msg=auth user=aleks token=tok-8f3a91, исправленная — token=[REDACTED]; время убрано через ReplaceAttr. Фикстура: go test -race -count=20 на обеих версиях.",
+    "sources": [
+      {
+        "title": "log/slog: LogValuer",
+        "url": "https://pkg.go.dev/log/slog#LogValuer"
+      },
+      {
+        "title": "Go specification: method sets",
+        "url": "https://go.dev/ref/spec#Method_sets"
+      },
+      {
+        "title": "Go FAQ: why do T and *T have different method sets?",
+        "url": "https://go.dev/doc/faq#different_method_sets"
+      }
+    ],
+    "cardIds": [
+      "c71",
+      "c48"
+    ]
   }
 ];

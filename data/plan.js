@@ -242,7 +242,7 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
+            { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10", "c72"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
             { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["p-parallelfetch", "q16", "c63"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
             { id: "w4-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
           ]
@@ -329,7 +329,7 @@ const PLAN = {
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", links: ["c48", "q38"], refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
+            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", links: ["c48", "q38", "c71"], refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
             { id: "w5-thu-2", text: "Docker Compose: postgres + сервис; healthcheck" }
           ]
         },
@@ -367,20 +367,20 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", links: ["c49", "c50", "p-transfers"], refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
+            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", links: ["c49", "c50", "p-transfers", "c67"], refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
             { id: "w6-mon-2", text: "LeetCode 973. K Closest Points to Origin + проговор", lc: 973 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", links: ["c51", "p-idempotency"], talk: "idem" },
+            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", links: ["c51", "p-idempotency", "c68"], talk: "idem" },
             { id: "w6-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»", links: ["q40", "p-idempotency", "c2"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox"], talk: "outbox", refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox", "c66"], talk: "outbox", refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63", "c66"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
           ]
         },
@@ -495,7 +495,7 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше", links: ["c58", "c64"] },
+            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше", links: ["c58", "c64", "c71"] },
             { id: "w8-wed-2", text: "LeetCode 684. Redundant Connection (union-find) + проговор", lc: 684 }
           ]
         },
@@ -603,18 +603,18 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w10-tue-1", text: "Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый)", refs: [{ t: "Rate limiter 100K RPS (itvector)", u: "https://itvector.io/articles/rate-limiter-100k-rps" }] }
+            { id: "w10-tue-1", text: "Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый)", links: ["c69"], refs: [{ t: "Rate limiter 100K RPS (itvector)", u: "https://itvector.io/articles/rate-limiter-100k-rps" }] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62", "c68", "c70"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w10-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62"] },
+            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62", "c69"] },
             { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
             { id: "w10-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
           ]
@@ -654,7 +654,7 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", talk: "outbox" },
+            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", links: ["c70", "c66"], talk: "outbox" },
             { id: "w11-mon-2", text: "LeetCode 33. Search in Rotated Sorted Array + проговор", lc: 33 }
           ]
         },
@@ -665,7 +665,7 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w11-wed-1", text: "Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва" }
+            { id: "w11-wed-1", text: "Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва", links: ["c69"] }
           ]
         },
         {
