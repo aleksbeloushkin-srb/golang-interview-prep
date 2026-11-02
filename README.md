@@ -1,9 +1,9 @@
 # ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
 
 [![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-65_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Flashcards](https://img.shields.io/badge/Flashcards-72_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Simulators](https://img.shields.io/badge/Simulators-10_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-52_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
+[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-55_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
 
 Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
@@ -26,7 +26,7 @@
 * 🔬 **[Диаграммы рантайма (10 пошаговых схем)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
 * 📖 **[База знаний (все 54 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
 * 📊 **[Шпаргалка по рантайму](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[Quiz: ловушки в коде (52 задачи)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+* 🧠 **[Quiz: ловушки в коде (55 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
 
 ---
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 📚 Содержание модулей (65 карточек + 52 задачи)
+## 📚 Содержание модулей (72 карточки + 55 задач)
 
 ### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
 * Горутина против потока ОС: конкурентность, растущий стек, владение и завершение; без универсальной цены в наносекундах или оценки RSS по числу горутин.
@@ -118,12 +118,22 @@
 ### Модуль 9: Архитектура Go-сервиса — раскладка, DI, REST, gRPC, long polling, каналы, стек (`C57 – C64`)
 * Раскладка: тонкий `cmd/`, логика в `internal/`, интерфейс-порт у потребителя, зависимости смотрят к домену; тест на направление импортов.
 * Сборка зависимостей: composition root вручную, Wire (кодоген, архивирован) и Fx (контейнер в рантайме), закрытие ресурсов в обратном порядке.
-* Между SIGTERM и выходом: readiness, `Shutdown` с дедлайном, дренаж воркеров, обратный порядок закрытия, код выхода; `context.Cause` у `NotifyContext` в 1.27.
+* Между SIGTERM и выходом: readiness, `Shutdown` с дедлайном, дренаж воркеров, обратный порядок закрытия, код выхода; `context.Cause` у `NotifyContext` с Go 1.26.
 * REST: маршруты Go 1.22 или OpenAPI-first (oapi-codegen, ogen), порядок middleware request id → logging → recover.
 * gRPC: когда вместо REST, интерсепторы, `codes.Internal` без деталей, health, `GracefulStop` с запасным `Stop`.
 * Long polling: маркер увиденного состояния, общий цикл выборки вместо поллера на клиента, мягкий таймаут, лимит и 429.
 * Каналы в сервисе: склеивающий сигнальный канал, семафор с мгновенным отказом, конвейер с каскадным закрытием и отменой.
 * Стек библиотек и как его обосновать: pgx, slog/zap, `singleflight`, testify/mock. Примеры выполнены Go 1.24.7 и 1.27.3 под `-race`.
+
+### Модуль 10: Надёжность и данные — очередь, транзакции, внешние вызовы, кэш, логи, context (`C66 – C72`)
+* Очередь задач на PostgreSQL: `FOR UPDATE SKIP LOCKED`, аренда, ретраи с backoff, лимит попыток и dead, дедупликация; когда переходить на брокер.
+* Транзакция через слои: транзакция в `context`, вложенность, колбэки после коммита; пулер в transaction-режиме и prepared statements; advisory lock.
+* Внешний вызов с неоднозначным исходом: таймаут ≠ отказ, повтор только «точно не исполнено», намерение с ключом до вызова, сверка; скрытый повтор `net/http` при `Idempotency-Key`.
+* Кэш без лавины и устаревших чтений; распределённый лок с токеном, Lua compare-and-delete и fencing token.
+* Temporal или очередь + опрос: долгие процессы, детерминизм, `WorkflowID` как ключ идемпотентности.
+* Логи без секретов: маскирование в одном месте (`LogValue`, `ReplaceAttr`), ловушка pointer receiver.
+* `context` в сервисе: что возить в `Value`, дедлайн на каждый вызов, `WithoutCancel` со своим таймаутом, `AfterFunc`, `Cause` у `NotifyContext` с Go 1.26.
+* Quiz q53–q55: `maps.Clone(nil)`, `len(timer.C)` после Go 1.23, `LogValue` на pointer receiver. Код карточек ссылается на эталонный проект [go-payments-reference](https://github.com/aleksbeloushkin-srb/go-payments-reference) (тег `v1`). Примеры выполнены Go 1.24.7 и 1.27.3.
 
 ---
 
