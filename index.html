@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Go Interview Prep — runtime, concurrency, idioms, practice</title>
-  <link rel="stylesheet" href="css/style.css?v=80" />
+  <link rel="stylesheet" href="css/style.css?v=81" />
 </head>
 <body>
 
@@ -184,6 +184,21 @@
           <button type="button" class="btn btn-sm" onclick="toggleAllAccordions(false)">Свернуть все</button>
         </div>
       </div>
+      <aside class="wiki-project" aria-labelledby="wiki-project-title">
+        <h3 id="wiki-project-title">Эталонный проект: Pinkponies Bank</h3>
+        <p>Рабочий платёжный сервис на Go для вымышленного банка. В нём идемпотентное создание платежа, очередь задач на PostgreSQL (<code>SKIP LOCKED</code> и аренда), outbox, опрос шлюза повтором команды, вебхуки, long polling на общем батчере, graceful shutdown, фейковый шлюз со сбоями, веб-страница, Docker Compose и тесты. Достоинства и недостатки разобраны в <code>docs/REVIEW.md</code>, план улучшений — в <code>docs/IMPROVEMENTS.md</code>.</p>
+        <p><a href="https://github.com/aleksbeloushkin-srb/go-payments-reference" target="_blank" rel="noopener">Репозиторий на GitHub</a> · запуск: <code>docker compose up --build</code>, затем <code>http://localhost:8080</code></p>
+        <details>
+          <summary>Порядок чтения кода</summary>
+          <ol>
+            <li><code>internal/domain/payment</code> — статусы и разрешённые переходы (<a href="#/cards/c57">C57</a>)</li>
+            <li><code>cmd/payments/main.go</code> — сборка зависимостей и порядок остановки (<a href="#/cards/c58">C58</a>, <a href="#/cards/c59">C59</a>)</li>
+            <li><code>internal/adapters/in/httpapi</code> — маршруты, middleware и long polling (<a href="#/cards/c60">C60</a>, <a href="#/cards/c62">C62</a>)</li>
+            <li><code>internal/adapters/out/postgres</code> и <code>internal/adapters/in/queue</code> — очередь задач и аренда (<a href="#/cards/c52">C52</a>, <a href="#/cards/c63">C63</a>)</li>
+            <li><code>internal/app/start.go</code> — вызов шлюза и намеренная слабость v1; <code>docs/proposals/0001-gateway-call-outside-transaction.md</code> — как её убрать (<a href="#/cards/c51">C51</a>)</li>
+          </ol>
+        </details>
+      </aside>
       <div id="accordion-container"></div>
     </section>
 
@@ -244,18 +259,18 @@
     </div>
   </dialog>
 
-  <script src="data/cards.js?v=80"></script>
-  <script src="data/simulators.js?v=80"></script>
-  <script src="data/quiz.js?v=80"></script>
-  <script src="data/plan.js?v=80"></script>
-  <script src="data/practice.js?v=80"></script>
-  <script src="data/audio.js?v=80"></script>
-  <script src="js/config.js?v=80"></script>
-  <script src="js/auth.js?v=80"></script>
-  <script src="js/audio.js?v=80"></script>
-  <script src="js/app.js?v=80"></script>
-  <script src="js/talk-trainer.js?v=80"></script>
-  <script src="js/plan-view.js?v=80"></script>
-  <script src="js/practice-view.js?v=80"></script>
+  <script src="data/cards.js?v=81"></script>
+  <script src="data/simulators.js?v=81"></script>
+  <script src="data/quiz.js?v=81"></script>
+  <script src="data/plan.js?v=81"></script>
+  <script src="data/practice.js?v=81"></script>
+  <script src="data/audio.js?v=81"></script>
+  <script src="js/config.js?v=81"></script>
+  <script src="js/auth.js?v=81"></script>
+  <script src="js/audio.js?v=81"></script>
+  <script src="js/app.js?v=81"></script>
+  <script src="js/talk-trainer.js?v=81"></script>
+  <script src="js/plan-view.js?v=81"></script>
+  <script src="js/practice-view.js?v=81"></script>
 </body>
 </html>
