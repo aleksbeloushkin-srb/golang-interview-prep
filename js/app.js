@@ -502,7 +502,7 @@ function recordAttempt(cardId, result) {
   }
 }
 
-// «Сам» — изучено; «с опорой» и «не ответил» — на повторение. Отметка прежнего формата не меняется.
+// «Сам» — ответил сам (дата следующей проверки — review-queue.js); «с опорой» и «не ответил» — на повторение. Отметка прежнего формата не меняется.
 function gradeCard(result) {
   if (!ATTEMPT_LABELS[result]) return;
   if (typeof siteCanEdit === "function" && !siteCanEdit()) {

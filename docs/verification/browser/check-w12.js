@@ -30,7 +30,7 @@ const base = "http://127.0.0.1:8765/";
     // Quiz: tab count and each new task, answer reveal for one.
     await p.goto(base + "#/quiz"); await p.waitForTimeout(300);
     const tab = await p.textContent('[data-route="quiz"]');
-    ok(`${w}: quiz tab count`, /\b52$/.test(tab.trim()), tab);
+    ok(`${w}: quiz tab count`, /\b55$/.test(tab.trim()), tab);
     for (const id of ["q28", "q29", "q30", "q31", "q32", "q33", "q34", "q35"]) {
       await p.goto(base + "#/quiz/" + id); await p.waitForTimeout(250);
       const r = await p.evaluate(id => {
