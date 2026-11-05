@@ -14,7 +14,8 @@ const AUTH_TRIED_KEY = "go_prep_auth_tried_v1";
 const SYNC_PREFIX = "go_prep_";
 // Не синхронизируем служебные ключи входа и черновики практикума (они в sessionStorage).
 // Голос озвучки — настройка этого устройства, а не прогресс: не синхронизируется.
-const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY, "go_prep_tts_voice_v1"]);
+// Голос и текущее занятие — настройки этого браузера, на другие устройства не переносятся.
+const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY, "go_prep_tts_voice_v1", "go_prep_session_v1"]);
 const SYNC_INTERVAL_MS = 5000;
 
 const authState = {
@@ -293,18 +294,36 @@ async function syncPushReport(snapshot, version, done) {
   }
 }
 
-// Прогресс на сервере и в браузере разный: выбирает пользователь.
+// Объединить прогресс этого браузера и сервера (js/progress-merge.js), записать сюда и на сервер, перезагрузить.
+async function syncMerge(server) {
+  const merged = mergeProgressSnapshots(syncSnapshot() || {}, server.progress);
+  try {
+    const r = await syncPush(merged, server.version);
+    if (r.conflict) { await syncStart(); return; }
+  } catch (e) {
+    authSetStatus(`Не объединилось: ${e.message}`, "warn");
+    return;
+  }
+  syncTakeServer({ progress: merged });
+}
+
+// Прогресс на сервере и в браузере разный: объединить или оставить одну сторону целиком — выбирает пользователь.
 function syncAskWhich(server) {
   const panel = document.getElementById("sync-choice");
   if (!panel) return;
   const when = server.updatedAt ? new Date(server.updatedAt).toLocaleString("ru-RU") : "раньше";
-  panel.replaceChildren(
-    authEl("p", { text: `На сервере сохранён другой прогресс (${when}). Какой оставить?` }),
-    authButton("Взять с сервера", () => syncTakeServer(server)),
-    authButton("Оставить этот браузер", async () => {
+  const buttons = [];
+  if (typeof mergeProgressSnapshots === "function") buttons.push(authButton("Объединить (рекомендуется)", () => { panel.classList.add("hidden"); syncMerge(server); }));
+  buttons.push(
+    authButton("Взять с сервера — заменит этот браузер", () => syncTakeServer(server)),
+    authButton("Оставить этот браузер — заменит сервер", async () => {
       panel.classList.add("hidden");
       await syncPushReport(syncSnapshot() || {}, server.version, "Прогресс этого браузера сохранён на сервере.");
     })
+  );
+  panel.replaceChildren(
+    authEl("p", { text: `На сервере сохранён другой прогресс (${when}). «Объединить» сохранит отметки и попытки с обоих устройств; снятая на одном из них отметка вернётся.` }),
+    ...buttons
   );
   panel.classList.remove("hidden");
   panel.querySelector("button").focus();

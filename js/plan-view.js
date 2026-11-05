@@ -72,6 +72,29 @@ function planLoad() {
   }
 }
 
+// Перед точечным изменением (отметка задачи, дата старта) взять свежий снимок из хранилища:
+// так изменение из другой вкладки не затрётся устаревшей копией этой.
+function planRefresh() {
+  try {
+    if (localStorage.getItem(PLAN_STORAGE_KEY)) planState.saved = planLoad();
+  } catch { /* хранилище недоступно — работаем с тем, что на странице */ }
+}
+
+// Другая вкладка изменила отметки плана: обновить галочки и счётчики; при новой дате старта — перерисовать.
+window.addEventListener("storage", e => {
+  if (e.storageArea !== localStorage || (e.key !== PLAN_STORAGE_KEY && e.key !== null) || !planState.saved) return;
+  const before = planState.saved.start;
+  planState.saved = planLoad();
+  const view = document.getElementById("view-plan");
+  if (!view || view.classList.contains("hidden")) return;
+  if (planState.saved.start !== before) { planRerender(); return; }
+  view.querySelectorAll('input[type="checkbox"][id^="plan-task-"]').forEach(box => {
+    box.checked = Boolean(planState.saved.done[box.id.slice("plan-task-".length)]);
+  });
+  const week = PLAN.weeks.find(w => view.querySelector(`#plan-task-${CSS.escape(w.days[0].tasks[0].id)}`));
+  if (week) planUpdateCounters(week);
+});
+
 function planSave() {
   try {
     localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(planState.saved));
@@ -221,6 +244,7 @@ function planTaskItem(task, week) {
       siteNeedSignIn("Чтобы отмечать задачи плана");
       return;
     }
+    planRefresh();
     if (checkbox.checked) planState.saved.done[task.id] = true;
     else delete planState.saved.done[task.id];
     planSave();
@@ -381,6 +405,13 @@ function planUpdateCounters(week) {
   }
 }
 
+// «Продолжить занятие»: просроченные карточки, затем новые с текущей недели — переход в карточки.
+function planReviewButton() {
+  const button = planEl("button", { type: "button", className: "btn btn-sm btn-primary", "data-review-start": "", text: reviewButtonLabel() });
+  button.addEventListener("click", () => continueSession());
+  return planEl("p", { className: "plan-review" }, [button]);
+}
+
 function planTodayBanner(today) {
   if (today.before) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: `Программа начнётся через ${today.daysLeft} дн.` });
   if (today.after) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: "13 недель позади. Дальше — журнал интервью и повторение слабых тем." });
@@ -431,6 +462,7 @@ function planSetStart(iso, reason) {
     return;
   }
   planState.startNeedsSignIn = false;
+  planRefresh();
   const previous = planState.saved.start;
   if (iso === previous) {
     planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;
@@ -646,6 +678,7 @@ function renderPlan(weekId, dayKey) {
         planEl("div", { className: "progress-bar-wrap" }, planEl("div", { id: "plan-overall-fill", className: "progress-bar-fill" }))
       ]),
       planTodayBanner(today),
+      typeof continueSession === "function" ? planReviewButton() : null,
       chips,
       planCalendar(today),
       planEl("p", { className: "muted-text", text: "Галочка значит «сделано по плану», а не «вспомнил без подсказки». Проверка памяти — в карточках и quiz." }),

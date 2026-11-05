@@ -8,7 +8,7 @@
   <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <meta name="theme-color" content="#0f172a" />
-  <link rel="stylesheet" href="css/style.css?v=82" />
+  <link rel="stylesheet" href="css/style.css?v=83" />
 </head>
 <body>
 
@@ -59,7 +59,10 @@
           <div class="progress-bar-wrap">
             <div id="progress-fill" class="progress-bar-fill"></div>
           </div>
-          <button class="btn btn-sm" type="button" onclick="setFilter('review')">Повторить отмеченные</button>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary" type="button" data-review-start onclick="continueSession()">▶ Продолжить занятие</button>
+            <button class="btn btn-sm" type="button" onclick="setFilter('review')">Повторить отмеченные</button>
+          </div>
         </div>
 
         <details class="study-settings">
@@ -160,6 +163,7 @@
 
     <!-- РАЗДЕЛ 2: ИНТЕРАКТИВНЫЕ СИМУЛЯТОРЫ ДИАГРАММ -->
     <section id="view-simulators" class="route-view hidden">
+      <h2 id="sim-view-title" class="visually-hidden">Интерактивные диаграммы</h2>
       <div class="toolbar" style="margin-bottom: 20px;">
         <div class="filter-row">
           <span class="filter-label">Быстрый переход к диаграмме:</span>
@@ -209,7 +213,7 @@
 
     <!-- РАЗДЕЛ 4: ШПАРГАЛКА -->
     <section id="view-cheatsheet" class="route-view hidden">
-      <h2 style="margin-bottom: 16px;">Шпаргалка по рантайму Go</h2>
+      <h2 id="cheatsheet-title" style="margin-bottom: 16px;">Шпаргалка по рантайму Go</h2>
       <div class="table-wrap">
         <table class="cheat-table">
           <thead>
@@ -228,7 +232,7 @@
     <!-- РАЗДЕЛ 5: 🧠 CODE TRAPS QUIZ (Собеседования с задачками) -->
     <section id="view-quiz" class="route-view hidden">
       <div class="section-top">
-        <h2>Quiz: ловушки в коде</h2>
+        <h2 id="quiz-title">Quiz: ловушки в коде</h2>
         <span class="muted-text">Хитрые сниппеты кода, которые дают на Senior Go-собеседованиях</span>
       </div>
       <div class="quiz-mode">
@@ -264,18 +268,20 @@
     </div>
   </dialog>
 
-  <script src="data/cards.js?v=82"></script>
-  <script src="data/simulators.js?v=82"></script>
-  <script src="data/quiz.js?v=82"></script>
-  <script src="data/plan.js?v=82"></script>
-  <script src="data/practice.js?v=82"></script>
-  <script src="data/audio.js?v=82"></script>
-  <script src="js/config.js?v=82"></script>
-  <script src="js/auth.js?v=82"></script>
-  <script src="js/audio.js?v=82"></script>
-  <script src="js/app.js?v=82"></script>
-  <script src="js/talk-trainer.js?v=82"></script>
-  <script src="js/plan-view.js?v=82"></script>
-  <script src="js/practice-view.js?v=82"></script>
+  <script src="data/cards.js?v=83"></script>
+  <script src="data/simulators.js?v=83"></script>
+  <script src="data/quiz.js?v=83"></script>
+  <script src="data/plan.js?v=83"></script>
+  <script src="data/practice.js?v=83"></script>
+  <script src="data/audio.js?v=83"></script>
+  <script src="js/config.js?v=83"></script>
+  <script src="js/progress-merge.js?v=83"></script>
+  <script src="js/auth.js?v=83"></script>
+  <script src="js/audio.js?v=83"></script>
+  <script src="js/app.js?v=83"></script>
+  <script src="js/review-queue.js?v=83"></script>
+  <script src="js/talk-trainer.js?v=83"></script>
+  <script src="js/plan-view.js?v=83"></script>
+  <script src="js/practice-view.js?v=83"></script>
 </body>
 </html>

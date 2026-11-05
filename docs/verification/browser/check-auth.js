@@ -163,6 +163,24 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     const taken = await p.evaluate(() => ({ cards: localStorage.getItem("go_prep_progress_v2"), plan: localStorage.getItem("go_prep_plan_v1"), hint: localStorage.getItem("go_prep_signed_in_v1") }));
     ok(`${w}: taking the server progress replaces local keys and keeps the session`, taken.cards === JSON.stringify({ c2: "review" }) && taken.plan === null && taken.hint === "1", JSON.stringify(taken));
 
+    // «Объединить»: отметки обоих устройств остаются и здесь, и на сервере.
+    await p.evaluate(() => {
+      localStorage.setItem("go_prep_progress_v2", JSON.stringify({ c1: "mastered", c2: "review" }));
+      localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-10-26", done: { "w1-mon-1": true } }));
+    });
+    server.progress = { go_prep_progress_v2: JSON.stringify({ c2: "review", c3: "mastered" }), go_prep_plan_v1: JSON.stringify({ schema: 1, start: "2026-10-26", done: { "w1-mon-2": true } }) };
+    server.version = 20;
+    await p.reload();
+    await p.waitForSelector("#sync-choice:not(.hidden) button", { timeout: 8000 });
+    const labels = await p.evaluate(() => [...document.querySelectorAll("#sync-choice button")].map(b => b.textContent));
+    ok(`${w}: merge offered first, replace buttons say what they replace`, /^Объединить/.test(labels[0]) && labels.some(t => /заменит этот браузер/.test(t)) && labels.some(t => /заменит сервер/.test(t)), labels.join(" | "));
+    await p.click("#sync-choice button:has-text('Объединить')");
+    await signedIn(p);
+    const both = await p.evaluate(() => ({ cards: JSON.parse(localStorage.getItem("go_prep_progress_v2")), plan: JSON.parse(localStorage.getItem("go_prep_plan_v1")).done }));
+    const srv = { cards: JSON.parse(server.progress.go_prep_progress_v2), plan: JSON.parse(server.progress.go_prep_plan_v1).done };
+    ok(`${w}: merge keeps marks from both devices locally`, both.cards.c1 === "mastered" && both.cards.c2 === "review" && both.cards.c3 === "mastered" && both.plan["w1-mon-1"] && both.plan["w1-mon-2"], JSON.stringify(both));
+    ok(`${w}: merge pushed to the server`, server.version === 21 && srv.cards.c1 === "mastered" && srv.cards.c3 === "mastered" && srv.plan["w1-mon-1"] && srv.plan["w1-mon-2"], JSON.stringify(srv));
+
     // Sign out: Cognito logout, the hint is gone, the next visit is read-only.
     await p.click("#account .account-signout");
     await p.waitForURL(u => u.toString().startsWith(`${AUTH}/logout`), { timeout: 5000 });
