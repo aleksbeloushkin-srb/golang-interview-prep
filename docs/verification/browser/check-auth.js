@@ -174,7 +174,8 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     await p.waitForSelector("#sync-choice:not(.hidden) button", { timeout: 8000 });
     const labels = await p.evaluate(() => [...document.querySelectorAll("#sync-choice button")].map(b => b.textContent));
     ok(`${w}: merge offered first, replace buttons say what they replace`, /^Объединить/.test(labels[0]) && labels.some(t => /заменит этот браузер/.test(t)) && labels.some(t => /заменит сервер/.test(t)), labels.join(" | "));
-    await p.click("#sync-choice button:has-text('Объединить')");
+    // Merge pushes, writes locally and reloads; already signed in, so wait for the reload itself.
+    await Promise.all([p.waitForEvent("load"), p.click("#sync-choice button:has-text('Объединить')")]);
     await signedIn(p);
     const both = await p.evaluate(() => ({ cards: JSON.parse(localStorage.getItem("go_prep_progress_v2")), plan: JSON.parse(localStorage.getItem("go_prep_plan_v1")).done }));
     const srv = { cards: JSON.parse(server.progress.go_prep_progress_v2), plan: JSON.parse(server.progress.go_prep_plan_v1).done };
