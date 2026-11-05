@@ -1,6 +1,6 @@
 # Приёмка озвучки на слух — недели 1–3
 
-Сгенерировано из `data/audio.js` (116 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
+Сгенерировано из `data/audio.js` (148 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
 Как проверять каждую запись (Michael и Heart отдельно):
 
@@ -15,8 +15,8 @@
 |---|---|---|---|---|---|---|---|---|---|
 | [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.6 | `-race` → «dash race» |  |  |  |  |  |  |
 | [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.6 | `-race` → «dash race» |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 38.6 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 39.2 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 38.9 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 39.6 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 18.0 | IDs → «I-D's», pprof |  |  |  |  |  |  |
 | [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 17.9 | IDs → «I-D's», pprof |  |  |  |  |  |  |
 | [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 42.2 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
@@ -27,8 +27,8 @@
 | [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
 | [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.3 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 45.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 46.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 39.4 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 41.6 | 1 ms → «one millisecond» |  |  |  |  |  |  |
 | [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 45.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
 | [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 47.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
 | [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 45.3 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
@@ -67,8 +67,8 @@
 | [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 39.6 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
 | [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 20.0 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
 | [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 20.9 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
-| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 40.5 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
-| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 41.5 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
+| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 39.6 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
+| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 40.8 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 27.4 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Heart | 28.0 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 36.9 | `for i := range` против `for i = range` |  |  |  |  |  |  |
@@ -133,8 +133,8 @@
 | [card:c21:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 21.2 |  |  |  |  |  |  |  |
 | [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 22.4 |  |  |  |  |  |  |  |
-| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 28.3 |  |  |  |  |  |  |  |
-| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 28.6 |  |  |  |  |  |  |  |
+| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 37.2 |  |  |  |  |  |  |  |
+| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 38.6 |  |  |  |  |  |  |  |
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 17.2 |  |  |  |  |  |  |  |
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 14.0 |  |  |  |  |  |  |  |
@@ -183,6 +183,70 @@
 | [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 32.8 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 23.5 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 23.8 |  |  |  |  |  |  |  |
+| [card:c57:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Michael | 32.8 |  |  |  |  |  |  |  |
+| [card:c57:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Heart | 33.3 |  |  |  |  |  |  |  |
+| [card:c57:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Michael | 45.5 |  |  |  |  |  |  |  |
+| [card:c57:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Heart | 46.8 |  |  |  |  |  |  |  |
+| [card:c58:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 26.3 |  |  |  |  |  |  |  |
+| [card:c58:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Heart | 26.8 |  |  |  |  |  |  |  |
+| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 42.8 |  |  |  |  |  |  |  |
+| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Heart | 44.7 |  |  |  |  |  |  |  |
+| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Michael | 37.3 |  |  |  |  |  |  |  |
+| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 38.6 |  |  |  |  |  |  |  |
+| [card:c59:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Michael | 44.3 |  |  |  |  |  |  |  |
+| [card:c59:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 46.7 |  |  |  |  |  |  |  |
+| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 28.1 |  |  |  |  |  |  |  |
+| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Heart | 28.8 |  |  |  |  |  |  |  |
+| [card:c60:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 46.3 |  |  |  |  |  |  |  |
+| [card:c60:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Heart | 48.0 |  |  |  |  |  |  |  |
+| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 33.6 |  |  |  |  |  |  |  |
+| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Heart | 34.2 |  |  |  |  |  |  |  |
+| [card:c61:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 52.2 |  |  |  |  |  |  |  |
+| [card:c61:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Heart | 53.2 |  |  |  |  |  |  |  |
+| [card:c62:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Michael | 28.6 |  |  |  |  |  |  |  |
+| [card:c62:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 29.0 |  |  |  |  |  |  |  |
+| [card:c62:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Michael | 40.9 |  |  |  |  |  |  |  |
+| [card:c62:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 42.1 |  |  |  |  |  |  |  |
+| [card:c63:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Michael | 34.4 |  |  |  |  |  |  |  |
+| [card:c63:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Heart | 35.4 |  |  |  |  |  |  |  |
+| [card:c63:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Michael | 43.1 |  |  |  |  |  |  |  |
+| [card:c63:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Heart | 44.1 |  |  |  |  |  |  |  |
+| [card:c64:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 22.3 |  |  |  |  |  |  |  |
+| [card:c64:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Heart | 23.1 |  |  |  |  |  |  |  |
+| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 52.4 |  |  |  |  |  |  |  |
+| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Heart | 53.3 |  |  |  |  |  |  |  |
+| [card:c65:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Michael | 39.1 |  |  |  |  |  |  |  |
+| [card:c65:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Heart | 40.1 |  |  |  |  |  |  |  |
+| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Michael | 41.3 |  |  |  |  |  |  |  |
+| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Heart | 42.8 |  |  |  |  |  |  |  |
+| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Michael | 28.8 |  |  |  |  |  |  |  |
+| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 29.5 |  |  |  |  |  |  |  |
+| [card:c66:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Michael | 38.8 |  |  |  |  |  |  |  |
+| [card:c66:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 40.5 |  |  |  |  |  |  |  |
+| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 36.5 |  |  |  |  |  |  |  |
+| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Heart | 38.1 |  |  |  |  |  |  |  |
+| [card:c67:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 45.0 |  |  |  |  |  |  |  |
+| [card:c67:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Heart | 46.4 |  |  |  |  |  |  |  |
+| [card:c68:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 35.9 |  |  |  |  |  |  |  |
+| [card:c68:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Heart | 37.1 |  |  |  |  |  |  |  |
+| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 43.0 |  |  |  |  |  |  |  |
+| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Heart | 44.2 |  |  |  |  |  |  |  |
+| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Michael | 29.7 |  |  |  |  |  |  |  |
+| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 29.9 |  |  |  |  |  |  |  |
+| [card:c69:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Michael | 41.4 |  |  |  |  |  |  |  |
+| [card:c69:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 42.4 |  |  |  |  |  |  |  |
+| [card:c70:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Michael | 28.1 |  |  |  |  |  |  |  |
+| [card:c70:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Heart | 27.9 |  |  |  |  |  |  |  |
+| [card:c70:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Michael | 43.5 |  |  |  |  |  |  |  |
+| [card:c70:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Heart | 45.0 |  |  |  |  |  |  |  |
+| [card:c71:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 30.7 |  |  |  |  |  |  |  |
+| [card:c71:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Heart | 31.1 |  |  |  |  |  |  |  |
+| [card:c71:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 40.2 |  |  |  |  |  |  |  |
+| [card:c71:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Heart | 40.8 |  |  |  |  |  |  |  |
+| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 36.9 |  |  |  |  |  |  |  |
+| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 38.0 |  |  |  |  |  |  |  |
+| [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 44.2 |  |  |  |  |  |  |  |
+| [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 45.6 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 28.5 |  |  |  |  |  |  |  |
 | [plan:w1-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 38.6 |  |  |  |  |  |  |  |
@@ -254,9 +318,9 @@
 
 > Yes, for example in a bank app: two withdrawals can both pass the balance check even when every read and write is locked. That is a race condition without a data race. A race condition is a timing-dependent logic bug; a data race is narrower: unsynchronized access to the same memory with at least one write, which dash race can detect. Here the check and the withdrawal take the lock separately, a check-then-act, so they must become one atomic step, for example one critical section.
 
-**card:c7:short** (хеш текста `f8cb60aa`)
+**card:c7:short** (хеш текста `eaf915bb`)
 
-> Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment. That is because Go max procs is the number of P's, and a P is the right to run Go code. By default it equals the number of logical C-P-U's the process may use, and in the G-M-P model a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
+> Go max procs limits parallel Go code: with Go max procs set to four, at most four goroutines run Go code at the same moment. That is because Go max procs is the number of P's, and a P is the right to run Go code. By default it follows the C-P-U's the process may use, since Go one 25 also the cgroup limit; a goroutine, G, runs on an O-S thread, M, only while that thread holds a P. Threads can still outnumber P's, because a thread blocked for long in a system call or in C-Go can lose its P to another thread.
 
 **card:c12:jvm** (хеш текста `b71dea61`)
 
@@ -278,9 +342,9 @@
 
 > Compare-and-swap means: if x still holds the value I saw, replace it with mine, and the hardware checks and writes as one indivisible step. In Go it is atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false if x no longer equals old, usually because another goroutine changed it. For an update such as an increment you re-read and retry in a loop; for a one-time claim from 0 to 1, false means another goroutine won. A separate Load and Store leave a gap: two goroutines can both read 0 and both write 1, each believing it won, while with C-A-S exactly one succeeds. It covers one variable, so an invariant across several fields usually needs a mutex.
 
-**card:c21:short** (хеш текста `65a26902`)
+**card:c21:short** (хеш текста `7ba0b62c`)
 
-> Inside, sync dot Mutex is a state word plus a semaphore, and Lock tries three things in turn. First one C-A-S that flips the word from unlocked to locked; with no contention, that is all. If the mutex is held, the goroutine may spin briefly, betting on a quick release, and then sleeps on the semaphore. Unlock wakes at most one waiter, and in normal mode that waiter competes with newcomers already running and often loses: fast, but unfair. A woken waiter that has waited more than one millisecond and finds the mutex taken again switches it to starvation mode, where Unlock hands ownership straight to the waiter at the front, so one millisecond is a mode threshold, not a timeout.
+> sync dot Mutex is a state word plus a semaphore. Lock first tries one C-A-S from unlocked to locked; without contention, that is all. If the mutex is held, the goroutine may spin briefly and retry, and sleeps on the semaphore only if it is still held. Unlock wakes at most one waiter; in normal mode it races newcomers already running and often loses: fast, but unfair. A waiter that waited over one millisecond and loses again switches the mutex to starvation mode, where Unlock hands it straight to the first waiter. So one millisecond is a mode threshold, not a timeout.
 
 **card:c23:short** (хеш текста `c4489bb9`)
 
@@ -358,9 +422,9 @@
 
 > sync dot Cond is Java's Condition from lock dot new Condition, or wait and notify on a monitor: Wait is await, Signal is signal, Broadcast is signal All, and the while loop is the same rule. Unlike Java, Wait has no spurious wakeups, no timed version and no interruption.
 
-**card:c56:short** (хеш текста `24e2b053`)
+**card:c56:short** (хеш текста `ac894d78`)
 
-> sync dot Cond lets goroutines sleep until shared state changes, for example workers waiting until a queue has an item. It pairs a lock, c dot L, with a list of waiting goroutines. A goroutine locks c dot L and checks the condition; if it is false, Wait unlocks, sleeps and locks again before returning. The goroutine that changes the state calls Signal to wake one waiter or Broadcast to wake all. Wait sits in a for loop, because another goroutine may change the state before the woken one gets the lock. Cond has no select and no timeout, so for a simple signal use a channel.
+> sync dot Cond lets goroutines sleep until shared state changes, for example workers waiting until a queue has an item. It pairs a lock, c dot L, with a list of waiters. A goroutine locks c dot L and checks the condition; if it is false, Wait unlocks, sleeps and locks again before returning. The goroutine that changes the state calls Signal to wake one waiter or Broadcast to wake all. Wait sits in a for loop, because another goroutine may change the state before the woken one gets the lock. Cond has no select and no timeout, so for a simple signal use a channel.
 
 **plan:w1-mon-1** (хеш текста `851cb195`)
 
@@ -490,9 +554,9 @@
 
 > Wait Group is like a reusable Count Down Latch whose count you can raise with Add; Once is like a lazy holder or double-checked initialization; Context is like an explicit, passed-along version of thread interruption with a deadline. Go passes Context as the first argument instead of keeping it in a Thread Local.
 
-**card:c22:short** (хеш текста `a2da08ac`)
+**card:c22:short** (хеш текста `28f9013b`)
 
-> All three coordinate goroutines, but each does one job. Wait Group waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values to the work. They do not replace each other: Wait Group does not cancel, Context does not wait, and Once does not retry a failed initialization. A handler often uses all three.
+> All three coordinate goroutines, but each does one job. Wait Group waits for a counted group of goroutines to finish, Once runs an initialization exactly once while other callers wait, and Context carries cancellation, deadlines and request values to the work. Once also publishes the result: after Do returns, every caller sees what the initializer wrote. They do not replace each other: Wait Group does not cancel, Context does not wait, and Once does not retry a failed initialization. A handler often uses all three.
 
 **card:c23:jvm** (хеш текста `22422ab2`)
 
@@ -589,6 +653,134 @@
 **card:c47:jvm** (хеш текста `774abf85`)
 
 > pointer to sql dot D-B is the pooled Data Source, like Hikari CP behind J-D-B-C, not a single Connection. Without try-with-resources, Go relies on defer rows dot Close and defer tx dot Rollback; defer runs at function exit, not at the end of a block, so inside a loop move the body into a helper function.
+
+**card:c57:jvm** (хеш текста `1a26348d`)
+
+> A typical Spring project is split by layer into controller, service and repository packages, and the repository interface comes from the persistence side, often a Spring Data Jpa Repository. In Go the use case declares the small interface it calls, and the adapter satisfies it implicitly, with no implements clause, so the adapter never imports the use case. Where a Java team adds Arch Unit rules, a Go team checks imports with a linter or a short test.
+
+**card:c57:short** (хеш текста `ce890ace`)
+
+> When a Go service outgrows one file, you decide which package holds what and who may import whom. cmd/ledger/main dot go stays thin: it reads config, builds dependencies and starts the server. The rest lives under internal/, split by business area: ledger, transfer. The H-T-T-P handler calls the use case, which calls the domain. The use case declares the small interface it needs, say Account Store, and the Postgre SQL adapter implements it. Dependencies point inward, and the domain imports nothing from the rest of the service: that is hexagonal architecture. This holds only if a linter or test checks imports.
+
+**card:c58:jvm** (хеш текста `00cba8b7`)
+
+> Spring scans annotations and builds the bean graph at run time with reflection, which is close to Fx; Dagger generates the wiring at compile time, close to Wire. What Spring recommends for required dependencies, constructor injection, is what Go does by hand, and Spring destroying a bean's dependents before the bean is the close stack you write yourself. Most Go services use neither tool.
+
+**card:c58:short** (хеш текста `a7eb76f7`)
+
+> A Go service has to build its database pool, clients, services and handlers in the right order. In Go, dependency injection just means passing them to constructors. One function, the composition root in main or internal/app, calls constructors in order and pushes each resource's close function onto a stack. Wiring by hand is the default even in large services: a missing dependency is a compile error, and the graph reads top to bottom. Wire generates the same function and reports a missing provider during generation. Fx builds the graph at run time with reflection, so errors appear at startup.
+
+**card:c59:jvm** (хеш текста `72fb0cc9`)
+
+> Spring Boot does most of this for you: graceful shutdown of the embedded server is on by default since 3.4, server dot shutdown=graceful before that, spring dot lifecycle dot timeout-per-shutdown-phase bounds each phase, Smart Lifecycle beans stop phase by phase, and then singletons are destroyed in reverse dependency order. Its Kubernetes guide adds a pre Stop sleep for the same load-balancer window. In Go nothing is implicit: run spells out the order in one function, which makes it easy to read and easy to get wrong.
+
+**card:c59:short** (хеш текста `b68630a7`)
+
+> When Kubernetes stops a pod, the service gets SIGTERM and, by default, thirty seconds before SIGKILL. In that window it must finish its work and lose nothing. signal dot Notify Context turns the signal into a cancelled context; after that, order matters. First the service reports not ready and keeps serving a few seconds, while load balancers stop sending it requests. Then http dot Server dot Shutdown with a deadline closes the listener and waits for requests in flight. Then the service cancels its workers and consumers and waits for them. It closes resources in reverse order, logs and traces last, and exits non-zero if anything failed.
+
+**card:c60:jvm** (хеш текста `6901b08d`)
+
+> Spring M-V-C maps routes with @Get Mapping and wraps them in servlet filters and Handler Interceptors. springdoc generates the spec from the code, which is code-first; openapi-generator generates controller interfaces from the spec, which is spec-first. Go has the same split, but no annotations or classpath scanning: routes are registered in code, and the middleware chain is ordinary function composition, read from the outside in.
+
+**card:c60:short** (хеш текста `d5006dcc`)
+
+> In Go a R-E-S-T A-P-I is usually net/http handlers behind a router, wrapped in middleware. Since Go one 22 the standard Serve Mux matches method and path, as in G-E-T /accounts/{id}, and r dot Path Value reads the id. Routes are written by hand, or spec-first: oapi-codegen or ogen turns the Open API file into types, a server interface and clients, and you implement that interface. Middleware is a function that wraps one handler in another. Request id goes outermost, then logging, then recover, which must answer 500, then rate limits and auth, so the log line shows the 500 with its id.
+
+**card:c61:jvm** (хеш текста `e223daaf`)
+
+> grpc-java has the same pieces: Server Interceptor, Status Runtime Exception, and Spring g RPC or grpc-spring-boot-starter to register interceptors as beans. But an uncaught exception there closes only that call with UNKNOWN, while a panic in grpc-go kills the process. And Java keeps the deadline in a g RPC Context bound to the thread; Go carries it in ctx, so a handler that drops ctx also drops the deadline.
+
+**card:c61:short** (хеш текста `ad1218fc`)
+
+> Between services inside one system, teams often choose g RPC; R-E-S-T with Jason stays for browsers, public AP Is and H-T-T-P caching. g RPC is R-P-C over H-T-T-P/2: protoc or buf generates types, server and client code from a .proto contract. It brings a strict contract, binary messages, streaming and deadlines that follow the call chain. In production the server chains interceptors with grpc dot Chain Unary Interceptor: logs, metrics, panic recovery and auth; grpc-go itself does not recover panics. Errors leave as status codes, and the health service answers balancers. Graceful Stop may wait forever on a long stream, so after a timeout Stop cancels the rest.
+
+**card:c62:jvm** (хеш текста `10e5de45`)
+
+> In Spring M-V-C a long-poll endpoint returns Deferred Result: the servlet thread goes back to the pool, and another thread completes the response later; a Web Async Task or Callable would still hold an executor thread while it waits. In Go a goroutine per request is cheap, so the handler simply blocks in select. Either way only the waiting is cheap: without a shared poller or event source every waiting request turns into its own database loop.
+
+**card:c62:short** (хеш текста `4db95cf8`)
+
+> A mobile app or another service often waits for a payment to change status. With long polling the server holds the request until the state changes or a soft timeout ends it with changed false, and the client asks again. The client sends the version it has seen, so a newer payment is answered at once. Instead of querying per handler, handlers register in a shared registry; one poller goroutine reads all awaited payments in one query per tick and wakes the requests whose payment changed. Over a per-pod limit the server answers 429; Write Timeout must exceed the soft timeout.
+
+**card:c63:jvm** (хеш текста `4b5f6490`)
+
+> In Java you take these from java dot util dot concurrent: an Executor Service with a bounded queue as the pool, a Semaphore for limits, a Blocking Queue between stages. Kotlin coroutines add Channel and structured concurrency: a scope cancels its children and waits for them, and produce closes its channel when the coroutine completes. Go has no built-in structured concurrency: the author decides who owns each goroutine and who closes each channel, and errgroup comes closest to a coroutine scope.
+
+**card:c63:short** (хеш текста `ce6bec1e`)
+
+> A Go service needs a few channel patterns, and each channel has one owner on the sending side. The owner closes it only when receivers must know the end; then their range loops stop. In a worker pool, the producer closes the job channel; whoever waits for workers closes results. Pipeline stages close their outputs when inputs close, and every send sits in a select with ctx dot Done. A semaphore, make, chan a struct literal, n, bounds concurrent work; with select and default, a handler answers 429 at once. A signal channel of capacity one merges changes into one wake-up; these two stay open.
+
+**card:c64:jvm** (хеш текста `e8a95a20`)
+
+> In Java and Kotlin the stack comes from Spring Boot: starters for web, data, Kafka and actuator, with versions aligned by the Boot dependency management. In Go each layer is chosen separately and wired by hand in main, so an interviewer asks why this library and not another, and expects the trade-off, not just the name.
+
+**card:c64:short** (хеш текста `db5e4aa8`)
+
+> A Go backend is usually not one framework like Spring but a set of small libraries around the standard library. The rule: standard library first, and a dependency only for a concrete need, since each one adds updates and vulnerabilities. A typical set is net/http or chi, pgx with pgxpool, sqlc or a query builder instead of an O-R-M, goose migrations, slog, Open Telemetry and Prometheus, and franz-go or sarama for Kafka. Gaps are filled by golang dot org/x packages: singleflight merges concurrent cache misses into one load. Choose by maintenance, net/http and context support, A-P-I stability and license, and check with govulncheck.
+
+**card:c65:jvm** (хеш текста `9a7d6e52`)
+
+> In Java, Premium extends Account makes a Premium an Account, and methods are virtual by default: Account dot charge calling fee runs Premium dot fee, and super dot fee reaches the parent. Go embedding has none of this. Closest is Kotlin delegation, class Premium that implements Billing by a, its Account parameter: the compiler writes forwarding methods, and an override in Premium is not seen from inside a, which is the same trap. But by forwards only the members of a declared interface, while Go promotes every method and field of the embedded type.
+
+**card:c65:short** (хеш текста `fa28a725`)
+
+> Go has no inheritance: to reuse a type, you embed it in a struct without a field name. Its fields and methods are promoted: if Premium embeds Account, p dot Charge of 1000 works and means p dot Account dot Charge of 1000. That is composition, not subtyping: a Premium is not an Account, there is no super, and a Fee declared on Premium only hides Account's Fee. Inside Charge the receiver is the Account, so its call to Fee on the receiver still reaches Account's Fee. A method call is dynamic only through an interface value, so pass the step that varies as an interface or a function.
+
+**card:c66:jvm** (хеш текста `9f7d7fc2`)
+
+> On the J-V-M the same design ships as libraries: db-scheduler and Job Runr keep jobs in a database table, while Spring's @Async only runs work in memory, so a restart loses it. In Go teams often write the queue themselves on pgx or take River, a Postgres job queue for Go. The lease plays the role of the visibility timeout in Amazon S-Q-S: a message that is not deleted in time becomes visible again.
+
+**card:c66:short** (хеш текста `6a66f56e`)
+
+> A service often has to do work later or retry it after a failure, like notifying a merchant. A tasks table in the same database commits the task with the payment. Workers claim a batch with F-O-R UPDATE S-K-I-P LOCKED, so each takes rows the others have not locked. The claim commits at once, leaving a lease: if the worker dies, it expires and another worker takes the task. Failures retry later with backoff and jitter; after the last attempt the task is dead, our dead-letter queue. A unique key drops duplicates. Many consumers or replay mean Kafka.
+
+**card:c67:jvm** (хеш текста `4fae1452`)
+
+> This is Spring's @Transactional done by hand. Spring binds the connection to the thread through Transaction Synchronization Manager; propagation REQUIRED joins the outer transaction, NESTED uses a savepoint, and after Commit callbacks match After Commit here. Go has no thread-locals, so the binding travels in context dot Context. The trap is mirrored: in Spring, work on another thread silently runs outside the transaction; in Go, a goroutine keeps the ctx and with it a transaction about to close.
+
+**card:c67:short** (хеш текста `64718ed4`)
+
+> A use case often changes several repositories, say a payment and its tasks, and they must commit together. A common Go answer keeps the transaction in the context: Run begins it, and D-B, ctx, gives each repository the transaction or, outside Run, the pool. A nested Run joins the outer one, and After Commit hooks, such as a wake-up or metrics, run only after the outer commit. The price is a hidden dependency: a goroutine started inside Run holds a closing transaction. Behind a transaction-mode pooler, advisory locks must be transaction-level, and pgx needs exec mode unless the pooler tracks prepared statements.
+
+**card:c68:jvm** (хеш текста `47d73db9`)
+
+> In Spring the same trap is @Transactional around a method that calls Rest Client or Web Client: the J-D-B-C connection and the row locks stay held for the whole H-T-T-P call. Spring Retry's @Retryable and Resilience4j Retry retry every exception by default, so a read timeout after the request left is resent like a refused connection. Limit them to connection failures such as Connect Exception and to 429, and create the idempotency key once per attempt, before the first send.
+
+**card:c68:short** (хеш текста `ad24fa2b`)
+
+> A service calls a payment provider over H-T-T-P, and a call can time out after the provider charged the card. A timeout is not a refusal: a call ends executed, certainly not executed, or unknown. The client resends only when the provider certainly did nothing: after a 429 with Retry-After or a failed dial with nothing sent. Before the call, the service commits an attempt with a stable idempotency key; the call holds no transaction, and a second transaction applies the answer. An unknown outcome is resolved by that key: the provider must deduplicate by it and answer lookups reliably.
+
+**card:c69:jvm** (хеш текста `467c91b1`)
+
+> In Spring, @Cacheable hides cache-aside behind an annotation, and @Cacheable, sync equals true, loads a key once for concurrent callers in one J-V-M, which is what singleflight does in Go; here you write the read path and the invalidation by hand. For locks, Redisson's R Lock extends its lease with a watchdog, and Shed Lock keeps a @Scheduled job on one node. Both are lease locks: a long pause still gives two owners, so the fencing question is the same.
+
+**card:c69:short** (хеш текста `62baefe8`)
+
+> A service often caches hot data, like merchant settings, so most requests skip the database. In one pod, singleflight merges concurrent misses into one load; T-T-L jitter spreads out expiry times. Across pods, Redis is cache-aside: on a miss the service reads the database and caches the value with a T-T-L, and after a write commits it deletes the key. A Redis lock is S-E-T key token N-X P-X ttl, released by a Lua script that deletes only its own token. If the owner pauses past the T-T-L, another pod takes the lock, so the resource checks a fencing token.
+
+**card:c70:jvm** (хеш текста `285406a3`)
+
+> On the J-V-M the choice is the same: Temporal's Java S-D-K, where workflow code calls Workflow dot sleep and Workflow dot current Time Millis instead of Thread dot sleep and the system clock, or a B-P-M-N engine such as Camunda, against a task table, Quartz with a J-D-B-C job store, or @Scheduled with Shed Lock. A Kotlin coroutine's delay is not durable: a restart forgets it, just like time dot Sleep in a goroutine.
+
+**card:c70:short** (хеш текста `e372d808`)
+
+> Some payment processes outlive any pod: a subscription charges monthly, and onboarding waits days for a bank. A workflow engine such as Temporal stores each process's history and replays the code to rebuild its state, so timers, signals and waits survive restarts. Hence workflow code must be deterministic, and side effects go into activities, which are retried and must be idempotent. A business-key Workflow ID blocks a second open run. The engine pays off for many steps, long timers and compensations; for one call plus waiting, a database task queue is enough, and polling is the same task retried later.
+
+**card:c71:jvm** (хеш текста `1c0460cf`)
+
+> In Kotlin a data class prints every field in to String, so a password reaches the log through a string template; teams override to String or wrap secrets in a value class. Logback can mask by regex in the layout or, with logstash-logback-encoder, by Jason field path. In Go, Log Value plays the role of that to String for slog, Replace Attr is the encoder-level mask, and String and Go String cover F-M-T; Replace Attr does not see the fields of a struct logged whole.
+
+**card:c71:short** (хеш текста `ae38d7de`)
+
+> Service logs reach more people and systems than the database, so they must not carry secrets. Never log whole request bodies, tokens, confirmation codes, card numbers or personal data. Redact in one place, not at each call: a Secret type whose Log Value returns a mask, entities that log an allowlist of fields, and a Replace Attr function in the slog handler that masks keys such as password, even inside groups. The access log writes route, status and duration, never the body. If Log Value has a pointer receiver, slog skips it for a plain value and prints the secret.
+
+**card:c72:jvm** (хеш текста `d03ead2d`)
+
+> The closest J-V-M analogue is a Kotlin Coroutine Context: a Job carries cancellation, with Timeout nests, MDC Context carries request data, and with Context, Non Cancellable, plays the role of context dot Without Cancel. Spring keeps the request, the security context and the transaction in Thread Locals, so a method's signature does not show what it depends on. Go passes all of it explicitly as ctx, and a transaction stored in ctx brings back the hidden dependency of @Transactional.
+
+**card:c72:short** (хеш текста `91a35099`)
+
+> In a Go service every request carries a context dot Context, and it should carry only two things. The first is the request's lifetime: cancellation and a deadline, so work can stop when nobody needs the answer. The handler passes ctx as the first argument to every I-O call and gives each outbound call its own context dot With Timeout. The second is request-scoped data for logs and tracing, such as the request I-D. Dependencies and optional parameters stay out: they go in constructors and signatures. Work after the response runs on context dot Without Cancel: values stay, cancellation goes, and you add your own timeout.
 
 **plan:w1-sat-1** (хеш текста `125e4582`)
 
