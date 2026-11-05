@@ -59,7 +59,10 @@
           <div class="progress-bar-wrap">
             <div id="progress-fill" class="progress-bar-fill"></div>
           </div>
-          <button class="btn btn-sm" type="button" onclick="setFilter('review')">Повторить отмеченные</button>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary" type="button" data-review-start onclick="continueSession()">▶ Продолжить занятие</button>
+            <button class="btn btn-sm" type="button" onclick="setFilter('review')">Повторить отмеченные</button>
+          </div>
         </div>
 
         <details class="study-settings">
@@ -272,9 +275,11 @@
   <script src="data/practice.js?v=82"></script>
   <script src="data/audio.js?v=82"></script>
   <script src="js/config.js?v=82"></script>
+  <script src="js/progress-merge.js?v=82"></script>
   <script src="js/auth.js?v=82"></script>
   <script src="js/audio.js?v=82"></script>
   <script src="js/app.js?v=82"></script>
+  <script src="js/review-queue.js?v=82"></script>
   <script src="js/talk-trainer.js?v=82"></script>
   <script src="js/plan-view.js?v=82"></script>
   <script src="js/practice-view.js?v=82"></script>

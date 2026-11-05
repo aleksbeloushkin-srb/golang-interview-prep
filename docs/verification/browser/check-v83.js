@@ -69,6 +69,56 @@ const { chromium } = require("playwright");
     ok("both plan ticks kept", plan["w1-mon-1"] === true && plan["w1-mon-2"] === true, JSON.stringify(plan));
     await ctx.close();
   }
+  // Очередь повторения и «Продолжить занятие» (часы зафиксированы на 5 ноября 2026).
+  for (const w of [1280, 390]) {
+    const ctx = await b.newContext({ viewport: { width: w, height: 900 } });
+    const p = await ctx.newPage(); watch(p, `session ${w}`);
+    await p.clock.setFixedTime(new Date("2026-11-05T12:00:00+01:00"));
+    await p.goto(`${base}#/cards/c1`); await p.waitForTimeout(300);
+    await p.evaluate(() => {
+      localStorage.clear(); sessionStorage.clear();
+      localStorage.setItem("go_prep_progress_v2", JSON.stringify({ c1: "review", c2: "mastered", c3: "mastered" }));
+      localStorage.setItem("go_prep_attempts_v1", JSON.stringify({
+        c1: [{ d: "2026-11-01", r: "none" }],                                  // проверка 02.11 — просрочена
+        c2: [{ d: "2026-11-04", r: "self" }],                                  // проверка 08.11
+        c3: [{ d: "2026-10-01", r: "self" }, { d: "2026-10-20", r: "self" }]   // 20.10 + 8 = 28.10 — просрочена
+      }));
+      localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-11-02", done: {} })); // неделя 1
+    });
+    await p.reload(); await p.waitForTimeout(400);
+    const bar = await p.textContent("#progress-text");
+    ok(`${w}: progress says answered on last check and due count`, new RegExp(`ответил сам на последней проверке — 2 из ${await p.evaluate(() => CARDS.length)}`).test(bar) && /к повторению: 2/.test(bar), bar);
+    await p.evaluate(() => { location.hash = "#/cards/c2"; }); await p.waitForTimeout(250);
+    const pill = await p.textContent("#card-status");
+    ok(`${w}: status shows next check`, pill === "Ответил сам ✓ · 04.11: сам · следующая проверка 08.11", pill);
+    await p.evaluate(() => setFilter("review")); await p.waitForTimeout(200);
+    const reviewIds = await p.evaluate(() => getFilteredCards().map(c => c.id));
+    ok(`${w}: review filter = marked + due`, reviewIds.join() === "c1,c3", reviewIds.join());
+    const label = await p.textContent("#view-cards [data-review-start]");
+    ok(`${w}: start button counts due and new`, /^▶ Занятие до 10 карточек: к повторению 2, новых на неделе \d+$/.test(label), label);
+    await p.click("#view-cards [data-review-start]"); await p.waitForTimeout(300);
+    const s1 = await p.evaluate(() => ({ filter: state.filter, ids: getFilteredCards().map(c => c.id), shown: state.shownCard, focus: document.activeElement.id }));
+    ok(`${w}: session starts with the most overdue, then week 1 cards`, s1.filter === "session" && s1.ids[0] === "c3" && s1.ids[1] === "c1" && s1.ids.length <= 10 && s1.ids.includes("c40") && s1.shown === "c3" && s1.focus === "card-q-en", JSON.stringify(s1));
+    await p.evaluate(() => { state.revealed = true; gradeCard("self"); }); await p.waitForTimeout(200);
+    ok(`${w}: graded card leaves the session`, await p.evaluate(() => state.shownCard === "c1" && !getFilteredCards().some(c => c.id === "c3")));
+    await p.reload(); await p.waitForTimeout(400);
+    const s2 = await p.evaluate(() => ({ filter: state.filter, shown: state.shownCard, label: document.querySelector("#view-cards [data-review-start]").textContent, left: getFilteredCards().length }));
+    ok(`${w}: session survives reload`, s2.filter === "session" && s2.shown === "c1" && s2.label === `▶ Продолжить занятие: осталось ${s2.left}`, JSON.stringify(s2));
+    // c3: «сам» третий раз подряд → проверка через 16 дней.
+    ok(`${w}: c3 next check after third self`, await p.evaluate(() => cardSchedule("c3").due === "2026-11-21"));
+    // Оценить всё — конец занятия.
+    await p.evaluate(() => { while (getFilteredCards().length) { state.revealed = true; gradeCard("anchors"); } }); await p.waitForTimeout(200);
+    const end = await p.evaluate(() => ({ title: document.getElementById("card-q-en").textContent, hint: document.getElementById("card-q-ru").textContent }));
+    ok(`${w}: session end message`, /^Занятие закончено: \d+ из \d+$/.test(end.title) && /Следующая проверка — 07\.11/.test(end.hint), JSON.stringify(end));
+    // С плана — кнопка ведёт в карточки.
+    await p.goto(`${base}#/plan/w1`); await p.waitForSelector("#plan-week-title");
+    await p.click("#view-plan [data-review-start]"); await p.waitForTimeout(400);
+    ok(`${w}: plan button opens the session in cards`, await p.evaluate(() => location.hash.startsWith("#/cards") && state.filter === "session"));
+    ok(`${w}: session not synced`, await p.evaluate(() => typeof syncSnapshot !== "function" || !("go_prep_session_v1" in (syncSnapshot() || {}))));
+    const ov = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    ok(`${w}: no overflow`, ov <= 0, ov);
+    await ctx.close();
+  }
   ok("no console errors", errors.length === 0, errors.join(" | "));
   await b.close();
   const fails = res.filter(r => r.startsWith("FAIL"));

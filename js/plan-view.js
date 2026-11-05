@@ -405,6 +405,13 @@ function planUpdateCounters(week) {
   }
 }
 
+// «Продолжить занятие»: просроченные карточки, затем новые с текущей недели — переход в карточки.
+function planReviewButton() {
+  const button = planEl("button", { type: "button", className: "btn btn-sm btn-primary", "data-review-start": "", text: reviewButtonLabel() });
+  button.addEventListener("click", () => continueSession());
+  return planEl("p", { className: "plan-review" }, [button]);
+}
+
 function planTodayBanner(today) {
   if (today.before) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: `Программа начнётся через ${today.daysLeft} дн.` });
   if (today.after) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: "13 недель позади. Дальше — журнал интервью и повторение слабых тем." });
@@ -671,6 +678,7 @@ function renderPlan(weekId, dayKey) {
         planEl("div", { className: "progress-bar-wrap" }, planEl("div", { id: "plan-overall-fill", className: "progress-bar-fill" }))
       ]),
       planTodayBanner(today),
+      typeof continueSession === "function" ? planReviewButton() : null,
       chips,
       planCalendar(today),
       planEl("p", { className: "muted-text", text: "Галочка значит «сделано по плану», а не «вспомнил без подсказки». Проверка памяти — в карточках и quiz." }),

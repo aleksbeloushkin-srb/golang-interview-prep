@@ -39,6 +39,7 @@ let state = {
   revealed: false,
   anchorsFor: null, // id карточки, для которой открыты опоры; на другой карточке они снова скрыты
   shownCard: null, // карточка на экране: другая карточка — новая попытка, опоры снова скрыты
+  session: null, // занятие «Продолжить занятие» (review-queue.js)
   progress: loadProgress()
 };
 
@@ -215,12 +216,14 @@ function saveProgress(changedId) {
 
 function updateProgressBar() {
   if (typeof CARDS === "undefined") return;
-  const mastered = CARDS.filter(c => state.progress[c.id] === "mastered").length;
-  const pct = Math.round((mastered / CARDS.length) * 100);
+  // Один ответ «сам» — ещё не удержание: показываем, как ответил на последней проверке, и сколько пора повторить.
+  const counts = typeof reviewCounts === "function" ? reviewCounts() : { self: CARDS.filter(c => state.progress[c.id] === "mastered").length, due: 0 };
+  const pct = Math.round((counts.self / CARDS.length) * 100);
   const txt = document.getElementById("progress-text");
   const fill = document.getElementById("progress-fill");
-  if (txt) txt.textContent = `${mastered} / ${CARDS.length} изучено (${pct}%)`;
+  if (txt) txt.textContent = `ответил сам на последней проверке — ${counts.self} из ${CARDS.length} (${pct}%) · к повторению: ${counts.due}`;
   if (fill) fill.style.width = `${pct}%`;
+  if (typeof updateReviewButton === "function") updateReviewButton();
 }
 
 function resetProgress() {
@@ -239,10 +242,15 @@ function resetProgress() {
 /* --- ФИЛЬТРАЦИЯ И РЕНДЕР КАРТОЧЕК --- */
 function getFilteredCards() {
   if (typeof CARDS === "undefined") return [];
+  // Занятие — свой порядок (просроченные, затем новые недели); уровень и поиск его не сужают.
+  if (state.filter === "session" && typeof reviewSessionCards === "function") return reviewSessionCards();
+  // «На повторение»: отмеченные «с опорой» / «не ответил» и все, у кого подошла дата проверки.
+  const attempts = state.filter === "review" ? loadAttempts() : null;
+  const today = attempts ? reviewToday() : "";
   return CARDS.filter(c => {
-    if (state.filter === "review" && state.progress[c.id] !== "review") return false;
+    if (state.filter === "review" && state.progress[c.id] !== "review" && !(typeof cardIsDue === "function" && cardIsDue(c, attempts, today))) return false;
     if (state.filter === "practice" && !c.practice) return false;
-    if (!["all", "review", "practice"].includes(state.filter) && c.mod !== state.filter) return false;
+    if (!["all", "review", "practice", "session"].includes(state.filter) && c.mod !== state.filter) return false;
     if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
     if (state.search) {
       const q = state.search.toLowerCase();
@@ -281,8 +289,9 @@ function renderCard() {
     document.getElementById("card-level").textContent = "0 карточек";
     document.getElementById("card-level").className = "level-badge";
     document.getElementById("card-counter").textContent = "0 из 0";
-    document.getElementById("card-q-en").textContent = "Нет карточек по выбранному сочетанию фильтров";
-    document.getElementById("card-q-ru").textContent = state.filter === "review" ? "В этой подборке нет карточек на повторение. Можно выбрать другой уровень или открыть все карточки." : "Измени поиск, модуль или уровень в разделе «Настроить подборку».";
+    const sessionEnd = state.filter === "session" && typeof reviewEmptyText === "function" ? reviewEmptyText() : null;
+    document.getElementById("card-q-en").textContent = sessionEnd ? sessionEnd.title : "Нет карточек по выбранному сочетанию фильтров";
+    document.getElementById("card-q-ru").textContent = sessionEnd ? sessionEnd.hint : state.filter === "review" ? "В этой подборке нет карточек на повторение. Можно выбрать другой уровень или открыть все карточки." : "Измени поиск, модуль или уровень в разделе «Настроить подборку».";
     ansBox.classList.remove("visible");
     document.getElementById("card-status").textContent = "";
     document.getElementById("card-practice").innerHTML = "";
@@ -450,6 +459,7 @@ function markCard(status) {
   const card = list[state.index];
   state.progress[card.id] = status;
   saveProgress(card.id);
+  if (typeof reviewSessionMark === "function") reviewSessionMark(card.id);
   // Removing the current item already shifts the next item into its place.
   if (getFilteredCards().some(c => c.id === card.id)) state.index++;
   state.revealed = false;
@@ -534,8 +544,9 @@ function renderCardStatus(card) {
   const st = state.progress[card.id] || "unseen";
   const pill = document.getElementById("card-status");
   pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
+  if (typeof reviewStatusText === "function") { pill.textContent = reviewStatusText(card); return; }
   const last = lastAttempt(card.id);
-  pill.textContent = (st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
+  pill.textContent = (st === "mastered" ? "Ответил сам ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
 }
 
 // Другая вкладка изменила отметки: обновить счётчик и статус на экране, не перестраивая подборку.
@@ -567,7 +578,7 @@ function restoreCardView() {
     if (!v || typeof v !== "object") return;
     const filters = new Set([...document.querySelectorAll("[data-filter]")].map(b => b.dataset.filter));
     const levels = new Set([...document.querySelectorAll("[data-level]")].map(b => b.dataset.level));
-    if (filters.has(v.filter)) state.filter = v.filter;
+    if (filters.has(v.filter) || (v.filter === "session" && typeof reviewSessionLeft === "function" && reviewSessionLeft(reviewLoadSession()).length)) state.filter = v.filter;
     if (levels.has(v.level)) state.level = v.level;
     if (typeof v.search === "string" && v.search.length <= 100) {
       state.search = v.search;

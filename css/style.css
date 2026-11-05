@@ -700,6 +700,8 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .plan-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .plan-today { padding: 10px 12px; border-left: 4px solid var(--accent); background: rgba(56, 189, 248, 0.08); border-radius: 6px; }
 .plan-today a { color: var(--accent); overflow-wrap: anywhere; }
+.plan-review { margin: 10px 0 0; }
+[data-review-start] { white-space: normal; text-align: left; max-width: 100%; }
 .plan-weeks { display: flex; flex-wrap: wrap; gap: 8px; }
 .plan-chip { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; min-width: 64px; justify-content: center; }
 .plan-chip.is-current { border-color: var(--amber); }
