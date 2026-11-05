@@ -72,6 +72,29 @@ function planLoad() {
   }
 }
 
+// Перед точечным изменением (отметка задачи, дата старта) взять свежий снимок из хранилища:
+// так изменение из другой вкладки не затрётся устаревшей копией этой.
+function planRefresh() {
+  try {
+    if (localStorage.getItem(PLAN_STORAGE_KEY)) planState.saved = planLoad();
+  } catch { /* хранилище недоступно — работаем с тем, что на странице */ }
+}
+
+// Другая вкладка изменила отметки плана: обновить галочки и счётчики; при новой дате старта — перерисовать.
+window.addEventListener("storage", e => {
+  if (e.storageArea !== localStorage || (e.key !== PLAN_STORAGE_KEY && e.key !== null) || !planState.saved) return;
+  const before = planState.saved.start;
+  planState.saved = planLoad();
+  const view = document.getElementById("view-plan");
+  if (!view || view.classList.contains("hidden")) return;
+  if (planState.saved.start !== before) { planRerender(); return; }
+  view.querySelectorAll('input[type="checkbox"][id^="plan-task-"]').forEach(box => {
+    box.checked = Boolean(planState.saved.done[box.id.slice("plan-task-".length)]);
+  });
+  const week = PLAN.weeks.find(w => view.querySelector(`#plan-task-${CSS.escape(w.days[0].tasks[0].id)}`));
+  if (week) planUpdateCounters(week);
+});
+
 function planSave() {
   try {
     localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(planState.saved));
@@ -221,6 +244,7 @@ function planTaskItem(task, week) {
       siteNeedSignIn("Чтобы отмечать задачи плана");
       return;
     }
+    planRefresh();
     if (checkbox.checked) planState.saved.done[task.id] = true;
     else delete planState.saved.done[task.id];
     planSave();
@@ -431,6 +455,7 @@ function planSetStart(iso, reason) {
     return;
   }
   planState.startNeedsSignIn = false;
+  planRefresh();
   const previous = planState.saved.start;
   if (iso === previous) {
     planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;

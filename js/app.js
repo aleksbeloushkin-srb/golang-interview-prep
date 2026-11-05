@@ -1,19 +1,24 @@
 const PROGRESS_KEY = "go_prep_progress_v2";
 let storageMessage = "";
 
+// Только известные карточки и два статуса; всё прочее в сохранённом объекте отбрасывается.
+function progressFrom(saved) {
+  const progress = {};
+  for (const card of CARDS) {
+    if (saved[card.id] === "mastered" || saved[card.id] === "review") progress[card.id] = saved[card.id];
+  }
+  return progress;
+}
+
+function readStoredProgress() {
+  const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) throw new Error("Invalid progress format");
+  return saved;
+}
+
 function loadProgress() {
   try {
-    const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
-    if (!saved || typeof saved !== "object" || Array.isArray(saved)) {
-      throw new Error("Invalid progress format");
-    }
-    const progress = {};
-    for (const card of CARDS) {
-      if (saved[card.id] === "mastered" || saved[card.id] === "review") {
-        progress[card.id] = saved[card.id];
-      }
-    }
-    return progress;
+    return progressFrom(readStoredProgress());
   } catch {
     storageMessage = "Не удалось прочитать сохранённый прогресс. Можно заниматься, но проверь сохранение перед закрытием страницы.";
     return {};
@@ -188,8 +193,17 @@ function diagramCardsHtml(sim) {
 }
 
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
-function saveProgress() {
+// changedId — изменённая карточка: она пишется поверх свежего снимка из хранилища, поэтому отметки,
+// сделанные в другой вкладке, не стираются, а эта вкладка их подхватывает. Без changedId (сброс) — весь объект.
+function saveProgress(changedId) {
   try {
+    if (changedId) {
+      let stored = {};
+      try { stored = readStoredProgress(); } catch { /* испорченный снимок: пишем свой */ }
+      const value = state.progress[changedId];
+      state.progress = progressFrom({ ...stored, [changedId]: value });
+      if (!value) delete state.progress[changedId];
+    }
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
     storageMessage = "";
   } catch {
@@ -349,11 +363,7 @@ function renderCard() {
     .join(""));
   simLinkWrap.insertAdjacentHTML("beforeend", relatedQuizHtml(card.id));
 
-  const st = state.progress[card.id] || "unseen";
-  const pill = document.getElementById("card-status");
-  pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
-  const last = lastAttempt(card.id);
-  pill.textContent = (st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
+  renderCardStatus(card);
   renderGradeSignIn();
   // Оценивать имеет смысл только после сверки с ответом: до этого кнопки и критерии не занимают экран.
   document.querySelector("#card-controls .card-grades").classList.toggle("hidden", !state.revealed);
@@ -439,7 +449,7 @@ function markCard(status) {
   if (!list.length || !state.revealed || !["mastered", "review"].includes(status)) return;
   const card = list[state.index];
   state.progress[card.id] = status;
-  saveProgress();
+  saveProgress(card.id);
   // Removing the current item already shifts the next item into its place.
   if (getFilteredCards().some(c => c.id === card.id)) state.index++;
   state.revealed = false;
@@ -520,8 +530,55 @@ document.addEventListener("auth-changed", () => {
   renderGradeSignIn();
 });
 
+function renderCardStatus(card) {
+  const st = state.progress[card.id] || "unseen";
+  const pill = document.getElementById("card-status");
+  pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
+  const last = lastAttempt(card.id);
+  pill.textContent = (st === "mastered" ? "Изучено ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
+}
+
+// Другая вкладка изменила отметки: обновить счётчик и статус на экране, не перестраивая подборку.
+window.addEventListener("storage", e => {
+  if (e.storageArea !== localStorage) return;
+  if (e.key === PROGRESS_KEY || e.key === null) {
+    state.progress = loadProgress();
+    updateProgressBar();
+  }
+  if ([PROGRESS_KEY, ATTEMPTS_KEY, null].includes(e.key) && state.shownCard) {
+    const card = CARDS.find(c => c.id === state.shownCard);
+    if (card) renderCardStatus(card);
+  }
+});
+
+/* Подборка карточек (модуль, уровень, поиск) — в sessionStorage: переживает перезагрузку вкладки,
+   на другие устройства не уходит (синхронизируется только localStorage). */
+const CARD_VIEW_KEY = "go_prep_cards_view_v1";
+
+function saveCardView() {
+  try {
+    sessionStorage.setItem(CARD_VIEW_KEY, JSON.stringify({ filter: state.filter, level: state.level, search: state.search }));
+  } catch { /* без хранилища подборка просто не переживёт перезагрузку */ }
+}
+
+function restoreCardView() {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(CARD_VIEW_KEY) || "null");
+    if (!v || typeof v !== "object") return;
+    const filters = new Set([...document.querySelectorAll("[data-filter]")].map(b => b.dataset.filter));
+    const levels = new Set([...document.querySelectorAll("[data-level]")].map(b => b.dataset.level));
+    if (filters.has(v.filter)) state.filter = v.filter;
+    if (levels.has(v.level)) state.level = v.level;
+    if (typeof v.search === "string" && v.search.length <= 100) {
+      state.search = v.search;
+      document.getElementById("search-input").value = v.search;
+    }
+  } catch { /* испорченная запись — обычная подборка «все» */ }
+}
+
 function setFilter(f) {
   state.filter = f;
+  saveCardView();
   state.index = 0;
   state.revealed = false;
   renderCard();
@@ -529,6 +586,7 @@ function setFilter(f) {
 
 function setLevel(lvl) {
   state.level = lvl;
+  saveCardView();
   state.index = 0;
   state.revealed = false;
   renderCard();
@@ -536,6 +594,7 @@ function setLevel(lvl) {
 
 function onSearchInput() {
   state.search = document.getElementById("search-input").value.trim();
+  saveCardView();
   state.index = 0;
   state.revealed = false;
   renderCard();
@@ -944,6 +1003,26 @@ function checkQuizAnswer(qId, selectedIdx, correctIdx) {
 }
 
 /* --- HASH ROUTER (НАВИГАЦИЯ И ПРЯМЫЕ ССЫЛКИ) --- */
+// План и практикум ставят заголовок вкладки и фокус сами (plan-view.js, practice-view.js).
+const ROUTE_TITLES = { cards: "Карточки", simulators: "Диаграммы", wiki: "База знаний", cheatsheet: "Шпаргалка", quiz: "Quiz" };
+let lastRoute = null;
+
+// При смене раздела — фокус на его заголовок, чтобы читалка объявила новый раздел, а клавиатура
+// продолжила оттуда. Внутри раздела (листание карточек и шагов) фокус не трогаем.
+function focusRouteHeading(route, param) {
+  const pick = {
+    cards: () => document.getElementById("card-q-en"),
+    simulators: () => (param && document.querySelector(`#${CSS.escape(param)} h3`)) || document.getElementById("sim-view-title"),
+    wiki: () => document.getElementById("wiki-title"),
+    cheatsheet: () => document.getElementById("cheatsheet-title"),
+    quiz: () => (param && document.querySelector(`#${CSS.escape(param)} h3`)) || document.getElementById("quiz-title")
+  }[route];
+  const heading = pick && pick();
+  if (!heading) return;
+  if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+  heading.focus({ preventScroll: true });
+}
+
 function handleRoute() {
   routeReady = true;
   const hash = window.location.hash || "#/cards";
@@ -964,6 +1043,9 @@ function handleRoute() {
     else link.removeAttribute("aria-current");
   });
   markMoreTab(activeRoute);
+  const routeChanged = lastRoute !== null && lastRoute !== activeRoute;
+  lastRoute = activeRoute;
+  if (ROUTE_TITLES[activeRoute]) document.title = `${ROUTE_TITLES[activeRoute]} — Go Interview Prep`;
 
   if (activeRoute === "cards" && param && CARDS.some(c => c.id === param)) {
     // Карточка из текущей подборки открывается в ней; иначе подборка сбрасывается на все карточки.
@@ -973,6 +1055,7 @@ function handleRoute() {
       state.level = "all";
       state.search = "";
       document.getElementById("search-input").value = "";
+      saveCardView();
       idx = CARDS.findIndex(c => c.id === param);
     }
     state.index = idx;
@@ -1000,6 +1083,7 @@ function handleRoute() {
     const question = QUIZ_QUESTIONS.find(q => q.id === param);
     if (question) document.getElementById(question.id).scrollIntoView({ behavior: "auto", block: "start" });
   }
+  if (routeChanged && ROUTE_TITLES[activeRoute]) focusRouteHeading(activeRoute, param);
 }
 
 function syncDynamicCounters() {
@@ -1158,6 +1242,7 @@ document.addEventListener("DOMContentLoaded", () => {
   showStorageMessage();
   syncDynamicCounters();
   updateProgressBar();
+  restoreCardView();
   renderCard();
   initSimulators();
   initWikiAndCheatsheet();
