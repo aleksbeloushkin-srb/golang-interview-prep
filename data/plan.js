@@ -37,12 +37,12 @@ const PLAN = {
       id: "w1",
       title: "Идиомы Go I: типы, интерфейсы, ошибки",
       goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.",
-      done: "Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок.",
+      done: "Решены LC 49, 347, 238 и задачи W1-1…W1-6 — в go-prep, go test -race ./week1/... проходит; самопроверка недели проговорена вслух по-английски без подсказок.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w1-mon-1", text: "Tour of Go: Basics — packages, variables, functions, flow control, defer", refs: [{ t: "Tour of Go", u: "https://go.dev/tour/" }] },
-            { id: "w1-mon-2", text: "Завести репозиторий go-prep, go mod init, папка week1" },
+            { id: "w1-mon-2", text: "Завести свой репозиторий go-prep: один модуль на весь практикум, по пакету на задачу (week1/money, week1/account…); тренировка команд go run, build, vet, test", links: ["g-go-prep", "c43"] },
             { id: "w1-mon-3", text: "LeetCode 49. Group Anagrams + проговор", lc: 49, talk: "lc49" }
           ]
         },
@@ -103,7 +103,7 @@ const PLAN = {
       id: "w2",
       title: "Идиомы Go II: slice, map, строки, generics, тесты",
       goal: "Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.",
-      done: "10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены.",
+      done: "10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены; CI в go-prep зелёный, тренировка с ассемблером пройдена.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -129,11 +129,12 @@ const PLAN = {
           ]
         },
         {
-          label: "Чт", minutes: 90, tasks: [
-            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/", links: ["c43"] },
-            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
-            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2", links: ["p-account", "p-generics"] },
-            { id: "w2-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" }
+          label: "Чт", minutes: 120, tasks: [
+            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–2 — пакетами в своём go-prep", links: ["c43", "g-go-prep"] },
+            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35", "g-go-prep-ci"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
+            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2 — в go-prep, рядом с тестами практикума", links: ["p-account", "p-generics"] },
+            { id: "w2-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" },
+            { id: "w2-thu-5", text: "Тренировка (≈30 мин): сборка с ассемблером и без — -gcflags=-S, '-N -l', -m, go tool objdump, GOSSAFUNC, бенчмарк с -benchmem", links: ["g-go-prep-asm", "c6", "c24"] }
           ]
         },
         {
@@ -164,8 +165,7 @@ const PLAN = {
         "Как выглядит table-driven тест и зачем t.Helper()?"
       ],
       gaps: [
-        "В quiz «Сначала свой ответ» вывод проговаривается, но не вводится и не сверяется автоматически.",
-        "Нет материала про -race в CI (generics и тесты уже есть в карточках и практикуме)."
+        "В quiz «Сначала свой ответ» вывод проговаривается, но не вводится и не сверяется автоматически."
       ]
     },
 
@@ -174,7 +174,7 @@ const PLAN = {
       id: "w3",
       title: "Конкурентность I: горутины, каналы, select, sync",
       goal: "Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.",
-      done: "W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.",
+      done: "W3-1…W3-5 работают под go test -race (в go-prep: ./week3/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -207,7 +207,7 @@ const PLAN = {
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w3-sat-1", text: "Прогнать W3-1…W3-5 под go test -race; для каждой горутины записать владельца и путь завершения", links: ["p-workerpool", "p-pipeline", "p-fanin", "p-counter", "p-safecache"] },
+            { id: "w3-sat-1", text: "Прогнать W3-1…W3-5 в go-prep: go test -race ./week3/...; для каждой горутины записать владельца и путь завершения", links: ["p-workerpool", "p-pipeline", "p-fanin", "p-counter", "p-safecache"] },
             { id: "w3-sat-2", text: "Дополнительно: 100 Go Mistakes — Concurrency Foundations", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
             { id: "w3-sat-3", text: "LeetCode 150. Evaluate Reverse Polish Notation + проговор", lc: 150 },
             { id: "w3-sat-4", text: "Проговор worker pool и «channel vs mutex» по-английски, записать", talk: "w3-1" },
@@ -238,7 +238,7 @@ const PLAN = {
       id: "w4",
       title: "Конкурентность II и минимум рантайма",
       goal: "Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.",
-      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding.",
+      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding; go test -race ./week4/... в go-prep зелёный.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -1050,7 +1050,7 @@ const PLAN = {
 
   acceptance: {
     "w1-mon-1": { accept: "Пройдены разделы Basics; без подсказки объясняешь var и := и порядок вызова defer на примере из трёх строк." },
-    "w1-mon-2": { accept: "Репозиторий с go.mod; go vet ./... и go test ./... проходят на пакете с одним тестом." },
+    "w1-mon-2": { accept: "В корне go-prep проходят go vet ./... и go test -race ./...; есть week1/hello и week1/calc с тестом. Тренировка недели 1 пройдена: без подсказки — чем go run отличается от go build, что такое ./..., откуда (cached) и зачем -count=1." },
     "w1-tue-1": { accept: "Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной." },
     "w1-tue-2": { accept: "Примеры набраны и запускаются; по каждому — одна фраза, что он показывает." },
     "w1-tue-3": { accept: "Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками." },
@@ -1073,9 +1073,10 @@ const PLAN = {
     "w2-tue-4": { accept: "Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22." },
     "w2-wed-1": { accept: "Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым." },
     "w2-wed-2": { accept: "Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена." },
-    "w2-thu-1": { accept: "c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт." },
-    "w2-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup." },
-    "w2-thu-3": { accept: "Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь." },
+    "w2-thu-1": { accept: "c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–2 лежат в week1/ и week2/, go test ./... из корня проходит." },
+    "w2-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup. CI в go-prep зелёный; намеренно сломанный тест делает его красным." },
+    "w2-thu-3": { accept: "Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь; go test -cover ./week1/account ./week2/generics показывает покрытие." },
+    "w2-thu-5": { accept: "Без подсказки: где Add держит аргументы на amd64 и arm64; что делают -N и -l и когда они нужны; почему встроенной функции может не быть в бинарнике; чем -gcflags отличается от -gcflags=all=." },
     "w2-thu-4": { accept: "P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски." },
     "w2-sat-1": { accept: "10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod." },
     "w2-sat-2": { accept: "Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках." },

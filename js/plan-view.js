@@ -165,6 +165,10 @@ function planEl(tag, attrs, children) {
 }
 
 function planSiteItem(id) {
+  if (id.startsWith("g-")) {
+    const link = typeof GUIDE_LINKS !== "undefined" ? GUIDE_LINKS[id] : null;
+    return link ? { href: `#/practice/${link.guide}${link.section ? `/${link.section}` : ""}`, label: link.label, kind: "Справка", reviewed: true } : null;
+  }
   if (id.startsWith("sim")) {
     const sim = SIMULATORS.find(s => s.id === id);
     return sim ? { href: `#/simulators/${id}`, label: `${id.toUpperCase()} · ${sim.title}`, kind: "Диаграмма" } : null;
@@ -344,7 +348,7 @@ function planSiteMaterials(week) {
     if (!ids.includes(id)) ids.push(id);
   })));
   if (!ids.length) return null;
-  const groups = { "Практикум": [], "Карточка": [], "Quiz": [], "Диаграмма": [] };
+  const groups = { "Справка": [], "Практикум": [], "Карточка": [], "Quiz": [], "Диаграмма": [] };
   ids.map(planSiteItem).filter(Boolean).forEach(item => groups[item.kind].push(item));
   const lists = Object.entries(groups).filter(([, items]) => items.length).map(([kind, items]) =>
     planEl("div", { className: "plan-materials-group" }, [

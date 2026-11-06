@@ -19,7 +19,7 @@ function practiceEl(tag, attrs, children) {
 function practiceRouteFromHash() {
   const parts = (window.location.hash || "").replace(/^#\//, "").split("/");
   if (parts[0] !== "practice") return null;
-  return { taskId: parts[1] || null };
+  return { taskId: parts[1] || null, section: parts[2] || null };
 }
 
 // Ссылка на материал сайта: карточка, задача quiz или диаграмма.
@@ -223,7 +223,8 @@ function renderPracticeIndex(view) {
   view.replaceChildren(
     practiceEl("div", { className: "section-top" }, [
       practiceEl("h2", { id: "practice-title", tabindex: "-1", text: "Практикум: пишешь код — тесты проверяют" }),
-      practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе. Скачай заготовку и тесты, запусти go test -race — или вставь решение на странице задачи и проверь на сервере. Порядок: своя попытка → подсказки → эталон и ответ на английском. ✅ — задача прошла проверку на сервере; отметка «сделано» — в плане, у задачи дня." })
+      practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе, в своём модуле go-prep: каждая задача — пакет weekN/<задача>. Скачай заготовку и тесты, запусти go test -race — или вставь решение на странице задачи и проверь на сервере. Порядок: своя попытка → подсказки → эталон и ответ на английском. ✅ — задача прошла проверку на сервере; отметка «сделано» — в плане, у задачи дня." }),
+      typeof GUIDES !== "undefined" ? practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: "#/practice/go-prep", text: "Свой репозиторий go-prep: раскладка, команды, CI, тренировка с ассемблером →" })]) : null
     ]),
     ...Object.entries(byWeek).map(([week, tasks]) => practiceEl("section", { className: "practice-week" }, [
       practiceEl("h3", { text: `Неделя ${week}` }),
@@ -244,12 +245,22 @@ function renderPracticeTask(view, task) {
   const planLinks = task.planTasks.map(practicePlanLink).filter(Boolean);
   const siteLinks = (task.links || []).map(practiceSiteLink).filter(Boolean);
   const pkg = task.files.solution.name.replace(/\.go$/, "");
+  // Основной вариант — пакет week<N>/<пакет> в своём модуле go-prep (data/guides.js); запасной — отдельный модуль.
   // setup — команды до тестов (go get зависимостей), extraRun — после (профили, -gcflags=-m).
+  const files = `# положи сюда ${task.files.starter.name} (заготовка) и ${task.files.tests.name} (тесты)`;
   const run = [
+    "cd go-prep",
+    `mkdir -p week${task.week}/${pkg} && cd week${task.week}/${pkg}`,
+    files,
+    ...(task.setup || []),
+    "go test -race -count=1 ./...",
+    ...(task.extraRun || [])
+  ].join("\n");
+  const runAlone = [
     `mkdir ${pkg} && cd ${pkg}`,
     `go mod init example.com/${pkg}`,
     ...(task.setup || []),
-    `# положи сюда ${task.files.starter.name} (заготовка) и ${task.files.tests.name} (тесты)`,
+    files,
     "go test -race -count=1 ./...",
     ...(task.extraRun || [])
   ].join("\n");
@@ -274,7 +285,12 @@ function renderPracticeTask(view, task) {
     ]),
     accept.length ? practiceSection("Готово, когда", accept.map(text => practiceEl("p", { text }))) : null,
     practiceSection("Как запустить", [
+      practiceEl("p", {}, ["В своём модуле go-prep — по пакету на задачу. Как его завести и проверить CI — ", practiceEl("a", { href: "#/practice/go-prep", text: "справка «Свой репозиторий go-prep»" }), "."]),
       practiceCode(run, "Команды для запуска"),
+      practiceEl("details", { className: "translated-answer" }, [
+        practiceEl("summary", { text: "Без go-prep: отдельный модуль на задачу" }),
+        practiceCode(runAlone, "Команды для отдельного модуля")
+      ]),
       practiceEl("p", { className: "muted-text", text: "Нужен Go 1.22 или новее; -race работает там, где включён cgo (обычно так и есть). Код и тесты проверены с -race на Go 1.24.7 и 1.27.3." })
     ]),
     practiceSection(`Заготовка: ${task.files.starter.name}`, [
@@ -328,11 +344,93 @@ function renderPracticeTask(view, task) {
   ]));
 }
 
+/* --- Справочная страница практикума (data/guides.js) --- */
+// Дерево раскладки go-prep: учебные пакеты недель 1–2 и задачи практикума по неделям.
+function practiceGuideTree() {
+  const byWeek = {};
+  const add = (week, line) => (byWeek[week] = byWeek[week] || []).push(line);
+  add(1, "hello/         ← go run");
+  add(1, "calc/          ← первый тест");
+  add(2, "asm/           ← ассемблер");
+  add(2, "cmd/sumdemo/   ← objdump");
+  PRACTICE.forEach(task => add(task.week, `${task.files.solution.name.replace(/\.go$/, "")}/`.padEnd(15) + `← ${task.code}`));
+  const lines = ["go-prep/", "├── go.mod", "├── .gitignore   ← bin/", "├── .github/", "│   └── workflows/ci.yml"];
+  const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);
+  weeks.forEach((week, wi) => {
+    const lastWeek = wi === weeks.length - 1;
+    lines.push(`${lastWeek ? "└──" : "├──"} week${week}/`);
+    byWeek[week].forEach((item, i) => lines.push(`${lastWeek ? "    " : "│   "}${i === byWeek[week].length - 1 ? "└──" : "├──"} ${item}`));
+  });
+  return lines.join("\n");
+}
+
+function practiceGuideSection(section) {
+  const children = [];
+  (section.paragraphs || []).forEach(text => children.push(practiceEl("p", {}, practiceInlineCode(text))));
+  if (section.tree) children.push(practiceCode(practiceGuideTree(), "Раскладка go-prep"));
+  if (section.code) children.push(practiceCode(section.code.text, section.code.label));
+  (section.files || []).forEach(file => children.push(practiceEl("div", { className: "practice-guide-file" }, [
+    practiceEl("h4", { text: file.name }),
+    practiceFileActions(file, "файл"),
+    practiceCode(file.code, `Файл ${file.name}`)
+  ])));
+  if (section.steps) {
+    children.push(practiceEl("ol", { className: "practice-guide-steps" }, section.steps.map(step => practiceEl("li", {}, [
+      practiceCode(step.cmd, "Команда"),
+      practiceEl("p", { className: "muted-text" }, [practiceEl("strong", { text: "Увидишь: " }), step.expect]),
+      practiceEl("details", { className: "practice-hint" }, [
+        practiceEl("summary", { text: `Вопрос: ${step.q}` }),
+        practiceEl("p", { text: step.a })
+      ])
+    ]))));
+  }
+  // Команды — списком «команда, под ней что делает»: на телефоне таблица ломает команды посреди слова.
+  if (section.rows) {
+    children.push(practiceEl("dl", { className: "practice-guide-commands" }, section.rows.flatMap(row => [
+      practiceEl("dt", {}, [practiceEl("code", { text: row.cmd })]),
+      practiceEl("dd", { text: row.what })
+    ])));
+  }
+  if (section.links) {
+    children.push(practiceEl("ul", { className: "practice-guide-links" }, section.links.map(link => practiceEl("li", {}, [
+      practiceEl("a", { href: link.u, target: "_blank", rel: "noopener noreferrer", text: `${link.t} ↗` })
+    ]))));
+  }
+  if (section.check) children.push(practiceEl("p", { className: "practice-guide-check" }, [practiceEl("strong", { text: "Самопроверка. " }), section.check]));
+  return practiceEl("section", { className: "practice-section practice-guide-section", id: `guide-${section.id}`, "aria-labelledby": `guide-${section.id}-title` }, [
+    practiceEl("h3", { id: `guide-${section.id}-title`, tabindex: "-1", text: section.title }),
+    ...children
+  ]);
+}
+
+function renderPracticeGuide(view, id, guide) {
+  view.replaceChildren(practiceEl("article", { className: "practice-task practice-guide" }, [
+    practiceEl("p", { className: "practice-meta" }, [practiceEl("a", { href: "#/practice", text: "← Все задачи практикума" }), " · Справка"]),
+    practiceEl("h2", { id: "practice-title", tabindex: "-1", text: guide.title }),
+    ...guide.intro.map(text => practiceEl("p", {}, practiceInlineCode(text))),
+    practiceEl("nav", { className: "practice-guide-toc", "aria-label": "Разделы справки" }, [
+      practiceEl("ul", {}, guide.sections.map(section => practiceEl("li", {}, [practiceEl("a", { href: `#/practice/${id}/${section.id}`, text: section.title })])))
+    ]),
+    ...guide.sections.map(practiceGuideSection)
+  ]));
+}
+
 function handlePracticeRoute() {
   const route = practiceRouteFromHash();
   const view = document.getElementById("view-practice");
   if (!route || !view || typeof PRACTICE === "undefined") return;
   const task = route.taskId ? PRACTICE.find(t => t.id === route.taskId) : null;
+  const guide = !task && route.taskId && typeof GUIDES !== "undefined" ? GUIDES[route.taskId] : null;
+  if (guide) {
+    renderPracticeGuide(view, route.taskId, guide);
+    document.title = `${guide.title} — Практикум`;
+    // Ссылка на раздел (#/practice/go-prep/asm): фокус и прокрутка к его заголовку.
+    const target = route.section && document.getElementById(`guide-${route.section}-title`);
+    const heading = target || document.getElementById("practice-title");
+    heading.focus({ preventScroll: true });
+    if (target) target.scrollIntoView({ block: "start" }); else window.scrollTo({ top: 0, behavior: "auto" });
+    return;
+  }
   if (task) {
     renderPracticeTask(view, task);
     document.title = `${task.code}. ${task.title} — Практикум`;

@@ -9,6 +9,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const dataFiles = ['data/cards.js', 'data/quiz.js', 'data/simulators.js'];
 const planFile = 'data/plan.js';
 const practiceFile = 'data/practice.js';
+const guidesFile = 'data/guides.js';
 
 // Only evaluate trusted repository data. VM isolation is not a security boundary.
 export function loadContent(read) {
@@ -35,11 +36,44 @@ export function loadPractice(read) {
   return JSON.parse(runInContext('JSON.stringify(PRACTICE)', context, { timeout: 1000 }));
 }
 
+// data/guides.js — справочные страницы практикума и ссылки на них из плана ("g-…"). Optional.
+export function loadGuides(read) {
+  let source;
+  try { source = read(guidesFile); } catch { return null; }
+  const context = createContext({});
+  runInContext(source, context, { filename: guidesFile, timeout: 1000 });
+  return JSON.parse(runInContext('JSON.stringify({ guides: GUIDES, links: GUIDE_LINKS })', context, { timeout: 1000 }));
+}
+
+export function validateGuides(guides) {
+  const errors = [];
+  if (!guides) return errors;
+  const require = (condition, message) => { if (!condition) errors.push(message); };
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  for (const [id, guide] of Object.entries(guides.guides || {})) {
+    require(text(guide?.title) && Array.isArray(guide?.intro) && Array.isArray(guide?.sections) && guide.sections.length, `guide ${id}: needs title, intro and sections`);
+    const ids = new Set();
+    for (const section of guide?.sections || []) {
+      require(text(section?.id) && /^[a-z0-9-]+$/.test(section.id) && !ids.has(section.id) && text(section?.title), `guide ${id}: section needs a unique lowercase id and a title`);
+      ids.add(section?.id);
+      for (const step of section?.steps || []) require(['cmd', 'expect', 'q', 'a'].every(k => text(step?.[k])), `guide ${id}/${section?.id}: step needs cmd, expect, q, a`);
+      for (const file of section?.files || []) require(text(file?.name) && text(file?.code), `guide ${id}/${section?.id}: file needs name and code`);
+      for (const row of section?.rows || []) require(text(row?.cmd) && text(row?.what), `guide ${id}/${section?.id}: row needs cmd and what`);
+      for (const link of section?.links || []) require(text(link?.t) && /^https:\/\//.test(link?.u || ''), `guide ${id}/${section?.id}: link needs title and https URL`);
+    }
+  }
+  for (const [id, link] of Object.entries(guides.links || {})) {
+    const guide = guides.guides?.[link?.guide];
+    require(/^g-[a-z0-9-]+$/.test(id) && guide && text(link?.label) && (link.section === null || guide.sections.some(s => s.id === link.section)), `guide link ${id}: unknown guide or section`);
+  }
+  return errors;
+}
+
 export function planTaskIds(plan) {
   return (plan?.weeks || []).flatMap(week => (week?.days || []).flatMap(day => (day?.tasks || []).map(task => task?.id)));
 }
 
-export function validatePlan(plan, data, practice = null) {
+export function validatePlan(plan, data, practice = null, guides = null) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
   const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -48,8 +82,8 @@ export function validatePlan(plan, data, practice = null) {
   if (errors.length) return errors;
   for (const key of ['leetcodeIndex', 'talks', 'acceptance']) require(plan[key] === undefined || isObject(plan[key]), `plan: ${key} must be an object`);
   if (errors.length) return errors;
-  const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)), p: new Set((practice || []).map(p => p?.id)) };
-  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('p-') ? site.p : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
+  const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)), p: new Set((practice || []).map(p => p?.id)), g: new Set(Object.keys(guides?.links || {})) };
+  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('p-') ? site.p : id.startsWith('g-') ? site.g : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
   const weekIds = new Set(), taskIds = new Set();
   plan.weeks.forEach((week, w) => {
     const label = `plan.weeks[${w}]`;
@@ -335,13 +369,16 @@ function main() {
   const read = file => readFileSync(resolve(root, file), 'utf8');
   const hasPlan = existsSync(resolve(root, planFile));
   const hasPractice = existsSync(resolve(root, practiceFile));
-  const scripts = [...dataFiles, 'js/app.js', ...(existsSync(resolve(root, 'data/audio.js')) ? ['data/audio.js', 'js/audio.js'] : []), ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : [])];
+  const hasGuides = existsSync(resolve(root, guidesFile));
+  const scripts = [...dataFiles, 'js/app.js', ...(existsSync(resolve(root, 'data/audio.js')) ? ['data/audio.js', 'js/audio.js'] : []), ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : []), ...(hasGuides ? [guidesFile] : [])];
   for (const file of scripts) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
   const data = loadContent(read);
   const errors = validateContent(data);
   const plan = hasPlan ? loadPlan(read) : null;
   const practice = hasPractice ? loadPractice(read) : null;
-  if (plan && !errors.length) errors.push(...validatePlan(plan, data, practice));
+  const guides = hasGuides ? loadGuides(read) : null;
+  errors.push(...validateGuides(guides));
+  if (plan && !errors.length) errors.push(...validatePlan(plan, data, practice, guides));
   if (practice && !errors.length) errors.push(...validatePractice(practice, data, plan, file => existsSync(resolve(root, file)) ? read(file) : null));
   const markdown = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
   const hazards = liquidHazards(markdown.map(name => ({ name, text: read(name) })));
