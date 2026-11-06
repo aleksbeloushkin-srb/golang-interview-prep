@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio, loadGuides, validateGuides } from './check-content.mjs';
 import { toSpeech, textHash } from './speech-text.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
@@ -66,12 +66,47 @@ test('loader fails on invalid JavaScript rather than reporting success', () => {
 
 const plan = loadPlan(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 const practice = loadPractice(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
+const guides = loadGuides(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 const readFixture = file => { const url = new URL('../' + file, import.meta.url); return existsSync(url) ? readFileSync(url, 'utf8') : null; };
 
 test('current plan passes structural validation against site data', () => {
   assert.ok(plan, 'data/plan.js should load');
-  assert.deepEqual(validatePlan(plan, current, practice), []);
+  assert.deepEqual(validatePlan(plan, current, practice, guides), []);
 });
+
+test('plan: guide links need data/guides.js', () => {
+  assert.match(validatePlan(plan, current, practice).join('\n'), /unknown site ID g-/);
+});
+
+test('current guides pass validation', () => {
+  assert.ok(guides && guides.guides['go-prep'], 'data/guides.js should load');
+  assert.deepEqual(validateGuides(guides), []);
+});
+
+test('guide files are the go-prep fixture, byte for byte (module path <ник> → you)', () => {
+  const sections = guides.guides['go-prep'].sections;
+  const file = (section, name) => sections.find(s => s.id === section).files.find(f => f.name === name).code.replaceAll('<ник>', 'you');
+  const fixture = path => readFileSync(new URL('../docs/verification/fixtures/go-prep/' + path, import.meta.url), 'utf8');
+  for (const [section, name, path] of [
+    ['setup', 'main.go', 'week1/hello/main.go'], ['setup', 'calc.go', 'week1/calc/calc.go'], ['setup', 'calc_test.go', 'week1/calc/calc_test.go'],
+    ['asm', 'asm.go', 'week2/asm/asm.go'], ['asm', 'asm_test.go', 'week2/asm/asm_test.go'], ['asm', 'main.go', 'week2/cmd/sumdemo/main.go'],
+    ['ci', 'ci.yml', 'ci.yml']
+  ]) assert.equal(file(section, name), fixture(path), path);
+});
+
+const guideFailures = [
+  ['link to an unknown section', g => { g.links['g-go-prep-asm'].section = 'nope'; }, /guide link g-go-prep-asm/],
+  ['step without an answer', g => { g.guides['go-prep'].sections.find(s => s.steps).steps[0].a = ''; }, /step needs cmd, expect, q, a/],
+  ['duplicate section id', g => { const s = g.guides['go-prep'].sections; s[1].id = s[0].id; }, /unique lowercase id/],
+  ['reference without https', g => { g.guides['go-prep'].sections.find(s => s.links).links[0].u = 'http://go.dev'; }, /https URL/],
+];
+for (const [name, mutate, expected] of guideFailures) {
+  test('guides: rejects ' + name, () => {
+    const data = structuredClone(guides);
+    mutate(data);
+    assert.match(validateGuides(data).join('\n'), expected);
+  });
+}
 
 test('plan: practice links need data/practice.js', () => {
   assert.match(validatePlan(plan, current).join('\n'), /unknown site ID p-/);
@@ -124,7 +159,7 @@ for (const [name, mutate, expected] of planFailures) {
   test('plan: rejects ' + name, () => {
     const data = structuredClone(plan);
     mutate(data);
-    assert.match(validatePlan(data, current, practice).join('\n'), expected);
+    assert.match(validatePlan(data, current, practice, guides).join('\n'), expected);
   });
 }
 
