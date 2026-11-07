@@ -22,8 +22,20 @@ function practiceRouteFromHash() {
   return { taskId: parts[1] || null, section: parts[2] || null };
 }
 
-// Ссылка на материал сайта: карточка, задача quiz или диаграмма.
+// Ссылка на материал сайта: карточка, задача quiz, диаграмма, задача практикума или ката трека.
 function practiceSiteLink(id) {
+  if (/^k\d+$/.test(id)) {
+    const found = trackFindBlock(id);
+    return found ? { href: `#/practice/${found.trackId}/${id}`, label: `${found.track.title}: ${found.block.title}` } : null;
+  }
+  if (/^k\d/.test(id)) {
+    const found = trackFindStep(id);
+    return found ? { href: `#/practice/${found.trackId}/${id}`, label: `${found.step.label} · ${found.step.title.replace(/`/g, "")}` } : null;
+  }
+  if (id.startsWith("p-") && typeof PRACTICE !== "undefined") {
+    const task = PRACTICE.find(t => t.id === id);
+    return task ? { href: `#/practice/${id}`, label: `${task.code} · ${task.title}` } : null;
+  }
   if (id.startsWith("sim") && typeof SIMULATORS !== "undefined") {
     const sim = SIMULATORS.find(s => s.id === id);
     return sim ? { href: `#/simulators/${id}`, label: `${id.toUpperCase()} · ${sim.title}` } : null;
@@ -224,7 +236,9 @@ function renderPracticeIndex(view) {
     practiceEl("div", { className: "section-top" }, [
       practiceEl("h2", { id: "practice-title", tabindex: "-1", text: "Практикум: пишешь код — тесты проверяют" }),
       practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе, в своём модуле go-prep: каждая задача — пакет weekN/<задача>. Скачай заготовку и тесты, запусти go test -race — или вставь решение на странице задачи и проверь на сервере. Порядок: своя попытка → подсказки → эталон и ответ на английском. ✅ — задача прошла проверку на сервере; отметка «сделано» — в плане, у задачи дня." }),
-      typeof GUIDES !== "undefined" ? practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: "#/practice/go-prep", text: "Свой репозиторий go-prep: раскладка, команды, CI, тренировка с ассемблером →" })]) : null
+      typeof GUIDES !== "undefined" ? practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: "#/practice/go-prep", text: "Свой репозиторий go-prep: раскладка, команды, CI, тренировка с ассемблером →" })]) : null,
+      ...(typeof TRACKS !== "undefined" ? Object.entries(TRACKS) : []).map(([id, track]) =>
+        practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: `#/practice/${id}`, text: `${track.title} — все каты подряд →` })]))
     ]),
     ...Object.entries(byWeek).map(([week, tasks]) => practiceEl("section", { className: "practice-week" }, [
       practiceEl("h3", { text: `Неделя ${week}` }),
@@ -330,6 +344,7 @@ function renderPracticeTask(view, task) {
       practiceList(task.followUps),
       task.note ? practiceEl("p", { className: "muted-text", text: task.note }) : null
     ]),
+    practiceKataVariation(task),
     planLinks.length ? practiceSection("В плане", [practiceEl("ul", {}, planLinks.map(link => practiceEl("li", {}, [
       practiceEl("a", { href: link.href, text: link.label }), ` — ${link.text}`
     ])))]) : null,
@@ -341,6 +356,131 @@ function renderPracticeTask(view, task) {
       prev ? practiceEl("a", { className: "btn", href: `#/practice/${prev.id}`, text: `← ${prev.code}. ${prev.title}` }) : practiceEl("span"),
       next ? practiceEl("a", { className: "btn", href: `#/practice/${next.id}`, text: `${next.code}. ${next.title} →` }) : practiceEl("span")
     ])
+  ]));
+}
+
+// «Вариация»: ката трека к этой задаче. Описание — только в data/tracks.js.
+function practiceKataVariation(task) {
+  const katas = (task.katas || []).map(trackFindStep).filter(Boolean);
+  if (!katas.length) return null;
+  return practiceSection("Вариация: ката из трека", katas.map(({ trackId, step }) => practiceEl("div", { className: "track-variation" }, [
+    practiceEl("p", {}, [practiceEl("a", { href: `#/practice/${trackId}/${step.id}`, text: `${step.label}. ${step.title.replace(/`/g, "")}` }), step.minutes ? ` · ${step.minutes} мин` : ""]),
+    practiceEl("p", {}, [practiceEl("strong", { text: "Готово, когда: " }), ...practiceInlineCode(step.doneWhen)]),
+    step.variation ? practiceEl("p", {}, [practiceEl("strong", { text: "Вариация: " }), ...practiceInlineCode(step.variation)]) : null
+  ])));
+}
+
+/* --- Трек (data/tracks.js): тема целиком по шагам --- */
+// Блок трека по ID ("k2"): { trackId, track, block } или null.
+function trackFindBlock(id) {
+  if (typeof TRACKS === "undefined") return null;
+  for (const [trackId, track] of Object.entries(TRACKS)) {
+    const block = track.blocks.find(b => b.id === id);
+    if (block) return { trackId, track, block };
+  }
+  return null;
+}
+
+// Ката по ID: { trackId, track, block, step } или null.
+function trackFindStep(id) {
+  if (typeof TRACKS === "undefined") return null;
+  for (const [trackId, track] of Object.entries(TRACKS)) {
+    for (const block of track.blocks) {
+      const step = block.steps.find(s => s.id === id);
+      if (step) return { trackId, track, block, step };
+    }
+  }
+  return null;
+}
+
+// Задачи плана, которые ссылаются на кату, и отмечены ли они. Отметки хранит только план.
+function trackPlanTasks(stepId, done) {
+  if (typeof PLAN === "undefined") return [];
+  const found = [];
+  PLAN.weeks.forEach(week => week.days.forEach(day => day.tasks.forEach(task => {
+    if ((task.links || []).includes(stepId)) {
+      found.push({ href: `#/plan/${week.id}/${PLAN_DAY_KEYS[day.label]}`, label: `${week.id.toUpperCase()} · ${day.label}`, done: Boolean(done[task.id]) });
+    }
+  })));
+  return found;
+}
+
+function trackStepNode(trackId, step, done) {
+  const inPlan = trackPlanTasks(step.id, done);
+  const isDone = inPlan.some(item => item.done);
+  const siteLinks = (step.links || []).map(practiceSiteLink).filter(Boolean);
+  const meta = [
+    step.oral ? "устно" : step.minutes ? `${step.minutes} мин` : null,
+    step.optional ? "по желанию" : null
+  ].filter(Boolean).join(" · ");
+  return practiceEl("li", { className: `track-step${isDone ? " is-done" : ""}`, id: `track-${step.id}` }, [
+    practiceEl("h4", { id: `track-${step.id}-title`, tabindex: "-1" }, [
+      practiceEl("span", { className: "track-label", text: step.label }),
+      " ",
+      ...practiceInlineCode(step.title),
+      isDone ? practiceEl("span", { className: "track-done", text: "✓ отмечено в плане" }) : null
+    ]),
+    practiceEl("p", { className: "track-when muted-text" }, [
+      meta ? `${meta} · ` : "",
+      inPlan.length
+        ? ["в плане: ", ...inPlan.flatMap((item, i) => [i ? ", " : "", practiceEl("a", { href: item.href, text: `${item.label}${item.done ? " ✓" : ""}` })])]
+        : step.whenRU || ""
+    ].flat()),
+    practiceEl("p", {}, [practiceEl("strong", { text: "Готово, когда: " }), ...practiceInlineCode(step.doneWhen)]),
+    step.variation ? practiceEl("p", {}, [practiceEl("strong", { text: "Вариация: " }), ...practiceInlineCode(step.variation)]) : null,
+    step.sayEN ? practiceEl("details", { className: "practice-talk" }, [
+      practiceEl("summary", { text: "Что сказать на собеседовании (EN)" }),
+      practiceEl("p", { lang: "en" }, practiceInlineCode(step.sayEN))
+    ]) : null,
+    ...(step.review || []).map(item => practiceEl("details", { className: "practice-hint track-review" }, [
+      practiceEl("summary", { text: `Чужой код: ${item.title}` }),
+      practiceEl("p", {}, practiceInlineCode(item.question)),
+      practiceCode(item.code, `Код для разбора: ${item.title}`),
+      practiceEl("details", { className: "practice-reference" }, [
+        practiceEl("summary", { text: "Ответ — после своего разбора" }),
+        practiceEl("p", {}, practiceInlineCode(item.answer))
+      ])
+    ])),
+    siteLinks.length || (step.refs || []).length ? practiceEl("nav", { className: "related-links", "aria-label": `Материалы к ${step.label}` }, [
+      ...siteLinks.map(link => practiceEl("a", { href: link.href, text: link.label })),
+      ...(step.refs || []).map(ref => practiceEl("a", { href: ref.u, target: "_blank", rel: "noopener noreferrer", text: `${ref.t} ↗` }))
+    ]) : null
+  ]);
+}
+
+function trackPairs(title, rows, className) {
+  return practiceEl("details", { className: `practice-box ${className}` }, [
+    practiceEl("summary", { text: title }),
+    practiceEl("dl", { className: "practice-guide-commands" }, rows.flatMap(([term, text]) => [
+      practiceEl("dt", {}, practiceInlineCode(term)),
+      practiceEl("dd", {}, practiceInlineCode(text))
+    ]))
+  ]);
+}
+
+function renderPracticeTrack(view, id, track) {
+  const done = typeof planLoad === "function" ? planLoad().done : {};
+  const steps = track.blocks.flatMap(block => block.steps);
+  const inPlan = steps.filter(step => trackPlanTasks(step.id, done).length);
+  const marked = inPlan.filter(step => trackPlanTasks(step.id, done).some(item => item.done));
+  view.replaceChildren(practiceEl("article", { className: "practice-task practice-guide practice-track" }, [
+    practiceEl("p", { className: "practice-meta" }, [practiceEl("a", { href: "#/practice", text: "← Все задачи практикума" }), " · Трек"]),
+    practiceEl("h2", { id: "practice-title", tabindex: "-1", text: track.title }),
+    ...track.intro.map(text => practiceEl("p", {}, practiceInlineCode(text))),
+    practiceEl("p", { className: "accent-text", text: `Шагов: ${steps.length}; в днях плана — ${inPlan.length}, из них отмечено ${marked.length}. Отметки ставятся в плане, у задачи дня; шаг без дня плана называет свой резерв.` }),
+    trackPairs("Правила каты", track.rules, "track-rules"),
+    trackPairs("Версии Go: что проговорить", track.versions, "track-versions"),
+    practiceEl("nav", { className: "practice-guide-toc", "aria-label": "Блоки трека" }, [
+      practiceEl("ul", {}, track.blocks.map(block => practiceEl("li", {}, [practiceEl("a", { href: `#/practice/${id}/${block.id}`, text: block.title })])))
+    ]),
+    ...track.blocks.map(block => practiceEl("section", { className: "practice-section practice-guide-section", id: `guide-${block.id}`, "aria-labelledby": `guide-${block.id}-title` }, [
+      practiceEl("h3", { id: `guide-${block.id}-title`, tabindex: "-1", text: block.title }),
+      (block.refs || []).length ? practiceEl("p", { className: "muted-text track-sources" }, [
+        "Первоисточники: ",
+        ...block.refs.flatMap((ref, i) => [i ? " · " : "", practiceEl("a", { href: ref.u, target: "_blank", rel: "noopener noreferrer", text: `${ref.t} ↗` })])
+      ]) : null,
+      practiceEl("ol", { className: "track-steps" }, block.steps.map(step => trackStepNode(id, step, done)))
+    ]))
   ]));
 }
 
@@ -421,6 +561,17 @@ function handlePracticeRoute() {
   if (!route || !view || typeof PRACTICE === "undefined") return;
   const task = route.taskId ? PRACTICE.find(t => t.id === route.taskId) : null;
   const guide = !task && route.taskId && typeof GUIDES !== "undefined" ? GUIDES[route.taskId] : null;
+  const track = !task && !guide && route.taskId && typeof TRACKS !== "undefined" ? TRACKS[route.taskId] : null;
+  if (track) {
+    renderPracticeTrack(view, route.taskId, track);
+    document.title = `${track.title} — Практикум`;
+    // #/practice/track-channels/k2-5 — к кате, #/practice/track-channels/b2 — к блоку.
+    const target = route.section && (document.getElementById(`track-${route.section}-title`) || document.getElementById(`guide-${route.section}-title`));
+    const heading = target || document.getElementById("practice-title");
+    heading.focus({ preventScroll: true });
+    if (target) target.scrollIntoView({ block: "start" }); else window.scrollTo({ top: 0, behavior: "auto" });
+    return;
+  }
   if (guide) {
     renderPracticeGuide(view, route.taskId, guide);
     document.title = `${guide.title} — Практикум`;

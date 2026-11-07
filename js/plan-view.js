@@ -165,6 +165,14 @@ function planEl(tag, attrs, children) {
 }
 
 function planSiteItem(id) {
+  if (/^k\d+$/.test(id)) {
+    const found = typeof trackFindBlock === "function" ? trackFindBlock(id) : null;
+    return found ? { href: `#/practice/${found.trackId}/${id}`, label: `${found.track.title}: ${found.block.title}`, kind: "Ката", reviewed: true } : null;
+  }
+  if (/^k\d/.test(id)) {
+    const found = typeof trackFindStep === "function" ? trackFindStep(id) : null;
+    return found ? { href: `#/practice/${found.trackId}/${id}`, label: `${found.step.label} · ${found.step.title.replace(/`/g, "")}`, kind: "Ката", reviewed: true } : null;
+  }
   if (id.startsWith("g-")) {
     const link = typeof GUIDE_LINKS !== "undefined" ? GUIDE_LINKS[id] : null;
     return link ? { href: `#/practice/${link.guide}${link.section ? `/${link.section}` : ""}`, label: link.label, kind: "Справка", reviewed: true } : null;
@@ -303,12 +311,29 @@ function planModelBlock(task) {
 // Критерий готовности задачи и упражнение, которого на сайте пока нет.
 function planAcceptBlock(task) {
   const entry = PLAN.acceptance && PLAN.acceptance[task.id];
-  const accept = entry ? entry.accept : (task.lc && PLAN.lcAccept) || "";
+  const accept = entry ? entry.accept : (task.lc && PLAN.lcAccept) || planKataDoneWhen(task);
   if (!accept) return null;
   return planEl("div", { className: "plan-accept" }, [
-    planEl("p", null, [planEl("strong", { text: "Готово, когда: " }), accept]),
+    planEl("p", null, [planEl("strong", { text: "Готово, когда: " }), ...planInlineCode(accept)]),
     entry && entry.exercise ? planEl("p", { className: "plan-gap" }, [planEl("strong", { text: "На сайте пока нет: " }), entry.exercise]) : null
   ]);
+}
+
+function planKataDoneWhen(task) {
+  const katas = (task.links || []).filter(id => /^k\d+-/.test(id));
+  const found = katas.length === 1 && typeof trackFindStep === "function" ? trackFindStep(katas[0]) : null;
+  return found ? found.step.doneWhen : "";
+}
+
+// Текст с `кодом` в обратных кавычках: нечётные куски — элементы <code>, всё через textContent.
+function planInlineCode(text) {
+  return text.split("`").map((part, i) => (i % 2 ? planEl("code", { text: part }) : part)).filter(part => part !== "");
+}
+
+// Часы недели — из минут её дней: в неделях с рабочей пятницей их больше.
+function planWeekHours(week) {
+  const minutes = week.days.reduce((sum, day) => sum + day.minutes, 0);
+  return `${Math.floor(minutes / 60)} ч${minutes % 60 ? ` ${minutes % 60} мин` : ""}`;
 }
 
 function planDraftArea(id) {
@@ -348,7 +373,7 @@ function planSiteMaterials(week) {
     if (!ids.includes(id)) ids.push(id);
   })));
   if (!ids.length) return null;
-  const groups = { "Справка": [], "Практикум": [], "Карточка": [], "Quiz": [], "Диаграмма": [] };
+  const groups = { "Справка": [], "Ката": [], "Практикум": [], "Карточка": [], "Quiz": [], "Диаграмма": [] };
   ids.map(planSiteItem).filter(Boolean).forEach(item => groups[item.kind].push(item));
   const lists = Object.entries(groups).filter(([, items]) => items.length).map(([kind, items]) =>
     planEl("div", { className: "plan-materials-group" }, [
@@ -689,12 +714,12 @@ function renderPlan(weekId, dayKey) {
       planControls()
     ]),
     planEl("article", { className: "sim-card plan-week" }, [
-      planEl("p", { className: "muted-text", text: `${phase ? phase.title : ""} · ${planFormatDate(from)}–${planFormatDate(to)} · ~${PLAN.hoursPerWeek} ч` }),
+      planEl("p", { className: "muted-text", text: `${phase ? phase.title : ""} · ${planFormatDate(from)}–${planFormatDate(to)} · ~${planWeekHours(week)}` }),
       planEl("h2", { id: "plan-week-title", tabindex: "-1", text: `Неделя ${index + 1}. ${week.title}` }),
       planEl("p", {}, [planEl("strong", { text: "Цель: " }), week.goal]),
       planEl("p", {}, [planEl("strong", { text: "Готово, когда: " }), week.done]),
       planEl("p", { id: "plan-week-count", className: "accent-text" }),
-      planEl("p", { className: "muted-text", text: `Бюджет ~${PLAN.hoursPerWeek} ч — ориентир, а не обещание. Не укладываешься — переноси в резерв (Пт/Вс); сначала обязательные задачи, «по желанию» — если осталось время.` }),
+      planEl("p", { className: "muted-text", text: `Бюджет ~${planWeekHours(week)} — ориентир, а не обещание. Не укладываешься — переноси в резерв (${["Пт", "Вс"].filter(label => !week.days.some(day => day.label === label)).join("/")}); сначала обязательные задачи, «по желанию» — если осталось время.` }),
       planTalkRules(),
       ...days,
       week.id === "w2" ? planPredictBlock() : null,

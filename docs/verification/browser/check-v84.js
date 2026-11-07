@@ -27,7 +27,7 @@ const { chromium } = require("playwright");
     }));
     ok(`${w}: guide title, tab title, focus`, g.title === "Свой репозиторий go-prep: раскладка, команды, CI" && g.doc.endsWith("— Практикум") && g.focus === "practice-title", JSON.stringify([g.title, g.doc, g.focus]));
     ok(`${w}: six sections with toc`, g.sections.join() === "guide-setup,guide-layout,guide-drill1,guide-ci,guide-asm,guide-ref" && g.toc.join() === "#/practice/go-prep/setup,#/practice/go-prep/layout,#/practice/go-prep/drill1,#/practice/go-prep/ci,#/practice/go-prep/asm,#/practice/go-prep/ref", g.toc.join());
-    ok(`${w}: layout tree lists practice packages by week`, /└── week6\//.test(g.tree) && /money\/\s+← W1-1/.test(g.tree) && /hello\/\s+← go run/.test(g.tree) && /workerpool\/\s+← W3-1/.test(g.tree), g.tree.split("\n").slice(0, 8).join(" | "));
+    ok(`${w}: layout tree lists practice packages by week`, /└── week9\//.test(g.tree) && /tee\/\s+← W9-1/.test(g.tree) && /money\/\s+← W1-1/.test(g.tree) && /hello\/\s+← go run/.test(g.tree) && /workerpool\/\s+← W3-1/.test(g.tree), g.tree.split("\n").slice(0, 8).join(" | "));
     ok(`${w}: files, drills, table, links, checks`, g.files === 7 && g.steps.join() === "8,8" && g.rows === 15 && g.links.length === 10 && g.links.every(([https, t]) => https && t === "_blank") && g.checks === 3 && g.answersHidden, JSON.stringify(g));
     if (w === 1280) {
       const [dl] = await Promise.all([p.waitForEvent("download"), p.click("#guide-ci button:has-text('Скачать ci.yml')")]);

@@ -27,7 +27,7 @@ const base = "http://127.0.0.1:8765/";
       focus: document.activeElement && document.activeElement.id,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     }));
-    ok(`${tag}: index visible with all tasks`, index.visible && index.items === index.total && index.total === 23 && index.weeks === 6, JSON.stringify(index));
+    ok(`${tag}: index visible with all tasks`, index.visible && index.items === index.total && index.total === 26 && index.weeks === 7, JSON.stringify(index));
     ok(`${tag}: tab marked current`, index.active === "page");
     ok(`${tag}: focus on heading`, index.focus === "practice-title", index.focus);
     ok(`${tag}: index no overflow`, index.overflow <= 0, index.overflow);
@@ -125,7 +125,7 @@ const base = "http://127.0.0.1:8765/";
       // Unknown task id falls back to the index.
       await p.goto(base + "#/practice/p-nope");
       await p.waitForTimeout(150);
-      ok("unknown task shows the index", (await p.locator(".practice-index-item").count()) === 23);
+      ok("unknown task shows the index", (await p.locator(".practice-index-item").count()) === 26);
     }
     ok(`${tag}: no console errors`, errors.length === 0, errors.join(" | "));
     await ctx.close();

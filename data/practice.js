@@ -489,6 +489,9 @@ const PRACTICE = [
       "Сохрани порядок результатов таким же, как у задач.",
       "Сделай results с буфером workers — что изменится в тесте на медленного потребителя?"
     ],
+    "katas": [
+      "k3-5"
+    ],
     "fixture": "docs/verification/fixtures/practice/workerpool",
     "files": {
       "starter": {
@@ -629,6 +632,9 @@ const PRACTICE = [
     "followUps": [
       "Сделай Merge двух входов без горутин на вход: один select-цикл, закрытый вход отключается присваиванием nil.",
       "reflect.Select для произвольного числа входов — когда это оправдано?"
+    ],
+    "katas": [
+      "k3-1"
     ],
     "fixture": "docs/verification/fixtures/practice/fanin",
     "files": {
@@ -843,6 +849,9 @@ const PRACTICE = [
       "Верни все ошибки, а не первую: чем заменить errgroup?",
       "Добавь таймаут на каждый вызов отдельно (context.WithTimeout внутри горутины).",
       "Сделай то же без x/sync: семафор на канале, WaitGroup и sync.Once для первой ошибки."
+    ],
+    "katas": [
+      "k3-8"
     ],
     "note": "Нужен модуль golang.org/x/sync. Последние выпуски требуют новых версий Go (v0.24 — Go 1.26); v0.18.0 работает с Go 1.24 и проверен здесь. Если go get пишет про более новый Go — укажи версию явно.",
     "fixture": "docs/verification/fixtures/practice-errgroup/parallelfetch",
@@ -1088,6 +1097,9 @@ const PRACTICE = [
       "Верни первый успешный ответ, пропуская ошибки, — и ошибку, если упали все.",
       "Найди ту же утечку библиотекой go.uber.org/goleak в TestMain: что она проверяет и чем отличается от профиля?",
       "Go 1.26: профиль goroutineleak с GOEXPERIMENT=goroutineleakprofile; в Go 1.27 — без эксперимента. Какие утечки он находит, а какие нет?"
+    ],
+    "katas": [
+      "k2-7"
     ],
     "fixture": "docs/verification/fixtures/practice/leak",
     "files": {
@@ -1403,6 +1415,77 @@ const PRACTICE = [
     }
   },
   {
+    "id": "p-timeout",
+    "code": "W5-3",
+    "week": 5,
+    "title": "Обёртка с таймаутом",
+    "titleEN": "A call with a timeout",
+    "goalRU": "Дождаться результата функции не дольше заданного времени и не оставить горутину висеть после того, как функция вернулась, — даже если она не слушает ctx: пока функция работает, её горутина живёт, обёртка лишь перестаёт ждать.",
+    "contractRU": [
+      "Call возвращает результат и ошибку f, если f успела за d.",
+      "По истечении d — нулевое значение и context.DeadlineExceeded (errors.Is); если раньше отменён родительский ctx — его ctx.Err().",
+      "f получает ctx с этим дедлайном; Call отменяет его при возврате — и после успеха тоже.",
+      "Call не ждёт f, которая не слушает ctx: возвращается в срок.",
+      "Опоздавшая f отдаёт результат и завершается: после возврата Call её горутина не висит."
+    ],
+    "contractEN": [
+      "Call returns f's result and error if f finishes within d.",
+      "After d it returns the zero value and context.DeadlineExceeded (errors.Is); if the parent ctx is done first, its ctx.Err().",
+      "f gets a ctx with that deadline; Call cancels it on return, after success too.",
+      "Call does not wait for an f that ignores ctx: it returns on time.",
+      "A late f still hands over its result and exits: its goroutine does not hang after Call has returned."
+    ],
+    "planTasks": [
+      "w5-sat-4"
+    ],
+    "links": [
+      "c22",
+      "c12",
+      "q9"
+    ],
+    "katas": [
+      "k2-5"
+    ],
+    "hints": [
+      "context.WithTimeout(ctx, d) и defer cancel(): дедлайн для f и отмена на любом пути выхода — две строки.",
+      "Запусти f в горутине и жди в select: результат или <-ctx.Done().",
+      "Канал результата — с буфером 1: опоздавшая f отправит и выйдет, даже если её уже никто не ждёт.",
+      "Результат и ошибку отправь одной структурой: так их не перепутать."
+    ],
+    "talkEN": "Call runs f in a goroutine and waits in a select for its result or for the derived context to be done. The context carries the deadline, so a cooperative f can stop, and Call cancels it on return, after success too. Stopping the wait does not stop the work: if f ignores its context it keeps running, so the result channel has a buffer of one — the late send never blocks and the goroutine exits. On timeout I return context.DeadlineExceeded, not my own error, so callers can use errors.Is.",
+    "invariantsRU": [
+      "`context.WithTimeout` и `defer cancel()`: f получает дедлайн, отмена — на любом пути выхода.",
+      "Канал результата — `make(chan result, 1)`: опоздавшая f отправит и выйдет.",
+      "Ждать в `select` результат и `<-ctx.Done()`; по таймауту вернуть `ctx.Err()`."
+    ],
+    "pitfalls": [
+      "Небуферизованный канал результата → после таймаута горутина f навсегда висит на отправке.",
+      "Свой errTimeout вместо ctx.Err() → вызывающий не отличит дедлайн от отмены через errors.Is.",
+      "time.After(d) вместо ctx с дедлайном → f не узнаёт о таймауте; а без <-ctx.Done() родителя в том же select и отмена родителя не прерывает ожидание.",
+      "Нет cancel после успеха → таймер и всё, что f запустила с этим ctx, живут до дедлайна.",
+      "Ждать, что обёртка прервёт работу → она лишь перестаёт ждать; остановится только f, которая слушает ctx."
+    ],
+    "followUps": [
+      "Верни причину отмены: `context.WithTimeoutCause` и `context.Cause(ctx)`.",
+      "Сделай Call без дженериков для `func(context.Context) error` — что упростится?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/timeout",
+    "files": {
+      "starter": {
+        "name": "timeout.go",
+        "code": "// Package timeout: practice task W5-3. Replace the TODO with your solution.\npackage timeout\n\nimport (\n\t\"context\"\n\t\"time\"\n)\n\n// Call runs f and waits at most d for its result. f receives a context with\n// that deadline, cancelled when Call returns, so a cooperative f can stop\n// early. After the deadline Call returns the zero value and\n// context.DeadlineExceeded; if the parent ctx is done first, its error.\n// Call does not wait for an f that ignores its context.\nfunc Call[T any](ctx context.Context, d time.Duration, f func(context.Context) (T, error)) (T, error) {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "timeout_test.go",
+        "code": "package timeout\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"runtime\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc waitUntil(t *testing.T, what string, cond func() bool) {\n\tt.Helper()\n\tdeadline := time.Now().Add(2 * time.Second)\n\tfor !cond() {\n\t\tif time.Now().After(deadline) {\n\t\t\tt.Fatalf(\"timed out waiting for: %s\", what)\n\t\t}\n\t\ttime.Sleep(time.Millisecond)\n\t}\n}\n\n// callWithin runs Call and fails the test if it does not return within 2 s:\n// a Call that waits for f instead of the deadline would otherwise hang.\nfunc callWithin(t *testing.T, ctx context.Context, d time.Duration, f func(context.Context) (int, error)) (int, error) {\n\tt.Helper()\n\ttype result struct {\n\t\tv   int\n\t\terr error\n\t}\n\tdone := make(chan result, 1)\n\tgo func() {\n\t\tv, err := Call(ctx, d, f)\n\t\tdone <- result{v, err}\n\t}()\n\tselect {\n\tcase r := <-done:\n\t\treturn r.v, r.err\n\tcase <-time.After(2 * time.Second):\n\t\tt.Fatal(\"Call is still waiting after 2 s: it must return at the deadline or when ctx is done, not wait for f\")\n\t\treturn 0, nil\n\t}\n}\n\nfunc TestResult(t *testing.T) {\n\tv, err := Call(context.Background(), time.Second, func(context.Context) (int, error) { return 7, nil })\n\tif v != 7 || err != nil {\n\t\tt.Fatalf(\"got %d, %v; want 7, nil\", v, err)\n\t}\n}\n\nfunc TestError(t *testing.T) {\n\tboom := errors.New(\"boom\")\n\t_, err := Call(context.Background(), time.Second, func(context.Context) (int, error) { return 0, boom })\n\tif !errors.Is(err, boom) {\n\t\tt.Fatalf(\"got %v, want %v\", err, boom)\n\t}\n}\n\n// f ignores its context: Call must stop waiting at the deadline anyway.\nfunc TestTimeout(t *testing.T) {\n\trelease := make(chan struct{})\n\tdefer close(release)\n\tv, err := callWithin(t, context.Background(), 20*time.Millisecond, func(context.Context) (int, error) {\n\t\t<-release\n\t\treturn 7, nil\n\t})\n\tif !errors.Is(err, context.DeadlineExceeded) || v != 0 {\n\t\tt.Fatalf(\"got %d, %v; want 0, context.DeadlineExceeded\", v, err)\n\t}\n}\n\n// A late f still finishes after Call has returned. Its goroutine must be able\n// to deliver the result and exit; with an unbuffered result channel it would\n// block forever.\nfunc TestNoLeakWhenFIsLate(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\trelease := make(chan struct{})\n\tfinished := make(chan struct{})\n\t_, err := Call(context.Background(), 10*time.Millisecond, func(context.Context) (int, error) {\n\t\tdefer close(finished)\n\t\t<-release\n\t\treturn 7, nil\n\t})\n\tif !errors.Is(err, context.DeadlineExceeded) {\n\t\tt.Fatalf(\"got %v, want context.DeadlineExceeded\", err)\n\t}\n\tclose(release)\n\t<-finished\n\twaitUntil(t, \"the goroutine running f to exit\", func() bool { return runtime.NumGoroutine() <= before })\n}\n\nfunc TestContextHasDeadline(t *testing.T) {\n\t_, err := Call(context.Background(), time.Minute, func(ctx context.Context) (int, error) {\n\t\tdeadline, ok := ctx.Deadline()\n\t\tif !ok || time.Until(deadline) > time.Minute {\n\t\t\tt.Errorf(\"f got deadline %v, %v; want one within a minute\", deadline, ok)\n\t\t}\n\t\treturn 0, nil\n\t})\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n}\n\n// Call must cancel f's context when it returns, after success too:\n// otherwise the timer and anything started with that context live on.\nfunc TestContextCancelledOnReturn(t *testing.T) {\n\tvar got context.Context\n\tif _, err := Call(context.Background(), time.Minute, func(ctx context.Context) (int, error) {\n\t\tgot = ctx\n\t\treturn 1, nil\n\t}); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tif got.Err() == nil {\n\t\tt.Fatal(\"f's context is still live after Call returned\")\n\t}\n}\n\nfunc TestCooperativeFStops(t *testing.T) {\n\tstopped := make(chan error, 1)\n\t_, err := Call(context.Background(), 10*time.Millisecond, func(ctx context.Context) (int, error) {\n\t\t<-ctx.Done()\n\t\tstopped <- ctx.Err()\n\t\treturn 0, ctx.Err()\n\t})\n\tif !errors.Is(err, context.DeadlineExceeded) {\n\t\tt.Fatalf(\"got %v, want context.DeadlineExceeded\", err)\n\t}\n\tselect {\n\tcase cause := <-stopped:\n\t\tif !errors.Is(cause, context.DeadlineExceeded) {\n\t\t\tt.Fatalf(\"f saw %v, want context.DeadlineExceeded\", cause)\n\t\t}\n\tcase <-time.After(2 * time.Second):\n\t\tt.Fatal(\"f was not told to stop\")\n\t}\n}\n\nfunc TestParentCancelled(t *testing.T) {\n\tctx, cancel := context.WithCancel(context.Background())\n\trelease := make(chan struct{})\n\tdefer close(release)\n\tgo func() {\n\t\ttime.Sleep(10 * time.Millisecond)\n\t\tcancel()\n\t}()\n\t_, err := callWithin(t, ctx, time.Hour, func(context.Context) (int, error) {\n\t\t<-release\n\t\treturn 7, nil\n\t})\n\tif !errors.Is(err, context.Canceled) {\n\t\tt.Fatalf(\"got %v, want context.Canceled\", err)\n\t}\n}"
+      },
+      "solution": {
+        "name": "timeout.go",
+        "code": "// Package timeout is the reference solution for practice task W5-3:\n// wait for a function's result at most a given time, without leaking it.\npackage timeout\n\nimport (\n\t\"context\"\n\t\"time\"\n)\n\n// Call runs f and waits at most d for its result. f receives a context with\n// that deadline, cancelled when Call returns, so a cooperative f can stop\n// early. After the deadline Call returns the zero value and\n// context.DeadlineExceeded; if the parent ctx is done first, its error.\n// Call does not wait for an f that ignores its context.\nfunc Call[T any](ctx context.Context, d time.Duration, f func(context.Context) (T, error)) (T, error) {\n\tctx, cancel := context.WithTimeout(ctx, d)\n\tdefer cancel()\n\ttype result struct {\n\t\tv   T\n\t\terr error\n\t}\n\t// Buffer 1: a late f can still send its result and exit after Call has returned.\n\tres := make(chan result, 1)\n\tgo func() {\n\t\tv, err := f(ctx)\n\t\tres <- result{v, err}\n\t}()\n\tselect {\n\tcase r := <-res:\n\t\treturn r.v, r.err\n\tcase <-ctx.Done():\n\t\tvar zero T\n\t\treturn zero, ctx.Err()\n\t}\n}"
+      }
+    }
+  },
+  {
     "id": "p-transfers",
     "code": "W6-1",
     "week": 6,
@@ -1648,6 +1731,150 @@ const PRACTICE = [
       "solution": {
         "name": "outbox.go",
         "code": "// Package outbox is the reference solution for practice task W6-3: a transactional\n// outbox in memory, a relay that publishes at least once, and an idempotent consumer.\npackage outbox\n\nimport (\n\t\"context\"\n\t\"errors\"\n\t\"fmt\"\n\t\"strconv\"\n\t\"sync\"\n\t\"time\"\n)\n\nvar (\n\tErrNotFound          = errors.New(\"account not found\")\n\tErrInvalidAmount     = errors.New(\"amount must be positive\")\n\tErrInsufficientFunds = errors.New(\"insufficient funds\")\n)\n\n// Event is what the relay publishes after a transfer.\ntype Event struct {\n\tID     int64 // outbox row ID: consumers deduplicate by it\n\tFrom   int64\n\tTo     int64\n\tAmount int64\n}\n\ntype row struct {\n\tev   Event\n\tsent bool\n}\n\n// DB is an in-memory database: holding mu is one transaction.\ntype DB struct {\n\tmu       sync.Mutex\n\tbalances map[int64]int64\n\toutbox   []row // in ID order\n\tnextID   int64\n}\n\nfunc NewDB(balances map[int64]int64) *DB {\n\tdb := &DB{balances: make(map[int64]int64, len(balances))}\n\tfor id, b := range balances {\n\t\tdb.balances[id] = b\n\t}\n\treturn db\n}\n\n// Transfer moves the money and appends the event to the outbox in one transaction:\n// either both happen or neither does.\nfunc (db *DB) Transfer(from, to, amount int64) (Event, error) {\n\tdb.mu.Lock()\n\tdefer db.mu.Unlock()\n\tif amount <= 0 {\n\t\treturn Event{}, ErrInvalidAmount\n\t}\n\tsrc, ok := db.balances[from]\n\tif !ok {\n\t\treturn Event{}, fmt.Errorf(\"transfer from %d: %w\", from, ErrNotFound)\n\t}\n\tif _, ok := db.balances[to]; !ok {\n\t\treturn Event{}, fmt.Errorf(\"transfer to %d: %w\", to, ErrNotFound)\n\t}\n\tif src < amount {\n\t\treturn Event{}, fmt.Errorf(\"transfer %d from %d: %w\", amount, from, ErrInsufficientFunds)\n\t}\n\tdb.balances[from] -= amount\n\tdb.balances[to] += amount\n\tdb.nextID++\n\tev := Event{ID: db.nextID, From: from, To: to, Amount: amount}\n\tdb.outbox = append(db.outbox, row{ev: ev})\n\treturn ev, nil\n}\n\n// Balance returns an account's balance.\nfunc (db *DB) Balance(id int64) int64 {\n\tdb.mu.Lock()\n\tdefer db.mu.Unlock()\n\treturn db.balances[id]\n}\n\n// Unsent returns up to limit unsent events in ID order, as a copy.\nfunc (db *DB) Unsent(limit int) []Event {\n\tdb.mu.Lock()\n\tdefer db.mu.Unlock()\n\tvar out []Event\n\tfor _, r := range db.outbox {\n\t\tif len(out) == limit {\n\t\t\tbreak\n\t\t}\n\t\tif !r.sent {\n\t\t\tout = append(out, r.ev)\n\t\t}\n\t}\n\treturn out\n}\n\n// MarkSent marks one event as published.\nfunc (db *DB) MarkSent(id int64) {\n\tdb.mu.Lock()\n\tdefer db.mu.Unlock()\n\tfor i := range db.outbox {\n\t\tif db.outbox[i].ev.ID == id {\n\t\t\tdb.outbox[i].sent = true\n\t\t\treturn\n\t\t}\n\t}\n}\n\n// Pending counts events that are not marked sent yet.\nfunc (db *DB) Pending() int {\n\tdb.mu.Lock()\n\tdefer db.mu.Unlock()\n\tn := 0\n\tfor _, r := range db.outbox {\n\t\tif !r.sent {\n\t\t\tn++\n\t\t}\n\t}\n\treturn n\n}\n\n// Publisher sends one event to the broker; key selects the partition.\ntype Publisher interface {\n\tPublish(ctx context.Context, key string, ev Event) error\n}\n\n// Relay publishes outbox events. It runs in one goroutine owned by the caller.\ntype Relay struct {\n\tDB       *DB\n\tPub      Publisher\n\tInterval time.Duration // pause between polls; 0 means 10 ms\n\tBatch    int           // events per poll; 0 means 100\n}\n\n// Run publishes unsent events in ID order until ctx is done, then returns ctx.Err().\n// An event is marked sent only after Publish succeeded, so delivery is at-least-once:\n// a lost acknowledgement makes the relay send the event again.\nfunc (r *Relay) Run(ctx context.Context) error {\n\tinterval, batch := r.Interval, r.Batch\n\tif interval <= 0 {\n\t\tinterval = 10 * time.Millisecond\n\t}\n\tif batch <= 0 {\n\t\tbatch = 100\n\t}\n\ttick := time.NewTicker(interval)\n\tdefer tick.Stop()\n\tfor {\n\t\tr.publishBatch(ctx, batch)\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn ctx.Err()\n\t\tcase <-tick.C:\n\t\t}\n\t}\n}\n\nfunc (r *Relay) publishBatch(ctx context.Context, batch int) {\n\t// Unsent copies the rows and releases the lock: Publish is a network call, and\n\t// transfers must not wait for the broker.\n\tfor _, ev := range r.DB.Unsent(batch) {\n\t\tif ctx.Err() != nil {\n\t\t\treturn\n\t\t}\n\t\t// The sender's account is the key: with a key-hashing partitioner its events go to one partition.\n\t\tif err := r.Pub.Publish(ctx, strconv.FormatInt(ev.From, 10), ev); err != nil {\n\t\t\treturn // stop the batch to keep the order; this event goes first on the next poll\n\t\t}\n\t\tr.DB.MarkSent(ev.ID)\n\t}\n}\n\n// Consumer applies each event at most once, by event ID.\ntype Consumer struct {\n\tmu   sync.Mutex\n\tseen map[int64]bool\n\tsent map[int64]int64 // money sent per account, according to the applied events\n}\n\nfunc NewConsumer() *Consumer {\n\treturn &Consumer{seen: make(map[int64]bool), sent: make(map[int64]int64)}\n}\n\n// Handle applies ev unless an event with the same ID was applied before.\n// A duplicate is not an error: the consumer just acknowledges it again.\nfunc (c *Consumer) Handle(ev Event) error {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\tif c.seen[ev.ID] {\n\t\treturn nil\n\t}\n\t// In a real service the ID and the effect commit in one database transaction.\n\tc.seen[ev.ID] = true\n\tc.sent[ev.From] += ev.Amount\n\treturn nil\n}\n\n// Sent returns how much an account sent according to the applied events.\nfunc (c *Consumer) Sent(account int64) int64 {\n\tc.mu.Lock()\n\tdefer c.mu.Unlock()\n\treturn c.sent[account]\n}"
+      }
+    }
+  },
+  {
+    "id": "p-fanout",
+    "code": "W6-4",
+    "week": 6,
+    "title": "Fan-out по ключу",
+    "titleEN": "Fan-out by key",
+    "goalRU": "Разложить поток значений по N выходам так, чтобы значения с одним ключом шли в один выход и в порядке поступления — как сообщения по партициям Kafka.",
+    "contractRU": [
+      "n < 1 считается как 1; Route возвращает ровно n выходов.",
+      "Значения с одним ключом всегда идут в один и тот же выход и в порядке поступления; разные ключи расходятся по выходам.",
+      "До отмены каждое значение доставляется ровно один раз; значение в пути при отмене отбрасывается.",
+      "Все выходы закрываются после закрытия in или отмены ctx — и те, в которые ничего не пришло.",
+      "Пока выход не читают, Route ждёт: медленный читатель тормозит всех, значения не копятся в памяти; отмена прерывает и это ожидание.",
+      "in принадлежит отправителю: Route его не закрывает."
+    ],
+    "contractEN": [
+      "n < 1 means 1; Route returns exactly n outputs.",
+      "Values with the same key always go to the same output, in arrival order; different keys spread over the outputs.",
+      "Until cancellation every value is delivered exactly once; a value in flight at cancellation is dropped.",
+      "All outputs are closed after in is closed or ctx is done — including outputs that got nothing.",
+      "While an output is not read, Route waits: a slow reader holds back all of them and values do not pile up in memory; cancellation ends that wait too.",
+      "in belongs to its sender: Route never closes it."
+    ],
+    "planTasks": [
+      "w6-sat-6"
+    ],
+    "links": [
+      "c13",
+      "c18",
+      "sim3"
+    ],
+    "katas": [
+      "k3-2"
+    ],
+    "hints": [
+      "Одна горутина-маршрутизатор: читает in, считает номер выхода по ключу, отправляет. Раз горутина одна, порядок внутри ключа сохраняется сам.",
+      "Номер выхода — хеш ключа по модулю n: hash/fnv (fnv.New32a) даёт одно и то же число для одного ключа.",
+      "Закрывает выходы тот, кто в них пишет: в маршрутизаторе — defer с циклом close.",
+      "Обе точки ожидания — чтение in и отправка в выход — в select с <-ctx.Done()."
+    ],
+    "talkEN": "Route has one goroutine that reads the input, hashes each value's key with FNV and sends the value to output hash mod n. A key always lands on the same output, and with a single router it keeps its order — the same idea as Kafka partitions. The router owns the outputs and closes all of them on any exit, including outputs that never got a value. Both waits, reading the input and sending, sit in a select with ctx.Done(). The trade-off is head-of-line blocking: a slow reader holds back every output; dropping instead would need a select with default and a drop counter.",
+    "invariantsRU": [
+      "Один маршрутизатор: номер выхода — хеш ключа `% n`, `n < 1` → 1.",
+      "Чтение `in` и отправка в выход — в `select` с `<-ctx.Done()`.",
+      "Маршрутизатор закрывает все выходы в `defer`, пустые тоже; `in` не закрывать."
+    ],
+    "pitfalls": [
+      "Горутина на значение для отправки → порядок внутри ключа теряется.",
+      "Round-robin вместо ключа → один ключ попадает в разные выходы.",
+      "Закрыть только выходы, куда что-то пришло → читатель пустого выхода ждёт вечно.",
+      "Отправка без select → после отмены читатель ушёл, маршрутизатор висит навсегда.",
+      "Новый maphash.Seed на каждое значение → у одного ключа разные номера выхода."
+    ],
+    "followUps": [
+      "Медленного получателя — отбрасывать: select с default и счётчик потерь на выход. Какие гарантии останутся?",
+      "Fan-out в смысле Cox-Buday — N стадий читают один вход: когда нужен он, когда маршрутизация, а когда хватит обычного пула?",
+      "Число выходов меняется на ходу: почему хеш по модулю тогда перемешивает ключи и что делает consistent hashing?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/fanout",
+    "files": {
+      "starter": {
+        "name": "fanout.go",
+        "code": "// Package fanout: practice task W6-4. Replace the TODO with your solution.\npackage fanout\n\nimport \"context\"\n\n// Route sends each value from in to one of n outputs (n < 1 means 1), chosen\n// by its key: values with the same key always go to the same output, in the\n// order they arrived. One goroutine routes, so a slow reader of one output\n// holds back all of them. Every output is closed after in is closed or ctx is\n// done. Route never closes in: it belongs to its sender.\nfunc Route[T any](ctx context.Context, in <-chan T, n int, key func(T) string) []<-chan T {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "fanout_test.go",
+        "code": "package fanout\n\nimport (\n\t\"context\"\n\t\"fmt\"\n\t\"runtime\"\n\t\"slices\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n)\n\ntype event struct {\n\taccount string\n\tseq     int\n}\n\nfunc byAccount(e event) string { return e.account }\n\nfunc source(events ...event) <-chan event {\n\tch := make(chan event)\n\tgo func() {\n\t\tdefer close(ch)\n\t\tfor _, e := range events {\n\t\t\tch <- e\n\t\t}\n\t}()\n\treturn ch\n}\n\n// readAll reads every output concurrently until all are closed.\nfunc readAll(t *testing.T, outs []<-chan event) [][]event {\n\tt.Helper()\n\tgot := make([][]event, len(outs))\n\tvar wg sync.WaitGroup\n\tfor i, out := range outs {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor e := range out {\n\t\t\t\tgot[i] = append(got[i], e)\n\t\t\t}\n\t\t}()\n\t}\n\tdone := make(chan struct{})\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(done)\n\t}()\n\tselect {\n\tcase <-done:\n\tcase <-time.After(5 * time.Second):\n\t\tt.Fatal(\"not every output was closed\")\n\t}\n\treturn got\n}\n\nfunc waitUntil(t *testing.T, what string, cond func() bool) {\n\tt.Helper()\n\tdeadline := time.Now().Add(2 * time.Second)\n\tfor !cond() {\n\t\tif time.Now().After(deadline) {\n\t\t\tt.Fatalf(\"timed out waiting for: %s\", what)\n\t\t}\n\t\ttime.Sleep(time.Millisecond)\n\t}\n}\n\nfunc events(accounts []string, perAccount int) []event {\n\tvar all []event\n\tfor seq := range perAccount {\n\t\tfor _, a := range accounts {\n\t\t\tall = append(all, event{a, seq})\n\t\t}\n\t}\n\treturn all\n}\n\nfunc TestSameKeySameOutputInOrder(t *testing.T) {\n\taccounts := []string{\"alice\", \"bob\", \"carol\", \"dave\", \"erin\"}\n\tgot := readAll(t, Route(context.Background(), source(events(accounts, 20)...), 3, byAccount))\n\tif len(got) != 3 {\n\t\tt.Fatalf(\"got %d outputs, want 3\", len(got))\n\t}\n\toutputOf := map[string]int{}\n\ttotal := 0\n\tfor i, out := range got {\n\t\tnext := map[string]int{}\n\t\tfor _, e := range out {\n\t\t\tif j, seen := outputOf[e.account]; seen && j != i {\n\t\t\t\tt.Fatalf(\"%s went to outputs %d and %d; one key must use one output\", e.account, j, i)\n\t\t\t}\n\t\t\toutputOf[e.account] = i\n\t\t\tif e.seq != next[e.account] {\n\t\t\t\tt.Fatalf(\"output %d: %s got seq %d, want %d: order inside a key is lost\", i, e.account, e.seq, next[e.account])\n\t\t\t}\n\t\t\tnext[e.account]++\n\t\t\ttotal++\n\t\t}\n\t}\n\tif total != len(accounts)*20 {\n\t\tt.Fatalf(\"delivered %d events, want %d\", total, len(accounts)*20)\n\t}\n}\n\n// Routing everything to one output keeps the order trivially; keys must spread.\nfunc TestKeysSpreadOverOutputs(t *testing.T) {\n\tvar accounts []string\n\tfor i := range 100 {\n\t\taccounts = append(accounts, fmt.Sprintf(\"acc-%d\", i))\n\t}\n\tgot := readAll(t, Route(context.Background(), source(events(accounts, 1)...), 4, byAccount))\n\tused := 0\n\tfor _, out := range got {\n\t\tif len(out) > 0 {\n\t\t\tused++\n\t\t}\n\t}\n\tif used < 2 {\n\t\tt.Fatalf(\"100 keys used %d of 4 outputs; route by key, not to one output\", used)\n\t}\n}\n\nfunc TestNonPositiveN(t *testing.T) {\n\tfor _, n := range []int{0, -3} {\n\t\tgot := readAll(t, Route(context.Background(), source(event{\"a\", 0}, event{\"b\", 0}), n, byAccount))\n\t\tif len(got) != 1 || len(got[0]) != 2 {\n\t\t\tt.Fatalf(\"n=%d: got %v, want one output with 2 events\", n, got)\n\t\t}\n\t}\n}\n\nfunc TestEveryOutputClosed(t *testing.T) {\n\t// One key, eight outputs: seven outputs get nothing, but each must still be closed.\n\tgot := readAll(t, Route(context.Background(), source(events([]string{\"only\"}, 3)...), 8, byAccount))\n\tvar lens []int\n\tfor _, out := range got {\n\t\tlens = append(lens, len(out))\n\t}\n\tslices.Sort(lens)\n\tif want := []int{0, 0, 0, 0, 0, 0, 0, 3}; !slices.Equal(lens, want) {\n\t\tt.Fatalf(\"output sizes %v, want %v\", lens, want)\n\t}\n}\n\nfunc TestCancelWithOpenInput(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\tin := make(chan event) // never closed\n\touts := Route(ctx, in, 2, byAccount)\n\tcancel()\n\treadAll(t, outs)\n\twaitUntil(t, \"goroutines to exit\", func() bool { return runtime.NumGoroutine() <= before })\n}\n\n// Nobody reads: the router takes one value and waits on its send.\n// It must not drain in into buffers or goroutines.\nfunc TestRouterWaitsForReader(t *testing.T) {\n\tctx, cancel := context.WithCancel(context.Background())\n\tdefer cancel()\n\tin := make(chan event, 3)\n\tfor i := range 3 {\n\t\tin <- event{\"a\", i}\n\t}\n\tRoute(ctx, in, 2, byAccount)\n\twaitUntil(t, \"Route to take a value\", func() bool { return len(in) < 3 })\n\ttime.Sleep(50 * time.Millisecond)\n\tif left := len(in); left != 2 {\n\t\tt.Fatalf(\"%d of 3 values left in in, want 2: Route must wait for the reader, not pile values up\", left)\n\t}\n}\n\n// Nobody reads the outputs: a router blocked on a send must notice the cancellation.\nfunc TestCancelWithoutReading(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\tin := make(chan event, 2)\n\tin <- event{\"a\", 0}\n\tin <- event{\"a\", 1}\n\touts := Route(ctx, in, 2, byAccount)\n\twaitUntil(t, \"Route to take a value\", func() bool { return len(in) < 2 })\n\tcancel()\n\twaitUntil(t, \"goroutines to exit while nobody reads\", func() bool { return runtime.NumGoroutine() <= before })\n\treadAll(t, outs)\n}"
+      },
+      "solution": {
+        "name": "fanout.go",
+        "code": "// Package fanout is the reference solution for practice task W6-4:\n// route values to N outputs by key, like messages to Kafka partitions.\npackage fanout\n\nimport (\n\t\"context\"\n\t\"hash/fnv\"\n)\n\n// Route sends each value from in to one of n outputs (n < 1 means 1), chosen\n// by its key: values with the same key always go to the same output, in the\n// order they arrived. One goroutine routes, so a slow reader of one output\n// holds back all of them. Every output is closed after in is closed or ctx is\n// done. Route never closes in: it belongs to its sender.\nfunc Route[T any](ctx context.Context, in <-chan T, n int, key func(T) string) []<-chan T {\n\tn = max(n, 1)\n\touts := make([]chan T, n)\n\tresult := make([]<-chan T, n)\n\tfor i := range outs {\n\t\touts[i] = make(chan T)\n\t\tresult[i] = outs[i]\n\t}\n\tgo func() {\n\t\tdefer func() {\n\t\t\tfor _, out := range outs {\n\t\t\t\tclose(out)\n\t\t\t}\n\t\t}()\n\t\tfor {\n\t\t\tselect {\n\t\t\tcase <-ctx.Done():\n\t\t\t\treturn\n\t\t\tcase v, ok := <-in:\n\t\t\t\tif !ok {\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tselect {\n\t\t\t\tcase outs[partition(key(v), n)] <- v:\n\t\t\t\tcase <-ctx.Done():\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}()\n\treturn result\n}\n\n// partition maps a key to an output index; the same key always gives the same index.\nfunc partition(key string, n int) int {\n\th := fnv.New32a()\n\th.Write([]byte(key))\n\treturn int(h.Sum32() % uint32(n))\n}"
+      }
+    }
+  },
+  {
+    "id": "p-tee",
+    "code": "W9-1",
+    "week": 9,
+    "title": "Tee и or-done",
+    "titleEN": "Tee and or-done",
+    "goalRU": "Прекратить чтение канала по отмене (or-done) и раздать каждое значение всем N читателям в том же порядке (tee) — без утечек горутин, даже когда читатели ушли.",
+    "contractRU": [
+      "OrDone пересылает значения in, пока in не закрыт и ctx не отменён, и закрывает выход в обоих случаях; in не закрывает.",
+      "Если читатель ушёл после отмены, горутина OrDone не остаётся висеть на отправке.",
+      "Tee: n < 1 считается как 1; каждый из n выходов получает каждое значение ровно один раз, в порядке in.",
+      "Следующее значение читается, только когда текущее дошло до всех выходов: медленный читатель тормозит остальных.",
+      "Все выходы закрываются после закрытия in или отмены ctx; после отмены не остаётся горутин, даже если выходы никто не читает."
+    ],
+    "contractEN": [
+      "OrDone forwards values from in until in is closed or ctx is done, and closes its output in both cases; it never closes in.",
+      "If the reader left after cancelling, the OrDone goroutine does not stay blocked on its send.",
+      "Tee: n < 1 means 1; each of the n outputs gets every value exactly once, in the order of in.",
+      "The next value is read only after the current one has reached every output: a slow reader holds back the others.",
+      "All outputs are closed after in is closed or ctx is done; after cancellation no goroutine is left, even if nobody reads the outputs."
+    ],
+    "planTasks": [
+      "w9-sat-2"
+    ],
+    "links": [
+      "c13",
+      "c18"
+    ],
+    "katas": [
+      "k3-3",
+      "k3-7"
+    ],
+    "hints": [
+      "OrDone — for-select по in и <-ctx.Done(), а отправка — в своём select с <-ctx.Done().",
+      "Tee читает через OrDone: for v := range OrDone(ctx, in) — отмена на чтении уже учтена.",
+      "На каждое значение — по горутине на выход и sync.WaitGroup; wg.Wait() до следующего значения: никто не убежит вперёд, порядок сохранится.",
+      "Книжный вариант на двух выходах: копия out1, out2 один раз на значение, отправленный канал — в nil (nil-канал в select никогда не готов)."
+    ],
+    "talkEN": "OrDone wraps a channel so a reader can range over it and still stop on cancellation: the forwarding goroutine selects on the input and ctx.Done(), and the send has its own select, otherwise a reader that left would leave it blocked forever. Tee reads through OrDone and, for each value, starts one goroutine per output and waits for all of them before reading the next value. Every output keeps the input order and moves in step, so a slow reader slows the others — that is the contract of tee. If readers need independent speed, I'd use per-reader buffers or pub/sub, not tee.",
+    "invariantsRU": [
+      "Отправка в OrDone — в своём `select` с `<-ctx.Done()`; выход закрывается в `defer`.",
+      "Tee: `wg.Wait()` по всем выходам до следующего значения — никто не уходит вперёд.",
+      "`n < 1` → 1; все выходы закрывает Tee после `in` или отмены; `in` не закрывать."
+    ],
+    "pitfalls": [
+      "Отправка в OrDone без select → читатель отменил и ушёл, горутина висит навсегда.",
+      "Горутина на значение без ожидания («быстрый» tee) → порядок в выходах теряется.",
+      "Копия out1, out2 внутри внутреннего цикла → один выход получает значение дважды, другой — ни разу.",
+      "Закрыть выходы, пока горутины ещё отправляют → panic: send on closed channel."
+    ],
+    "followUps": [
+      "Напиши книжный Tee на двух выходах через nil-каналы, без горутин на выход. Что проще, что ограниченнее?",
+      "Читателям нужна независимая скорость: буфер на выход и политика переполнения — почему это уже не tee?"
+    ],
+    "fixture": "docs/verification/fixtures/practice/tee",
+    "files": {
+      "starter": {
+        "name": "tee.go",
+        "code": "// Package tee: practice task W9-1. Replace each TODO with your solution.\npackage tee\n\nimport \"context\"\n\n// OrDone forwards values from in until in is closed or ctx is done, and closes\n// the returned channel in both cases. A reader can then range over the result\n// without its own select on ctx.Done(). OrDone never closes in.\nfunc OrDone[T any](ctx context.Context, in <-chan T) <-chan T {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Tee copies every value from in to n outputs (n < 1 means 1). The next value\n// is read only after the current one has reached every output: a slow reader\n// holds back the others, and each output keeps the input order. All outputs\n// are closed after in is closed or ctx is done. Tee never closes in.\nfunc Tee[T any](ctx context.Context, in <-chan T, n int) []<-chan T {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+      },
+      "tests": {
+        "name": "tee_test.go",
+        "code": "package tee\n\nimport (\n\t\"context\"\n\t\"runtime\"\n\t\"slices\"\n\t\"sync\"\n\t\"testing\"\n\t\"time\"\n)\n\nfunc source(n int) <-chan int {\n\tch := make(chan int)\n\tgo func() {\n\t\tdefer close(ch)\n\t\tfor i := range n {\n\t\t\tch <- i\n\t\t}\n\t}()\n\treturn ch\n}\n\nfunc collect(t *testing.T, out <-chan int) []int {\n\tt.Helper()\n\tvar got []int\n\ttimeout := time.After(5 * time.Second)\n\tfor {\n\t\tselect {\n\t\tcase v, ok := <-out:\n\t\t\tif !ok {\n\t\t\t\treturn got\n\t\t\t}\n\t\t\tgot = append(got, v)\n\t\tcase <-timeout:\n\t\t\tt.Fatalf(\"output is not closed; received %d values\", len(got))\n\t\t}\n\t}\n}\n\n// readAll reads every output concurrently until all are closed.\nfunc readAll(t *testing.T, outs []<-chan int) [][]int {\n\tt.Helper()\n\tgot := make([][]int, len(outs))\n\tvar wg sync.WaitGroup\n\tfor i, out := range outs {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor v := range out {\n\t\t\t\tgot[i] = append(got[i], v)\n\t\t\t}\n\t\t}()\n\t}\n\tdone := make(chan struct{})\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(done)\n\t}()\n\tselect {\n\tcase <-done:\n\tcase <-time.After(5 * time.Second):\n\t\tt.Fatal(\"not every output was closed\")\n\t}\n\treturn got\n}\n\nfunc waitUntil(t *testing.T, what string, cond func() bool) {\n\tt.Helper()\n\tdeadline := time.Now().Add(2 * time.Second)\n\tfor !cond() {\n\t\tif time.Now().After(deadline) {\n\t\t\tt.Fatalf(\"timed out waiting for: %s\", what)\n\t\t}\n\t\ttime.Sleep(time.Millisecond)\n\t}\n}\n\nfunc TestOrDoneForwardsAll(t *testing.T) {\n\tgot := collect(t, OrDone(context.Background(), source(5)))\n\tif want := []int{0, 1, 2, 3, 4}; !slices.Equal(got, want) {\n\t\tt.Fatalf(\"got %v, want %v\", got, want)\n\t}\n}\n\nfunc TestOrDoneCancelWithOpenInput(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\tout := OrDone(ctx, make(chan int)) // the input never closes\n\tcancel()\n\tcollect(t, out)\n\twaitUntil(t, \"goroutines to exit\", func() bool { return runtime.NumGoroutine() <= before })\n}\n\n// Nobody reads the result: OrDone took a value and waits to send it.\n// The send must also listen to ctx.Done(), otherwise the goroutine leaks.\nfunc TestOrDoneCancelWithoutReading(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\tin := make(chan int, 1)\n\tin <- 1\n\tout := OrDone(ctx, in)\n\twaitUntil(t, \"OrDone to take a value\", func() bool { return len(in) == 0 })\n\tcancel()\n\twaitUntil(t, \"goroutines to exit while nobody reads\", func() bool { return runtime.NumGoroutine() <= before })\n\tcollect(t, out)\n}\n\nfunc TestTeeEveryOutputGetsAllInOrder(t *testing.T) {\n\tfor range 20 {\n\t\tgot := readAll(t, Tee(context.Background(), source(50), 3))\n\t\twant := collect(t, source(50))\n\t\tfor i, out := range got {\n\t\t\tif !slices.Equal(out, want) {\n\t\t\t\tt.Fatalf(\"output %d got %v, want every value once, in order\", i, out)\n\t\t\t}\n\t\t}\n\t}\n}\n\nfunc TestTeeNonPositiveN(t *testing.T) {\n\tgot := readAll(t, Tee(context.Background(), source(3), 0))\n\tif len(got) != 1 || !slices.Equal(got[0], []int{0, 1, 2}) {\n\t\tt.Fatalf(\"got %v, want one output [0 1 2]\", got)\n\t}\n}\n\n// Output 1 is not read yet, so output 0 may get the first value but not the\n// second: the next value is read only after every output got the current one.\nfunc TestTeeWaitsForSlowestReader(t *testing.T) {\n\tin := make(chan int, 3)\n\tin <- 10\n\tin <- 20\n\tin <- 30\n\tclose(in)\n\touts := Tee(context.Background(), in, 2)\n\tif v := <-outs[0]; v != 10 {\n\t\tt.Fatalf(\"output 0 got %d first, want 10\", v)\n\t}\n\tselect {\n\tcase v := <-outs[0]:\n\t\tt.Fatalf(\"output 0 got %d before output 1 took 10: outputs must move in step\", v)\n\tcase <-time.After(50 * time.Millisecond):\n\t}\n\tif v := <-outs[1]; v != 10 {\n\t\tt.Fatalf(\"output 1 got %d first, want 10\", v)\n\t}\n\trest := readAll(t, outs)\n\tif !slices.Equal(rest[0], []int{20, 30}) || !slices.Equal(rest[1], []int{20, 30}) {\n\t\tt.Fatalf(\"rest %v, want [20 30] on both outputs\", rest)\n\t}\n}\n\nfunc TestTeeCancelWithoutReading(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\tin := make(chan int, 1)\n\tin <- 1\n\touts := Tee(ctx, in, 3)\n\twaitUntil(t, \"Tee to take a value\", func() bool { return len(in) == 0 })\n\tcancel()\n\twaitUntil(t, \"goroutines to exit while nobody reads\", func() bool { return runtime.NumGoroutine() <= before })\n\treadAll(t, outs)\n}\n\nfunc TestTeeCancelWithOpenInput(t *testing.T) {\n\tbefore := runtime.NumGoroutine()\n\tctx, cancel := context.WithCancel(context.Background())\n\touts := Tee(ctx, make(chan int), 2) // the input never closes\n\tcancel()\n\treadAll(t, outs)\n\twaitUntil(t, \"goroutines to exit\", func() bool { return runtime.NumGoroutine() <= before })\n}"
+      },
+      "solution": {
+        "name": "tee.go",
+        "code": "// Package tee is the reference solution for practice task W9-1:\n// or-done and tee, both stopping on cancellation without leaks.\npackage tee\n\nimport (\n\t\"context\"\n\t\"sync\"\n)\n\n// OrDone forwards values from in until in is closed or ctx is done, and closes\n// the returned channel in both cases. A reader can then range over the result\n// without its own select on ctx.Done(). OrDone never closes in.\nfunc OrDone[T any](ctx context.Context, in <-chan T) <-chan T {\n\tout := make(chan T)\n\tgo func() {\n\t\tdefer close(out)\n\t\tfor {\n\t\t\tselect {\n\t\t\tcase <-ctx.Done():\n\t\t\t\treturn\n\t\t\tcase v, ok := <-in:\n\t\t\t\tif !ok {\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\t// The send waits for a reader, so it needs its own exit on cancellation.\n\t\t\t\tselect {\n\t\t\t\tcase out <- v:\n\t\t\t\tcase <-ctx.Done():\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}()\n\treturn out\n}\n\n// Tee copies every value from in to n outputs (n < 1 means 1). The next value\n// is read only after the current one has reached every output: a slow reader\n// holds back the others, and each output keeps the input order. All outputs\n// are closed after in is closed or ctx is done. Tee never closes in.\nfunc Tee[T any](ctx context.Context, in <-chan T, n int) []<-chan T {\n\tn = max(n, 1)\n\touts := make([]chan T, n)\n\tresult := make([]<-chan T, n)\n\tfor i := range outs {\n\t\touts[i] = make(chan T)\n\t\tresult[i] = outs[i]\n\t}\n\tgo func() {\n\t\tdefer func() {\n\t\t\tfor _, out := range outs {\n\t\t\t\tclose(out)\n\t\t\t}\n\t\t}()\n\t\tfor v := range OrDone(ctx, in) {\n\t\t\t// One goroutine per output, joined before the next value: the outputs\n\t\t\t// are served in any order, but none gets two values ahead of another.\n\t\t\tvar wg sync.WaitGroup\n\t\t\tfor _, out := range outs {\n\t\t\t\twg.Add(1)\n\t\t\t\tgo func() {\n\t\t\t\t\tdefer wg.Done()\n\t\t\t\t\tselect {\n\t\t\t\t\tcase out <- v:\n\t\t\t\t\tcase <-ctx.Done():\n\t\t\t\t\t}\n\t\t\t\t}()\n\t\t\t}\n\t\t\twg.Wait()\n\t\t}\n\t}()\n\treturn result\n}"
       }
     }
   }

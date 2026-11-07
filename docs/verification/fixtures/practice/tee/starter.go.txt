@@ -1,0 +1,21 @@
+// Package tee: practice task W9-1. Replace each TODO with your solution.
+package tee
+
+import "context"
+
+// OrDone forwards values from in until in is closed or ctx is done, and closes
+// the returned channel in both cases. A reader can then range over the result
+// without its own select on ctx.Done(). OrDone never closes in.
+func OrDone[T any](ctx context.Context, in <-chan T) <-chan T {
+	// TODO
+	panic("TODO")
+}
+
+// Tee copies every value from in to n outputs (n < 1 means 1). The next value
+// is read only after the current one has reached every output: a slow reader
+// holds back the others, and each output keeps the input order. All outputs
+// are closed after in is closed or ctx is done. Tee never closes in.
+func Tee[T any](ctx context.Context, in <-chan T, n int) []<-chan T {
+	// TODO
+	panic("TODO")
+}

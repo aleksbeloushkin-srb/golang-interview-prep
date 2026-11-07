@@ -905,6 +905,27 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .practice-guide-commands dd { margin: 2px 0 0 16px; color: var(--muted); }
 .practice-guide-check { margin-top: 12px; padding: 8px 12px; border-left: 3px solid var(--green); background: var(--surface); border-radius: 6px; }
 .practice-guide-links { padding-left: 20px; }
+/* Трек (data/tracks.js): шаги-каты блока, отметка из плана, чужой код для разбора */
+.practice-section .track-steps { list-style: none; padding: 0; margin: 10px 0 0; }
+.practice-section .track-step { margin: 0; padding: 14px 0; border-top: 1px solid var(--border); min-width: 0; }
+.practice-section .track-step:first-child { border-top: 0; padding-top: 4px; }
+.track-step h4 { margin: 0 0 4px; font-size: 1rem; line-height: 1.45; overflow-wrap: anywhere; }
+.track-step h4:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.track-label { display: inline-block; min-width: 3.4em; font-family: "JetBrains Mono", Consolas, monospace; font-size: 0.85rem; color: var(--accent); }
+.track-done { display: inline-block; margin-left: 8px; font-size: 0.75rem; font-weight: 400; color: var(--green); border: 1px solid rgba(34, 197, 94, 0.5); border-radius: 999px; padding: 0 8px; white-space: nowrap; vertical-align: middle; }
+.track-step.is-done .track-label { color: var(--green); }
+.track-when { margin: 0 0 6px; font-size: 0.88rem; }
+.track-when a, .track-sources a, .track-variation a { color: var(--accent); text-underline-offset: 3px; }
+.track-step p { margin: 6px 0; }
+.track-step .related-links { margin-top: 8px; gap: 8px 14px; }
+.track-sources { font-size: 0.88rem; overflow-wrap: anywhere; }
+.track-review > summary { font-weight: 600; }
+.track-variation { margin: 10px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 6px; min-width: 0; }
+.track-variation p { margin: 4px 0; }
+.track-rules, .track-versions { margin-top: 12px; }
+/* Переход на блок или кату: заголовок не уходит под закреплённую шапку (на телефоне шапка не закреплена). */
+.practice-track .practice-guide-section h3, .track-step h4 { scroll-margin-top: 130px; }
+@media (max-width: 640px) { .practice-track .practice-guide-section h3, .track-step h4 { scroll-margin-top: 12px; } }
 .practice-hint > summary, .practice-talk > summary, .practice-reference > summary, .practice-tests > summary { cursor: pointer; color: var(--accent); padding: 8px 0; }
 .practice-hint p, .practice-talk p { margin: 6px 0 4px; overflow-wrap: anywhere; }
 .practice-pager { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 24px; }

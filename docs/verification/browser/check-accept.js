@@ -10,10 +10,12 @@ const { chromium } = require("playwright");
 
   const expect = await p.evaluate(() => PLAN.weeks.slice(0, 5).map(w => {
     const tasks = w.days.flatMap(d => d.tasks);
+    // v86: a task that is one kata of a track takes «Готово, когда» from that kata.
+    const oneKata = t => (t.links || []).filter(id => /^k\d+-/.test(id)).length === 1;
     return { id: w.id,
-      withAccept: tasks.filter(t => PLAN.acceptance[t.id] || t.lc).length,
+      withAccept: tasks.filter(t => PLAN.acceptance[t.id] || t.lc || oneKata(t)).length,
       withGap: tasks.filter(t => PLAN.acceptance[t.id] && PLAN.acceptance[t.id].exercise).length,
-      requiredWithout: tasks.filter(t => !t.optional && !PLAN.acceptance[t.id] && !t.lc).map(t => t.id) };
+      requiredWithout: tasks.filter(t => !t.optional && !PLAN.acceptance[t.id] && !t.lc && !oneKata(t)).map(t => t.id) };
   }));
   for (const w of expect) {
     await p.goto(base + `#/plan/${w.id}`); await p.waitForTimeout(150);

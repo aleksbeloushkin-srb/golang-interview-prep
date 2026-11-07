@@ -1,0 +1,14 @@
+// Package fanout: practice task W6-4. Replace the TODO with your solution.
+package fanout
+
+import "context"
+
+// Route sends each value from in to one of n outputs (n < 1 means 1), chosen
+// by its key: values with the same key always go to the same output, in the
+// order they arrived. One goroutine routes, so a slow reader of one output
+// holds back all of them. Every output is closed after in is closed or ctx is
+// done. Route never closes in: it belongs to its sender.
+func Route[T any](ctx context.Context, in <-chan T, n int, key func(T) string) []<-chan T {
+	// TODO
+	panic("TODO")
+}
