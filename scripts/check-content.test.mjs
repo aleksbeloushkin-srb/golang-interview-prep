@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio, loadGuides, validateGuides } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio, loadGuides, validateGuides, loadTracks, validateTracks } from './check-content.mjs';
 import { toSpeech, textHash } from './speech-text.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
@@ -67,11 +67,18 @@ test('loader fails on invalid JavaScript rather than reporting success', () => {
 const plan = loadPlan(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 const practice = loadPractice(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 const guides = loadGuides(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
+const tracks = loadTracks(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
 const readFixture = file => { const url = new URL('../' + file, import.meta.url); return existsSync(url) ? readFileSync(url, 'utf8') : null; };
 
 test('current plan passes structural validation against site data', () => {
   assert.ok(plan, 'data/plan.js should load');
-  assert.deepEqual(validatePlan(plan, current, practice, guides), []);
+  assert.deepEqual(validatePlan(plan, current, practice, guides, tracks), []);
+});
+
+test('plan: kata and block links need data/tracks.js', () => {
+  const errors = validatePlan(plan, current, practice, guides).join('\n');
+  assert.match(errors, /unknown site ID k2-5/);
+  assert.match(errors, /unknown site ID k1\b/);
 });
 
 test('plan: guide links need data/guides.js', () => {
@@ -114,8 +121,37 @@ test('plan: practice links need data/practice.js', () => {
 
 test('current practice tasks pass validation and match their Go fixtures', () => {
   assert.ok(practice, 'data/practice.js should load');
-  assert.deepEqual(validatePractice(practice, current, plan, readFixture), []);
+  assert.deepEqual(validatePractice(practice, current, plan, readFixture, tracks), []);
 });
+
+test('practice: katas need data/tracks.js', () => {
+  assert.match(validatePractice(practice, current, plan, readFixture).join('\n'), /katas must list known track steps/);
+});
+
+test('current tracks pass validation; review code is part of its fixture', () => {
+  assert.ok(tracks && tracks['track-channels'], 'data/tracks.js should load');
+  assert.deepEqual(validateTracks(tracks, current, practice, plan, readFixture), []);
+});
+
+const trackStep = (t, id) => t['track-channels'].blocks.flatMap(b => b.steps).find(s => s.id === id);
+const trackFailures = [
+  ['step ID outside its block', t => { trackStep(t, 'k2-5').id = 'k3-50'; }, /start with its block \(k2-\)/],
+  ['duplicate step ID', t => { trackStep(t, 'k2-7').id = 'k2-5'; }, /must be unique/],
+  ['unknown site link', t => { trackStep(t, 'k2-5').links = ['p-nope']; }, /unknown site ID p-nope/],
+  ['step neither in the plan nor with a reserve', t => { delete trackStep(t, 'k1-2').whenRU; }, /k1-2: needs either a plan task/],
+  ['step in the plan and with a reserve', t => { trackStep(t, 'k2-5').whenRU = 'резерв'; }, /k2-5: needs either a plan task/],
+  ['review code changed after verification', t => { trackStep(t, 'k3-7').review[0].code += '\n// edited'; }, /review code "Or-done" is not part of/],
+  ['unpaired backtick', t => { trackStep(t, 'k2-2').doneWhen += ' `ctx'; }, /doneWhen must be text with paired backticks/],
+  ['reference without https', t => { t['track-channels'].blocks[0].refs[0].u = 'http://go.dev'; }, /https URL/],
+  ['block ID not k<N>', t => { t['track-channels'].blocks[0].id = 'b1'; }, /unique k<N> id/],
+];
+for (const [name, mutate, expected] of trackFailures) {
+  test('tracks: rejects ' + name, () => {
+    const data = structuredClone(tracks);
+    mutate(data);
+    assert.match(validateTracks(data, current, practice, plan, readFixture).join('\n'), expected);
+  });
+}
 
 const practiceFailures = [
   ['bad ID', p => { p[0].id = 'workerpool'; }, /start with p-/],
@@ -133,7 +169,7 @@ for (const [name, mutate, expected] of practiceFailures) {
   test('practice: rejects ' + name, () => {
     const data = structuredClone(practice);
     mutate(data);
-    assert.match(validatePractice(data, current, plan, readFixture).join('\n'), expected);
+    assert.match(validatePractice(data, current, plan, readFixture, tracks).join('\n'), expected);
   });
 }
 
@@ -159,7 +195,7 @@ for (const [name, mutate, expected] of planFailures) {
   test('plan: rejects ' + name, () => {
     const data = structuredClone(plan);
     mutate(data);
-    assert.match(validatePlan(data, current, practice, guides).join('\n'), expected);
+    assert.match(validatePlan(data, current, practice, guides, tracks).join('\n'), expected);
   });
 }
 

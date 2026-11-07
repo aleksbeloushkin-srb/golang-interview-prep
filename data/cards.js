@@ -1195,16 +1195,18 @@ const CARDS = [
       "Channel operands and send values are evaluated once, in source order, before choosing a case. Receive-assignment destinations are evaluated only if that receive is selected, after the communication. Even a nil-channel case can have operand side effects.",
       "A preliminary cancellation check stops work if cancellation is already visible there. Cancellation can occur between that check and the next select, where a ready job can still be chosen. This is not a strict priority guarantee.",
       "Random choice does not guarantee a maximum waiting time. Check the receive ok value when the jobs channel can close, and pass context to work that supports cancellation.",
-      "An empty select blocks forever; a default-only select runs its body. Receiving from a closed, drained channel is ready and returns the zero value with ok=false. Sending to a closed channel panics if that case is selected; default does not protect it."
+      "An empty select blocks forever; a default-only select runs its body. Receiving from a closed, drained channel is ready and returns the zero value with ok=false. Sending to a closed channel panics if that case is selected; default does not protect it.",
+      "ctx.Done() and a timer signal differently. Cancellation closes the Done channel, so every goroutine waiting on it wakes, including later ones. Timer.C and time.After send one time.Time value to one receiver and are never closed: of five goroutines waiting on one timer, one wakes. Since Go 1.23 (for modules declaring go 1.23 or later; since Go 1.27 for every module) the timer channel is unbuffered and an unreferenced timer can be garbage-collected even if not stopped."
     ],
     "detailsRU": [
       "Выражения каналов и отправляемых значений вычисляются один раз, в порядке исходника, до выбора ветки. Левая часть присваивания при чтении вычисляется только после выбора и выполнения этого чтения. Даже у ветки с nil-каналом возможны побочные эффекты вычисления операндов.",
       "Предварительная проверка останавливает работу, если отмена уже видна в этот момент. Отмена может произойти между проверкой и следующим select: тогда готовая задача всё ещё может быть выбрана. Строгого приоритета здесь нет.",
       "Случайный выбор не гарантирует максимальное время ожидания. Проверяй ok при чтении закрываемой очереди и передавай context в работу, которая умеет обрабатывать отмену.",
-      "Пустой select блокируется навсегда; select только с default выполняет его тело. Чтение из закрытого опустошённого канала готово: нулевое значение и ok=false. Отправка в закрытый канал паникует при выборе этой ветки; default от этого не защищает."
+      "Пустой select блокируется навсегда; select только с default выполняет его тело. Чтение из закрытого опустошённого канала готово: нулевое значение и ok=false. Отправка в закрытый канал паникует при выборе этой ветки; default от этого не защищает.",
+      "ctx.Done() и таймер сигналят по-разному. Отмена закрывает канал Done, поэтому просыпаются все ждущие горутины, в том числе пришедшие позже. Timer.C и time.After отправляют одно значение time.Time одному получателю и не закрываются: из пяти горутин, ждущих один таймер, проснётся одна. С Go 1.23 (у модулей с go 1.23 и выше в go.mod; с Go 1.27 — у всех) канал таймера без буфера, а таймер без ссылок может собрать GC и без Stop."
     ],
     "practicalRU": "Если воркер продолжает брать задания после отмены, проверь момент выбора задачи и поддержку context внутри самой операции. Предварительная проверка уменьшает нежелательную работу, но не делает проверку и получение задачи атомарными. Для строгой границы приёма задач потребуется отдельный протокол синхронизации.",
-    "versionNote": "Гарантии select одинаковы для Go 1.17, 1.25 и 1.26. Для фрагмента ниже нужен импорт пакета context; handle должен поддерживать отмену.",
+    "versionNote": "Гарантии select одинаковы для Go 1.17, 1.25 и 1.26. Канал таймера синхронный с Go 1.23 при go 1.23+ в go.mod; в 1.27 настройку asynctimerchan удалили — новое поведение у всех модулей. Для фрагмента ниже нужен импорт пакета context; handle должен поддерживать отмену.",
     "sources": [
       {
         "title": "Go specification: select",
@@ -1213,6 +1215,10 @@ const CARDS = [
       {
         "title": "context.Context",
         "url": "https://pkg.go.dev/context@go1.26.1#Context"
+      },
+      {
+        "title": "time.NewTimer",
+        "url": "https://pkg.go.dev/time#NewTimer"
       }
     ],
     "practice": {
@@ -1500,6 +1506,7 @@ const CARDS = [
       "Implementation history: Go 1.17 used three uint32 words to obtain an aligned 64-bit state plus a semaphore. Go 1.25/1.26 use atomic.Uint64: high 32 bits count tasks; the low part contains a synctest flag and 31 waiter bits. Memorize the contract first, not a permanent two-counter layout.",
       "Once.Do publishes initialization only after f finishes. A CAS that marks done before f runs would let losing callers return too early. Recursive Do on the same Once deadlocks. If f panics, Once considers that invocation complete: later Do calls do not retry f. Once itself must not be copied after use.",
       "Cancellation is a request: work must observe Done or use a context-aware API, and its owner still waits for completion where needed. Call the CancelFunc to release associated resources. Context methods are safe for concurrent use; mutable objects stored in values are not automatically protected.",
+      "A writer that can be cancelled puts every send into a select with ctx.Done() and returns in that case; an empty case without return keeps the loop running. Three rules against goroutine leaks: got the result — exit; unrecoverable error — exit; cancelled — exit. defer close(out) closes the channel on every path.",
       "WithoutCancel (Go 1.21+) keeps value lookup but removes the parent deadline, cancellation and cause: Done is nil. Add an explicit timeout if using it. This is suitable only for intentionally detached, owned best-effort work; it neither guarantees delivery nor connects the task to service shutdown. Mandatory audit needs a durable handoff or completion before success."
     ],
     "practicalRU": "Задай три вопроса: кто регистрирует задачу и ждёт её, кто публикует инициализированное состояние, кто отменяет? Фоновая работа требует решения о жизненном цикле. Таймаут и отдельная горутина не заменяют надёжную очередь.",
@@ -1513,6 +1520,7 @@ const CARDS = [
       "История реализации: Go 1.17 использовал три слова uint32 для выровненного 64-битного состояния и семафора. В Go 1.25/1.26 используется atomic.Uint64: старшие 32 бита — задачи, младшая часть — флаг synctest и 31 бит ожидающих. Сначала запоминай контракт, а не вечную раскладку из двух счётчиков.",
       "Once.Do публикует инициализацию только после завершения f. CAS с установкой done до вызова f позволил бы проигравшим вернуться слишком рано. Рекурсивный Do того же Once блокируется навсегда. После panic в f Once считает вызов выполненным: следующие Do не повторят f. Once после использования тоже нельзя копировать.",
       "Отмена — просьба: работа должна проверять Done или использовать API с поддержкой контекста, а владелец при необходимости отдельно ждёт завершения. Вызывай CancelFunc для освобождения связанных ресурсов. Методы Context безопасны при параллельных вызовах; изменяемые объекты в values автоматически не защищаются.",
+      "Писатель с отменой ставит каждую отправку в select с ctx.Done() и в этой ветке выходит: пустая ветка без return цикл не останавливает. Три правила против утечек горутин: получил результат — выйди; неисправимая ошибка — выйди; отменили — выйди. defer close(out) закрывает канал на любом пути выхода.",
       "WithoutCancel (Go 1.21+) сохраняет поиск values, но убирает дедлайн, отмену и cause родителя: Done равен nil. При использовании добавь явный таймаут. Это только для осознанно отделённой best-effort работы с владельцем; доставки и остановки вместе с сервисом он не обеспечивает. Обязательному аудиту нужна надёжная передача или завершение до ответа об успехе."
     ],
     "versionNote": "Пример: Go 1.25+ (WaitGroup.Go); отдельная переменная каждой итерации при := — семантика модулей Go 1.22+. Для Go 1.17: Add до go, defer Done и явная передача i аргументом. WithoutCancel — 1.21+. Различие panic-пути проверено по тегам 1.25.0 и 1.26.1.",
@@ -1540,6 +1548,10 @@ const CARDS = [
       {
         "title": "errgroup.WithContext — golang.org/x/sync",
         "url": "https://pkg.go.dev/golang.org/x/sync/errgroup#WithContext"
+      },
+      {
+        "title": "Go blog: Pipelines and cancellation",
+        "url": "https://go.dev/blog/pipelines"
       }
     ],
     "quizIds": [

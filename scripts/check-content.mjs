@@ -10,6 +10,7 @@ const dataFiles = ['data/cards.js', 'data/quiz.js', 'data/simulators.js'];
 const planFile = 'data/plan.js';
 const practiceFile = 'data/practice.js';
 const guidesFile = 'data/guides.js';
+const tracksFile = 'data/tracks.js';
 
 // Only evaluate trusted repository data. VM isolation is not a security boundary.
 export function loadContent(read) {
@@ -45,6 +46,69 @@ export function loadGuides(read) {
   return JSON.parse(runInContext('JSON.stringify({ guides: GUIDES, links: GUIDE_LINKS })', context, { timeout: 1000 }));
 }
 
+// data/tracks.js — треки практикума: каты по блокам; план ссылается на кату ("k2-5") или блок ("k2"). Optional.
+export function loadTracks(read) {
+  let source;
+  try { source = read(tracksFile); } catch { return null; }
+  const context = createContext({});
+  runInContext(source, context, { filename: tracksFile, timeout: 1000 });
+  return JSON.parse(runInContext('JSON.stringify(TRACKS)', context, { timeout: 1000 }));
+}
+
+// Step and block IDs of all tracks: what plan and practice may link to.
+export function trackIds(tracks) {
+  const steps = new Set(), blocks = new Set();
+  for (const track of Object.values(tracks || {})) {
+    for (const block of track?.blocks || []) {
+      blocks.add(block?.id);
+      for (const step of block?.steps || []) steps.add(step?.id);
+    }
+  }
+  return { steps, blocks };
+}
+
+// A kata is described once, here. Every step is either linked from a plan day or names its reserve
+// (whenRU), never both; review code must be a verbatim part of the verified fixture.
+export function validateTracks(tracks, data, practice, plan, readFixture) {
+  const errors = [];
+  if (!tracks) return errors;
+  const require = (condition, message) => { if (!condition) errors.push(message); };
+  const text = value => typeof value === 'string' && value.trim().length > 0;
+  const balanced = value => (value.match(/`/g) || []).length % 2 === 0;
+  const site = new Set([...data.cards, ...data.quiz, ...data.simulators, ...(practice || [])].map(item => item?.id));
+  const planLinks = new Set((plan?.weeks || []).flatMap(w => (w?.days || []).flatMap(d => (d?.tasks || []).flatMap(t => t?.links || []))));
+  const stepIds = new Set(), blockIds = new Set();
+  for (const [id, track] of Object.entries(tracks)) {
+    require(/^track-[a-z0-9-]+$/.test(id) && text(track?.title) && Array.isArray(track?.intro) && track.intro.every(text) && Array.isArray(track?.blocks) && track.blocks.length, `track ${id}: needs a track-… id, title, intro and blocks`);
+    for (const key of ['rules', 'versions']) {
+      require(Array.isArray(track?.[key]) && track[key].every(row => Array.isArray(row) && row.length === 2 && row.every(text) && row.every(balanced)), `track ${id}: ${key} must be [term, text] pairs`);
+    }
+    const fixture = track?.reviewFixture && readFixture ? readFixture(track.reviewFixture) : null;
+    for (const block of track?.blocks || []) {
+      require(/^k\d+$/.test(block?.id || '') && !blockIds.has(block.id) && text(block?.title) && Array.isArray(block?.steps) && block.steps.length, `track ${id}: block ${block?.id} needs a unique k<N> id, title and steps`);
+      blockIds.add(block?.id);
+      for (const ref of block?.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `track ${id}/${block?.id}: reference needs title and https URL`);
+      for (const step of block?.steps || []) {
+        const label = `track ${id}/${step?.id}`;
+        require(typeof step?.id === 'string' && step.id.startsWith(`${block?.id}-`) && /^k\d+-[a-z0-9]+$/.test(step.id) && !stepIds.has(step.id), `${label}: ID must be unique and start with its block (${block?.id}-)`);
+        stepIds.add(step?.id);
+        for (const key of ['label', 'title', 'doneWhen']) require(text(step?.[key]), `${label}: missing/empty ${key}`);
+        for (const key of ['title', 'doneWhen', 'variation', 'whenRU', 'sayEN']) if (step?.[key] !== undefined) require(text(step[key]) && balanced(step[key]), `${label}: ${key} must be text with paired backticks`);
+        if (step?.minutes !== undefined) require(Number.isInteger(step.minutes) && step.minutes > 0, `${label}: minutes must be a positive integer`);
+        for (const key of ['oral', 'optional']) if (step?.[key] !== undefined) require(typeof step[key] === 'boolean', `${label}: ${key} must be boolean`);
+        for (const link of step?.links || []) require(site.has(link), `${label}: unknown site ID ${link}`);
+        for (const ref of step?.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `${label}: reference needs title and https URL`);
+        if (plan) require(planLinks.has(step?.id) !== text(step?.whenRU), `${label}: needs either a plan task that links it or whenRU, not both`);
+        for (const item of step?.review || []) {
+          require(['title', 'question', 'answer', 'code'].every(k => text(item?.[k])) && balanced(item.question) && balanced(item.answer), `${label}: review needs title, question, answer and code`);
+          if (readFixture) require(fixture !== null && text(item?.code) && fixture.includes(item.code), `${label}: review code "${item?.title}" is not part of ${track?.reviewFixture}`);
+        }
+      }
+    }
+  }
+  return errors;
+}
+
 export function validateGuides(guides) {
   const errors = [];
   if (!guides) return errors;
@@ -73,7 +137,7 @@ export function planTaskIds(plan) {
   return (plan?.weeks || []).flatMap(week => (week?.days || []).flatMap(day => (day?.tasks || []).map(task => task?.id)));
 }
 
-export function validatePlan(plan, data, practice = null, guides = null) {
+export function validatePlan(plan, data, practice = null, guides = null, tracks = null) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
   const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -83,7 +147,8 @@ export function validatePlan(plan, data, practice = null, guides = null) {
   for (const key of ['leetcodeIndex', 'talks', 'acceptance']) require(plan[key] === undefined || isObject(plan[key]), `plan: ${key} must be an object`);
   if (errors.length) return errors;
   const site = { c: new Set(data.cards.map(c => c.id)), q: new Set(data.quiz.map(q => q.id)), sim: new Set(data.simulators.map(s => s.id)), p: new Set((practice || []).map(p => p?.id)), g: new Set(Object.keys(guides?.links || {})) };
-  const siteHas = id => text(id) && (id.startsWith('sim') ? site.sim : id.startsWith('p-') ? site.p : id.startsWith('g-') ? site.g : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
+  const kata = trackIds(tracks);
+  const siteHas = id => text(id) && (/^k\d+$/.test(id) ? kata.blocks : /^k\d/.test(id) ? kata.steps : id.startsWith('sim') ? site.sim : id.startsWith('p-') ? site.p : id.startsWith('g-') ? site.g : id.startsWith('c') ? site.c : id.startsWith('q') ? site.q : new Set()).has(id);
   const weekIds = new Set(), taskIds = new Set();
   plan.weeks.forEach((week, w) => {
     const label = `plan.weeks[${w}]`;
@@ -183,7 +248,7 @@ export function validateBoard(board, label) {
 
 // Practice tasks: text fields, links, and code that must match the verified Go fixtures
 // (readFixture returns a file's text, or null when the file does not exist).
-export function validatePractice(practice, data, plan, readFixture) {
+export function validatePractice(practice, data, plan, readFixture, tracks = null) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
   const text = value => typeof value === 'string' && value.trim().length > 0;
@@ -205,6 +270,7 @@ export function validatePractice(practice, data, plan, readFixture) {
     for (const id of task.planTasks || []) require(!plan || taskIds.has(id), `${label}: unknown plan task ${id}`);
     for (const id of task.links || []) require(site.has(id), `${label}: unknown site ID ${id}`);
     for (const ref of task.refs || []) require(text(ref?.t) && /^https:\/\//.test(ref?.u || ''), `${label}: reference needs title and https URL`);
+    if (task.katas !== undefined) require(Array.isArray(task.katas) && task.katas.length > 0 && task.katas.every(id => trackIds(tracks).steps.has(id)), `${label}: katas must list known track steps`);
     for (const key of ['setup', 'extraRun']) if (task[key] !== undefined) require(texts(task[key]), `${label}: ${key} must be a non-empty list of commands`);
     if (task.invariantsRU !== undefined) require(texts(task.invariantsRU) && task.invariantsRU.length === 3, `${label}: invariantsRU must be exactly 3 texts`);
     for (const kind of ['starter', 'tests', 'solution']) {
@@ -370,16 +436,20 @@ function main() {
   const hasPlan = existsSync(resolve(root, planFile));
   const hasPractice = existsSync(resolve(root, practiceFile));
   const hasGuides = existsSync(resolve(root, guidesFile));
-  const scripts = [...dataFiles, 'js/app.js', ...(existsSync(resolve(root, 'data/audio.js')) ? ['data/audio.js', 'js/audio.js'] : []), ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : []), ...(hasGuides ? [guidesFile] : [])];
+  const hasTracks = existsSync(resolve(root, tracksFile));
+  const scripts = [...dataFiles, 'js/app.js', ...(existsSync(resolve(root, 'data/audio.js')) ? ['data/audio.js', 'js/audio.js'] : []), ...(hasPlan ? [planFile, 'js/plan-view.js'] : []), ...(hasPractice ? [practiceFile, 'js/practice-view.js'] : []), ...(hasGuides ? [guidesFile] : []), ...(hasTracks ? [tracksFile] : [])];
   for (const file of scripts) execFileSync(process.execPath, ['--check', resolve(root, file)], { stdio: 'pipe' });
   const data = loadContent(read);
   const errors = validateContent(data);
   const plan = hasPlan ? loadPlan(read) : null;
   const practice = hasPractice ? loadPractice(read) : null;
   const guides = hasGuides ? loadGuides(read) : null;
+  const tracks = hasTracks ? loadTracks(read) : null;
+  const readFixture = file => existsSync(resolve(root, file)) ? read(file) : null;
   errors.push(...validateGuides(guides));
-  if (plan && !errors.length) errors.push(...validatePlan(plan, data, practice, guides));
-  if (practice && !errors.length) errors.push(...validatePractice(practice, data, plan, file => existsSync(resolve(root, file)) ? read(file) : null));
+  if (plan && !errors.length) errors.push(...validatePlan(plan, data, practice, guides, tracks));
+  if (practice && !errors.length) errors.push(...validatePractice(practice, data, plan, readFixture, tracks));
+  if (tracks && !errors.length) errors.push(...validateTracks(tracks, data, practice, plan, readFixture));
   const markdown = execFileSync('git', ['ls-files', '-z', '--', '*.md'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
   const hazards = liquidHazards(markdown.map(name => ({ name, text: read(name) })));
   if (hazards.length) errors.push(`markdown: Liquid syntax outside {% raw %} breaks GitHub Pages: ${hazards.join(', ')}`);

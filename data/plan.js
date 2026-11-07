@@ -6,7 +6,7 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-10-29e",
+  revision: "2026-11-07",
   defaultStart: "2026-10-12",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
@@ -238,7 +238,7 @@ const PLAN = {
       id: "w4",
       title: "Конкурентность II и минимум рантайма",
       goal: "Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.",
-      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding; go test -race ./week4/... в go-prep зелёный.",
+      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week4/... в go-prep зелёный.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -275,7 +275,7 @@ const PLAN = {
             { id: "w4-sat-2", text: "Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое", links: ["c38"] },
             { id: "w4-sat-3", text: "LeetCode 98. Validate Binary Search Tree + проговор", lc: 98 },
             { id: "w4-sat-4", text: "Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов»", links: ["q5", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q21", "q22"] },
-            { id: "w4-sat-5", text: "Виртуальный live coding (Claude как интервьюер): одна задача на конкурентность, проговор по-английски, разбор" }
+            { id: "w4-sat-5", text: "Виртуальный live coding (Claude как интервьюер): «финальный босс» — processParallel(in, out, 5) за 5 с с тестом на утечки; проговор по-английски, разбор. В воскресный резерв — каты блоков 1–2 трека (К1.2, К2.2, К2.4 обязательно)", links: ["k2-6", "p-workerpool", "k1", "k2"] }
           ]
         }
       ],
@@ -305,7 +305,7 @@ const PLAN = {
       id: "w5",
       title: "Проект I: каркас ledger-сервиса",
       goal: "Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.",
-      done: "Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском.",
+      done: "Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском; каты К2.5 и К2.7 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -334,10 +334,16 @@ const PLAN = {
           ]
         },
         {
+          label: "Пт", minutes: 45, tasks: [
+            { id: "w5-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
+          ]
+        },
+        {
           label: "Сб", minutes: 240, tasks: [
             { id: "w5-sat-1", text: "Перевод end-to-end: создание счетов, перевод, проверка балансов через curl" },
             { id: "w5-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", links: ["c57"], talk: "proj-structure" },
-            { id: "w5-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
+            { id: "w5-sat-4", text: "Ката К2.5 (20 мин): обёртка с таймаутом — три версии, утечку находит тест", links: ["k2-5", "p-timeout"] },
+            { id: "w5-sat-5", text: "Ката К2.7 (20 мин): одна утечка — три детектора: goleak, профиль goroutineleak, synctest", links: ["k2-7", "p-leak"] }
           ]
         }
       ],
@@ -363,7 +369,7 @@ const PLAN = {
       id: "w6",
       title: "Проект II: транзакции, идемпотентность, outbox → Kafka",
       goal: "Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.",
-      done: "Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат.",
+      done: "Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат; каты К3.1 и К3.2 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -391,11 +397,17 @@ const PLAN = {
           ]
         },
         {
+          label: "Пт", minutes: 45, tasks: [
+            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 }
+          ]
+        },
+        {
           label: "Сб", minutes: 240, tasks: [
             { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race", links: ["p-transfers", "q41", "c50"] },
             { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", links: ["c51", "c52"], talk: "outbox" },
-            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 },
-            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", links: ["c54"], refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] }
+            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", links: ["c54"], refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] },
+            { id: "w6-sat-5", text: "Ката К3.1 (10 мин): fan-in на время — Merge(ctx, ins...) с чистого листа", links: ["k3-1", "p-fanin"] },
+            { id: "w6-sat-6", text: "Ката К3.2 (25 мин): fan-out по ключу — как партиции Kafka этой недели", links: ["k3-2", "p-fanout"] }
           ]
         }
       ],
@@ -422,7 +434,7 @@ const PLAN = {
       id: "w7",
       title: "Проект III: gRPC, тесты, бенчмарки",
       goal: "У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.",
-      done: "Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов.",
+      done: "Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов; каты К3.5 и К3.8 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -450,10 +462,16 @@ const PLAN = {
           ]
         },
         {
+          label: "Пт", minutes: 45, tasks: [
+            { id: "w7-sat-3", text: "LeetCode 994. Rotting Oranges + проговор", lc: 994 }
+          ]
+        },
+        {
           label: "Сб", minutes: 240, tasks: [
             { id: "w7-sat-1", text: "Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis", links: ["c24"] },
             { id: "w7-sat-2", text: "Покрытие: где тестов нет намеренно и почему (записать в README)" },
-            { id: "w7-sat-3", text: "LeetCode 994. Rotting Oranges + проговор", lc: 994 }
+            { id: "w7-sat-4", text: "Ката К3.5 (30 мин): ограничение работы в полёте — задача W3-1 пулом, семафором и errgroup.SetLimit", links: ["k3-5", "p-workerpool"] },
+            { id: "w7-sat-5", text: "Ката К3.8 (25 мин): errgroup на каналах и sync.Once; сравнить с x/sync/errgroup", links: ["k3-8", "p-parallelfetch"] }
           ]
         }
       ],
@@ -479,7 +497,7 @@ const PLAN = {
       id: "w8",
       title: "Проект IV: production-readiness, CV",
       goal: "Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.",
-      done: "Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском.",
+      done: "Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском; каты К3.6 и К3.9 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -508,11 +526,17 @@ const PLAN = {
           ]
         },
         {
+          label: "Пт", minutes: 45, tasks: [
+            { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 }
+          ]
+        },
+        {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском", talk: "deep-dive" },
-            { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 },
+            { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском; среди них — два о каналах в эталонном коде: К4.1 и К4.2", links: ["k4-1", "k4-2"], talk: "deep-dive" },
             { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" },
-            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2", "c59"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] }
+            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2", "c59"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] },
+            { id: "w8-sat-5", text: "Ката К3.6 (25 мин): остановка — done-канал и Shutdown, повторный вызов безопасен", links: ["k3-6", "p-shutdown"] },
+            { id: "w8-sat-6", text: "Ката К3.9 (25 мин): rate limiter — leaky bucket против token bucket", links: ["k3-9", "p-ratelimit"] }
           ]
         }
       ],
@@ -565,7 +589,7 @@ const PLAN = {
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w9-sat-1", text: "Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка" },
-            { id: "w9-sat-2", text: "Ещё 1 чужой PR в формате 40 минут" },
+            { id: "w9-sat-2", text: "Ещё 1 чужой PR в формате 40 минут — код с каналами из трека: tee с копией внутри цикла и «быстрый» tee (К3.3), or-done без select (К3.7), «решение без утечек» финального босса (К2.6)", links: ["k3-3", "k3-7", "p-tee"] },
             { id: "w9-sat-3", text: "Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10" },
             { id: "w9-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true },
             { id: "w9-sat-5", text: "Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов" }
@@ -730,7 +754,7 @@ const PLAN = {
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w12-sat-1", text: "Прогон всех историй вслух с записью, сократить каждую до 2 минут" },
-            { id: "w12-sat-2", text: "2 повторные задачи LeetCode из слабых тем" }
+            { id: "w12-sat-2", text: "Прогон на время, часть 1: каты К2.5 и К2.6 вслух, по 20–30 мин; остальные восемь — в воскресный резерв до мока 1", links: ["k5-1"] }
           ]
         }
       ],
@@ -1110,7 +1134,7 @@ const PLAN = {
     "w4-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости." },
     "w4-sat-2": { accept: "c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями." },
     "w4-sat-4": { accept: "Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор." },
-    "w4-sat-5": { accept: "Задача решена вслух за 40 минут; получен разбор; три слабых места записаны." },
+    "w4-sat-5": { accept: "«Финальный босс» решён вслух за 40 минут, тест на утечки зелёный (что это значит — в шаге К2.6); получен разбор; три слабых места записаны." },
 
     "w5-mon-1": { accept: "ADR на английском: контекст, решение, альтернативы, последствия; что в scope и вне его." },
     "w5-mon-2": { accept: "Пакет ledger не импортирует net/http и драйвер БД; Money в int64 покрыт тестами." },
