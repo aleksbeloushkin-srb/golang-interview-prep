@@ -310,13 +310,13 @@ const PLAN = {
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w5-mon-1", text: "ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope" },
-            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах", links: ["c57", "c58"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах", links: ["c57", "c58"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w5-mon-3", text: "LeetCode 230. Kth Smallest Element in a BST + проговор", lc: 230 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37", "c60"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }, { t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37", "c60"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }, { t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)", links: ["p-httperr", "c46", "q39"] }
           ]
         },
@@ -379,8 +379,8 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox", "c66"], talk: "outbox", refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63", "c66"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63", "c66"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
           ]
         },
@@ -489,7 +489,7 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)", links: ["c59", "c63", "c61"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)", links: ["c59", "c63", "c61"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
             { id: "w8-tue-2", text: "GitHub Actions: lint, test -race, build Docker-образа" }
           ]
         },
@@ -608,13 +608,13 @@ const PLAN = {
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62", "c68", "c70"], refs: [{ t: "Эталонный проект: Pinkponies Bank (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62", "c68", "c70"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }, { t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
             { id: "w10-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62", "c69"] },
+            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62", "c69"], refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
             { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
             { id: "w10-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
           ]
@@ -654,7 +654,7 @@ const PLAN = {
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", links: ["c70", "c66"], talk: "outbox" },
+            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", links: ["c70", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
             { id: "w11-mon-2", text: "LeetCode 33. Search in Rotated Sorted Array + проговор", lc: 33 }
           ]
         },
