@@ -4625,17 +4625,17 @@ const CARDS = [
     ],
     "practice": {
       "kind": "Оцени нагрузку",
-      "promptEN": "5,000 clients wait for a payment status, and each handler runs its own SELECT every 100 ms until the status changes. How many queries per second reach the database, and how do you redesign it?",
-      "promptRU": "5 000 клиентов ждут статус платежа, и каждый обработчик сам делает SELECT раз в 100 мс, пока статус не сменится. Сколько запросов в секунду приходит в базу и как это переделать?",
+      "promptEN": "5,000 clients wait for a payment status, and each handler runs its own SELECT every 250 ms until the status changes. How many queries per second reach the database, and how do you redesign it?",
+      "promptRU": "5 000 клиентов ждут статус платежа, и каждый обработчик сам делает SELECT раз в 250 мс, пока статус не сменится. Сколько запросов в секунду приходит в базу и как это переделать?",
       "pointsEN": [
-        "5,000 × 10 = 50,000 SELECTs per second, almost all returning the same row; the load grows with the number of waiting clients, not with the number of changes.",
-        "One poller per pod: every 100 ms one query with WHERE id = ANY($1) for all awaited IDs is 10 queries per second per pod; with 10 pods, 100.",
-        "Add the first read of every request: with a 20-second soft timeout the 5,000 clients come back about 250 times per second, so 250 single-row reads; the per-pod waiter limit with 429 caps the rest."
+        "5,000 × 4 = 20,000 SELECTs per second, almost all returning the same row; the load grows with the number of waiting clients, not with the number of changes.",
+        "One poller per pod: every 250 ms one query with WHERE id = ANY($1) for all awaited IDs is 4 queries per second per pod; with 10 pods, 40.",
+        "Add the first read of every request: with a 30-second soft timeout the 5,000 clients come back about 170 times per second, so about 170 single-row reads; the per-pod waiter limit with 429 caps the rest."
       ],
       "pointsRU": [
-        "5 000 × 10 = 50 000 SELECT в секунду, и почти все возвращают ту же строку; нагрузка растёт с числом ждущих клиентов, а не с числом изменений.",
-        "Один поллер на под: раз в 100 мс один запрос с WHERE id = ANY($1) по всем ожидаемым ID — это 10 запросов в секунду на под; при 10 подах — 100.",
-        "Плюс первое чтение каждого запроса: при мягком таймауте 20 секунд 5 000 клиентов возвращаются примерно 250 раз в секунду, то есть 250 чтений одной строки; лимит ожидающих на под и 429 ограничивают остальное."
+        "5 000 × 4 = 20 000 SELECT в секунду, и почти все возвращают ту же строку; нагрузка растёт с числом ждущих клиентов, а не с числом изменений.",
+        "Один поллер на под: раз в 250 мс один запрос с WHERE id = ANY($1) по всем ожидаемым ID — это 4 запроса в секунду на под; при 10 подах — 40.",
+        "Плюс первое чтение каждого запроса: при мягком таймауте 30 секунд 5 000 клиентов возвращаются примерно 170 раз в секунду, то есть около 170 чтений одной строки; лимит ожидающих на под и 429 ограничивают остальное."
       ],
       "followUpEN": "How do you wake the waiters on a change without polling at all, and why keep a slow poll anyway?",
       "followUpRU": "Как будить ожидающих при изменении совсем без опроса и зачем всё равно оставить медленный опрос?"
@@ -4958,17 +4958,17 @@ const CARDS = [
     ],
     "practice": {
       "kind": "Найди ошибку",
-      "promptEN": "A partition-maintenance job must run on one pod at a time. It calls SELECT pg_try_advisory_lock(42) inside a transaction, commits and never unlocks; the comment says the lock goes away at commit. What really happens behind a connection pool, and how do you fix it?",
-      "promptRU": "Задача обслуживания партиций должна выполняться одним подом за раз. Она вызывает SELECT pg_try_advisory_lock(42) внутри транзакции, фиксирует её и не снимает лок; комментарий говорит, что лок уйдёт на коммите. Что на самом деле происходит за пулом соединений и как это исправить?",
+      "promptEN": "A report job must run on one instance at a time. Through a *sql.DB it calls SELECT pg_advisory_lock(7), builds the report, then calls SELECT pg_advisory_unlock(7); every call goes straight through db. Tests pass, but in production the next run sometimes hangs, and the unlock returns false with a server warning. What happens, and how do you fix it?",
+      "promptRU": "Отчёт должен строиться одним экземпляром за раз. Через *sql.DB задача вызывает SELECT pg_advisory_lock(7), строит отчёт и затем вызывает SELECT pg_advisory_unlock(7); каждый вызов идёт прямо через db. Тесты проходят, а в проде следующий запуск иногда зависает, а снятие лока возвращает false с предупреждением сервера. Что происходит и как это исправить?",
       "pointsEN": [
-        "pg_try_advisory_lock takes a session-level lock: it survives COMMIT and stays on the server connection that went back to the pool.",
-        "A later run gets the lock only if it lands on that same connection, since the holding session can lock again; other connections get false. Whether the job runs depends on the pool, and behind a transaction pooler it is random.",
-        "Use pg_try_advisory_xact_lock inside the transaction: PostgreSQL releases it at COMMIT or ROLLBACK. The test must check that a run after the commit gets the lock, not only that a concurrent run does not."
+        "Every call on *sql.DB may take a different pooled connection. The lock is a session lock on connection A; the unlock runs on connection B, which does not hold it, so it returns false and PostgreSQL warns that you don't own the lock.",
+        "Connection A goes back to the pool still holding the lock. The next run waits in pg_advisory_lock until A is closed — by ConnMaxLifetime, ConnMaxIdleTime or a restart — unless it happens to get A, which can take the lock again because session locks stack.",
+        "Pin one connection: conn, err := db.Conn(ctx), then lock, work and unlock on conn and close it; or, if the work fits in one transaction, use pg_try_advisory_xact_lock. Behind a transaction-mode pooler session locks do not work at all. The test runs the job twice on one pool and checks that the unlock returns true."
       ],
       "pointsRU": [
-        "pg_try_advisory_lock берёт сессионный лок: он переживает COMMIT и остаётся на серверном соединении, которое вернулось в пул.",
-        "Следующий запуск получит лок, только если попадёт на то же соединение, потому что держащая сессия может взять его снова; другие соединения получат false. Выполнится ли задача, зависит от пула, а за пулером в transaction-режиме — от случая.",
-        "Взять pg_try_advisory_xact_lock внутри транзакции: PostgreSQL снимет его на COMMIT или ROLLBACK. Тест должен проверять, что запуск после коммита лок получает, а не только что параллельный запуск его не получает."
+        "Каждый вызов на *sql.DB может взять другое соединение из пула. Лок сессионный и висит на соединении A; снятие уходит на соединение B, которое лок не держит, поэтому возвращает false, а PostgreSQL предупреждает, что лок вам не принадлежит.",
+        "Соединение A возвращается в пул вместе с локом. Следующий запуск ждёт в pg_advisory_lock, пока A не закроют — по ConnMaxLifetime, ConnMaxIdleTime или при рестарте, — если только не попадёт на само A: сессионные локи берутся повторно.",
+        "Закрепить одно соединение: conn, err := db.Conn(ctx), на нём взять лок, сделать работу, снять лок и закрыть conn; если работа помещается в одну транзакцию — pg_try_advisory_xact_lock. За пулером в transaction-режиме сессионные локи не работают вовсе. Тест запускает задачу дважды на одном пуле и проверяет, что снятие возвращает true."
       ],
       "followUpEN": "When is a session-level advisory lock the right tool, and what must hold it?",
       "followUpRU": "Когда сессионный advisory-лок — правильный инструмент и что должно его держать?"
@@ -5298,17 +5298,17 @@ const CARDS = [
     ],
     "practice": {
       "kind": "Найди утечку",
-      "promptEN": "A payment service logs every request at Info with its body, and a filter hides the body for /login and /cards. A month later someone adds POST /payouts, whose body carries the recipient's account number and a confirmation code. What leaks, and how do you change the design?",
-      "promptRU": "Платёжный сервис логирует каждый запрос на уровне Info вместе с телом, а фильтр скрывает тело для /login и /cards. Через месяц кто-то добавляет POST /payouts, в теле которого номер счёта получателя и код подтверждения. Что утекает и как изменить устройство?",
+      "promptEN": "To debug declined card payments, a client logs the processor request on every 4xx: logger.Warn(\"processor rejected\", \"req\", req), where req is a struct with Amount, PAN and CVV fields. The slog JSON handler has a ReplaceAttr that masks the keys password, token and pan. What reaches the logs, and how do you change the design?",
+      "promptRU": "Чтобы разбирать отклонённые платежи картой, клиент на каждый ответ 4xx логирует запрос к процессингу: logger.Warn(\"processor rejected\", \"req\", req), где req — структура с полями Amount, PAN и CVV. У JSON-обработчика slog есть ReplaceAttr, который маскирует ключи password, token и pan. Что попадает в логи и как изменить устройство?",
       "pointsEN": [
-        "The new route is not in the filter, so every payout body goes to the logs whole, with the account number and the code: the filter is a denylist.",
-        "The access log should write a fixed allowlist: method, route pattern, status, size, duration and request ID, never the body.",
-        "Sensitive values get types with LogValue, the handler masks known keys with ReplaceAttr, and a test logs a filled request and checks that no secret appears."
+        "ReplaceAttr sees attributes, not struct fields: req is one attribute of kind Any, so the key check never meets pan, and the JSON handler marshals the whole struct with the full card number and the CVV, which must never be stored, logs included.",
+        "Log an allowlist instead of the request: status, the processor's error code, amount and request ID. Give the request type a LogValue that returns only those fields, so even logging req whole stays safe, and a field added to the request later stays out until someone allows it.",
+        "Key masking in ReplaceAttr stays as the second line of defence; a test logs a request with a sentinel card number through the real handler and checks that the output does not contain it."
       ],
       "pointsRU": [
-        "Нового маршрута нет в фильтре, поэтому тело каждой выплаты уходит в логи целиком, с номером счёта и кодом: фильтр — это список запрещённого.",
-        "Access log должен писать фиксированный список разрешённых полей: метод, шаблон маршрута, статус, размер, длительность и request ID, но никогда не тело.",
-        "Чувствительные значения получают типы с LogValue, обработчик маскирует известные ключи через ReplaceAttr, а тест логирует заполненный запрос и проверяет, что секретов в выводе нет."
+        "ReplaceAttr видит атрибуты, а не поля структуры: req — один атрибут вида Any, поэтому проверка ключей до pan не доходит, а JSON-обработчик сериализует структуру целиком — с полным номером карты и CVV, который нельзя хранить нигде, в том числе в логах.",
+        "Логировать не запрос, а разрешённый список: статус, код ошибки процессинга, сумму и request ID. Дать типу запроса LogValue, который возвращает только эти поля, — тогда безопасно даже логирование req целиком, а поле, которое позже добавят в запрос, в лог не попадёт, пока его явно не разрешат.",
+        "Маскирование ключей в ReplaceAttr остаётся второй линией защиты; тест логирует запрос с номером-маркером через настоящий обработчик и проверяет, что в выводе его нет."
       ],
       "followUpEN": "Your Token type has LogValue on a pointer receiver, and the code logs tok, not &tok. What gets printed, and why does the compiler not stop you?",
       "followUpRU": "У типа Token метод LogValue с pointer receiver, а код логирует tok, а не &tok. Что попадёт в лог и почему компилятор этого не остановит?"
