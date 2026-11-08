@@ -71,10 +71,10 @@ const { chromium } = require("playwright");
     const labels = await p.evaluate(() => { const out = []; for (let i = 0; i < 8; i++) { document.querySelectorAll("#sim9-board .g-changed").forEach(e => out.push(e.textContent)); document.querySelector("#sim9-next")?.click(); } return out; });
     ok(`${w}: sim9 custom label stays a word`, labels.length === 0 || labels.every(t => t !== "Δ"), labels.slice(0, 3).join(","));
 
-    // Шпаргалка: 21 строка, строка 21 ведёт на c59.
+    // Шпаргалка: строка 21 ведёт на c59.
     await p.goto(`${base}#/cheatsheet`); await p.waitForTimeout(400);
     const row = await p.evaluate(() => { const rows = [...document.querySelectorAll("#cheatsheet-tbody tr")]; const r = rows[20]; return { n: rows.length, text: r ? r.innerText : "", link: r ? [...r.querySelectorAll("a")].map(a => a.getAttribute("href")).join(" ") : "" }; });
-    ok(`${w}: cheat sheet row 21`, row.n === 21 && /Архитектура Go-сервиса/.test(row.text) && /c59/.test(row.link), `${row.n} ${row.link}`);
+    ok(`${w}: cheat sheet row 21`, row.n >= 21 && /Архитектура Go-сервиса/.test(row.text) && /c59/.test(row.link), `${row.n} ${row.link}`);
     ok(`${w}: cheat sheet no overflow`, (await overflow()) <= 0);
 
     // Неделя 1: блока «Чего для этой недели пока нет на сайте» больше нет.

@@ -6,8 +6,8 @@
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-11-07",
-  defaultStart: "2026-10-12",
+  revision: "2026-11-08",
+  defaultStart: "2026-11-09",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
 
@@ -19,9 +19,9 @@ const PLAN = {
 
   talkSteps: [
     { id: "clarify", en: "Clarify", ru: "Уточнить условие и входные данные", phrase: "Before I start, let me clarify a few things." },
-    { id: "approach", en: "Approach", ru: "Идея решения до кода: brute force, затем лучше", phrase: "The brute-force approach would be… We can do better with…" },
+    { id: "approach", en: "Approach", ru: "Идея до кода: сначала brute force, затем как улучшить", phrase: "The brute-force approach would be… We can do better with…" },
     { id: "complexity", en: "Complexity", ru: "Время и память", phrase: "This runs in O(n) time and O(n) extra space." },
-    { id: "edge", en: "Edge cases & tests", ru: "Что проверить, как тест", phrase: "Edge cases: an empty input, a single element… I'd turn these into a table-driven test." }
+    { id: "edge", en: "Edge cases & tests", ru: "Граничные случаи и как они лягут в тест", phrase: "Edge cases: an empty input, a single element… I'd turn these into a table-driven test." }
   ],
 
   stuckPhrases: [
@@ -37,36 +37,35 @@ const PLAN = {
       id: "w1",
       title: "Идиомы Go I: типы, интерфейсы, ошибки",
       goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.",
-      done: "Решены LC 49, 347, 238 и задачи W1-1…W1-6 — в go-prep, go test -race ./week1/... проходит; самопроверка недели проговорена вслух по-английски без подсказок.",
+      done: "Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
             { id: "w1-mon-1", text: "Tour of Go: Basics — packages, variables, functions, flow control, defer", refs: [{ t: "Tour of Go", u: "https://go.dev/tour/" }] },
-            { id: "w1-mon-2", text: "Завести свой репозиторий go-prep: один модуль на весь практикум, по пакету на задачу (week1/money, week1/account…); тренировка команд go run, build, vet, test", links: ["g-go-prep", "c43"] },
+            { id: "w1-mon-2", text: "Завести свой репозиторий go-prep: один модуль на весь практикум; сегодня — week1/hello и week1/calc, дальше по пакету на задачу; тренировка команд go run, build, vet, test", links: ["g-go-prep", "c43"] },
             { id: "w1-mon-3", text: "LeetCode 49. Group Anagrams + проговор", lc: 49, talk: "lc49" }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures" },
+            { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures", refs: [{ t: "Tour: More types", u: "https://go.dev/tour/moretypes/1" }] },
             { id: "w1-tue-2", text: "Go by Example от Values до Closures — набрать руками, не копировать", refs: [{ t: "Go by Example", u: "https://gobyexample.com/" }] },
             { id: "w1-tue-3", text: "W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор", links: ["p-money"], talk: "w1-1" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors", links: ["c39"] },
-            { id: "w1-wed-2", text: "Сайт: интерфейсы и receivers — только короткий ответ и «как работает»", links: ["c34", "c33", "q2", "q28"] },
-            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", links: ["p-account", "p-validation", "c39", "q29"], talk: "w1-2" },
-            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" }
+            { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors (упражнения Readers, rot13Reader и Images — по желанию)", links: ["c39"], refs: [{ t: "Tour: Methods and interfaces", u: "https://go.dev/tour/methods/1" }] },
+            { id: "w1-wed-2", text: "Карточки c33 и c34 — «Коротко по-английски», «Как это работает» и практика без вариантов ответа; quiz q2 и q28", links: ["c34", "c33", "q2", "q28"] },
+            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", links: ["p-account", "p-validation", "c39", "q29"], talk: "w1-2" }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
             { id: "w1-thu-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", links: ["c39", "q29", "q30", "q20"], refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
-            { id: "w1-thu-2", text: "defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов", links: ["c35", "q3", "q5", "q31", "q32"] },
+            { id: "w1-thu-2", text: "defer / panic / recover: карточка c35, ловушки q3 и q5 из quiz и их вариации q31 и q32 — отвечать до просмотра вариантов ответа", links: ["c35", "q3", "q5", "q31", "q32"] },
             { id: "w1-thu-3", text: "Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5", links: ["p-deferpanic"], talk: "w1-5" }
+            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-5; без текста повторить проговор W1-3 из среды", links: ["p-deferpanic"], talk: "w1-5" }
           ]
         },
         {
@@ -74,26 +73,28 @@ const PLAN = {
             { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-6" },
             { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость", links: ["c40", "c65", "q33", "q34", "q52"] },
             { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать)", lc: 238, talk: "lc238" },
+            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" },
             { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
-            { id: "w1-sat-5", text: "Повторный проговор LC 49 и LC 347 без подсказок" },
-            { id: "w1-sat-6", text: "Самопроверка недели вслух по-английски (ниже)" }
+            { id: "w1-sat-5", text: "Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника" },
+            { id: "w1-sat-6", text: "Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы" },
+            { id: "w1-sat-7", text: "Tell me about yourself, версия 0 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go; записать", talk: "why-go" }
           ]
         }
       ],
-      leetcode: [1, 49, 347, 238, 20],
+      leetcode: [1, 49, 347, 238],
       english: [
         "How does error handling in Go differ from exceptions in Kotlin or Java?",
         "What is a zero value and why does it matter?",
         "When do you use a pointer receiver?",
-        "Why can a nil pointer returned as an error be non-nil?",
+        "Why can returning a nil pointer as an error give the caller a non-nil error?",
         "Tell me about yourself — version 0, 60–90 seconds."
       ],
       selfCheck: [
-        "Zero values у int, string, *T, []T, map[K]V, chan T, error?",
+        "Какие нулевые значения у int, string, *T, []T, map[K]V, chan T и error?",
         "Чем errors.Is отличается от errors.As?",
         "Когда метод объявлять на pointer receiver?",
         "Почему nil-указатель, возвращённый как error, даёт err != nil?",
-        "Порядок отложенных вызовов и когда вычисляются их аргументы?"
+        "В каком порядке выполняются отложенные вызовы и когда вычисляются их аргументы?"
       ],
       gaps: []
     },
@@ -894,21 +895,24 @@ const PLAN = {
       clarify: "Are the strings lowercase English letters only? Does the output order matter?",
       approach: "Anagrams share the same letter counts, so I build a key per word and group words in a map from key to list. In Go a [26]int array is comparable, so I can use it directly as a map key — no string building needed.",
       complexity: "O(n · k) time, where k is the average word length, and O(n · k) space.",
-      edge: "An empty string is a valid group of its own; a single word gives one group."
+      edge: "An empty string is a valid group of its own; a single word gives one group.",
+      followUp: "What if the strings can contain any Unicode letters? — A [26]int key no longer works. I'd sort the runes of each word and use the sorted string as the key, which costs O(k log k) per word."
     },
     lc347: {
       title: "LC 347. Top K Frequent Elements",
       clarify: "Is k always valid? If two numbers have the same frequency, does the order matter?",
       approach: "First count frequencies in a map. Then bucket sort: a slice of buckets indexed by frequency, which is at most n. Walk the buckets from the highest frequency and collect k numbers. A min-heap of size k is the alternative.",
       complexity: "Buckets give O(n) time and O(n) space; the heap is O(n log k).",
-      edge: "k equals the number of unique elements; all elements are the same."
+      edge: "k equals the number of unique elements; all elements are the same.",
+      followUp: "What if k is much smaller than the number of distinct values? — A min-heap of size k keeps only the best candidates: O(n log k) time and O(k) extra space on top of the counts."
     },
     lc238: {
       title: "LC 238. Product of Array Except Self",
       clarify: "Division isn't allowed, right? Can there be zeros?",
       approach: "Two passes. Left to right I store the product of everything before each index. Right to left I keep a running suffix product and multiply it in. Zeros are handled naturally because I never divide.",
       complexity: "O(n) time, O(1) extra space besides the output.",
-      edge: "One zero; two zeros, where every result is zero; negative numbers."
+      edge: "One zero; two zeros, where every result is zero; negative numbers.",
+      followUp: "What if division were allowed? — Dividing the total product works only without zeros: with one zero only that index is non-zero, with two zeros everything is zero, so prefix and suffix products stay simpler."
     },
     lc3: {
       title: "LC 3. Longest Substring Without Repeating Characters",
@@ -941,23 +945,26 @@ const PLAN = {
     },
     "w1-1": {
       title: "W1-1. Money",
-      approach: "I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats units and cents with the currency code.",
+      approach: "I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats whole and minor units with the number of decimals defined by the currency, plus the currency code.",
       edge: "Negative amounts, zero, amounts below one euro like 0.05."
     },
     "w1-2": {
       title: "W1-2. Account и W1-3. ValidationError",
       approach: "Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.",
-      edge: "errors.Is compares against a specific value; errors.As matches by type and gives me the value."
+      edge: "A zero or negative amount, withdrawing exactly the balance, and a Transfer whose deposit fails, so the money must go back. Each is a row in a table-driven test.",
+      followUp: "How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value."
     },
     "w1-5": {
       title: "W1-5. SafeDiv",
       approach: "A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.",
-      edge: "In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server."
+      edge: "b equal to zero, a normal division like 7 / 2, and a panic two calls deeper, which recover still catches in the same goroutine.",
+      followUp: "Would you use recover like this in production? — In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server."
     },
     "w1-6": {
       title: "W1-6. Method sets",
       approach: "The method set of T contains only value-receiver methods; the method set of *T contains both. So if Notify has a pointer receiver, only *Service satisfies Notifier, and passing a Service value fails at compile time.",
-      edge: "The rule itself comes from the spec. The rationale: an interface holds a copy of the value, so a pointer method called through it would change that copy, not the caller's variable."
+      edge: "An element of map[string]Service cannot call Notify at all, and a struct that embeds *Service does satisfy Notifier.",
+      followUp: "Why does the spec have this rule? — The usual rationale: the interface stores a copy that is not addressable, so a pointer method would have nothing to point to and could not change the caller's value."
     },
     "w2-1": {
       title: "W2-1. Remove",
@@ -1073,22 +1080,23 @@ const PLAN = {
   lcAccept: "Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.",
 
   acceptance: {
-    "w1-mon-1": { accept: "Пройдены разделы Basics; без подсказки объясняешь var и := и порядок вызова defer на примере из трёх строк." },
-    "w1-mon-2": { accept: "В корне go-prep проходят go vet ./... и go test -race ./...; есть week1/hello и week1/calc с тестом. Тренировка недели 1 пройдена: без подсказки — чем go run отличается от go build, что такое ./..., откуда (cached) и зачем -count=1." },
+    "w1-mon-1": { accept: "Пройдены уроки «Packages, variables, and functions» и «Flow control statements»; без подсказки объясняешь var и := и порядок вызова defer на примере из трёх строк." },
+    "w1-mon-2": { accept: "В корне go-prep проходят go vet ./... и go test -race ./...; есть week1/hello и week1/calc с тестом. Тренировка недели 1 пройдена: без подсказки — чем go run отличается от go build, что такое ./..., откуда (cached) и зачем -count=1; чем пакет отличается от модуля (c43)." },
     "w1-tue-1": { accept: "Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной." },
     "w1-tue-2": { accept: "Примеры набраны и запускаются; по каждому — одна фраза, что он показывает." },
-    "w1-tue-3": { accept: "Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками." },
+    "w1-tue-3": { accept: "Тесты практикума зелёные: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль, отрицательные суммы, JPY и BHD; одна фраза по-английски, почему не float64. Изменённое условие: Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение." },
     "w1-wed-1": { accept: "Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch." },
-    "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов." },
-    "w1-wed-3": { accept: "Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки." },
-    "w1-thu-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v) и q30 (errors.Join, Go 1.20) объяснены до вариантов." },
-    "w1-thu-2": { accept: "q3, q5, q31, q32: ответ до вариантов совпал с разбором по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5." },
-    "w1-thu-4": { accept: "Порядок трёх defer предсказан до запуска; SafeDiv возвращает ошибку при делении на ноль без паники наружу. Изменённое условие: panic во вложенной функции." },
+    "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 (nil-указатель внутри error) и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов." },
+    "w1-wed-3": { accept: "Тесты W1-2 и W1-3 зелёные, включая два уровня обёртки; errors.As достаёт *ValidationError с верным Field. Изменённое условие: добавить ErrAccountClosed — errors.Is различает обе причины." },
+    "w1-thu-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v), q30 (errors.Join, Go 1.20) и q20 (ошибка Close) объяснены до вариантов." },
+    "w1-thu-2": { accept: "q3, q5, q31, q32: ответ до вариантов совпал с разбором и по результату, и по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5." },
+    "w1-thu-4": { accept: "Порядок трёх defer предсказан до запуска; SafeDiv(1, 0) возвращает 0 и ошибку без паники наружу. Изменённое условие: деление на два вызова глубже, затем в отдельной горутине — объяснено, почему в первом случае recover ловит панику, а во втором нет." },
     "w1-sat-1": { accept: "Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация." },
     "w1-sat-2": { accept: "Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 и c65 — ответ до раскрытия; q33 (ключ map), q34 и q52 (встраивание) — до вариантов." },
-    "w1-sat-4": { accept: "Диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен." },
-    "w1-sat-5": { accept: "Обе задачи проговорены без подсказок, по 5 минут; запись сделана." },
-    "w1-sat-6": { accept: "Все вопросы самопроверки — ответ по-английски без подсказки; ошибочные отмечены для повтора." },
+    "w1-sat-4": { accept: "LC 1 решён без подсказки; диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен." },
+    "w1-sat-5": { accept: "LC 49 проговорена без подсказок за 5 минут; запись сделана." },
+    "w1-sat-6": { accept: "Все вопросы обоих блоков, кроме Tell me about yourself (это отдельная задача), — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора." },
+    "w1-sat-7": { accept: "Запись 60–90 секунд без чтения с листа: роль, один результат с числом, почему Go." },
 
     "w2-mon-1": { accept: "c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки." },
     "w2-mon-2": { accept: "q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает." },
@@ -1252,8 +1260,12 @@ const PLAN = {
       en: "It comes down to method sets: var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
     },
     "w1-sat-2": {
-      hook: "var x T is ready: 0, \"\", false or nil; nil map writes panic, nil channels block.",
+      hook: "For the zero-values row: var x T is ready — 0, \"\", false or nil; nil map writes panic, nil channels block.",
       en: "Every declared variable starts at its zero value: var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
+    },
+    "w1-sat-6": {
+      hook: "Zero values are usable; Is compares, As extracts; pointer receiver to mutate or avoid copies; defer is LIFO.",
+      en: "Zero values: 0 for int, \"\" for string, and nil for *T, []T, map[K]V, chan T and error. errors.Is checks whether the chain contains a specific value, such as a sentinel; errors.As finds the first error of a given type and lets me read its fields. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync.Mutex; then I keep all methods of the type on pointers. A nil *MyErr returned as error is not nil, because the interface stores the type *MyErr; it is nil only when both type and value are nil. Deferred calls run last in, first out when the function returns, and their arguments are evaluated when the defer statement runs."
     },
 
     "w2-mon-1": {

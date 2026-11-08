@@ -43,7 +43,7 @@ const { chromium } = require("playwright");
     // Plan model answers and practice talk.
     await p.goto(base + "#/plan/w1"); await p.waitForTimeout(300);
     const plan = await p.evaluate(() => ({ models: document.querySelectorAll(".plan-model").length, tts: document.querySelectorAll(".plan-model .tts-play").length }));
-    ok(`${w}: week 1 model answers have 🔊`, plan.models === 11 && plan.tts === 11, JSON.stringify(plan));
+    ok(`${w}: week 1 model answers have 🔊`, plan.models === 12 && plan.tts === 11, JSON.stringify(plan)); // v88: w1-sat-6 is new and waits for a recording (docs/AUDIO_QUEUE_RU.md)
     await p.goto(base + "#/plan/w2"); await p.waitForTimeout(300);
     ok(`${w}: week 2 model answers have 🔊`, await p.locator(".plan-model .tts-play").count() === await p.locator(".plan-model").count());
     await p.goto(base + "#/plan/w4"); await p.waitForTimeout(300);

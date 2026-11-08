@@ -66,7 +66,7 @@ const QUIZ_QUESTIONS = [
     "explanationRU": "Выведется false. Возврат p в error сохраняет динамический тип *MyError и значение nil. Это не nil-интерфейс: у него тип уже есть. Для успешного результата нужно вернуть nil явно, как в исправленном варианте. Метод Error у nil-ресивера не вызывается этим сравнением; его отдельный вызов здесь вернул бы boom, потому что тело не разыменовывает ресивер. Опора: сначала спроси «какой динамический тип?», затем «какое значение?».",
     "speechEN": "It prints false. Returning p as error stores the dynamic type *MyError together with a nil pointer value. The interface itself is therefore non-nil. Return nil explicitly to represent success, as in the corrected version. The equality check does not call Error. Calling that method separately would return boom here because its body does not dereference the receiver. A nil receiver does not by itself imply a panic.",
     "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc returnsError() error { return nil }\n\nfunc main() { fmt.Println(returnsError() == nil) }",
-    "versionNote": "Семантика одинакова в Go 1.17, 1.25 и 1.26; для ответа не нужны конкретная архитектура, размер iface или аллокация.",
+    "versionNote": "Семантика одинакова в Go 1.17, 1.25, 1.26 и 1.27.3; для ответа не нужны конкретная архитектура, размер iface или аллокация.",
     "sources": [
       {
         "title": "Language specification — Go 1.26.1",
@@ -95,7 +95,7 @@ const QUIZ_QUESTIONS = [
     "correct": 1,
     "explanationRU": "Выведется 1. Сначала return 0 присваивает 0 именованному результату result. Затем выполняется отложенное замыкание и увеличивает эту переменную до 1. После defer функция возвращает её итоговое значение. Это порядок языка, а не обещание конкретного стекового слота, регистра или open-coded реализации. Если передать result параметром int в отложенную функцию и менять только этот параметр, меняется копия: именованный результат останется 0.",
     "speechEN": "It prints 1. The return statement first assigns zero to the named result variable. The deferred closure then increments that same variable, and the function returns its final value. This is a language rule, independent of registers, stack slots or whether the compiler uses open-coded defers. Passing result as an int argument to the deferred function would instead give it a copy; incrementing only that parameter would leave the named result at zero.",
-    "versionNote": "Порядок присваивания результата и defer одинаков в Go 1.17, 1.25 и 1.26. Пример корректен и не нуждается в исправлении; вариант с параметром — отдельная задача на перенос.",
+    "versionNote": "Порядок присваивания результата и defer одинаков в Go 1.17, 1.25, 1.26 и 1.27.3. Пример корректен и не нуждается в исправлении; вариант с параметром — отдельная задача на перенос.",
     "sources": [
       {
         "title": "Language specification — Go 1.26.1",
@@ -171,7 +171,7 @@ const QUIZ_QUESTIONS = [
     "explanationRU": "Программа завершится из-за неперехваченного panic: отправка в закрытый канал вызывает обычную панику, а defer с recover в main принадлежит другой горутине. Получение из done не даёт main просто завершить процесс раньше попытки отправки; Sleep для порядка не нужен. В исправленном учебном варианте recover вызывается непосредственно отложенной функцией самого отправителя, затем закрывается done и main продолжает работу. Это показывает область recover, но не исправляет ошибку владения каналом в рабочем приложении: отправитель не должен посылать после закрытия.",
     "speechEN": "The program terminates with an unrecovered panic. Sending on a closed channel causes an ordinary panic, but main’s deferred recover belongs to another goroutine. Waiting on done prevents main from returning before the send attempt; no sleep is used to establish order. The corrected teaching variant recovers directly in a deferred function of the sender, then closes done so main can continue. This demonstrates recovery scope; the application-level fix is still to coordinate senders and channel closure.",
     "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tch := make(chan int)\n\tclose(ch)\n\tdone := make(chan struct{})\n\tgo func() {\n\t\tdefer close(done)\n\t\tdefer func() {\n\t\t\tif r := recover(); r != nil {\n\t\t\t\tfmt.Println(\"sender recovered:\", r)\n\t\t\t}\n\t\t}()\n\t\tch <- 42\n\t}()\n\t<-done\n}",
-    "versionNote": "Основная семантика одинакова в Go 1.17, 1.25 и 1.26. Исходный пример намеренно завершает процесс с ошибкой; проверять его нужно отдельным процессом. Вариант с recover учебный, не рекомендация подавлять ошибки канала.",
+    "versionNote": "Основная семантика одинакова в Go 1.17, 1.25, 1.26 и 1.27.3. Исходный пример намеренно завершает процесс с ошибкой; проверять его нужно отдельным процессом. Вариант с recover учебный, не рекомендация подавлять ошибки канала.",
     "sources": [
       {
         "title": "Language specification — Go 1.26.1",

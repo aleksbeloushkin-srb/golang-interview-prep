@@ -7,7 +7,7 @@ const { chromium } = require("playwright");
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
     const page = await ctx.newPage();
     const errors = []; page.on("pageerror", e => errors.push(e.message)); page.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
-    await page.clock.setFixedTime(new Date("2026-10-26T18:00:00+01:00"));
+    await page.clock.setFixedTime(new Date("2026-11-23T18:00:00+01:00")); // Monday of week 3 with the default start 09.11
     await page.goto(base + "#/plan");
     await page.waitForSelector("#plan-week-title");
     const title = await page.textContent("#plan-week-title");
