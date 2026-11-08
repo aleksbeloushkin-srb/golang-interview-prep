@@ -12514,5 +12514,11 @@ const CHEATSHEET_ROWS = [
     how: "<code>cmd/ledger/main.go</code> тонкий, остальное — в <code>internal/</code> по предметным областям; handler → use case → домен, интерфейс объявляет потребитель; сборка — руками в одной функции. SIGTERM: <code>signal.NotifyContext</code> → «не готов», пауза → <code>Shutdown</code> → воркеры → ресурсы в обратном порядке.",
     markers: "<code>Shutdown</code> — со своим дедлайном: с отменённым контекстом сигнала он не ждёт запросы. gRPC часто берут между своими сервисами, REST с JSON — для браузеров и публичных API. Long polling — один поллер на все ожидания. Канал закрывает владелец-отправитель; при нескольких — тот, кто дождался всех.",
     cardId: "c59", simId: null
+  },
+  {
+    topic: "22. Окружение Go: GOROOT, GOPATH, кэши",
+    how: "<code>GOROOT</code> — установленный Go, <code>go</code> находит его сам. <code>GOPATH</code> (по умолчанию <code>~/go</code>) с модулями — не для кода: <code>pkg/mod</code> — кэш модулей, <code>bin</code> — команды из <code>go install</code>. Кэш сборки — <code>GOCACHE</code>. Версию для модуля задаёт строка <code>go</code> в go.mod; при <code>GOTOOLCHAIN=auto</code> нужный тулчейн скачивается сам.",
+    markers: "<code>go env GOROOT GOPATH GOMODCACHE GOCACHE GOBIN</code>. С Go 1.27 <code>go env GOBIN</code> показывает итоговый каталог даже без заданного GOBIN. GOPATH mode — только при <code>GO111MODULE=off</code> или вне модуля при <code>auto</code>. Кэш модулей — не vendor.",
+    cardId: "c43", simId: null
   }
 ];

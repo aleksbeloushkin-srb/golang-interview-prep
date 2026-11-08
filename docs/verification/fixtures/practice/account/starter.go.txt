@@ -12,7 +12,7 @@ type Account struct {
 	balance int64
 }
 
-// TODO: choose the receiver for each method: they change the account.
+// The methods change the account, so they use a pointer receiver; be ready to explain what a value receiver would break.
 
 func (a *Account) Balance() int64 { return a.balance }
 

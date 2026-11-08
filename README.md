@@ -1,176 +1,102 @@
-# ⚡ Go Interview Prep — runtime, concurrency, idioms and hands-on practice
+English | [Русский](README.ru.md)
 
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Flashcards](https://img.shields.io/badge/Flashcards-72_Q%26A-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
-[![Simulators](https://img.shields.io/badge/Simulators-10_Interactive-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
-[![Code Review Quiz](https://img.shields.io/badge/Code_Review_Quiz-55_Cases-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-22c55e?style=flat-square)](#)
+# Go Interview Prep
 
-Интерактивная база знаний, визуальный симулятор рантайма и тренажёр по **Production Code Review** для подготовки к **Middle / Senior / Staff Go Backend** интервью.
+[![Go](https://img.shields.io/badge/examples_tested_on_Go-1.24.7_%7C_1.27.3-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
+[![Cards](https://img.shields.io/badge/cards-72-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Diagrams](https://img.shields.io/badge/diagrams-12-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
+[![Quiz](https://img.shields.io/badge/quiz-55-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
+[![Practice](https://img.shields.io/badge/practice_tasks-26-ef4444?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)
+[![No build](https://img.shields.io/badge/build_step-none-22c55e?style=flat-square)](#run-locally)
 
-Охватывает внутреннее устройство рантайма Go (`src/runtime/`, `asm_amd64.s`) от базовых концепций до уровня архитектора компилятора: планировщик GMP, управление стеками и переключение регистров CPU, каналы (`hchan`/`sudog`), `selectgo`, атомики `CAS` (`MESI`), трёхцветный сборщик мусора, аллокатор памяти, новые мапы на **SwissTables** и новинки **Go 1.24–1.25+**.
+A study site for Go backend interviews: runtime internals, concurrency, idioms, service design and coding tasks with tests. Plain HTML, CSS and JavaScript, with no build step and no runtime dependencies.
 
----
+**Site:** https://aleksbeloushkin-srb.github.io/golang-interview-prep/
 
-> Версии: материалы сверены с исходниками Go 1.26.1 и 1.25.0; 28 октября 2026 ключевые места рантайма (планировщик, вытеснение, GOMAXPROCS, sync.Mutex, select, netpoll) перепроверены на Go 1.27.3 — без изменений; отличия 1.27 (map, таймеры, goroutineleak, generic-методы, json/v2) отмечены в материалах.
+The interface is in Russian. Answers are in English, written to be said out loud, with a Russian explanation next to each.
 
-## 🔗 Быстрые ссылки (Live Demo)
+## Sections
 
-На телефоне разделы — в нижней панели: План, Карточки, Диаграммы, Quiz и «Ещё» (Практикум, База знаний, Шпаргалка). На компьютере — вкладки в шапке в том же порядке.
+On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams are in the bottom bar and the rest under "More".
 
-* 🔐 **Вход через Google** (кнопка в шапке): прогресс карточек, плана и практикума сохраняется на сервере и одинаков на всех устройствах; в практикуме — «Проверить на сервере» (`go test -race` в AWS, по тестам: что прошло, что нет). Без входа сайт открыт только на чтение: материалы, quiz и заготовки доступны, отметки не сохраняются. Бэкенд — [golang-interview-prep-api](https://github.com/aleksbeloushkin-srb/golang-interview-prep-api).
-* 📅 **[План подготовки на 13 недель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan)** — задачи по дням со ссылками на карточки, quiz и диаграммы, критерии готовности недель 1–6, проговор по-английски; отметки хранятся отдельно от прогресса карточек. Текстовая копия — [PROGRAM_13_WEEKS_RU.md](PROGRAM_13_WEEKS_RU.md).
-* 🛠 **[Практикум (23 задачи недель 1–6)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)** — неделя 1: Money, Account, ValidationError, defer и SafeDiv; неделя 2: Remove, generics, CLI txsum; неделя 3: worker pool, pipeline, fan-in, счётчик тремя способами, SafeCache; неделя 4: errgroup с лимитом, token bucket, graceful shutdown, утечка горутин и goroutine-профиль, escape analysis, бенчмарк и pprof; неделя 5: HTTP API счетов на ServeMux и ошибки домена → HTTP-коды; неделя 6: параллельные переводы с порядком блокировок, идемпотентный перевод (Idempotency-Key), outbox с relay и идемпотентным потребителем: контракт EN/RU, заготовка и тесты для `go test -race`, подсказки по одной, эталон и ответ на английском за минуту. Эталоны и тесты проверены в `docs/verification/fixtures/practice`, в том числе «сломанными» решениями.
-* 🗂 **[Карточки (54 вопроса и ответа)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)** — с фильтрацией по 8 модулям и 3 уровням сложности (`🟢 Base`, `🟡 Senior`, `🔴 Deep Dive`); карточка идёт в три шага: вопрос → «Показать опоры» (H) → ответ; самооценка «Не ответил / С опорой / Сам ✓» с датой попытки.
-* 🔊 **Озвучка английских ответов (пока неделя 1)** — кнопка «🔊 Слушать» у короткого ответа, сравнения с Java, эталонных ответов плана и объяснения в практикуме; голос Michael или Heart (медленнее), клавиша L. Файлы — `audio/en/`, манифест — `data/audio.js`; кнопка показывается, только если запись сделана для текущего текста. Перегенерация: `node scripts/gen-audio.mjs --week N` (Kokoro, модель в `.tts/`, см. `scripts/tts_kokoro.py`). Приёмка на слух — чек-лист [docs/AUDIO_REVIEW_RU.md](docs/AUDIO_REVIEW_RU.md); точечные правки произношения — `SPEECH_FIXES` в `scripts/gen-audio.mjs`.
-* 🔬 **[Диаграммы рантайма (10 пошаговых схем)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)** — визуализация регистров CPU, очередей GMP, каналов, `select`, `CAS` и `SwissTables`.
-* 📖 **[База знаний (все 54 темы на одной странице)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/wiki)** — с разбором продакшен-инцидентов (`pprof`, `trace`, `GODEBUG`).
-* 📊 **[Шпаргалка по рантайму](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cheatsheet)** — быстрый повтор ключевых цифр и функций перед собеседованием.
-* 🧠 **[Quiz: ловушки в коде (55 задач)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)** — поиск скрытых багов, утечек и гонок в боевом коде с ответами на русском и английском; режим «Сначала свой ответ» прячет варианты, пока не записан свой ответ.
+| Section | Route | What it does |
+|---|---|---|
+| Plan | `#/plan` | 13 weeks, 189 tasks by day, each linked to its material |
+| Cards | `#/cards` | 72 questions in 10 modules, answered from memory, with a review schedule |
+| Diagrams | `#/simulators` | 12 step-by-step diagrams, 95 steps |
+| Quiz | `#/quiz` | 55 code traps: what it prints, where the bug is, how to fix it |
+| Practice | `#/practice` | 26 coding tasks with tests, the `go-prep` repository guide, the "Channels and context" track |
+| Knowledge base | `#/wiki` | all card topics on one page and two reference projects |
+| Cheat sheet | `#/cheatsheet` | 22 rows: how each mechanism works and the numbers worth naming |
 
----
+### Plan
 
-## ✨ Ключевые особенности
+- Weeks 1–4: the language and concurrency. Weeks 5–8: a practice project, a ledger service. Weeks 9–13: interview formats — take-home and code review, system design, behavioral, mock interviews.
+- The calendar starts on your own date (the Monday of week 1) and can be shifted by a week; it highlights today and what is left for the day.
+- Tasks are checked off with a counter per week. Many have a "Done when" criterion; LeetCode problems have a hint to open after your attempt; some tasks have a model answer in English. Plan marks can be exported and imported as JSON.
+- Talk-through trainer: Clarify → Approach → Complexity → Edge cases, a timer per step, a model answer, a self-rating and your weak steps.
 
-* **3-уровневая глубина каждой карточки:**
-  1. `Base Interview Answer (EN)` — ёмкий 20-секундный ответ на английском.
-  2. `Under the Hood Details (EN)` — низкоуровневая механика рантайма и вырезки из исходников Go (`proc.go`, `chan.go`, `select.go`, `asm_amd64.s`).
-  3. `🛠️ Production Debugging (RU)` — как знание этого механизма помогает расследовать реальные проблемы в продакшене (CPU throttling в K8s, утечки горутин, `False Sharing` кэш-линий, `noscan mspan`, `GOMEMLIMIT`).
-* **9 интерактивных пошаговых симуляторов (`#/simulators`):** у всех девяти диаграмм есть схемы с подвижными «фишками» и список «Что изменилось»; на 17 шагах — режим «сначала предскажи».
-  * **Sim 1:** Шесть шагов от вычисления аргументов до завершения горутины; роли `R14`, `RSP` и `RIP` на amd64 простыми словами, сохранённое состояние и переход через `gogo`/`mcall`.
-  * **Sim 2:** Одиннадцать кадров: источники работы, запрос и безопасное вытеснение, перехват с головы очереди «до → после», различия syscall в Go 1.25/1.26, ожидание сети, GOMAXPROCS в контейнере, вся картина с ответом за минуту и пять частых вопросов с разбором упрощений. Порог 10 мс не является гарантией задержки.
-  * **Sim 3:** Девять шагов: передача значения ждущему получателю (регистрация, парковка, копирование, готовность через `runnext`, продолжение), кольцевой буфер `sendx`/`recvx`, полный буфер с ждущим отправителем, `close` и таблица nil/открыт/закрыт с ответом за минуту.
-  * **Sim 4:** Восемь шагов `select`: шесть форм компиляции, флаги selected/ok, общий `selectgo`, ожидание и CAS, обратное сопоставление веток, nil/closed и порядок вычисления выражений.
-  * **Sim 5:** CAS от смысла «замени, если совпало» до регистров amd64 (`LOCK CMPXCHG`), CAS-цикла, ABA, порядка памяти атомиков и выбора между CAS, atomic и mutex.
-  * **Sim 6:** Аллокатор памяти (`mcache` / `mcentral` / `mheap`, спаны `scan` vs `noscan`) и учебный граф GC: достижимость, перенос ссылки с защитой `Hybrid Write Barrier`, очистка и мягкий лимит. Все четыре шага содержат EN-пояснение и самопроверку.
-  * **Sim 7:** Эволюция `map` в Go: классическая `hmap`/`bmap` против новой **SwissTable (Go 1.24+)** — пять шагов: старые бакеты, состояния `ctrl`, разбор поиска ключа, рост таблиц и владение памятью. EN/RU, вопросы на воспроизведение, различия Go 1.25/1.26.
-  * **Sim 8:** `sync.Mutex` изнутри: слово `state` (locked/woken/starving и счётчик ждущих), быстрый путь `CAS(0 → 1)`, спин, очередь на семафоре, `Unlock`, режим голодания и ловушки.
-  * **Sim 9:** Битовые операции: `& | ^ &^ << >>`, маски и степени двойки, флаги в одном слове, H1/H2, поиск H2 в 8 байтах (SWAR), обход битсета, атомарные `And`/`Or` (Go 1.23+) и ловушки приоритетов и сдвигов.
-* **27 задач на Code Review (`#/quiz`):** q23–q27 — мьютекс в методе со значением, Unlock без Lock, приоритет `&` и переполнение, закрытый буферизованный канал, вычисление выражений в `select`.
-  * Каждая задача содержит реальный сниппет кода, **6 сложных вариантов ответа** (с разбором популярных полу-мифов), объяснение корневой причины в рантайме на русском и готовую речь для интервью на английском (`Ready-to-Speak English Answer`).
+### Cards
 
----
+- 28 Base, 35 Senior and 9 Deep Dive cards. Filters: module, level, search, "To review", "With practice".
+- Recall first: say the first sentence out loud and answer in your own words; if stuck, open the anchors (`H`); then compare and rate yourself: "didn't answer", "with anchors" or "on my own".
+- The rating sets the next review: tomorrow, in 2 days, or in 4, 8, 16 and then 30 days for answers on your own in a row. "Continue session" takes up to 10 cards: overdue first, then unchecked cards of the current plan week.
+- A card has a short English answer, "If asked about Java and Kotlin" (70 cards), how it works in English with a Russian translation, where it matters in practice, code, a version note with sources, an exercise, and links to its diagram and quiz questions.
+- Keys: `H` anchors, `Space` answer, `←`/`→` navigate, `L` listen, `1` on my own, `2` with anchors, `3` didn't answer.
 
-## 📚 Содержание модулей (72 карточки + 55 задач)
+| # | Module | Topics | Cards |
+|---|---|---|---|
+| 1 | Goroutines & Stack | goroutines vs threads, data race vs race condition, goroutine start, stack growth, resuming a goroutine | 6 |
+| 2 | GMP Scheduler | G, M, P and `GOMAXPROCS`, preemption, work stealing, netpoll, syscalls and cgo, `runnext`, leaks | 6 |
+| 3 | Channels, Select & Sync | channel states, channel or mutex, `hchan` and `sudog`, `selectgo`, CAS, `sync.Mutex`, WaitGroup, Once, Context, deadlock, `sync.Cond` | 12 |
+| 4 | Memory, Allocator & GC | stack vs heap, escape analysis, `mcache`/`mcentral`/`mheap`, tri-color GC, `GOGC`, `GOMEMLIMIT`, write barrier | 6 |
+| 5 | Maps, Interfaces & Go 1.25+ | slices and strings, Swiss Tables, interfaces and typed nil, method sets, `defer`, `weak`, `unique`, iterators, `synctest`, `FlightRecorder` | 10 |
+| 6 | Go Idioms | errors and `errors.Is`/`As`/`Join`, zero values, strings and runes, generics, modules, table-driven tests, embedding | 7 |
+| 7 | Go Service: HTTP, Errors, SQL, Logs | `net/http` and server timeouts, domain errors as HTTP codes, `database/sql`, `log/slog` | 4 |
+| 8 | Data Consistency | isolation levels, transfers without deadlocks, idempotent payments, outbox, Kafka consumers, slow queries | 6 |
+| 9 | Go Service Architecture | layout, dependency injection, shutdown, REST and OpenAPI, gRPC, long polling, channel patterns, library stack | 8 |
+| 10 | Reliability and Data | a PostgreSQL task queue, transactions across repositories, unknown-outcome calls, caching and Redis locks, Temporal, log redaction, `context` | 7 |
 
-### Модуль 1: Горутины, Стек и Регистры CPU (`Q1 – Q6`)
-* Горутина против потока ОС: конкурентность, растущий стек, владение и завершение; без универсальной цены в наносекундах или оценки RSS по числу горутин.
-* `Data Race` против `Race Condition` и устройство детектора гонок (`-race` / ThreadSanitizer).
-* Создание горутины (`runtime.newproc`, пул `P.gFree`), отсутствие `Thread ID` и трюк с `runtime.goexit`.
-* Выделение стеков отдельными путями рантайма, смысл StackInuse и работа регистра RSP.
-* Динамическое расширение и сжатие стека (`stackguard0`, `morestack`, `copystack`, сдвиг указателей `adjustpointers`).
-* Низкоуровневое переключение контекста на системном стеке `g0` (`gobuf`, `runtime.gogo`, `runtime.mcall`).
+### Diagrams
 
-### Модуль 2: Планировщик GMP, Вытеснение и Work Stealing (`Q7 – Q12`)
-* Модель `G-M-P`, роль `GOMAXPROCS` и проблема CFS CPU Throttling в Kubernetes.
-* Запросы вытеснения (`stackPreempt`, Unix-путь SIGURG), безопасные точки и отличие вытеснения от отмены.
-* Поиск работы в runtime.findRunnable (историческое имя findrunnable), условная проверка schedtick % 61 и перехват ceil(n/2) с головы обычной очереди.
-* Ожидание поллируемой сети через netpoll против syscall/cgo; старый _Psyscall в 1.25 и новый протокол изъятия P в 1.26; отдельные пределы операций приложения.
-* Зачем P нужен слот runnext: предпочтительный кандидат, перенос прежнего в очередь, наследование кванта и ограничения справедливости.
-* Диагностика и предотвращение утечек горутин (`Goroutine Leaks`) через `pprof`.
+Stacks and registers, the GMP scheduler, channels, `select`, CAS, the allocator and GC, maps, `sync.Mutex`, bit operations, an HTTP request in `net/http`, deadlock and livelock, and a channel-or-mutex decision tree. Each step is a board of lanes and tokens: changed tokens are marked Δ, a "What changed" list follows, and the step ends with a self-check question. On 35 steps you predict the result first. Steps have their own links (`#/simulators/sim9/3`), and each diagram lists its cards.
 
-### Модуль 3: Каналы (`hchan`), `select`, `CAS` и Примитивы синхронизации (`Q13 – Q22`)
-* Буферизованные и небуферизованные каналы в памяти, матрица поведения `nil` / `closed` / `open` каналов.
-* Архитектурный выбор: Каналы против Мьютексов (`sync.Mutex` / `sync.RWMutex`).
-* Внутреннее устройство `runtime.hchan` и роль связующей структуры `runtime.sudog` ($M:N$ ожидание).
-* Механика `chansend` / `chanrecv`: `sendDirect` (`memmove` + `typeBitsBulkBarrier` из стека в стек) и защита от гонки в `gopark(chanparkcommit)`.
-* Выбор готовых веток и ограничения приоритета отмены в `select` и внутренний цикл `runtime.selectgo` (`pollorder`, `lockorder`, `g.selectDone`).
-* Ассемблер `LOCK CMPXCHGL`, протокол `MESI` и проблема `False Sharing` 64-байтных кэш-линий.
-* Контракты и реализация `sync.Mutex` (порог starvation — не гарантия задержки), `sync.WaitGroup`, `sync.Once` и `context.Context`; версии `WaitGroup.Go` и ограничения `WithoutCancel`.
+### Quiz
 
-### Модуль 4: Память, Аллокатор и Сборщик мусора (`Q23 – Q28`)
-* Стек против Кучи и статический анализ побега (`Escape Analysis`, `-gcflags="-m"`, *Sharing Down vs. Sharing Up*).
-* Иерархия аллокатора памяти Go (`mspan`, `P.mcache`, `mcentral`, `mheap`) и оптимизация кэшей через `noscan` спаны.
-* Трёхцветный алгоритм Дейкстры (White / Grey / Black), 4 фазы цикла GC и механизм `Mark Assist`.
-* Устройство `Hybrid Write Barrier` (Юаса + Дейкстра) и управление памятью через `GOGC` и `GOMEMLIMIT`.
+A snippet, four to six options, an explanation in Russian, an answer to say in English, corrected code for 40 questions, and links to the cards. "Answer first" mode hides the options until you have written your own answer.
 
-### Модуль 5: Мапы (`SwissTables`), Слайсы, Интерфейсы, `defer` и Go 1.24–1.25+ (`Q29 – Q38`)
-* Устройство срезов и строк, формула плавного роста в `runtime.growslice` (от `2x` к `1.25x` после 256) и округление по классам размеров `mspan`.
-* Классическая мапа (`hmap`/`bmap`, `tophash[8]`, инкрементальная эвакуация) против новой **SwissTable в Go 1.24+** (`ctrl` 64-битное слово, `H1`/`H2` хеш, `SIMD/SWAR` параллельный поиск и `Extendible Hashing`).
-* Проблема невозврата памяти мапой после `delete`/`clear` и рандомизация итерации.
-* Внутреннее устройство интерфейсов (`eface` vs `iface`, таблица `itab`) и правила наборов методов (*Value vs. Pointer Receiver*).
-* Эволюция `defer` (`Open-Coded Defers` через битовую маску на стеке), раскрутка стека в `gopanic` и `gorecover`.
-* API **Go 1.23–1.26**: `unique` и `iter` (1.23), `weak.Pointer` и `runtime.AddCleanup` (1.24), стабильный `testing/synctest`, `FlightRecorder` и container-aware defaults (1.25). В карточках — владение, ограничения и актуальность для 1.26; `SetFinalizer` не объявлен удалённым.
+### Practice
 
-### Модуль 6: Идиомы Go — ошибки, нулевые значения, строки, generics, модули, тесты (`C39 – C44`)
-* Ошибки: `%w` против `%v`, `errors.Is`/`errors.As`, sentinel или тип, `errors.Join` (Go 1.20).
-* Нулевые значения и nil по видам типов, сравнимость и ключи map.
-* Строки: байты, руны, `range` по UTF-8, `strings.Builder`.
-* Generics или интерфейс; модули, пакеты и `internal/`; table-driven тесты, `t.Parallel` и `t.Cleanup`.
-* К модулю — quiz q28–q35 (наборы методов, `%v` вместо `%w`, `errors.Join`, `defer` с безымянным результатом, `recover` в своей горутине, ключи map, встраивание, параллельные подтесты). Все программы выполнены Go 1.24.7.
+- 26 tasks for weeks 1–6 and 9: money and errors, `defer`, generics, a CSV tool, worker pool, pipeline, fan-in and fan-out, errgroup, token bucket, graceful shutdown, a goroutine leak, escape analysis, pprof, an HTTP API, a timeout wrapper, parallel transfers, idempotency, outbox, tee and or-done.
+- Each has a contract in English and Russian, a starter, tests for `go test -race`, hints one at a time, a reference solution, a one-minute English explanation, common mistakes and variations; 15 also have "3 checks before you submit".
+- "Check on server" runs your pasted solution against the same tests with `-race` on Go 1.27.3, without network access; it needs sign-in.
+- Reference solutions and tests are in `docs/verification/fixtures/practice/`; the tests were checked against deliberately broken solutions.
+- **Your `go-prep` repository** (`#/practice/go-prep`): one module with a package per task, drills for run, build, vet and test, CI on GitHub Actions, compiler and assembly output (`-S`, `-m`, `GOSSAFUNC`, objdump), a command reference, and where Go keeps its files: `GOROOT`, `GOPATH` and the caches.
+- **"Channels and context" track** (`#/practice/track-channels`): 28 katas in 5 blocks, from channel basics through `select`, `context` and leaks to fan-in, fan-out, pipelines, bounded concurrency, errgroup and rate limiting, with code-review exercises and a table of Go version differences. The katas also appear in plan days of weeks 4–12; a kata is done when its plan task is checked.
 
-### Модуль 7: Сервис на Go — HTTP, ошибки, SQL, логи (`C45 – C48`)
-* Жизненный цикл запроса в `net/http`: горутина на соединение, `r.Context()`, маршруты Go 1.22, таймауты сервера — с диаграммой 10.
-* Ошибки домена → HTTP-коды через `errors.Is`/`errors.As`, 500 без деталей наружу.
-* `database/sql`: пул, `rows.Close`/`rows.Err`, граница транзакции.
-* `log/slog`: JSON, `request_id`, `LogValue` против утечки секретов.
-* Quiz q36–q39: `http.Error` без `return`, маршруты и 405, пароль в логе, `errors.As` с целью-значением. Программы выполнены Go 1.24.7 и 1.27.3.
+### Knowledge base
 
-### Модуль 8: Данные — транзакции, идемпотентность, outbox, Kafka (`C49 – C54`)
-* Уровни изоляции PostgreSQL: снимок на запрос в Read Committed, 40001 в Repeatable Read и Serializable, повтор транзакции с BEGIN.
-* Перевод между счетами: `SELECT … FOR UPDATE` по возрастанию ID, дедлок и 40P01, те же правила для мьютексов Go.
-* Идемпотентность платежей: Idempotency-Key, отпечаток запроса, сохранённый ответ, атомарный захват ключа (`INSERT … ON CONFLICT DO NOTHING`), коды 400/422/409 по черновику IETF.
-* Transactional outbox: почему не публиковать после commit, relay, `SKIP LOCKED`, at-least-once.
-* Потребитель Kafka: offset после обработки, дедупликация по ID события, порядок внутри партиции; `ReadMessage` в kafka-go фиксирует offset при чтении.
-* Индексы, `EXPLAIN ANALYZE` и N+1.
-* Quiz q40–q43: «проверить, потом вставить» и молчащий `-race`, встречные переводы и дедлок, публикация после commit, offset до обработки. Программы выполнены Go 1.24.7 и 1.27.3.
+All 72 card topics on one page, and two reference projects with a reading order through the code:
 
-### Модуль 9: Архитектура Go-сервиса — раскладка, DI, REST, gRPC, long polling, каналы, стек (`C57 – C64`)
-* Раскладка: тонкий `cmd/`, логика в `internal/`, интерфейс-порт у потребителя, зависимости смотрят к домену; тест на направление импортов.
-* Сборка зависимостей: composition root вручную, Wire (кодоген, архивирован) и Fx (контейнер в рантайме), закрытие ресурсов в обратном порядке.
-* Между SIGTERM и выходом: readiness, `Shutdown` с дедлайном, дренаж воркеров, обратный порядок закрытия, код выхода; `context.Cause` у `NotifyContext` с Go 1.26.
-* REST: маршруты Go 1.22 или OpenAPI-first (oapi-codegen, ogen), порядок middleware request id → logging → recover.
-* gRPC: когда вместо REST, интерсепторы, `codes.Internal` без деталей, health, `GracefulStop` с запасным `Stop`.
-* Long polling: маркер увиденного состояния, общий цикл выборки вместо поллера на клиента, мягкий таймаут, лимит и 429.
-* Каналы в сервисе: склеивающий сигнальный канал, семафор с мгновенным отказом, конвейер с каскадным закрытием и отменой.
-* Стек библиотек и как его обосновать: pgx, slog/zap, `singleflight`, testify/mock. Примеры выполнены Go 1.24.7 и 1.27.3 под `-race`.
+- [go-payments-reference](https://github.com/aleksbeloushkin-srb/go-payments-reference): a payment service with idempotent payment creation, a PostgreSQL task queue (`SKIP LOCKED` and leases), outbox, webhooks, long polling, graceful shutdown and a failing fake gateway.
+- [pinkponies-bank](https://github.com/aleksbeloushkin-srb/pinkponies-bank): three services — a gRPC ledger with double-entry accounts and holds, transfers as an orchestrated saga with an outbox to Kafka, and an idempotent Kafka consumer with a dead-letter topic.
 
-### Модуль 10: Надёжность и данные — очередь, транзакции, внешние вызовы, кэш, логи, context (`C66 – C72`)
-* Очередь задач на PostgreSQL: `FOR UPDATE SKIP LOCKED`, аренда, ретраи с backoff, лимит попыток и dead, дедупликация; когда переходить на брокер.
-* Транзакция через слои: транзакция в `context`, вложенность, колбэки после коммита; пулер в transaction-режиме и prepared statements; advisory lock.
-* Внешний вызов с неоднозначным исходом: таймаут ≠ отказ, повтор только «точно не исполнено», намерение с ключом до вызова, сверка; скрытый повтор `net/http` при `Idempotency-Key`.
-* Кэш без лавины и устаревших чтений; распределённый лок с токеном, Lua compare-and-delete и fencing token.
-* Temporal или очередь + опрос: долгие процессы, детерминизм, `WorkflowID` как ключ идемпотентности.
-* Логи без секретов: маскирование в одном месте (`LogValue`, `ReplaceAttr`), ловушка pointer receiver.
-* `context` в сервисе: что возить в `Value`, дедлайн на каждый вызов, `WithoutCancel` со своим таймаутом, `AfterFunc`, `Cause` у `NotifyContext` с Go 1.26.
-* Quiz q53–q55: `maps.Clone(nil)`, `len(timer.C)` после Go 1.23, `LogValue` на pointer receiver. Код карточек ссылается на эталонный проект [go-payments-reference](https://github.com/aleksbeloushkin-srb/go-payments-reference) (тег `v1`). Примеры выполнены Go 1.24.7 и 1.27.3.
+### Audio
 
----
+148 English recordings (Kokoro TTS, voices Michael and a slower Heart): short answers and Java comparisons for 52 cards, plan model answers for weeks 1–3, and explanations for 12 practice tasks. The "Listen" button appears only if the recording matches the current text.
 
-## 🗂 Структура проекта
+## Sign-in and progress
 
-Проект построен по модульной схеме без внешних зависимостей и сборщиков (Zero-Build SPA с Hash-роутером):
+- "Sign in with Google" goes through Amazon Cognito (authorization code with PKCE); tokens stay in memory. Card ratings, plan marks and start date, trainer results and solved tasks sync to the server, so every device shows the same progress. If two devices disagree, you can merge them or keep one side.
+- Without sign-in the site is read-only: all material, the quiz and starters are open, but marks are not saved.
+- For now only test accounts can sign in: the Google OAuth app is in testing mode.
+- Backend: [golang-interview-prep-api](https://github.com/aleksbeloushkin-srb/golang-interview-prep-api) — Go AWS Lambda functions, Cognito, progress with optimistic locking, and a runner for `go test -race` without network access.
 
-```text
-golang-interview-prep/
-├── index.html          # Каркас приложения и навигация по вкладкам
-├── README.md           # Документация репозитория
-├── css/
-│   └── style.css       # Стили, адаптивная сетка и тёмная тема
-├── data/
-│   ├── cards.js        # База из 54 карточек Q&A (Base / Senior / Deep Dive + Prod Cases)
-│   ├── simulators.js   # Пошаговые состояния для 10 диаграмм и сводной таблицы
-│   ├── quiz.js         # 43 задачи на Production Code Review (по 6 вариантов ответа)
-│   ├── plan.js         # План 13 недель: задачи, критерии готовности, LeetCode, опорные тексты
-│   └── practice.js     # Практикум: контракт, заготовка, тесты, подсказки, эталон (из docs/verification/fixtures/practice)
-└── js/
-    ├── app.js          # Hash-роутер (#/plan, #/practice, #/cards, #/simulators, #/wiki, #/quiz), фильтры и localStorage
-    ├── plan-view.js    # Раздел «План 13 недель» и его отметки (go_prep_plan_v1)
-    └── practice-view.js # Раздел «Практикум»: ничего не хранит, отметки — в плане
+## Go versions
 
-```
+The site treats Go 1.27.3 as current. Examples and practice tests are checked on Go 1.24.7 and 1.27.3. Where releases differ, the material says what changed and when: `sync.WaitGroup.Go` arrived in 1.25; the goroutine leak profile was experimental in 1.26 and is on by default in 1.27. Every card and quiz question has a version note and sources.
 
-## ⌨️ Горячие клавиши и локальный запуск
-
-
-В режиме карточек (#/cards) работает быстрое управление с клавиатуры:
-
-* Space (Пробел) — показать / скрыть ответ
-* ← / → — предыдущая / следующая карточка
-* 1 — отметить «Знаю отлично ✓»
-* 2 — отметить «Повторить ещё»
-
-Локальный запуск на macOS / Linux:
+## Run locally
 
 ```bash
 git clone https://github.com/aleksbeloushkin-srb/golang-interview-prep.git
@@ -178,34 +104,33 @@ cd golang-interview-prep
 python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
+Open `http://127.0.0.1:8000`; stop with Ctrl+C. `js/config.js` points at the public backend, so this copy is read-only. To keep progress in the browser instead, serve it without the backend: `python3 docs/verification/browser/serve.py 8765 --root . --no-backend`.
 
+## Checks
 
-## Текущий этап улучшений
+| Command | What it checks |
+|---|---|
+| `node scripts/check-content.mjs --base <commit>` | data syntax and structure, IDs, links, practice code against fixtures, audio freshness, Liquid syntax in tracked `.md` files |
+| `node --test` | `scripts/*.test.mjs`: the checker, the Go source registry, progress merging, the review schedule |
+| `go vet ./... && go test -race -count=1 ./...` | practice reference solutions, run in `docs/verification/fixtures/practice` |
+| `docs/verification/browser/check-*.js` | Playwright suites; see [their README](docs/verification/browser/README.md) |
 
-**Актуальный остаток редакции и точные списки ID: [CURRENT_STATUS_RU.md](CURRENT_STATUS_RU.md).** Счётчики материалов на сайте показывают общий объём, а не остаток редакции.
+They do not replace a review of the Go content. The review process is in [VERIFICATION_WORKFLOW_RU.md](VERIFICATION_WORKFLOW_RU.md); rules for contributors and coding agents are in [AGENTS.md](AGENTS.md).
 
-Полный аудит исходного состояния и план: [AUDIT_AND_PLAN_RU.md](AUDIT_AND_PLAN_RU.md), реестр Go-материала: [GO_CONTENT_AUDIT_RU.md](GO_CONTENT_AUDIT_RU.md). Выполненные изменения и проверки: [CHANGE_LOG_RU.md](CHANGE_LOG_RU.md). Материал проходит поэтапную редакцию; наличие темы в каталоге выше не означает, что все замечания аудита уже исправлены.
+## Repository layout
 
-Полную тематическую EN/RU-редакцию прошли **38 из 38 карточек и 22 из 22 quiz**. Все карточки содержат вопрос, короткий ответ, объяснение на двух языках, источники, версионные оговорки и упражнение с follow-up. Все **40 шагов семи схем** имеют EN-пояснение и скрытый ответ для самопроверки. Итоговая сверка связывает эти материалы; подробные основания и ограничения — в [отчёте для Claude и других ревьюеров](FINAL_REVIEW_HANDOFF_RU.md). Позже добавлены q23–q27, диаграммы 8–9, шаги 5–8 диаграммы 5, 6–9 диаграммы 3 и 9–11 диаграммы 2 (всего 66 шагов девяти схем): их сверяли с исходниками Go независимые проверки Claude (`CLAUDE_CHANGE_LOG_RU.md`), тематическую редакцию Астры они ещё не проходили. Так же проверены и добавленные к неделям 1–2 карточки c39–c44 (модуль 6), quiz q28–q35 и семь задач практикума: все программы и тесты выполнены Go 1.24.7.
-
-В подборке «С практикой» сначала ответь своими словами, затем открой «Сверить рассуждение». Русский можно использовать для понимания, после чего повторить объяснение на английском. Сайт пока не записывает устные ответы и не оценивает их автоматически. Связанные карточки и все quiz имеют переходы между собой.
-
-Основания учебных приёмов и дальнейший план: [LEARNING_DESIGN_RU.md](LEARNING_DESIGN_RU.md). Отчёты браузерных проверок: [опубликованная версия](docs/verification/2026-10-26-live.json) и [локальная порция с упражнениями](docs/verification/2026-10-26-learning.json).
-
-На телефоне фильтры находятся в «Настроить подборку». Сначала ответь самостоятельно, открой объяснение, затем выбери «Нужно повторить» или «Вспомнил». Кнопка «Повторить отмеченные» открывает ручную подборку. Это пока не интервальное расписание: даты следующего повторения появятся отдельным этапом.
-
-Старые отметки `go_prep_progress_v2` сохраняют совместимость. Если браузер запрещает хранение, сайт продолжает работать и сообщает, что новые отметки остаются только на открытой странице. Сброс требует подтверждения. Горячие клавиши не перехватываются при работе с полями, ссылками и кнопками; оценки 1/2 доступны после раскрытия ответа.
-
-Для локальной проверки:
-
-```bash
-python3 -m http.server 8000 --bind 127.0.0.1
+```text
+index.html         page shell and navigation
+css/style.css      styles
+js/                app.js (routing, cards, quiz, diagrams, knowledge base, cheat sheet),
+                   plan-view.js, practice-view.js, review-queue.js, talk-trainer.js,
+                   audio.js, auth.js (sign-in and sync), progress-merge.js,
+                   config.js (public backend addresses, not secrets)
+data/              cards.js, quiz.js, simulators.js (diagrams and cheat sheet), plan.js,
+                   practice.js, guides.js, tracks.js, audio.js (recording manifest)
+audio/en/          recordings
+scripts/           content checker, tests, audio generation, Go source registry
+docs/verification/ Go fixtures, browser suites, check reports
 ```
 
-Открыть `http://127.0.0.1:8000`; остановить сервер Ctrl+C после проверки.
-
-Подробный разбор компиляции select, версий и ловушек: [SELECT_COMPILATION_RU.md](SELECT_COMPILATION_RU.md).
-Запрос для независимого поиска следующих задач: [TASK_RESEARCH_BRIEF_RU.md](TASK_RESEARCH_BRIEF_RU.md).
-
-Проверка порции и завершение работы: [VERIFICATION_WORKFLOW_RU.md](VERIFICATION_WORKFLOW_RU.md).
-Быстрая проверка синтаксиса, структуры и изменённых ID: `node scripts/check-content.mjs --base <base-commit>`. Она не заменяет Go-review и браузер.
+Files ending in `_RU.md` in the root and in `docs/` are internal working notes in Russian (handoff, audits, review reports); release history is in [CLAUDE_CHANGE_LOG_RU.md](CLAUDE_CHANGE_LOG_RU.md).

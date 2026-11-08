@@ -13,11 +13,13 @@ const GUIDES = {
         id: "setup",
         title: "1. Завести (неделя 1, понедельник)",
         paragraphs: [
-          "Путь модуля — будущий адрес на GitHub. `go mod init` записывает в go.mod версию твоего Go (например, `go 1.27.3`): это минимальная версия для сборки, и от неё зависят возможности языка. Эталоны практикума проверены на Go 1.24.7 и 1.27.3."
+          "Нужен Go 1.27: `brew install go` или установщик с https://go.dev/dl/. Проверка — `go version`, ожидается `go version go1.27.x darwin/arm64` (на Intel — `darwin/amd64`). Редактор — с gopls: VS Code с расширением Go или GoLand.",
+          "Путь модуля — будущий адрес на GitHub. `go mod init` записывает в go.mod версию твоего Go (например, `go 1.27.3`): это минимальная версия для сборки, и от неё зависят возможности языка. Эталоны практикума проверены на Go 1.24.7 и 1.27.3. Где лежат сам Go, кэши и установленные команды — раздел 7.",
+          "Команды ниже — по порядку. Замени `<ник>` на свой ник на GitHub: в zsh угловые скобки без замены дают «no such file or directory». Между `mkdir -p week1/hello week1/calc` и `go vet` положи файлы ниже: main.go — в week1/hello, calc.go и calc_test.go — в week1/calc."
         ],
         code: {
           label: "Команды: завести go-prep",
-          text: "mkdir go-prep && cd go-prep\ngit init\ngo mod init github.com/<ник>/go-prep\nmkdir -p week1/hello week1/calc\n# положи main.go в week1/hello, calc.go и calc_test.go — в week1/calc (файлы ниже)\nprintf 'bin/\\n' > .gitignore\ngo vet ./...\ngo test ./...\ngit add . && git commit -m \"go-prep: week1 hello and calc\""
+          text: "mkdir go-prep && cd go-prep\ngit init\ngo mod init github.com/<ник>/go-prep\nmkdir -p week1/hello week1/calc\nprintf 'bin/\\n' > .gitignore\ngo vet ./...\ngo test ./...\ngit add . && git commit -m \"go-prep: week1 hello and calc\""
         },
         files: [
           { name: "main.go", code: "// Command hello — первая программа модуля go-prep.\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello, go-prep\")\n}\n" },
@@ -30,12 +32,13 @@ const GUIDES = {
         title: "2. Раскладка: по пакету на задачу",
         paragraphs: [
           "Задачу практикума кладёшь в её папку и запускаешь там же; файлы заготовки и тестов — со страницы задачи, имя пакета в них уже совпадает с папкой. Зависимость (`go get`) добавляется в общий go.mod один раз.",
-          "Свои тесты — рядом с тестами практикума, в том же пакете (неделя 2: «Покрыть тестами W1-2 и W2-2»)."
+          "Свои тесты — рядом с тестами практикума, в том же пакете (неделя 2: «Покрыть тестами W1-2 и W2-2»).",
+          "В командах ниже: перед первым `go test` положи в папку money.go и money_test.go со страницы задачи. `./week1/...` — вся неделя, `./...` — весь go-prep, то же делает CI."
         ],
         tree: true,
         code: {
           label: "Команды: задача практикума в go-prep",
-          text: "cd go-prep\nmkdir -p week1/money && cd week1/money\n# положи money.go (заготовка) и money_test.go (тесты)\ngo test -race -count=1 .\ncd ../..\ngo test -race ./week1/...      # вся неделя\ngo test -race ./...            # весь go-prep — то же делает CI"
+          text: "cd go-prep\nmkdir -p week1/money && cd week1/money\ngo test -race -count=1 .\ncd ../..\ngo test -race ./week1/...\ngo test -race ./..."
         }
       },
       {
@@ -46,10 +49,10 @@ const GUIDES = {
           { cmd: "go run ./week1/hello", expect: "hello, go-prep", q: "Где бинарник после go run?", a: "Не рядом с кодом: go run собирает во временный каталог и запускает, а с Go 1.24 ещё и хранит исполняемый файл в кэше сборки, чтобы повторный запуск был быстрее. Свой файл — go build -o." },
           { cmd: "go build -o bin/hello ./week1/hello && ./bin/hello", expect: "hello, go-prep; файл bin/hello остаётся (bin/ — в .gitignore).", q: "Что даст go build ./week1/calc — пакет без main?", a: "Скомпилирует пакет и выбросит результат: это только проверка, что пакет собирается. Файла не будет." },
           { cmd: "go vet ./...", expect: "Ничего не печатает, если всё чисто.", q: "Что ловит vet, чего не ловит компилятор?", a: "Код, который компилируется, но почти наверняка ошибочен: неверные глаголы Printf (printf), мьютекс, скопированный по значению (copylocks), невызванный cancel от context.WithCancel (lostcancel), недостижимый код (unreachable)." },
-          { cmd: "go test ./...", expect: "ok  github.com/<ник>/go-prep/week1/calc  0.002s\n?   github.com/<ник>/go-prep/week1/hello  [no test files]", q: "Запусти ещё раз: откуда (cached) и как его обойти?", a: "Ни код, ни тесты не менялись, поэтому go test показывает прошлый результат из кэша. Заново — go test -count=1." },
+          { cmd: "go test ./...", expect: "ok  github.com/<ник>/go-prep/week1/calc  0.002s (время — твоё)\n?   github.com/<ник>/go-prep/week1/hello  [no test files]", q: "Запусти ещё раз: откуда (cached) и как его обойти?", a: "Ни код, ни тесты не менялись, поэтому go test показывает прошлый результат из кэша. Заново — go test -count=1." },
           { cmd: "go test -v -run TestAdd ./week1/calc", expect: "=== RUN   TestAdd\n--- PASS: TestAdd (0.00s)", q: "-run принимает имя или шаблон?", a: "Регулярное выражение по имени теста; подтест выбирается через /: -run 'TestAdd/negative'." },
           { cmd: "go test -race -count=1 ./...", expect: "Те же ok, без WARNING: DATA RACE.", q: "Почему -race — в тестах и CI, а не в проде?", a: "Детектор заметно замедляет программу и увеличивает память, и находит гонки только на путях, которые реально выполнились. Поэтому его гоняют на тестах конкурентного кода и в CI." },
-          { cmd: "go test -cover ./week1/calc", expect: "ok  …/week1/calc  0.003s  coverage: 100.0% of statements", q: "Что значит 100%?", a: "Каждый оператор выполнился хотя бы раз. Это не значит, что проверены граничные случаи: покрытие — не качество тестов." },
+          { cmd: "go test -cover ./week1/calc", expect: "ok  …/week1/calc  0.003s  coverage: 100.0% of statements (время — твоё)", q: "Что значит 100%?", a: "Каждый оператор выполнился хотя бы раз. Это не значит, что проверены граничные случаи: покрытие — не качество тестов." },
           { cmd: "go list ./...", expect: "github.com/<ник>/go-prep/week1/calc\ngithub.com/<ник>/go-prep/week1/hello", q: "Что значит ./...?", a: "Текущий каталог и все пакеты под ним. Пропускаются testdata, vendor, каталоги на _ и . и вложенные модули (свой go.mod)." }
         ],
         check: "Готово, когда без подсказки: чем go run отличается от go build; что такое ./...; откуда (cached) и зачем -count=1; чем пакет отличается от модуля (c43)."
@@ -121,6 +124,30 @@ const GUIDES = {
           { t: "A Quick Guide to Go's Assembler", u: "https://go.dev/doc/asm" },
           { t: "GitHub Actions: Building and testing Go", u: "https://docs.github.com/en/actions/tutorials/build-and-test-code/go" },
           { t: "golangci-lint", u: "https://golangci-lint.run/" }
+        ]
+      },
+      {
+        id: "env",
+        title: "7. Где живёт Go: GOROOT, GOPATH и кэши",
+        paragraphs: [
+          "GOROOT — установленный Go: компилятор, команда `go` и исходники стандартной библиотеки. `go` находит его сам по своему расположению, задавать вручную не нужно. Несколько версий рядом — нормально: запускается та, чья `bin` стоит в PATH первой (например, `~/sdk/go1.27.3/bin`).",
+          "GOPATH с модулями — не место для кода: модуль лежит где угодно (модули по умолчанию с Go 1.16). По умолчанию это `~/go`, и в нём два каталога: `pkg/mod` — кэш скачанных модулей (только для чтения) и `bin` — сюда `go install` кладёт команды, если не задан GOBIN. Добавь `$(go env GOPATH)/bin` в PATH, чтобы установленные утилиты запускались по имени.",
+          "Кэш сборки — отдельно: `go env GOCACHE` (на macOS `~/Library/Caches/go-build`), отсюда `(cached)` в выводе `go test`. Нужную модулю версию Go задаёт строка `go` в go.mod: при `GOTOOLCHAIN=auto` (по умолчанию, с Go 1.21) более старый `go` сам скачает нужный тулчейн.",
+          "Версии: с Go 1.27 `go env GOBIN` показывает, куда `go install` положит команду, даже если GOBIN не задан; до 1.27 — пустую строку. Для интервью: GOPATH mode включается только при `GO111MODULE=off` или при `auto` вне модуля; кэш модулей — не vendor: vendor лежит в репозитории, кэш — на машине."
+        ],
+        rows: [
+          { cmd: "go env GOROOT GOPATH", what: "где установлен Go и где GOPATH" },
+          { cmd: "go env GOMODCACHE GOCACHE", what: "кэш модулей и кэш сборки" },
+          { cmd: "go env GOBIN", what: "куда go install кладёт команды (с 1.27 — и без заданного GOBIN)" },
+          { cmd: "go install <модуль>/cmd/<имя>@latest", what: "собрать и установить утилиту в GOPATH/bin или GOBIN" },
+          { cmd: "go clean -modcache · go clean -cache", what: "очистить кэш модулей · кэш сборки" },
+          { cmd: "go env -w GOBIN=<путь> · go env -u GOBIN", what: "записать настройку · сбросить её (файл — go env GOENV)" }
+        ],
+        links: [
+          { t: "How to Write Go Code", u: "https://go.dev/doc/code" },
+          { t: "Go toolchains (GOTOOLCHAIN)", u: "https://go.dev/doc/toolchain" },
+          { t: "Managing Go installations", u: "https://go.dev/doc/manage-install" },
+          { t: "cmd/go: GOPATH environment variable", u: "https://pkg.go.dev/cmd/go#hdr-GOPATH_environment_variable" }
         ]
       }
     ]

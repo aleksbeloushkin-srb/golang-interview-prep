@@ -54,12 +54,13 @@ function practiceSiteLink(id) {
 // Задача плана → ссылка на её день: #/plan/w3/tue.
 function practicePlanLink(taskId) {
   if (typeof PLAN === "undefined") return null;
-  for (const week of PLAN.weeks) {
+  for (const [index, week] of PLAN.weeks.entries()) {
     for (const day of week.days) {
       const task = day.tasks.find(t => t.id === taskId);
       if (task) {
-        const dayKey = taskId.split("-")[1];
-        return { href: `#/plan/${week.id}/${dayKey}`, label: `${week.id.toUpperCase()} · ${day.label} · ${taskId}`, text: task.text };
+        // The day comes from where the task sits now: a task moved to another day keeps its ID.
+        const dayKey = (typeof PLAN_DAY_KEYS !== "undefined" && PLAN_DAY_KEYS[day.label]) || taskId.split("-")[1];
+        return { href: `#/plan/${week.id}/${dayKey}`, label: `${week.id.toUpperCase()} · ${day.label} · ${taskId}`, text: task.text, where: `Неделя ${index + 1}, ${day.label}` };
       }
     }
   }
@@ -255,7 +256,8 @@ function renderPracticeIndex(view) {
 
 function renderPracticeTask(view, task) {
   const index = PRACTICE.indexOf(task);
-  const accept = typeof PLAN !== "undefined" && PLAN.acceptance ? task.planTasks.map(id => PLAN.acceptance[id] && PLAN.acceptance[id].accept).filter(Boolean) : [];
+  // A practice task can serve several plan tasks: each criterion is labelled with its week and day.
+  const accept = typeof PLAN !== "undefined" && PLAN.acceptance ? task.planTasks.map(id => ({ id, text: PLAN.acceptance[id] && PLAN.acceptance[id].accept })).filter(entry => entry.text) : [];
   const planLinks = task.planTasks.map(practicePlanLink).filter(Boolean);
   const siteLinks = (task.links || []).map(practiceSiteLink).filter(Boolean);
   const pkg = task.files.solution.name.replace(/\.go$/, "");
@@ -297,7 +299,10 @@ function renderPracticeTask(view, task) {
         practiceList(task.contractEN, { lang: "en", className: "practice-contract" })
       ])
     ]),
-    accept.length ? practiceSection("Готово, когда", accept.map(text => practiceEl("p", { text }))) : null,
+    accept.length ? practiceSection("Готово, когда", accept.map(entry => {
+      const link = practicePlanLink(entry.id);
+      return practiceEl("p", {}, [link ? practiceEl("strong", { text: `${link.where}: ` }) : null, entry.text]);
+    })) : null,
     practiceSection("Как запустить", [
       practiceEl("p", {}, ["В своём модуле go-prep — по пакету на задачу. Как его завести и проверить CI — ", practiceEl("a", { href: "#/practice/go-prep", text: "справка «Свой репозиторий go-prep»" }), "."]),
       practiceCode(run, "Команды для запуска"),

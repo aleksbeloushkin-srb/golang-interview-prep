@@ -35,7 +35,7 @@ const PRACTICE = [
     ],
     "talkEN": "I store money as an int64 number of minor units plus a currency code, so 12.50 euros is 1250. Integers keep sums exact, while float64 cannot represent most decimal fractions. String formats the absolute value as whole units and zero-padded minor units, then puts the sign in front, so minus five cents prints as -0.05 EUR. The number of decimals belongs to the currency: yen has none and the Bahraini dinar has three, so I look it up instead of hard-coding 100.",
     "pitfalls": [
-      "float64 для денег → 0.1 + 0.2 != 0.3, ошибки копятся в суммах.",
+      "float64 для денег → для переменных a, b := 0.1, 0.2 сумма a+b != 0.3 (у констант 0.1+0.2 == 0.3: компилятор считает точно), ошибки копятся в суммах.",
       "%d без нулей слева → «0.5 EUR» вместо «0.05 EUR».",
       "Знак через % → «0.-5 EUR» и «-12.-50 EUR».",
       "Делитель 100 зашит в код → JPY и BHD печатаются неверно."
@@ -70,14 +70,14 @@ const PRACTICE = [
     "goalRU": "Счёт с Deposit, Withdraw и Transfer: методы меняют состояние, а нехватка средств — sentinel-ошибка, которую errors.Is находит через две обёртки.",
     "contractRU": [
       "Deposit и Withdraw с суммой 0 или меньше возвращают ошибку и не меняют баланс.",
-      "Withdraw больше баланса возвращает ошибку, обёрнутую через %w вокруг ErrInsufficientFunds; в тексте есть сумма и счёт; баланс не меняется.",
+      "Withdraw больше баланса возвращает ошибку, обёрнутую через %w вокруг ErrInsufficientFunds; текст начинается с «withdraw <сумма> from <ID счёта>», например «withdraw 500 from A (balance 100): insufficient funds»; баланс не меняется.",
       "Ошибка не равна самой ErrInsufficientFunds: у неё есть контекст, но errors.Is её находит.",
       "Transfer добавляет второй уровень контекста «transfer A→B: …»; при ошибке балансы обоих счетов прежние.",
       "Методы меняют счёт, поэтому ресивер — указатель."
     ],
     "contractEN": [
       "Deposit and Withdraw with an amount of 0 or less return an error and leave the balance unchanged.",
-      "Withdrawing more than the balance returns an error that wraps ErrInsufficientFunds with %w; the message names the amount and the account; the balance does not change.",
+      "Withdrawing more than the balance returns an error that wraps ErrInsufficientFunds with %w; the message starts with \"withdraw <amount> from <account ID>\", for example \"withdraw 500 from A (balance 100): insufficient funds\"; the balance does not change.",
       "The error is not ErrInsufficientFunds itself: it carries context, yet errors.Is finds it.",
       "Transfer adds a second level of context, \"transfer A→B: …\"; on failure both balances stay as they were.",
       "The methods change the account, so the receiver is a pointer."
@@ -94,7 +94,7 @@ const PRACTICE = [
     "hints": [
       "Сначала проверь сумму, потом баланс, и только затем меняй состояние: при любой ошибке баланс должен остаться прежним.",
       "fmt.Errorf(\"withdraw %d from %s (balance %d): %w\", …, ErrInsufficientFunds) — контекст плюс причина в цепочке.",
-      "Transfer оборачивает ошибку Withdraw ещё раз через %w. Если Deposit на втором счёте не удался, деньги нужно вернуть на первый."
+      "Transfer оборачивает ошибку Withdraw ещё раз через %w. После успешного Withdraw здесь Deposit не падает — сумма уже проверена; если добавишь новый отказ Deposit (лимит, закрытый счёт), верни деньги на первый счёт."
     ],
     "talkEN": "Deposit and Withdraw change the account, so they have pointer receivers; with value receivers they would change a copy. Insufficient funds is a sentinel error, because callers only need to branch on that condition. I wrap it with %w and add the amount and the account, so the message is useful and errors.Is still finds the cause. Transfer wraps once more, and a test checks that errors.Is works through both levels and that a failed operation leaves the balances unchanged.",
     "pitfalls": [
@@ -112,7 +112,7 @@ const PRACTICE = [
     "files": {
       "starter": {
         "name": "account.go",
-        "code": "// Package account: practice task W1-2. Replace each TODO with your solution.\npackage account\n\nimport \"errors\"\n\n// ErrInsufficientFunds is a sentinel: callers check the condition with errors.Is.\nvar ErrInsufficientFunds = errors.New(\"insufficient funds\")\n\n// Account balance is in minor units.\ntype Account struct {\n\tID      string\n\tbalance int64\n}\n\n// TODO: choose the receiver for each method: they change the account.\n\nfunc (a *Account) Balance() int64 { return a.balance }\n\n// Deposit adds amount; it must be positive.\nfunc (a *Account) Deposit(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Withdraw takes amount if the balance allows it; otherwise it returns an error\n// that wraps ErrInsufficientFunds and says which amount and account.\nfunc (a *Account) Withdraw(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Transfer moves amount between accounts. Its error starts with\n// \"transfer A→B: \" and still matches ErrInsufficientFunds with errors.Is.\nfunc Transfer(from, to *Account, amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}"
+        "code": "// Package account: practice task W1-2. Replace each TODO with your solution.\npackage account\n\nimport \"errors\"\n\n// ErrInsufficientFunds is a sentinel: callers check the condition with errors.Is.\nvar ErrInsufficientFunds = errors.New(\"insufficient funds\")\n\n// Account balance is in minor units.\ntype Account struct {\n\tID      string\n\tbalance int64\n}\n\n// The methods change the account, so they use a pointer receiver; be ready to explain what a value receiver would break.\n\nfunc (a *Account) Balance() int64 { return a.balance }\n\n// Deposit adds amount; it must be positive.\nfunc (a *Account) Deposit(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Withdraw takes amount if the balance allows it; otherwise it returns an error\n// that wraps ErrInsufficientFunds and says which amount and account.\nfunc (a *Account) Withdraw(amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}\n\n// Transfer moves amount between accounts. Its error starts with\n// \"transfer A→B: \" and still matches ErrInsufficientFunds with errors.Is.\nfunc Transfer(from, to *Account, amount int64) error {\n\t// TODO\n\tpanic(\"TODO\")\n}"
       },
       "tests": {
         "name": "account_test.go",
@@ -162,7 +162,7 @@ const PRACTICE = [
     "pitfalls": [
       "Возврат nil-указателя *ValidationError как error → err != nil у корректного пользователя.",
       "Приведение err.(*ValidationError) вместо errors.As → не работает после обёртки.",
-      "errors.As(err, ve) без & → panic: target must be a non-nil pointer.",
+      "errors.As(err, ve) без & → go vet и go test отклоняют вызов ещё до запуска; без vet при выполнении — panic «errors: target must be a non-nil pointer».",
       "%v в Register → цепочка оборвана, errors.As ничего не находит."
     ],
     "followUps": [
@@ -811,7 +811,7 @@ const PRACTICE = [
       "If the parent ctx is cancelled, the error is ctx.Err()."
     ],
     "setup": [
-      "go get golang.org/x/sync@v0.18.0   # работает с Go 1.24+; на Go 1.26+ можно @latest"
+      "# x/sync v0.18.0 работает с Go 1.24+; на Go 1.26+ можно @latest", "go get golang.org/x/sync@v0.18.0"
     ],
     "planTasks": [
       "w4-mon-2"
@@ -1052,7 +1052,7 @@ const PRACTICE = [
       "With no backends it returns ErrNoBackends; if ctx is done before any answer, ctx.Err()."
     ],
     "extraRun": [
-      "go test -run FirstLeaky -v .   # утечка в тесте",
+      "# утечка в тесте", "go test -run FirstLeaky -v .",
       "# в сервисе: import _ \"net/http/pprof\", затем",
       "curl 'http://localhost:6060/debug/pprof/goroutine?debug=1'"
     ],

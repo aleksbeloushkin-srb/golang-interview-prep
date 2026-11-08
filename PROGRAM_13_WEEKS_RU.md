@@ -2,7 +2,7 @@
 
 <!-- GitHub Pages (Jekyll/Liquid) не должен разбирать фигурные скобки в Go-коде этого файла. --> <!-- {% raw %} -->
 
-Цель: Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET. Старт 12.10.2026, ~10 ч в неделю: 4 вечера по 1,5 ч и 4 ч в субботу; пятница и воскресенье — резерв. Бюджет — ориентир, а не обещание; внешний результат (оффер) план не гарантирует.
+Цель: Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET. Старт 09.11.2026, ~10 ч в неделю: 4 вечера по 1,5 ч и 4 ч в субботу; пятница и воскресенье — резерв. Бюджет — ориентир, а не обещание; внешний результат (оффер) план не гарантирует.
 
 Пометки: *(по желанию)* — не входит в обязательный объём недели; *(на редакции)* — у материала сайта нет списка источников (сейчас таких нет). Опорные английские тексты — редакционные наброски, по рубрике не проверены.
 
@@ -10,7 +10,7 @@
 
 Недели 1–5: у каждой обязательной задачи есть критерий «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29e.
+Этот файл сгенерирован из `data/plan.js` — источника данных раздела [«План 13 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`. Ревизия программы: 2026-10-29e; неделя 1, её проговоры и образцы ответов сверены с ревизией 2026-11-08.
 
 ## Фазы
 
@@ -24,106 +24,110 @@
 
 | Нед. | Даты | Тема | Готово, когда |
 | --- | --- | --- | --- |
-| 1 | 12.10–18.10 | Идиомы Go I: типы, интерфейсы, ошибки | Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок. |
-| 2 | 19.10–25.10 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены. |
-| 3 | 26.10–01.11 | Конкурентность I: горутины, каналы, select, sync | W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
-| 4 | 02.11–08.11 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding. |
-| 5 | 09.11–15.11 | Проект I: каркас ledger-сервиса | Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском. |
-| 6 | 16.11–22.11 | Проект II: транзакции, идемпотентность, outbox → Kafka | Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат. |
-| 7 | 23.11–29.11 | Проект III: gRPC, тесты, бенчмарки | Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов. |
-| 8 | 30.11–06.12 | Проект IV: production-readiness, CV | Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском. |
-| 9 | 07.12–13.12 | Take-home, code review, первая волна откликов | Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1. |
-| 10 | 14.12–20.12 | System Design I | 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников. |
-| 11 | 21.12–27.12 | System Design II: event-driven и предметные дизайны | Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов. |
-| 12 | 28.12–03.01 | Behavioral, легенда, CV | Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании. |
-| 13 | 04.01–10.01 | Моки и пик откликов | 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал. |
+| 1 | 09.11–15.11 | Идиомы Go I: типы, интерфейсы, ошибки | Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок. |
+| 2 | 16.11–22.11 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены. |
+| 3 | 23.11–29.11 | Конкурентность I: горутины, каналы, select, sync | W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
+| 4 | 30.11–06.12 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding. |
+| 5 | 07.12–13.12 | Проект I: каркас ledger-сервиса | Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском. |
+| 6 | 14.12–20.12 | Проект II: транзакции, идемпотентность, outbox → Kafka | Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат. |
+| 7 | 21.12–27.12 | Проект III: gRPC, тесты, бенчмарки | Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов. |
+| 8 | 28.12–03.01 | Проект IV: production-readiness, CV | Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском. |
+| 9 | 04.01–10.01 | Take-home, code review, первая волна откликов | Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1. |
+| 10 | 11.01–17.01 | System Design I | 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников. |
+| 11 | 18.01–24.01 | System Design II: event-driven и предметные дизайны | Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов. |
+| 12 | 25.01–31.01 | Behavioral, легенда, CV | Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании. |
+| 13 | 01.02–07.02 | Моки и пик откликов | 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал. |
 
 ## Как проговаривать задачи по-английски
 
 1. **Clarify** — Уточнить условие и входные данные. *Before I start, let me clarify a few things.*
-2. **Approach** — Идея решения до кода: brute force, затем лучше. *The brute-force approach would be… We can do better with…*
+2. **Approach** — Идея до кода: сначала brute force, затем как улучшить. *The brute-force approach would be… We can do better with…*
 3. **Complexity** — Время и память. *This runs in O(n) time and O(n) extra space.*
-4. **Edge cases & tests** — Что проверить, как тест. *Edge cases: an empty input, a single element… I'd turn these into a table-driven test.*
+4. **Edge cases & tests** — Граничные случаи и как они лягут в тест. *Edge cases: an empty input, a single element… I'd turn these into a table-driven test.*
 
 Если завис: *Let me think out loud for a second.* · *I'm not sure yet, but my first idea is…* · *Let me step back and reconsider.* · *Can I assume…? If not, I'd handle it by…*
 
-## Неделя 1. Идиомы Go I: типы, интерфейсы, ошибки (12.10–18.10)
+## Неделя 1. Идиомы Go I: типы, интерфейсы, ошибки (09.11–15.11)
 
 **Цель:** Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.
 
-**Готово, когда:** Решены LC 49, 347, 238 и задачи W1-1…W1-6; самопроверка недели проговорена вслух по-английски без подсказок.
+**Готово, когда:** Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.
 
 ### Пн · 90 мин
 
 - [ ] Tour of Go: Basics — packages, variables, functions, flow control, defer — [Tour of Go](https://go.dev/tour/)
-  - Готово, когда: Пройдены разделы Basics; без подсказки объясняешь var и := и порядок вызова defer на примере из трёх строк.
-- [ ] Завести репозиторий go-prep, go mod init, папка week1
-  - Готово, когда: Репозиторий с go.mod; go vet ./... и go test ./... проходят на пакете с одним тестом.
+  - Готово, когда: Пройдены уроки «Packages, variables, and functions» и «Flow control statements»; без подсказки объясняешь var и := и порядок вызова defer на примере из трёх строк.
+- [ ] Завести свой репозиторий go-prep: один модуль на весь практикум; сегодня — week1/hello и week1/calc, дальше по пакету на задачу; тренировка команд go run, build, vet, test — [Справка go-prep](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep), [C43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43)
+  - Готово, когда: В корне go-prep проходят go vet ./... и go test -race ./...; есть week1/hello и week1/calc с тестом. Тренировка недели 1 пройдена: без подсказки — чем go run отличается от go build, что такое ./..., откуда (cached) и зачем -count=1; чем пакет отличается от модуля (c43).
 - [ ] LeetCode 49. Group Anagrams + проговор — [LC 49. Group Anagrams](https://leetcode.com/problems/group-anagrams/), проговор: «LC 49. Group Anagrams»
 
 ### Вт · 90 мин
 
-- [ ] Tour: pointers, structs, arrays, slices, maps, function values, closures
+- [ ] Tour: pointers, structs, arrays, slices, maps, function values, closures — [Tour: More types](https://go.dev/tour/moretypes/1)
   - Готово, когда: Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной.
 - [ ] Go by Example от Values до Closures — набрать руками, не копировать — [Go by Example](https://gobyexample.com/)
   - Готово, когда: Примеры набраны и запускаются; по каждому — одна фраза, что он показывает.
 - [ ] W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор — [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), проговор: «W1-1. Money»
-  - Готово, когда: Тесты: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль и отрицательная сумма; одна фраза по-английски, почему не float64. Изменённое условие: валюта без дробной части или с тремя знаками.
+  - Готово, когда: Тесты практикума зелёные: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль, отрицательные суммы, JPY и BHD; одна фраза по-английски, почему не float64. Изменённое условие: Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение.
 
 ### Ср · 90 мин
 
-- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors — [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39)
+- [ ] Tour: methods, interfaces, type assertions, type switches, Stringer, errors (упражнения Readers, rot13Reader и Images — по желанию) — [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39), [Tour: Methods and interfaces](https://go.dev/tour/methods/1)
   - Готово, когда: Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch.
-- [ ] Сайт: интерфейсы и receivers — только короткий ответ и «как работает» — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28)
-  - Готово, когда: c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов.
+- [ ] Карточки c33 и c34 — «Коротко по-английски», «Как это работает» и практика без вариантов ответа; quiz q2 и q28 — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [C33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28)
+  - Готово, когда: c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 (nil-указатель внутри error) и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов.
 - [ ] W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As) — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W1-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation), [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29), проговор: «W1-2. Account и W1-3. ValidationError»
-  - Готово, когда: Тесты: после обёртки %w errors.Is находит ErrInsufficientFunds; errors.As достаёт ValidationError с полем Field. Изменённое условие: два уровня обёртки.
-- [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
+  - Готово, когда: Тесты W1-2 и W1-3 зелёные, включая два уровня обёртки; errors.As достаёт *ValidationError с верным Field. Изменённое условие: добавить ErrAccountClosed — errors.Is различает обе причины.
 
 ### Чт · 90 мин
 
 - [ ] Ошибки глубже: errors.New, fmt.Errorf("…: %w"), errors.Is/As, sentinel vs typed — [C39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39), [Q29](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29), [Q30](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q30), [Q20](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20), [Go blog: Working with Errors in Go 1.13](https://go.dev/blog/go1.13-errors), [package errors](https://pkg.go.dev/errors)
-  - Готово, когда: Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v) и q30 (errors.Join, Go 1.20) объяснены до вариантов.
-- [ ] defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов — [C35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q31](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q31), [Q32](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q32)
-  - Готово, когда: q3, q5, q31, q32: ответ до вариантов совпал с разбором по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5.
+  - Готово, когда: Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v), q30 (errors.Join, Go 1.20) и q20 (ошибка Close) объяснены до вариантов.
+- [ ] defer / panic / recover: карточка c35, ловушки q3 и q5 из quiz и их вариации q31 и q32 — отвечать до просмотра вариантов ответа — [C35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35), [Q3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3), [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q31](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q31), [Q32](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q32)
+  - Готово, когда: q3, q5, q31, q32: ответ до вариантов совпал с разбором и по результату, и по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5.
 - [ ] Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management *(по желанию)* — [100go.co](https://100go.co/)
-- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5 — [W1-4, W1-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic), проговор: «W1-5. SafeDiv»
-  - Готово, когда: Порядок трёх defer предсказан до запуска; SafeDiv возвращает ошибку при делении на ноль без паники наружу. Изменённое условие: panic во вложенной функции.
+- [ ] W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-5; без текста повторить проговор W1-3 из среды — [W1-4, W1-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic), проговор: «W1-5. SafeDiv»
+  - Готово, когда: Порядок трёх defer предсказан до запуска; SafeDiv(1, 0) возвращает 0 и ошибку без паники наружу. Изменённое условие: деление на два вызова глубже, затем в отдельной горутине — объяснено, почему в первом случае recover ловит панику, а во втором нет.
 
 ### Сб · 240 мин
 
 - [ ] W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28), проговор: «W1-6. Method sets»
   - Готово, когда: Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.
-- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40), [Q33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34)
-  - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 — ответ до раскрытия; q33 (ключ map) и q34 (встраивание) — до вариантов.
+- [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40), [C65](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65), [Q33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34), [Q52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q52)
+  - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 и c65 — ответ до раскрытия; q33 (ключ map), q34 и q52 (встраивание) — до вариантов.
 - [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
+- [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
 - [ ] Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами — [LC 1. Two Sum](https://leetcode.com/problems/two-sum/), проговор: «LC 1. Two Sum — полный диалог с интервьюером»
-  - Готово, когда: Диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен.
-- [ ] Повторный проговор LC 49 и LC 347 без подсказок
-  - Готово, когда: Обе задачи проговорены без подсказок, по 5 минут; запись сделана.
-- [ ] Самопроверка недели вслух по-английски (ниже)
-  - Готово, когда: Все вопросы самопроверки — ответ по-английски без подсказки; ошибочные отмечены для повтора.
+  - Готово, когда: LC 1 решён без подсказки; диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен.
+- [ ] Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника
+  - Готово, когда: LC 49 проговорена без подсказок за 5 минут; запись сделана.
+- [ ] Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы
+  - Готово, когда: Все вопросы обоих блоков, кроме Tell me about yourself (это отдельная задача), — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора.
+- [ ] Tell me about yourself, версия 0 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go; записать — проговор: «Why Go»
+  - Готово, когда: Запись 60–90 секунд без чтения с листа: роль, один результат с числом, почему Go.
 
-**LeetCode недели:** [1. Two Sum](https://leetcode.com/problems/two-sum/) (Hash map), [49. Group Anagrams](https://leetcode.com/problems/group-anagrams/) (Hash map), [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/) (Hash map + buckets), [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) (Prefix/suffix), [20. Valid Parentheses](https://leetcode.com/problems/valid-parentheses/) (Stack)
+**LeetCode недели:** [1. Two Sum](https://leetcode.com/problems/two-sum/) (Hash map), [49. Group Anagrams](https://leetcode.com/problems/group-anagrams/) (Hash map), [347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/) (Hash map + buckets), [238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/) (Prefix/suffix)
 
 **Проговорить по-английски:**
 
 - *How does error handling in Go differ from exceptions in Kotlin or Java?*
 - *What is a zero value and why does it matter?*
 - *When do you use a pointer receiver?*
-- *Why can a nil pointer returned as an error be non-nil?*
+- *Why can returning a nil pointer as an error give the caller a non-nil error?*
 - *Tell me about yourself — version 0, 60–90 seconds.*
 
 **Самопроверка:**
 
-- Zero values у int, string, *T, []T, map[K]V, chan T, error?
+- Какие нулевые значения у int, string, *T, []T, map[K]V, chan T и error?
 - Чем errors.Is отличается от errors.As?
 - Когда метод объявлять на pointer receiver?
 - Почему nil-указатель, возвращённый как error, даёт err != nil?
-- Порядок отложенных вызовов и когда вычисляются их аргументы?
+- В каком порядке выполняются отложенные вызовы и когда вычисляются их аргументы?
 
 **Материал сайта:**
 
+- [Справка Свой репозиторий go-prep: раскладка, команды, CI](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep)
+- [C43 What is the difference between a module and a package, and what does an internal directory enforce?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43)
 - [Практикум W1-1 Money: сумма в минорных единицах](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money)
 - [C39 How do you add context to an error, and when do you use errors.Is, errors.As and errors.Join?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39)
 - [C34 How do method sets differ from the shorthand used to call pointer methods?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34)
@@ -142,15 +146,12 @@
 - [Q32 Recover в своей горутине и nil map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q32)
 - [Практикум W1-4, W1-5 Порядок defer и SafeDiv](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic)
 - [C40 What is the zero value of each kind of type, and which nil values are safe to use?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40)
+- [C65 How does embedding differ from inheritance, and what trap does it set for a Java or Kotlin developer?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65)
 - [Q33 Какой тип может быть ключом map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33)
 - [Q34 Встраивание и неоднозначный метод](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34)
+- [Q52 «Переопределённый» метод и встраивание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q52)
 
-**Чего пока нет на сайте:**
-
-- Нет карточки «embedding против наследования» для JVM-разработчика (ошибки, %w/Is/As и пакеты уже есть в карточках).
-- Нет режима проговора задач (Clarify → Approach → Complexity → Edge) с таймером и самооценкой.
-
-## Неделя 2. Идиомы Go II: slice, map, строки, generics, тесты (19.10–25.10)
+## Неделя 2. Идиомы Go II: slice, map, строки, generics, тесты (16.11–22.11)
 
 **Цель:** Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.
 
@@ -256,7 +257,7 @@
 - В quiz «Сначала свой ответ» вывод проговаривается, но не вводится и не сверяется автоматически.
 - Нет материала про -race в CI (generics и тесты уже есть в карточках и практикуме).
 
-## Неделя 3. Конкурентность I: горутины, каналы, select, sync (26.10–01.11)
+## Неделя 3. Конкурентность I: горутины, каналы, select, sync (23.11–29.11)
 
 **Цель:** Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.
 
@@ -359,7 +360,7 @@
 **Чего пока нет на сайте:**
 
 
-## Неделя 4. Конкурентность II и минимум рантайма (02.11–08.11)
+## Неделя 4. Конкурентность II и минимум рантайма (30.11–06.12)
 
 **Цель:** Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.
 
@@ -485,7 +486,7 @@
 - Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 3–4.
 - Нет задачи на чтение trace-вывода (go tool trace); профиль pprof разбирается в «Бенчмарк и профиль» и «Утечка горутин».
 
-## Неделя 5. Проект I: каркас ledger-сервиса (09.11–15.11)
+## Неделя 5. Проект I: каркас ledger-сервиса (07.12–13.12)
 
 **Цель:** Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.
 
@@ -564,7 +565,7 @@
 - Нет материалов по pgx и конфигурации сервиса (net/http, database/sql и slog уже есть в карточках).
 - Нет шаблона ADR и примеров «как рассказать про проект» по-английски.
 
-## Неделя 6. Проект II: транзакции, идемпотентность, outbox → Kafka (16.11–22.11)
+## Неделя 6. Проект II: транзакции, идемпотентность, outbox → Kafka (14.12–20.12)
 
 **Цель:** Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.
 
@@ -647,7 +648,7 @@
 - Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W6-3.
 - Практикум недели работает в памяти; PostgreSQL и Kafka в Docker Compose проверяются только в своём проекте.
 
-## Неделя 7. Проект III: gRPC, тесты, бенчмарки (23.11–29.11)
+## Неделя 7. Проект III: gRPC, тесты, бенчмарки (21.12–27.12)
 
 **Цель:** У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.
 
@@ -704,7 +705,7 @@
 - Нет материалов по тестированию на Go и testcontainers.
 - Карточка c38 про synctest — единственная точка про тестирование конкурентного кода.
 
-## Неделя 8. Проект IV: production-readiness, CV (30.11–06.12)
+## Неделя 8. Проект IV: production-readiness, CV (28.12–03.01)
 
 **Цель:** Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.
 
@@ -762,7 +763,7 @@
 
 - Нет тренажёра Craft Deep-Dive: вопросы интервьюера по собственному проекту с follow-up.
 
-## Неделя 9. Take-home, code review, первая волна откликов (07.12–13.12)
+## Неделя 9. Take-home, code review, первая волна откликов (04.01–10.01)
 
 **Цель:** Сделать take-home в формате EU-компаний и уверенно ревьюить чужой Go-код за 40 минут.
 
@@ -822,7 +823,7 @@
 - Нет режима code review: показать фрагмент, дать написать комментарии, затем сравнить с эталонным списком замечаний.
 - Quiz сейчас только выбор варианта, а не самостоятельный поиск дефекта.
 
-## Неделя 10. System Design I (14.12–20.12)
+## Неделя 10. System Design I (11.01–17.01)
 
 **Цель:** По шаблону за 40 минут вести дизайн вслух на английском и в каждом дизайне объяснять, почему Go.
 
@@ -874,7 +875,7 @@
 - На сайте нет раздела System Design: шаблон, разобранные дизайны, вопросы интервьюера.
 - Нет связки «механизм Go → архитектурное решение» (например, горутины и netpoller → почему Go для I/O-bound сервиса).
 
-## Неделя 11. System Design II: event-driven и предметные дизайны (21.12–27.12)
+## Неделя 11. System Design II: event-driven и предметные дизайны (18.01–24.01)
 
 **Цель:** Уверенно вести дизайн event-driven систем и предметные задачи целевых компаний.
 
@@ -921,7 +922,7 @@
 
 - Нет материалов по event-driven архитектуре и предметным дизайнам целевых компаний.
 
-## Неделя 12. Behavioral, легенда, CV (28.12–03.01)
+## Неделя 12. Behavioral, легенда, CV (25.01–31.01)
 
 **Цель:** 8 STAR-историй и рассказ о себе звучат естественно по-английски; CV и LinkedIn готовы.
 
@@ -970,7 +971,7 @@
 
 - Нет банка behavioral-вопросов с шаблоном STAR и тренировкой ответа вслух.
 
-## Неделя 13. Моки и пик откликов (04.01–10.01)
+## Неделя 13. Моки и пик откликов (01.02–07.02)
 
 **Цель:** Пройти полный цикл интервью в тренировочном режиме и выйти на реальные собеседования.
 
@@ -1049,6 +1050,7 @@
 - **Approach:** Anagrams share the same letter counts, so I build a key per word and group words in a map from key to list. In Go a [26]int array is comparable, so I can use it directly as a map key — no string building needed.
 - **Complexity:** O(n · k) time, where k is the average word length, and O(n · k) space.
 - **Edge cases & tests:** An empty string is a valid group of its own; a single word gives one group.
+- **Follow-up:** What if the strings can contain any Unicode letters? — A [26]int key no longer works. I'd sort the runes of each word and use the sorted string as the key, which costs O(k log k) per word.
 
 ### LC 347. Top K Frequent Elements
 
@@ -1056,6 +1058,7 @@
 - **Approach:** First count frequencies in a map. Then bucket sort: a slice of buckets indexed by frequency, which is at most n. Walk the buckets from the highest frequency and collect k numbers. A min-heap of size k is the alternative.
 - **Complexity:** Buckets give O(n) time and O(n) space; the heap is O(n log k).
 - **Edge cases & tests:** k equals the number of unique elements; all elements are the same.
+- **Follow-up:** What if k is much smaller than the number of distinct values? — A min-heap of size k keeps only the best candidates: O(n log k) time and O(k) extra space on top of the counts.
 
 ### LC 238. Product of Array Except Self
 
@@ -1063,6 +1066,7 @@
 - **Approach:** Two passes. Left to right I store the product of everything before each index. Right to left I keep a running suffix product and multiply it in. Zeros are handled naturally because I never divide.
 - **Complexity:** O(n) time, O(1) extra space besides the output.
 - **Edge cases & tests:** One zero; two zeros, where every result is zero; negative numbers.
+- **Follow-up:** What if division were allowed? — Dividing the total product works only without zeros: with one zero only that index is non-zero, with two zeros everything is zero, so prefix and suffix products stay simpler.
 
 ### LC 3. Longest Substring Without Repeating Characters
 
@@ -1095,23 +1099,26 @@
 
 ### W1-1. Money
 
-- **Approach:** I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats units and cents with the currency code.
+- **Approach:** I store money as int64 minor units, so 12.50 EUR is 1250, because float64 can't represent decimal amounts exactly and rounding errors are unacceptable in payments. String() formats whole and minor units with the number of decimals defined by the currency, plus the currency code.
 - **Edge cases & tests:** Negative amounts, zero, amounts below one euro like 0.05.
 
 ### W1-2. Account и W1-3. ValidationError
 
 - **Approach:** Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.
-- **Edge cases & tests:** errors.Is compares against a specific value; errors.As matches by type and gives me the value.
+- **Edge cases & tests:** A zero or negative amount, withdrawing exactly the balance, and a Transfer whose deposit fails, so the money must go back. Each is a row in a table-driven test.
+- **Follow-up:** How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value.
 
 ### W1-5. SafeDiv
 
 - **Approach:** A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.
-- **Edge cases & tests:** In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server.
+- **Edge cases & tests:** b equal to zero, a normal division like 7 / 2, and a panic two calls deeper, which recover still catches in the same goroutine.
+- **Follow-up:** Would you use recover like this in production? — In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server.
 
 ### W1-6. Method sets
 
 - **Approach:** The method set of T contains only value-receiver methods; the method set of *T contains both. So if Notify has a pointer receiver, only *Service satisfies Notifier, and passing a Service value fails at compile time.
-- **Edge cases & tests:** The rule itself comes from the spec. The rationale: an interface holds a copy of the value, so a pointer method called through it would change that copy, not the caller's variable.
+- **Edge cases & tests:** An element of map[string]Service cannot call Notify at all, and a struct that embeds *Service does satisfy Notifier.
+- **Follow-up:** Why does the spec have this rule? — The usual rationale: the interface stores a copy that is not addressable, so a pointer method would have nothing to point to and could not change the caller's value.
 
 ### W2-1. Remove
 
@@ -1364,7 +1371,7 @@ I store money as int64 minor units with a currency code, so 12.50 EUR is 1250. f
 
 </details>
 
-**w1-wed-1** — Tour: methods, interfaces, type assertions, type switches, Stringer, errors
+**w1-wed-1** — Tour: methods, interfaces, type assertions, type switches, Stringer, errors (упражнения Readers, rot13Reader и Images — по желанию)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1374,7 +1381,7 @@ A type switch branches on the dynamic type stored in an interface: switch v := x
 
 </details>
 
-**w1-wed-2** — Сайт: интерфейсы и receivers — только короткий ответ и «как работает»
+**w1-wed-2** — Карточки c33 и c34 — «Коротко по-английски», «Как это работает» и практика без вариантов ответа; quiz q2 и q28
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1404,7 +1411,7 @@ I use a sentinel error when callers only branch on a fixed condition, and a type
 
 </details>
 
-**w1-thu-2** — defer / panic / recover: карточка, ловушки q3 и q5 из quiz и их варианты q31 и q32 — сначала ответить без вариантов
+**w1-thu-2** — defer / panic / recover: карточка c35, ловушки q3 и q5 из quiz и их вариации q31 и q32 — отвечать до просмотра вариантов ответа
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1414,7 +1421,7 @@ defer schedules cleanup for when the function returns; deferred calls run in las
 
 </details>
 
-**w1-thu-4** — W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-3, W1-5
+**w1-thu-4** — W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-5; без текста повторить проговор W1-3 из среды
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1438,9 +1445,19 @@ It comes down to method sets: var _ Notifier = Service{} fails to compile when N
 
 <details><summary>Model answer (EN)</summary>
 
-*Remember:* var x T is ready: 0, "", false or nil; nil map writes panic, nil channels block.
+*Remember:* For the zero-values row: var x T is ready — 0, "", false or nil; nil map writes panic, nil channels block.
 
 Every declared variable starts at its zero value: var n int is 0, var s string is "", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
+
+</details>
+
+**w1-sat-6** — Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Zero values are usable; Is compares, As extracts; pointer receiver to mutate or avoid copies; defer is LIFO.
+
+Zero values: 0 for int, "" for string, and nil for *T, []T, map[K]V, chan T and error. errors.Is checks whether the chain contains a specific value, such as a sentinel; errors.As finds the first error of a given type and lets me read its fields. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync.Mutex; then I keep all methods of the type on pointers. A nil *MyErr returned as error is not nil, because the interface stores the type *MyErr; it is nil only when both type and value are nil. Deferred calls run last in, first out when the function returns, and their arguments are evaluated when the defer statement runs.
 
 </details>
 

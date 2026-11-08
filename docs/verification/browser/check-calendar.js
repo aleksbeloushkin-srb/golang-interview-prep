@@ -7,7 +7,7 @@ const { chromium } = require("playwright");
   const ctx = await b.newContext({ viewport: { width: 390, height: 900 } });
   const p = await ctx.newPage();
   const errors = []; p.on("pageerror", e => errors.push(e.message)); p.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
-  await p.clock.setFixedTime(new Date("2026-10-28T19:00:00+01:00")); // Wednesday
+  await p.clock.setFixedTime(new Date("2026-11-25T19:00:00+01:00")); // Wednesday
   await p.goto(base + "#/plan"); await p.waitForSelector("#plan-week-title");
   const saved = () => p.evaluate(() => JSON.parse(localStorage.getItem("go_prep_plan_v1") || "null"));
   const status = () => p.textContent(".plan-calendar-status");
@@ -22,56 +22,56 @@ const { chromium } = require("playwright");
   ok("summary shows status", (await status()).includes("изменить"), await status());
   await openDates();
   ok("dates open on click", await p.evaluate(() => document.getElementById("plan-dates").open));
-  ok("reset label names the date", await p.locator("text=Сбросить на 12.10").count() === 1);
-  ok("default: week 3 on Wed 28.10", (await status()).includes("12.10.2026") && (await status()).includes("сейчас неделя 3"), await status());
+  ok("reset label names the date", await p.locator("text=Сбросить на 09.11").count() === 1);
+  ok("default: week 3 on Wed 25.11", (await status()).includes("09.11.2026") && (await status()).includes("сейчас неделя 3"), await status());
   await p.check("#plan-task-w3-mon-1");
 
   await p.click("text=Я начал на этой неделе"); await p.waitForTimeout(150);
   let s = await saved();
-  ok("«Я начал» sets Monday of this week", s.start === "2026-10-26", s.start);
+  ok("«Я начал» sets Monday of this week", s.start === "2026-11-23", s.start);
   ok("marks kept after start change", s.done["w3-mon-1"] === true);
   ok("status shows week 1", (await status()).includes("сейчас неделя 1"));
   ok("today banner follows: week 1, Ср", (await p.textContent("#plan-today")).includes("неделя 1, Ср"), (await p.textContent("#plan-today")).trim());
   const note = await p.textContent("#plan-start-note");
-  ok("note says previous date", note.includes("было 12.10.2026") && note.includes("Отметки задач не изменились"), note);
+  ok("note says previous date", note.includes("было 09.11.2026") && note.includes("Отметки задач не изменились"), note);
   ok("focus moves to the note", await p.evaluate(() => document.activeElement && document.activeElement.id === "plan-start-note"));
 
   await p.click("text=План на неделю позже →"); await p.waitForTimeout(150);
   s = await saved();
-  ok("shift later: start +7, before start", s.start === "2026-11-02" && (await status()).includes("до старта"), `${s.start} ${await status()}`);
+  ok("shift later: start +7, before start", s.start === "2026-11-30" && (await status()).includes("до старта"), `${s.start} ${await status()}`);
   await p.click("text=← План на неделю раньше"); await p.click("text=← План на неделю раньше"); await p.waitForTimeout(150);
   s = await saved();
-  ok("shift earlier twice: week 2", s.start === "2026-10-19" && (await status()).includes("сейчас неделя 2"), s.start);
+  ok("shift earlier twice: week 2", s.start === "2026-11-16" && (await status()).includes("сейчас неделя 2"), s.start);
 
   await p.selectOption("#plan-current-week", "5"); await p.waitForTimeout(150);
   s = await saved();
-  ok("«Сейчас я на неделе 5» → start 5 weeks back", s.start === "2026-09-28" && (await status()).includes("сейчас неделя 5"), s.start);
+  ok("«Сейчас я на неделе 5» → start 5 weeks back", s.start === "2026-10-26" && (await status()).includes("сейчас неделя 5"), s.start);
   ok("current chip is week 5", await p.locator('.plan-chip.is-current[data-plan-week="w5"]').count() === 1);
 
   await p.goto(base + "#/plan/w2"); await p.waitForTimeout(150);
   ok("URL week kept; note cleared after navigation", (await p.textContent("#plan-week-title")).startsWith("Неделя 2.") && await p.locator("#plan-start-note").count() === 0);
-  await p.click("text=Сбросить на 12.10"); await p.waitForTimeout(150);
+  await p.click("text=Сбросить на 09.11"); await p.waitForTimeout(150);
   s = await saved();
-  ok("reset returns default start", s.start === "2026-10-12", s.start);
+  ok("reset returns default start", s.start === "2026-11-09", s.start);
   ok("week from URL stays after reset", (await p.textContent("#plan-week-title")).startsWith("Неделя 2."));
   ok("dates stay open after a change", await p.evaluate(() => document.getElementById("plan-dates").open));
   await p.reload(); await p.waitForSelector("#plan-week-title");
-  ok("start persists after reload", (await status()).includes("12.10.2026"));
+  ok("start persists after reload", (await status()).includes("09.11.2026"));
   ok("dates collapsed again after reload", await p.evaluate(() => !document.getElementById("plan-dates").open));
 
   // Date input still snaps to Monday.
   await p.click(".plan-settings summary");
-  await p.fill("#plan-start", "2026-11-04"); await p.waitForTimeout(150);
+  await p.fill("#plan-start", "2026-12-02"); await p.waitForTimeout(150);
   s = await saved();
-  ok("date input snaps Wednesday to Monday", s.start === "2026-11-02", s.start);
+  ok("date input snaps Wednesday to Monday", s.start === "2026-11-30", s.start);
   ok("date input opens dates block with note", await p.evaluate(() => document.getElementById("plan-dates").open) && (await p.textContent("#plan-start-note")).includes("понедельник"));
-  await p.click("text=Сбросить на 12.10"); await p.waitForTimeout(100);
+  await p.click("text=Сбросить на 09.11"); await p.waitForTimeout(100);
 
   // Keyboard: buttons and select reachable and labelled.
   ok("select has a label", await p.evaluate(() => Boolean(document.querySelector('label[for="plan-current-week"]'))));
   await p.focus("text=Я начал на этой неделе"); await p.keyboard.press("Enter"); await p.waitForTimeout(150);
-  ok("Enter on «Я начал» works", (await saved()).start === "2026-10-26");
-  await p.click("text=Сбросить на 12.10"); await p.waitForTimeout(100);
+  ok("Enter on «Я начал» works", (await saved()).start === "2026-11-23");
+  await p.click("text=Сбросить на 09.11"); await p.waitForTimeout(100);
 
   // Model answers weeks 1–3.
   for (const [week, count] of [["w1", null], ["w2", null], ["w3", null]]) {
@@ -107,7 +107,7 @@ const { chromium } = require("playwright");
   // Read-only (backend configured, signed out): hint next to the calendar, no jump to the top.
   {
     const r = await (await b.newContext({ viewport: { width: 390, height: 800 } })).newPage();
-    await r.clock.setFixedTime(new Date("2026-10-28T19:00:00+01:00"));
+    await r.clock.setFixedTime(new Date("2026-11-25T19:00:00+01:00"));
     await r.goto("http://127.0.0.1:8767/#/plan"); await r.waitForSelector("#plan-week-title");
     await r.evaluate(() => { const d = document.getElementById("plan-dates"); d.querySelector("summary").click(); });
     ok("RO: hint shown before any click", (await r.textContent("#plan-dates")).includes("только просмотр"));
@@ -119,11 +119,11 @@ const { chromium } = require("playwright");
     const n = await r.textContent("#plan-start-note");
     ok("RO: note says sign-in needed", n.includes("Без входа дата не меняется"), n);
     ok("RO: sign-in button inside note", await r.locator("#plan-start-note button", { hasText: "Войти через Google" }).count() === 1);
-    ok("RO: start not saved", await r.evaluate(() => localStorage.getItem("go_prep_plan_v1") === null || JSON.parse(localStorage.getItem("go_prep_plan_v1")).start === "2026-10-12"));
+    ok("RO: start not saved", await r.evaluate(() => localStorage.getItem("go_prep_plan_v1") === null || JSON.parse(localStorage.getItem("go_prep_plan_v1")).start === "2026-11-09"));
     ok("RO: no jump to top", Math.abs(y1 - y0) < 150 && y1 > 0, `${y0}→${y1}`);
     ok("RO: top notice not used", await r.evaluate(() => document.getElementById("signin-notice").classList.contains("hidden")));
     ok("RO: note visible in viewport", await r.evaluate(() => { const b = document.getElementById("plan-start-note").getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight; }));
-    await r.click("text=Сбросить на 12.10"); await r.waitForTimeout(150);
+    await r.click("text=Сбросить на 09.11"); await r.waitForTimeout(150);
     ok("RO: reset also explains", (await r.textContent("#plan-start-note")).includes("Без входа"));
     await r.close();
   }
