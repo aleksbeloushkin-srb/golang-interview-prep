@@ -2,7 +2,7 @@
 // Дата следующей проверки выводится из истории попыток (go_prep_attempts_v1, app.js): отдельного хранилища
 // для расписания нет, поэтому оно синхронизируется и сливается вместе с попытками.
 // Интервалы — рабочая гипотеза, пересмотреть по нагрузке: «не ответил» — завтра, «с опорой» — через 2 дня,
-// «сам» подряд — через 4, 8, 16, затем 30 дней. Отметка старого формата без истории — проверить сегодня.
+// «сам» в разные дни подряд — через 4, 8, 16, затем 30 дней. Отметка старого формата без истории — проверить сегодня.
 const REVIEW_DAYS = { none: 1, anchors: 2 };
 const REVIEW_SELF_DAYS = [4, 8, 16, 30];
 // Текущее занятие — только этот браузер (auth.js исключает ключ из синхронизации).
@@ -26,18 +26,28 @@ function reviewShort(iso) {
   return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 }
 
-// { last, rating, streak, due } по истории карточки или null, если попыток нет.
+// Расписание считается по учебным дням: за день засчитывается худшая оценка. Поэтому повторные «сам»
+// в тот же день не удлиняют интервал, промах в тот же день его сокращает, а порядок попыток внутри дня
+// (в том числе после слияния двух устройств) на расписание не влияет.
+const RATING_RANK = { none: 0, anchors: 1, self: 2 };
+
+// { last, rating, streak, due } по истории карточки или null, если попыток нет; rating — итог последнего дня.
 function cardSchedule(cardId, attempts) {
   const raw = (attempts || loadAttempts())[cardId];
   const list = (Array.isArray(raw) ? raw : []).filter(a => a && ATTEMPT_LABELS[a.r] && /^\d{4}-\d{2}-\d{2}$/.test(a.d));
   if (!list.length) return null;
-  // История дописывается по порядку, но после слияния устройств её стоит упорядочить по дате (стабильно).
-  const sorted = list.map((a, i) => [a, i]).sort((x, y) => (x[0].d < y[0].d ? -1 : x[0].d > y[0].d ? 1 : x[1] - y[1])).map(x => x[0]);
-  const last = sorted[sorted.length - 1];
+  const dayRating = new Map();
+  for (const a of list) {
+    const r = dayRating.get(a.d);
+    if (r === undefined || RATING_RANK[a.r] < RATING_RANK[r]) dayRating.set(a.d, a.r);
+  }
+  const days = [...dayRating.keys()].sort();
+  const last = days[days.length - 1];
+  const rating = dayRating.get(last);
   let streak = 0;
-  for (let i = sorted.length - 1; i >= 0 && sorted[i].r === "self"; i--) streak++;
-  const days = last.r === "self" ? REVIEW_SELF_DAYS[Math.min(streak, REVIEW_SELF_DAYS.length) - 1] : REVIEW_DAYS[last.r];
-  return { last: last.d, rating: last.r, streak, due: reviewAddDays(last.d, days) };
+  for (let i = days.length - 1; i >= 0 && dayRating.get(days[i]) === "self"; i--) streak++;
+  const wait = rating === "self" ? REVIEW_SELF_DAYS[Math.min(streak, REVIEW_SELF_DAYS.length) - 1] : REVIEW_DAYS[rating];
+  return { last, rating, streak, due: reviewAddDays(last, wait) };
 }
 
 // Дата проверки карточки: по истории; у отметки старого формата без истории — сегодня; у новой — null.

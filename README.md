@@ -25,7 +25,7 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 | Cards | `#/cards` | 72 questions in 10 modules, answered from memory, with a review schedule |
 | Diagrams | `#/simulators` | 12 step-by-step diagrams, 95 steps |
 | Quiz | `#/quiz` | 55 code traps: what it prints, where the bug is, how to fix it |
-| Practice | `#/practice` | 26 coding tasks with tests, the `go-prep` repository guide, the "Channels and context" track |
+| Practice | `#/practice` | 26 coding tasks with tests, the `go-prep` repository guide, a guide on comparable types and map keys, the "Channels and context" track |
 | Knowledge base | `#/wiki` | all card topics on one page and two reference projects |
 | Cheat sheet | `#/cheatsheet` | 22 rows: how each mechanism works and the numbers worth naming |
 

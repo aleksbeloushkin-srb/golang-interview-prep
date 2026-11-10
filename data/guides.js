@@ -151,6 +151,73 @@ const GUIDES = {
         ]
       }
     ]
+  },
+  "go-types": {
+    title: "Типы Go: что сравнимо и что может быть ключом map",
+    intro: [
+      "Сводка к неделе 1: какие типы сравниваются через ==, что может быть ключом map и где сравнение компилируется, но падает при выполнении. Каждое утверждение проверено запуском на Go 1.24.7 и 1.27.3."
+    ],
+    sections: [
+      {
+        id: "kinds",
+        title: "1. Сравнимые и несравнимые типы",
+        paragraphs: [
+          "Сравнимость — свойство типа, а не значения: компилятор решает, разрешён ли ==. Составной тип сравним, только если сравнимо всё, из чего он состоит."
+        ],
+        rows: [
+          { cmd: "bool, числа, string", what: "сравнимы; < и > есть у чисел и строк (cmp.Ordered), у bool — нет: operator < not defined on bool" },
+          { cmd: "*T, chan T", what: "сравнимы по идентичности: равны, только если указывают на одно и то же значение или созданы одним make" },
+          { cmd: "интерфейсы (any, error)", what: "сравнимы: равны, если совпадают динамический тип и значение; any(1) == any(1.0) — false, типы разные" },
+          { cmd: "[N]T", what: "сравним, если сравним T; сравнение поэлементное" },
+          { cmd: "struct", what: "сравнима, если сравнимы все поля, включая неэкспортированные: struct containing []int cannot be compared" },
+          { cmd: "[]T, map[K]V, func", what: "несравнимы, == только с nil: slice can only be compared to nil; содержимое сравнивают slices.Equal, maps.Equal, bytes.Equal" }
+        ]
+      },
+      {
+        id: "keys",
+        title: "2. Ключи map",
+        paragraphs: [
+          "Ключом может быть только сравнимый тип: map[[]int]int не компилируется — invalid map key type []int. Составные ключи — массив и структура: счётчик букв [26]int в LC 49 и struct{ From, To string } вместо склейки строк через разделитель.",
+          "Ключ-интерфейс компилируется всегда, но запись значения несравнимого динамического типа роняет программу: m[any([]int{1})] = 1 даёт panic: runtime error: hash of unhashable type []int.",
+          "Ключ-указатель различает адреса, а не содержимое: одинаковые значения по разным указателям — разные ключи. У float-ключей NaN != NaN: каждая запись с NaN создаёт новый элемент, найти его по ключу нельзя; +0 и -0 — один ключ."
+        ],
+        code: {
+          label: "Ключ-массив: группировка анаграмм (LC 49)",
+          text: "groups := map[[26]int][]string{}\nfor _, word := range words {\n\tvar count [26]int\n\tfor _, r := range word {\n\t\tcount[r-'a']++\n\t}\n\tgroups[count] = append(groups[count], word)\n}"
+        }
+      },
+      {
+        id: "runtime",
+        title: "3. Компилируется, но падает или удивляет",
+        paragraphs: [
+          "Интерфейсы сравниваются по динамическим значениям: any([]int{1}) == any([]int{1}) компилируется и паникует — comparing uncomparable type []int.",
+          "Typed nil: var p *int; var i any = p — i == nil даёт false, потому что у интерфейса есть тип *int (карточка C33).",
+          "time.Time сравнивают методом Equal, а не ==: == учитывает зону и показания монотонных часов. t == t.Round(0) — false, t.Equal(t.Round(0)) — true."
+        ]
+      },
+      {
+        id: "generics",
+        title: "4. comparable в generics",
+        paragraphs: [
+          "Ограничение comparable разрешает == в generic-коде: func Index[T comparable](xs []T, x T) int. С Go 1.20 ему удовлетворяют и интерфейсы, например any: Eq[any](a, b) компилируется, но при несравнимом динамическом значении паникует так же, как обычное сравнение интерфейсов. Для < и > нужен cmp.Ordered (с Go 1.21)."
+        ]
+      },
+      {
+        id: "say",
+        title: "5. Сказать на интервью",
+        paragraphs: [
+          "Slices, maps and functions are not comparable, so they can't be map keys; arrays and structs are comparable when their elements or fields are. An interface key compiles, but panics at run time if the dynamic value isn't comparable. NaN never equals itself, so it's a useless key, and time values are compared with Equal, not with ==."
+        ],
+        links: [
+          { t: "Spec: Comparison operators", u: "https://go.dev/ref/spec#Comparison_operators" },
+          { t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" },
+          { t: "Go blog: All your comparable types (Go 1.20)", u: "https://go.dev/blog/comparable" },
+          { t: "slices.Equal", u: "https://pkg.go.dev/slices#Equal" },
+          { t: "maps.Equal", u: "https://pkg.go.dev/maps#Equal" },
+          { t: "time.Time.Equal", u: "https://pkg.go.dev/time#Time.Equal" }
+        ]
+      }
+    ]
   }
 };
 
@@ -158,5 +225,6 @@ const GUIDES = {
 const GUIDE_LINKS = {
   "g-go-prep": { guide: "go-prep", section: null, label: "Свой репозиторий go-prep: раскладка, команды, CI" },
   "g-go-prep-ci": { guide: "go-prep", section: "ci", label: "go-prep: CI на GitHub Actions" },
-  "g-go-prep-asm": { guide: "go-prep", section: "asm", label: "go-prep: тренировка — сборка с ассемблером и без" }
+  "g-go-prep-asm": { guide: "go-prep", section: "asm", label: "go-prep: тренировка — сборка с ассемблером и без" },
+  "g-go-types": { guide: "go-types", section: null, label: "Типы Go: что сравнимо и что может быть ключом map" }
 };
