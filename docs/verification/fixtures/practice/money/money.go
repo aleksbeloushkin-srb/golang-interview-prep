@@ -31,7 +31,7 @@ func (m Money) String() string {
 	v := m.Minor
 	if v < 0 {
 		sign = "-"
-		v = -v // note: math.MinInt64 cannot be negated; amounts here are far smaller
+		v = -v // math.MinInt64 cannot be negated; the contract excludes it
 	}
 	if d == 0 {
 		return fmt.Sprintf("%s%d %s", sign, v, m.Currency)

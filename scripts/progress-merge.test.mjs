@@ -83,3 +83,28 @@ test('schedule: a miss resets the self streak; month end handled; unsorted histo
   assert.equal(sched([{ d: '2026-11-05', r: 'self' }, { d: '2026-11-01', r: 'none' }]).rating, 'self');
   assert.equal(ctx.cardSchedule('c1', {}), null);
 });
+
+test('schedule: one step per day — four «сам» on one day are one step, not a month', () => {
+  const s = sched(Array.from({ length: 4 }, () => ({ d: '2026-11-09', r: 'self' })));
+  assert.equal(s.streak, 1);
+  assert.equal(s.due, '2026-11-13');
+});
+
+test('schedule: the worst rating of a day counts, whatever the order of attempts that day', () => {
+  for (const day of [[{ d: '2026-11-09', r: 'none' }, { d: '2026-11-09', r: 'self' }], [{ d: '2026-11-09', r: 'self' }, { d: '2026-11-09', r: 'none' }]]) {
+    const s = sched([{ d: '2026-11-05', r: 'self' }, ...day]);
+    assert.deepEqual([s.rating, s.streak, s.due], ['none', 0, '2026-11-10']);
+  }
+  const anchors = sched([{ d: '2026-11-09', r: 'self' }, { d: '2026-11-09', r: 'anchors' }]);
+  assert.deepEqual([anchors.rating, anchors.due], ['anchors', '2026-11-11']);
+});
+
+test('schedule after a merge does not depend on which side is local', () => {
+  const a = { go_prep_attempts_v1: J({ c1: [{ d: '2026-11-09', r: 'none' }] }) };
+  const b = { go_prep_attempts_v1: J({ c1: [{ d: '2026-11-09', r: 'self' }] }) };
+  const ab = sched(P(mergeProgressSnapshots(a, b), 'go_prep_attempts_v1').c1);
+  const ba = sched(P(mergeProgressSnapshots(b, a), 'go_prep_attempts_v1').c1);
+  assert.deepEqual([ab.rating, ab.due], ['none', '2026-11-10']);
+  assert.deepEqual([ba.rating, ba.due], [ab.rating, ab.due]);
+});
+

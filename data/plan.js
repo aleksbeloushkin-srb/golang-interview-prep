@@ -37,7 +37,7 @@ const PLAN = {
       id: "w1",
       title: "Идиомы Go I: типы, интерфейсы, ошибки",
       goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.",
-      done: "Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.",
+      done: "Решены LC 49 и LC 1 (на leetcode.com, на Go); LC 238 и 347 — резерв недели, по желанию. W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -48,7 +48,7 @@ const PLAN = {
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures", refs: [{ t: "Tour: More types", u: "https://go.dev/tour/moretypes/1" }] },
+            { id: "w1-tue-1", text: "Tour: pointers, structs, arrays, slices, maps, function values, closures; что сравнимо и что может быть ключом map — справка", links: ["g-go-types"], refs: [{ t: "Tour: More types", u: "https://go.dev/tour/moretypes/1" }] },
             { id: "w1-tue-2", text: "Go by Example от Values до Closures — набрать руками, не копировать", refs: [{ t: "Go by Example", u: "https://gobyexample.com/" }] },
             { id: "w1-tue-3", text: "W1-1 Money: тип в минорных единицах (int64) + валюта, метод String() → «12.50 EUR». Проговор", links: ["p-money"], talk: "w1-1" }
           ]
@@ -72,10 +72,10 @@ const PLAN = {
           label: "Сб", minutes: 240, tasks: [
             { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-6" },
             { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость", links: ["c40", "c65", "q33", "q34", "q52"] },
-            { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать)", lc: 238, talk: "lc238" },
-            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" },
+            { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать) — резерв недели: пятница или воскресенье", optional: true, lc: 238, talk: "lc238" },
+            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — резерв недели: пятница или воскресенье", optional: true, lc: 347, talk: "lc347" },
             { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
-            { id: "w1-sat-5", text: "Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника" },
+            { id: "w1-sat-5", text: "Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника; почему массив [26]int годится в ключ map", links: ["g-go-types"] },
             { id: "w1-sat-6", text: "Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы" },
             { id: "w1-sat-7", text: "Tell me about yourself, версия 0 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go; записать", talk: "why-go" }
           ]
@@ -951,7 +951,7 @@ const PLAN = {
     "w1-2": {
       title: "W1-2. Account и W1-3. ValidationError",
       approach: "Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.",
-      edge: "A zero or negative amount, withdrawing exactly the balance, and a Transfer whose deposit fails, so the money must go back. Each is a row in a table-driven test.",
+      edge: "A zero or negative amount, withdrawing exactly the balance or one unit more, and a successful transfer that keeps the total. Each is a row in a table-driven test. Rolling the money back matters only once Deposit can fail, for example on a closed account.",
       followUp: "How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value."
     },
     "w1-5": {

@@ -24,7 +24,7 @@
 
 | Нед. | Даты | Тема | Готово, когда |
 | --- | --- | --- | --- |
-| 1 | 09.11–15.11 | Идиомы Go I: типы, интерфейсы, ошибки | Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок. |
+| 1 | 09.11–15.11 | Идиомы Go I: типы, интерфейсы, ошибки | Решены LC 49 и LC 1 (на leetcode.com, на Go); LC 238 и 347 — резерв недели, по желанию. W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок. |
 | 2 | 16.11–22.11 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены. |
 | 3 | 23.11–29.11 | Конкурентность I: горутины, каналы, select, sync | W3-1…W3-5 работают под go test -race; на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
 | 4 | 30.11–06.12 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding. |
@@ -51,7 +51,7 @@
 
 **Цель:** Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.
 
-**Готово, когда:** Решены LC 1, 49, 347, 238 (на leetcode.com, на Go). W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.
+**Готово, когда:** Решены LC 49 и LC 1 (на leetcode.com, на Go); LC 238 и 347 — резерв недели, по желанию. W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.
 
 ### Пн · 90 мин
 
@@ -63,7 +63,7 @@
 
 ### Вт · 90 мин
 
-- [ ] Tour: pointers, structs, arrays, slices, maps, function values, closures — [Tour: More types](https://go.dev/tour/moretypes/1)
+- [ ] Tour: pointers, structs, arrays, slices, maps, function values, closures; что сравнимо и что может быть ключом map — справка — [Справка: типы Go и ключи map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-types), [Tour: More types](https://go.dev/tour/moretypes/1)
   - Готово, когда: Пройдены pointers…closures; без подсказки предсказываешь, что выведет замыкание после изменения захваченной переменной.
 - [ ] Go by Example от Values до Closures — набрать руками, не копировать — [Go by Example](https://gobyexample.com/)
   - Готово, когда: Примеры набраны и запускаются; по каждому — одна фраза, что он показывает.
@@ -95,11 +95,11 @@
   - Готово, когда: Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.
 - [ ] Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость — [C40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40), [C65](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65), [Q33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q33), [Q34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34), [Q52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q52)
   - Готово, когда: Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 и c65 — ответ до раскрытия; q33 (ключ map), q34 и q52 (встраивание) — до вариантов.
-- [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
-- [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
+- [ ] LeetCode 238. Product of Array Except Self + проговор (записать) — резерв недели: пятница или воскресенье *(по желанию)* — [LC 238. Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/), проговор: «LC 238. Product of Array Except Self»
+- [ ] LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — резерв недели: пятница или воскресенье *(по желанию)* — [LC 347. Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/), проговор: «LC 347. Top K Frequent Elements»
 - [ ] Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами — [LC 1. Two Sum](https://leetcode.com/problems/two-sum/), проговор: «LC 1. Two Sum — полный диалог с интервьюером»
   - Готово, когда: LC 1 решён без подсказки; диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен.
-- [ ] Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника
+- [ ] Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника; почему массив [26]int годится в ключ map — [Справка: типы Go и ключи map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-types)
   - Готово, когда: LC 49 проговорена без подсказок за 5 минут; запись сделана.
 - [ ] Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы
   - Готово, когда: Все вопросы обоих блоков, кроме Tell me about yourself (это отдельная задача), — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора.
@@ -1105,7 +1105,7 @@
 ### W1-2. Account и W1-3. ValidationError
 
 - **Approach:** Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.
-- **Edge cases & tests:** A zero or negative amount, withdrawing exactly the balance, and a Transfer whose deposit fails, so the money must go back. Each is a row in a table-driven test.
+- **Edge cases & tests:** A zero or negative amount, withdrawing exactly the balance or one unit more, and a successful transfer that keeps the total. Each is a row in a table-driven test. Rolling the money back matters only once Deposit can fail, for example on a closed account.
 - **Follow-up:** How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value.
 
 ### W1-5. SafeDiv
@@ -1351,7 +1351,7 @@ Go has two ways to declare a variable: var x T declares one with its zero value 
 
 </details>
 
-**w1-tue-1** — Tour: pointers, structs, arrays, slices, maps, function values, closures
+**w1-tue-1** — Tour: pointers, structs, arrays, slices, maps, function values, closures; что сравнимо и что может быть ключом map — справка
 
 <details><summary>Model answer (EN)</summary>
 
