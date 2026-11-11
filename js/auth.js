@@ -208,7 +208,8 @@ function siteNeedSignIn(what) {
 
 // --- Синхронизация прогресса: все ключи go_prep_* из localStorage одним объектом.
 
-function syncSnapshot() {
+// Что лежит в localStorage.
+function syncStored() {
   const out = {};
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -220,6 +221,38 @@ function syncSnapshot() {
     return null;
   }
   return out;
+}
+
+// Что видит пользователь: сохранённое и поверх него несохранённые правки (pending-store.js). Его отправляем на сервер
+// и с ним сравниваем ответ, иначе отметка, которую браузер не дал записать, пропала бы при слиянии.
+function syncSnapshot() {
+  const stored = syncStored();
+  return stored && { ...stored, ...pendingSnapshot() };
+}
+
+// Записать снимок в этот браузер; replace — ключи, которых в снимке нет, удалить (замена целиком).
+// Записанный или удалённый ключ больше не держит несохранённых правок: они уже вошли в снимок или заменены им.
+function syncWrite(snapshot, replace) {
+  try {
+    if (replace) {
+      Object.keys(syncSnapshot() || {}).filter(k => !(k in snapshot)).forEach(k => {
+        localStorage.removeItem(k);
+        pendingForget(k);
+      });
+    }
+    for (const [k, v] of Object.entries(snapshot)) {
+      localStorage.setItem(k, v);
+      pendingForget(k);
+    }
+  } catch {
+    return false;
+  }
+  return syncSame(syncStored(), snapshot);
+}
+
+// Прогресс в браузере заменён: разделы перечитывают его так же, как после записи из другой вкладки.
+function syncShowStored() {
+  window.dispatchEvent(new StorageEvent("storage", { key: null, storageArea: localStorage }));
 }
 
 function syncSame(a, b) {
@@ -239,6 +272,7 @@ async function syncPush(snapshot, version) {
 }
 
 // Начальная сверка: сначала прочитать серверную версию, только потом что-то отправлять. Одна за раз.
+// Решение — по тому, что видно после ответа: отметка, сделанная во время запроса, в нём уже есть.
 async function syncStart() {
   const sync = authState.sync;
   if (sync.phase === "busy") return;
@@ -246,7 +280,7 @@ async function syncStart() {
   sync.retryTimer = null;
   sync.phase = "busy";
   authSetStatus("Сверяю прогресс с сервером…", "busy", sync.failures > 0);
-  const local = syncSnapshot() || {};
+  const before = syncSnapshot() || {};
   let server;
   try {
     const resp = await apiFetch("/progress");
@@ -256,6 +290,7 @@ async function syncStart() {
     syncFailed(`Прогресс не сверен: ${e.message}.`, e);
     return;
   }
+  const local = syncSnapshot() || {};
   if (!server.progress) {
     await syncPushReport(local, 0, "Прогресс этого браузера сохранён на сервере.");
     return;
@@ -269,6 +304,11 @@ async function syncStart() {
   // Новое устройство: своих отметок нет — спрашивать нечего, берём серверные.
   if (!Object.keys(local).length) {
     syncTakeServer(server);
+    return;
+  }
+  // Свои отметки появились только во время запроса — других на этом устройстве нет: объединить без вопроса.
+  if (!Object.keys(before).length) {
+    await syncMerge(server);
     return;
   }
   sync.phase = "start"; // ждём выбора пользователя
@@ -297,13 +337,10 @@ function syncFailed(text, error) {
   authSetStatus(`${text} Повторю через ${delay < 60000 ? `${delay / 1000} с` : `${delay / 60000} мин`}.`, "warn", true);
 }
 
-// Записать серверный прогресс в этот браузер и перезагрузить страницу: так его подхватят все разделы.
+// Заменить прогресс этого браузера серверным, вместе с несохранёнными правками, и перезагрузить страницу: так его
+// подхватят все разделы. Не записалось — страница не перезагружается, несохранённое остаётся.
 function syncTakeServer(server) {
-  try {
-    Object.keys(syncSnapshot() || {}).forEach(k => localStorage.removeItem(k));
-    Object.entries(server.progress).forEach(([k, v]) => localStorage.setItem(k, v));
-    if (!syncSame(syncSnapshot(), server.progress)) throw new Error("не записалось");
-  } catch {
+  if (!syncWrite(server.progress, true)) {
     syncFailed("Не удалось записать прогресс в этот браузер.");
     return;
   }
@@ -327,7 +364,9 @@ async function syncPushReport(snapshot, version, done) {
   }
 }
 
-// Объединить прогресс этого браузера и сервера (js/progress-merge.js), записать сюда и на сервер, перезагрузить.
+// Объединить прогресс этого браузера и сервера (js/progress-merge.js) и отправить на сервер. То, что изменилось
+// во время отправки, накладывается поверх результата и уходит следующим тиком: sync.last — уже отправленное.
+// Страница не перезагружается — перезагрузка снесла бы несохранённое; разделы перечитывают прогресс на месте.
 async function syncMerge(server) {
   authState.sync.phase = "busy";
   const merged = mergeProgressSnapshots(syncSnapshot() || {}, server.progress);
@@ -342,7 +381,13 @@ async function syncMerge(server) {
     syncFailed(`Не объединилось: ${e.message}.`, e);
     return;
   }
-  syncTakeServer({ progress: merged });
+  const written = syncWrite(mergeProgressSnapshots(syncSnapshot() || {}, merged));
+  syncShowStored();
+  if (!written) {
+    syncFailed("Не удалось записать прогресс в этот браузер.");
+    return;
+  }
+  syncReady("Прогресс объединён с сервером.");
 }
 
 // Прогресс на сервере и в браузере разный: объединить или оставить одну сторону целиком — выбирает пользователь.

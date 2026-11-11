@@ -35,7 +35,9 @@ function mergeParse(text) {
 }
 
 // Списки попыток: каждая попытка с одинаковыми полями учитывается столько раз, сколько её больше на одной из сторон
-// (общая история не удваивается, разные попытки одного дня сохраняются); порядок — по дате, стабильно.
+// (общая история не удваивается, разные попытки одного дня сохраняются). Порядок — по дате, внутри дня — не от стороны:
+// худшая оценка последней, затем по записи. Поэтому обрезка до keep одинакова с обеих сторон и, пока от дня
+// остаётся хоть одна попытка, не отрезает его итог (худшую оценку, attemptDayResults).
 function mergeLists(a, b, dateOf, keep) {
   const out = [];
   const count = new Map();
@@ -48,9 +50,13 @@ function mergeLists(a, b, dateOf, keep) {
   });
   add(a, 0);
   add(b, 1);
-  return out.map((item, i) => [item, i])
-    .sort((x, y) => { const dx = dateOf(x[0]), dy = dateOf(y[0]); return dx < dy ? -1 : dx > dy ? 1 : x[1] - y[1]; })
-    .map(x => x[0]).slice(-keep);
+  // Испорченная попытка без оценки встаёт раньше оценок своего дня и отрезается первой; у результатов проговора
+  // оценок нет — внутри дня они идут по записи.
+  const rank = item => (item && Object.prototype.hasOwnProperty.call(RATING_RANK, item.r) ? RATING_RANK[item.r] : 3);
+  const order = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+  return out.map(item => ({ item, day: dateOf(item), rank: rank(item), text: JSON.stringify(item) }))
+    .sort((x, y) => order(x.day, y.day) || y.rank - x.rank || order(x.text, y.text))
+    .map(x => x.item).slice(-keep);
 }
 
 function lastAttemptDay(attempts, cardId) {

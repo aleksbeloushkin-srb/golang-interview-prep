@@ -4,6 +4,9 @@
 // а записанное в снимок другой вкладкой не теряется. После отказа запись повторяется сама (onRetry) раз
 // в PENDING_RETRY_MS, пока не удастся. Используют отметки карточек и попытки (app.js) и отметки плана (plan-view.js).
 const PENDING_RETRY_MS = 5000;
+// Хранилища по ключу — для синхронизации с сервером (auth.js): она отправляет то, что видит пользователь,
+// вместе с несохранённым, а записав итог в браузер, снимает правки, которые в него уже вошли.
+const PENDING_STORES = new Map();
 
 // read() — свежий разобранный снимок, новый объект на каждый вызов.
 function pendingStore(key, read, onRetry) {
@@ -47,7 +50,21 @@ function pendingStore(key, read, onRetry) {
       stopRetry();
     }
   };
+  PENDING_STORES.set(key, store);
   return store;
 }
 
-if (typeof module !== "undefined") module.exports = { pendingStore, PENDING_RETRY_MS };
+// Несохранённое всех хранилищ: { ключ: строка JSON } — то, что будет записано, когда браузер даст.
+function pendingSnapshot() {
+  const out = {};
+  for (const [key, store] of PENDING_STORES) if (store.pending) out[key] = JSON.stringify(store.read());
+  return out;
+}
+
+// Значение ключа записано целиком, и несохранённые правки в нём уже учтены.
+function pendingForget(key) {
+  const store = PENDING_STORES.get(key);
+  if (store) store.forget();
+}
+
+if (typeof module !== "undefined") module.exports = { pendingStore, pendingSnapshot, pendingForget, PENDING_RETRY_MS };

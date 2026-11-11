@@ -213,20 +213,36 @@ function saveProgress(changedId) {
   showProgressSaved();
 }
 
-// Сообщение — по факту: висит, пока в памяти есть несохранённые отметки или попытки.
+// Сообщение — по факту: висит, пока в памяти есть несохранённые отметки или попытки или сброс не удалил занятие.
 function showProgressSaved() {
-  storageMessage = progressStore.pending || attemptsStore.pending ? STORAGE_UNSAVED : "";
+  storageMessage = progressStore.pending || attemptsStore.pending || sessionResetPending() ? STORAGE_UNSAVED : "";
   showStorageMessage();
   updateProgressBar();
 }
 
-// Повтор записи несохранённого — по таймеру pending-store.js и когда другая вкладка изменила хранилище.
+// Повтор записи несохранённого — по таймеру pending-store.js и когда хранилище изменили снаружи
+// (другая вкладка, синхронизация с сервером).
 function flushProgress() {
   state.progress = progressStore.read();
   if (progressStore.pending) progressStore.write(state.progress);
   if (attemptsStore.pending) attemptsStore.write(attemptsStore.read());
+  if (sessionResetPending()) forgetSavedSession();
   showProgressSaved();
   renderShownCardStatus();
+}
+
+// Сброс не смог удалить сохранённое занятие: удаление повторяется вместе с записью несохранённого и своим таймером —
+// на случай, когда отметки и попытки уже записались и таймера pending-store.js нет.
+let sessionRetryTimer = null;
+
+function sessionResetPending() {
+  return typeof reviewStaleSession !== "undefined" && reviewStaleSession;
+}
+
+function forgetSavedSession() {
+  clearTimeout(sessionRetryTimer);
+  sessionRetryTimer = null;
+  if (!reviewForgetSession()) sessionRetryTimer = setTimeout(flushProgress, PENDING_RETRY_MS);
 }
 
 function updateProgressBar() {
@@ -251,14 +267,16 @@ function resetProgress() {
   if (!window.confirm("Начать карточки с нуля? Удалятся отметки всех карточек, история ответов (по ней считается дата следующей проверки) и текущее занятие — в этом браузере и, если ты вошёл, на сервере. Отметки плана останутся. Отменить это нельзя.")) return;
   progressStore.forget();
   attemptsStore.forget();
-  try {
-    [PROGRESS_KEY, ATTEMPTS_KEY, SESSION_KEY].forEach(key => localStorage.removeItem(key));
-  } catch {
-    // Хранилище не дало удалить: сброс остаётся правкой в памяти и запишется при повторе.
-    const clear = saved => Object.keys(saved).forEach(id => delete saved[id]);
-    progressStore.change(clear);
-    attemptsStore.change(clear);
+  // Каждая часть — отдельно. Хранилище не дало удалить: сброс остаётся правкой в памяти и запишется при повторе.
+  const clear = saved => Object.keys(saved).forEach(id => delete saved[id]);
+  for (const [key, store] of [[PROGRESS_KEY, progressStore], [ATTEMPTS_KEY, attemptsStore]]) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      store.change(clear);
+    }
   }
+  forgetSavedSession();
   state.progress = loadProgress();
   state.session = null;
   if (state.filter === "session") {
@@ -590,17 +608,11 @@ function renderShownCardStatus() {
   if (card) renderCardStatus(card);
 }
 
-// Другая вкладка изменила отметки или попытки: обновить счётчик и статус на экране, не перестраивая подборку.
-// Есть несохранённое — заодно повторить запись: место в хранилище могло освободиться.
+// Другая вкладка или синхронизация (auth.js) изменила отметки или попытки: обновить счётчик, статус на экране
+// и сообщение, не перестраивая подборку. Есть несохранённое — заодно повторить запись: место могло освободиться.
 window.addEventListener("storage", e => {
   if (e.storageArea !== localStorage || ![PROGRESS_KEY, ATTEMPTS_KEY, null].includes(e.key)) return;
-  if (progressStore.pending || attemptsStore.pending) {
-    flushProgress();
-    return;
-  }
-  state.progress = loadProgress();
-  updateProgressBar();
-  renderShownCardStatus();
+  flushProgress();
 });
 
 /* Подборка карточек (модуль, уровень, поиск) — в sessionStorage: переживает перезагрузку вкладки,

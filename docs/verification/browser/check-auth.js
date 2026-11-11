@@ -174,9 +174,11 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     await p.waitForSelector("#sync-choice:not(.hidden) button", { timeout: 8000 });
     const labels = await p.evaluate(() => [...document.querySelectorAll("#sync-choice button")].map(b => b.textContent));
     ok(`${w}: merge offered first, replace buttons say what they replace`, /^Объединить/.test(labels[0]) && labels.some(t => /заменит этот браузер/.test(t)) && labels.some(t => /заменит сервер/.test(t)), labels.join(" | "));
-    // Merge pushes, writes locally and reloads; already signed in, so wait for the reload itself.
-    await Promise.all([p.waitForEvent("load"), p.click("#sync-choice button:has-text('Объединить')")]);
-    await signedIn(p);
+    // v92: merge pushes and writes locally without a reload — a reload would drop edits made meanwhile.
+    await p.evaluate(() => { window.__noReload = true; });
+    await p.click("#sync-choice button:has-text('Объединить')");
+    await p.waitForFunction(() => /Прогресс объединён с сервером/.test(document.getElementById("account-status").title), null, { timeout: 8000 });
+    ok(`${w}: merge does not reload the page`, await p.evaluate(() => window.__noReload === true));
     const both = await p.evaluate(() => ({ cards: JSON.parse(localStorage.getItem("go_prep_progress_v2")), plan: JSON.parse(localStorage.getItem("go_prep_plan_v1")).done }));
     const srv = { cards: JSON.parse(server.progress.go_prep_progress_v2), plan: JSON.parse(server.progress.go_prep_plan_v1).done };
     ok(`${w}: merge keeps marks from both devices locally`, both.cards.c1 === "mastered" && both.cards.c2 === "review" && both.cards.c3 === "mastered" && both.plan["w1-mon-1"] && both.plan["w1-mon-2"], JSON.stringify(both));
