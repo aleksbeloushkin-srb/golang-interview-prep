@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { mergeProgressSnapshots } = require('../js/progress-merge.js');
+const { mergeProgressSnapshots, attemptDayResults } = require('../js/progress-merge.js');
 const J = JSON.stringify;
 const P = (snap, key) => JSON.parse(snap[key]);
 
@@ -30,7 +30,7 @@ test('attempts: two equal attempts on one side survive, list capped at 20', () =
   assert.equal(capped.c1[19].d, '2026-10-25');
 });
 
-test('card status: newer last attempt wins, tie → review, one-sided marks kept', () => {
+test('card status: the last day of the merged history decides, one-sided marks kept', () => {
   const local = {
     go_prep_progress_v2: J({ c1: 'mastered', c2: 'mastered', c3: 'review' }),
     go_prep_attempts_v1: J({ c1: [{ d: '2026-11-05', r: 'self' }], c2: [{ d: '2026-11-01', r: 'self' }] })
@@ -62,8 +62,8 @@ test('talk attempts united by identity, settings stay local, unreadable side yie
   assert.equal(out.go_prep_only_server, '7');
 });
 
-// cardSchedule с подставленными глобалами app.js
-const ctx = { ATTEMPT_LABELS: { self: 'сам', anchors: 'с опорой', none: 'не ответил' }, loadAttempts: () => ({}), state: { progress: {} }, CARDS: [] };
+// cardSchedule с подставленными глобалами app.js; итог дня — общий с progress-merge.js, как в index.html
+const ctx = { ATTEMPT_LABELS: { self: 'сам', anchors: 'с опорой', none: 'не ответил' }, loadAttempts: () => ({}), state: { progress: {} }, CARDS: [], attemptDayResults };
 vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(new URL('../js/review-queue.js', import.meta.url), 'utf8'), ctx);
 const sched = list => ctx.cardSchedule('c1', { c1: list });
@@ -108,3 +108,79 @@ test('schedule after a merge does not depend on which side is local', () => {
   assert.deepEqual([ba.rating, ba.due], [ab.rating, ab.due]);
 });
 
+
+// Статус после слияния — тот же итог дня, что у расписания: «сам» за последний день → mastered, иначе review.
+const statusOf = list => (sched(list).rating === 'self' ? 'mastered' : 'review');
+const snap = (progress, attempts) => ({ go_prep_progress_v2: J(progress), go_prep_attempts_v1: J(attempts) });
+const merged = (a, b) => { const out = mergeProgressSnapshots(a, b); return { progress: P(out, 'go_prep_progress_v2'), attempts: P(out, 'go_prep_attempts_v1'), out }; };
+const multiset = list => list.map(x => J(x)).sort();
+
+test('merge status: one day «не ответил» here and «сам» there — review in both directions, as the schedule says', () => {
+  const here = snap({ c33: 'review' }, { c33: [{ d: '2026-11-09', r: 'none' }] });
+  const there = snap({ c33: 'mastered' }, { c33: [{ d: '2026-11-09', r: 'self' }] });
+  for (const [a, b] of [[here, there], [there, here]]) {
+    const m = merged(a, b);
+    assert.equal(m.progress.c33, 'review');
+    assert.equal(m.progress.c33, statusOf(m.attempts.c33));
+    assert.equal(sched(m.attempts.c33).due, '2026-11-10');
+  }
+});
+
+test('merge status: the newer side loses when its own last day has a miss', () => {
+  // На телефоне 10.11 «не ответил», потом «сам» — статус там «ответил сам», но итог дня — промах.
+  const phone = snap({ c1: 'mastered' }, { c1: [{ d: '2026-11-10', r: 'none' }, { d: '2026-11-10', r: 'self' }] });
+  const laptop = snap({ c1: 'review' }, { c1: [{ d: '2026-11-09', r: 'anchors' }] });
+  assert.equal(merged(phone, laptop).progress.c1, 'review');
+  assert.equal(merged(laptop, phone).progress.c1, 'review');
+  // «Сам» за последний день — «ответил сам», с какой стороны ни сливай.
+  const later = snap({ c1: 'mastered' }, { c1: [{ d: '2026-11-11', r: 'self' }] });
+  assert.equal(merged(later, laptop).progress.c1, 'mastered');
+  assert.equal(merged(laptop, later).progress.c1, 'mastered');
+});
+
+test('merge status without history: previous rule — differing marks become review, one-sided stay', () => {
+  const m = merged(snap({ c1: 'mastered', c2: 'mastered' }, {}), snap({ c1: 'review', c3: 'review' }, {}));
+  assert.deepEqual(m.progress, { c1: 'review', c2: 'mastered', c3: 'review' });
+});
+
+test('merge in both directions and repeated merges give the same progress, history and schedule', () => {
+  let seed = 7;
+  const rand = n => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  const ratings = ['none', 'anchors', 'self'];
+  const side = () => {
+    const progress = {}, attempts = {};
+    for (const id of ['c1', 'c2', 'c3', 'c4']) {
+      const list = Array.from({ length: rand(4) }, () => ({ d: `2026-11-0${1 + rand(3)}`, r: ratings[rand(3)] }));
+      if (list.length) attempts[id] = list;
+      if (list.length || rand(2)) progress[id] = list.length ? (list[list.length - 1].r === 'self' ? 'mastered' : 'review') : ['mastered', 'review'][rand(2)];
+    }
+    return snap(progress, attempts);
+  };
+  for (let round = 0; round < 200; round++) {
+    const a = side(), b = side();
+    const ab = merged(a, b), ba = merged(b, a);
+    assert.deepEqual(ba.progress, ab.progress);
+    for (const id of new Set([...Object.keys(ab.attempts), ...Object.keys(ba.attempts)])) {
+      assert.deepEqual(multiset(ba.attempts[id]), multiset(ab.attempts[id]));
+      assert.deepEqual(attemptDayResults(ba.attempts[id]), attemptDayResults(ab.attempts[id]));
+    }
+    // Расходились — статус равен итогу дня объединённой истории (если она есть).
+    const pa = JSON.parse(a.go_prep_progress_v2), pb = JSON.parse(b.go_prep_progress_v2);
+    for (const id of Object.keys(ab.progress)) {
+      if (id in pa && id in pb && pa[id] !== pb[id] && ab.attempts[id]) assert.equal(ab.progress[id], statusOf(ab.attempts[id]), `${id} round ${round}`);
+    }
+    // Повторное слияние результата с любой стороной ничего не меняет.
+    for (const again of [merged(ab.out, a), merged(ab.out, b), merged(a, ab.out), merged(ab.out, ab.out)]) {
+      assert.deepEqual(again.progress, ab.progress);
+      for (const id of Object.keys(ab.attempts)) assert.deepEqual(multiset(again.attempts[id]), multiset(ab.attempts[id]));
+    }
+  }
+});
+
+test('day results: worst rating of each day, sorted by day, broken records skipped', () => {
+  assert.deepEqual(attemptDayResults([
+    { d: '2026-11-09', r: 'self' }, { d: '2026-11-08', r: 'anchors' }, { d: '2026-11-09', r: 'none' },
+    { d: '2026-11-10', r: 'toString' }, { d: 'bad', r: 'self' }, null, { r: 'self' }
+  ]), [{ day: '2026-11-08', rating: 'anchors' }, { day: '2026-11-09', rating: 'none' }]);
+  assert.deepEqual(attemptDayResults(undefined), []);
+});
