@@ -1,4 +1,4 @@
-// Package validation is the reference solution for practice task W1-3.
+// Package validation is the reference solution for practice task W2-1.
 package validation
 
 import (

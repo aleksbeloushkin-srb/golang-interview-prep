@@ -696,7 +696,7 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
   .channel-scene { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* --- План 13 недель (#/plan) --- */
+/* --- План 14 недель (#/plan) --- */
 .plan-toolbar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .plan-today { padding: 10px 12px; border-left: 4px solid var(--accent); background: rgba(56, 189, 248, 0.08); border-radius: 6px; }
 .plan-today a { color: var(--accent); overflow-wrap: anywhere; }

@@ -26,12 +26,13 @@ const base = "http://127.0.0.1:8765/";
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(300);
       ok(`${w}: plan ${day} links the guide`, await p.evaluate(() => !!document.querySelector('a[href="#/practice/go-types"]')));
     }
-    const sat = await p.evaluate(() => ["w1-sat-3", "w1-wed-4", "w1-sat-4"].map(id => {
+    // v91: LC 238 and 347 left this Saturday for week 2 (Sat and Wed) and are required there (check-v91); LC 1 stays.
+    const sat = await p.evaluate(() => ["w2-sat-2", "w2-wed-1", "w1-sat-4"].map(id => {
       const box = document.getElementById(`plan-task-${id}`);
       const item = box && box.closest("li.plan-task");
       return item ? item.classList.contains("is-optional") : null;
     }));
-    ok(`${w}: Saturday LC 238 and 347 optional, LC 1 required`, sat[0] === true && sat[1] === true && sat[2] === false, JSON.stringify(sat));
+    ok(`${w}: Saturday of week 1: LC 238 and 347 gone, LC 1 required`, sat[0] === null && sat[1] === null && sat[2] === false, JSON.stringify(sat));
 
     await p.goto(base + "#/practice/p-account"); await p.waitForSelector("#practice-title");
     ok(`${w}: W1-2 contract names a successful transfer`, await p.evaluate(() => document.body.innerText.includes("A=700, B=500")));

@@ -1,7 +1,7 @@
 // v86: трек «Каналы и context» (#/practice/track-channels): блоки, каты, чужой код, переход на кату и блок;
-// отметки только в плане — ✓ на треке из go_prep_plan_v1; план недель 4–12: «Пт» с LeetCode в неделях 5–8, каты
-// субботы, «Готово, когда» из трека, ссылки на блоки, часы недели; практикум: новые задачи W5-3, W6-4, W9-1 и блок
-// «Вариация» у W3-1; испорченное хранилище плана; «Назад». Скриншоты трека — если передана папка.
+// отметки только в плане — ✓ на треке из go_prep_plan_v1; план недель 5–13: «Пт» с LeetCode в неделях 6–9, каты
+// субботы, «Готово, когда» из трека, ссылки на блоки, часы недели; практикум: новые задачи W6-3, W7-4, W10-1 и блок
+// «Вариация» у W4-1; испорченное хранилище плана; «Назад». Скриншоты трека — если передана папка.
 const { chromium } = require("playwright");
 const shots = process.argv[2];
 (async () => {
@@ -51,14 +51,14 @@ const shots = process.argv[2];
     }
 
     // Отметка в плане → ✓ на треке.
-    await p.evaluate(() => localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-10-12", done: { "w5-sat-4": true, "w9-sat-2": true } })));
+    await p.evaluate(() => localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-10-12", done: { "w6-sat-4": true, "w10-sat-2": true } })));
     await p.goto(`${base}#/practice/track-channels`); await p.waitForSelector("#practice-title");
     const m = await p.evaluate(() => ({
       done: [...document.querySelectorAll(".track-step.is-done")].map(li => li.id),
       k25: document.querySelector("#track-k2-5 .track-when").textContent,
       summary: document.querySelector(".practice-track .accent-text").textContent
     }));
-    ok(`${w}: plan marks show on the track (w5-sat-4 → К2.5, w9-sat-2 → К3.3, К3.7)`, m.done.join() === "track-k2-5,track-k3-3,track-k3-7" && /W5 · Сб ✓/.test(m.k25) && /отмечено 3/.test(m.summary), JSON.stringify(m));
+    ok(`${w}: plan marks show on the track (w6-sat-4 → К2.5, w10-sat-2 → К3.3, К3.7)`, m.done.join() === "track-k2-5,track-k3-3,track-k3-7" && /W6 · Сб ✓/.test(m.k25) && /отмечено 3/.test(m.summary), JSON.stringify(m));
 
     // Испорченное хранилище плана: трек рисуется без отметок.
     await p.evaluate(() => localStorage.setItem("go_prep_plan_v1", "{broken"));
@@ -66,15 +66,15 @@ const shots = process.argv[2];
     ok(`${w}: corrupt plan storage — track still renders, no marks`, (await p.$$(".track-step")).length === 28 && (await p.$$(".track-step.is-done")).length === 0);
     await p.evaluate(() => localStorage.removeItem("go_prep_plan_v1"));
 
-    // План: неделя 5 — пятница с LeetCode, суббота с катами.
-    await p.goto(`${base}#/plan/w5`); await p.waitForSelector("#plan-week-title");
+    // План: неделя 6 — пятница с LeetCode, суббота с катами.
+    await p.goto(`${base}#/plan/w6`); await p.waitForSelector("#plan-week-title");
     const w5 = await p.evaluate(() => {
       const heads = [...document.querySelectorAll("h3")].map(h => h.textContent);
       const fri = heads.find(h => /^Пт ·/.test(h)) || "";
-      const friSection = document.getElementById("plan-w5-fri");
-      const sat = document.getElementById("plan-task-w5-sat-4").closest("li");
+      const friSection = document.getElementById("plan-w6-fri");
+      const sat = document.getElementById("plan-task-w6-sat-4").closest("li");
       return {
-        fri, friLc: !!friSection && !!friSection.querySelector("#plan-task-w5-sat-3") && !document.getElementById("plan-w5-sat").querySelector("#plan-task-w5-sat-3"),
+        fri, friLc: !!friSection && !!friSection.querySelector("#plan-task-w6-sat-3") && !document.getElementById("plan-w6-sat").querySelector("#plan-task-w6-sat-3"),
         order: heads.filter(h => /^(Пн|Вт|Ср|Чт|Пт|Сб|Вс) ·/.test(h)).map(h => h.slice(0, 2)).join(),
         kataLink: !!sat.querySelector('a[href="#/practice/track-channels/k2-5"]'), practiceLink: !!sat.querySelector('a[href="#/practice/p-timeout"]'),
         accept: sat.querySelector(".plan-accept").textContent, acceptCode: sat.querySelectorAll(".plan-accept code").length,
@@ -91,31 +91,31 @@ const shots = process.argv[2];
     ok(`${w}: plan no overflow`, (await overflow()) <= 0, await overflow());
 
     // Недели без пятницы: резерв по-прежнему «Пт/Вс».
-    await p.goto(`${base}#/plan/w3`); await p.waitForSelector("#plan-week-title");
+    await p.goto(`${base}#/plan/w4`); await p.waitForSelector("#plan-week-title");
     ok(`${w}: weeks without a Friday keep reserve Пт/Вс`, /в резерв \(Пт\/Вс\)/.test(await p.evaluate(() => document.querySelector(".plan-week").textContent)));
 
-    // Неделя 4: «финальный босс» и ссылки на блоки 1–2; переход по ссылке на кату и «Назад».
-    await p.goto(`${base}#/plan/w4/sat`); await p.waitForSelector("#plan-week-title");
-    const w4 = await p.evaluate(() => { const li = document.getElementById("plan-task-w4-sat-5").closest("li"); return { text: li.textContent, hrefs: [...li.querySelectorAll("a")].map(a => a.getAttribute("href")) }; });
-    ok(`${w}: w4-sat-5 is the final boss, links K2.6 and blocks 1–2`, /финальный босс/.test(w4.text) && ["k2-6", "k1", "k2"].every(id => w4.hrefs.includes(`#/practice/track-channels/${id}`)), w4.hrefs.join());
-    await p.click('#plan-task-w4-sat-5 ~ * a[href="#/practice/track-channels/k2-6"], li:has(#plan-task-w4-sat-5) a[href="#/practice/track-channels/k2-6"]');
+    // Неделя 5: «финальный босс» и ссылки на блоки 1–2; переход по ссылке на кату и «Назад».
+    await p.goto(`${base}#/plan/w5/sat`); await p.waitForSelector("#plan-week-title");
+    const w4 = await p.evaluate(() => { const li = document.getElementById("plan-task-w5-sat-5").closest("li"); return { text: li.textContent, hrefs: [...li.querySelectorAll("a")].map(a => a.getAttribute("href")) }; });
+    ok(`${w}: w5-sat-5 is the final boss, links K2.6 and blocks 1–2`, /финальный босс/.test(w4.text) && ["k2-6", "k1", "k2"].every(id => w4.hrefs.includes(`#/practice/track-channels/${id}`)), w4.hrefs.join());
+    await p.click('#plan-task-w5-sat-5 ~ * a[href="#/practice/track-channels/k2-6"], li:has(#plan-task-w5-sat-5) a[href="#/practice/track-channels/k2-6"]');
     await p.waitForTimeout(300);
     ok(`${w}: kata link opens the step`, (await p.evaluate(() => [location.hash, document.activeElement.id].join())) === "#/practice/track-channels/k2-6,track-k2-6-title");
     await p.goBack(); await p.waitForTimeout(300);
-    ok(`${w}: Back returns to the plan day`, /^#\/plan\/w4/.test(await p.evaluate(() => location.hash)) && !!(await p.$("#plan-task-w4-sat-5")));
+    ok(`${w}: Back returns to the plan day`, /^#\/plan\/w5/.test(await p.evaluate(() => location.hash)) && !!(await p.$("#plan-task-w5-sat-5")));
 
-    // Недели 9 и 12.
-    await p.goto(`${base}#/plan/w9/sat`); await p.waitForSelector("#plan-week-title");
-    const w9 = await p.evaluate(() => [...document.getElementById("plan-task-w9-sat-2").closest("li").querySelectorAll("a")].map(a => a.getAttribute("href")));
-    ok(`${w}: w9-sat-2 reviews K3.3 and K3.7 with the practice`, ["#/practice/track-channels/k3-3", "#/practice/track-channels/k3-7", "#/practice/p-tee"].every(h => w9.includes(h)), w9.join());
-    await p.goto(`${base}#/plan/w12/sat`); await p.waitForSelector("#plan-week-title");
-    ok(`${w}: w12-sat-2 is the timed run`, !!(await p.$('li:has(#plan-task-w12-sat-2) a[href="#/practice/track-channels/k5-1"]')));
+    // Недели 10 и 13.
+    await p.goto(`${base}#/plan/w10/sat`); await p.waitForSelector("#plan-week-title");
+    const w9 = await p.evaluate(() => [...document.getElementById("plan-task-w10-sat-2").closest("li").querySelectorAll("a")].map(a => a.getAttribute("href")));
+    ok(`${w}: w10-sat-2 reviews K3.3 and K3.7 with the practice`, ["#/practice/track-channels/k3-3", "#/practice/track-channels/k3-7", "#/practice/p-tee"].every(h => w9.includes(h)), w9.join());
+    await p.goto(`${base}#/plan/w13/sat`); await p.waitForSelector("#plan-week-title");
+    ok(`${w}: w13-sat-2 is the timed run`, !!(await p.$('li:has(#plan-task-w13-sat-2) a[href="#/practice/track-channels/k5-1"]')));
 
     // Практикум: оглавление, новые задачи, «Вариация».
     await p.goto(`${base}#/practice`); await p.waitForSelector("#practice-title");
     const idx = await p.evaluate(() => ({ track: !!document.querySelector('#view-practice a.btn[href="#/practice/track-channels"]'), weeks: [...document.querySelectorAll(".practice-week h3")].map(h => h.textContent).join(), tasks: document.querySelectorAll(".practice-index-item").length }));
-    ok(`${w}: practice index: track button, 26 tasks, week 9`, idx.track && idx.tasks === 26 && /Неделя 9/.test(idx.weeks), JSON.stringify(idx));
-    for (const [id, code] of [["p-timeout", "W5-3"], ["p-fanout", "W6-4"], ["p-tee", "W9-1"]]) {
+    ok(`${w}: practice index: track button, 26 tasks, week 10`, idx.track && idx.tasks === 26 && /Неделя 10/.test(idx.weeks), JSON.stringify(idx));
+    for (const [id, code] of [["p-timeout", "W6-3"], ["p-fanout", "W7-4"], ["p-tee", "W10-1"]]) {
       await p.goto(`${base}#/practice/${id}`); await p.waitForSelector("#practice-title");
       const task = await p.evaluate(() => ({ title: document.getElementById("practice-title").textContent, variation: [...document.querySelectorAll(".track-variation a")].map(a => a.getAttribute("href")), plan: [...document.querySelectorAll(".practice-section a")].some(a => /^#\/plan\//.test(a.getAttribute("href"))) }));
       ok(`${w}: ${id} page (${code}) with plan day and kata variation`, task.title.startsWith(`${code}.`) && task.variation.length >= 1 && task.plan, JSON.stringify(task));
@@ -123,7 +123,7 @@ const shots = process.argv[2];
     }
     await p.goto(`${base}#/practice/p-workerpool`); await p.waitForSelector("#practice-title");
     const v = await p.evaluate(() => { const box = document.querySelector(".track-variation"); return box ? { href: box.querySelector("a").getAttribute("href"), text: box.textContent } : null; });
-    ok(`${w}: W3-1 shows K3.5 as a variation from the track`, v && v.href === "#/practice/track-channels/k3-5" && /все три проходят тесты W3-1/.test(v.text), JSON.stringify(v));
+    ok(`${w}: W4-1 shows K3.5 as a variation from the track`, v && v.href === "#/practice/track-channels/k3-5" && /все три проходят тесты W4-1/.test(v.text), JSON.stringify(v));
     if (shots && w !== 320) await p.screenshot({ path: `${shots}/v86-practice-${w}.png` });
     await ctx.close();
   }

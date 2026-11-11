@@ -1,4 +1,4 @@
-// Package tee is the reference solution for practice task W9-1:
+// Package tee is the reference solution for practice task W10-1:
 // or-done and tee, both stopping on cancellation without leaks.
 package tee
 

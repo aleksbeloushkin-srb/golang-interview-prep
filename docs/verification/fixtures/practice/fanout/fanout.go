@@ -1,4 +1,4 @@
-// Package fanout is the reference solution for practice task W6-4:
+// Package fanout is the reference solution for practice task W7-4:
 // route values to N outputs by key, like messages to Kafka partitions.
 package fanout
 

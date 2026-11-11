@@ -1,4 +1,4 @@
-// Package counter: practice task W3-4. One counter, three ways to make it
+// Package counter: practice task W4-4. One counter, three ways to make it
 // safe for concurrent use. Replace each TODO with your solution.
 package counter
 

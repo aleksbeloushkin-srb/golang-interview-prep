@@ -1,4 +1,4 @@
-// Package leak is the reference solution for practice task W4-4:
+// Package leak is the reference solution for practice task W5-4:
 // a goroutine leak written on purpose, found with the goroutine profile, and fixed.
 package leak
 

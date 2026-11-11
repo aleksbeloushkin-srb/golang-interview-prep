@@ -1,4 +1,4 @@
-// Package timeout is the reference solution for practice task W5-3:
+// Package timeout is the reference solution for practice task W6-3:
 // wait for a function's result at most a given time, without leaking it.
 package timeout
 

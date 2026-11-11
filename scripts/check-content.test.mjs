@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { existsSync } from 'node:fs';
-import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, liquidHazards, loadPractice, validatePractice, validateAudio, loadGuides, validateGuides, loadTracks, validateTracks } from './check-content.mjs';
+import { loadContent, validateContent, changedContent, loadPlan, validatePlan, planTaskIds, removedPlanTasks, liquidHazards, loadPractice, validatePractice, validateAudio, loadGuides, validateGuides, loadTracks, validateTracks } from './check-content.mjs';
 import { toSpeech, textHash } from './speech-text.mjs';
 
 const current = loadContent(file => readFileSync(new URL('../' + file, import.meta.url), 'utf8'));
@@ -96,7 +96,7 @@ test('guide files are the go-prep fixture, byte for byte (module path <ник> �
   const fixture = path => readFileSync(new URL('../docs/verification/fixtures/go-prep/' + path, import.meta.url), 'utf8');
   for (const [section, name, path] of [
     ['setup', 'main.go', 'week1/hello/main.go'], ['setup', 'calc.go', 'week1/calc/calc.go'], ['setup', 'calc_test.go', 'week1/calc/calc_test.go'],
-    ['asm', 'asm.go', 'week2/asm/asm.go'], ['asm', 'asm_test.go', 'week2/asm/asm_test.go'], ['asm', 'main.go', 'week2/cmd/sumdemo/main.go'],
+    ['asm', 'asm.go', 'week3/asm/asm.go'], ['asm', 'asm_test.go', 'week3/asm/asm_test.go'], ['asm', 'main.go', 'week3/cmd/sumdemo/main.go'],
     ['ci', 'ci.yml', 'ci.yml']
   ]) assert.equal(file(section, name), fixture(path), path);
 });
@@ -190,6 +190,8 @@ const planFailures = [
   ['missing weeks', p => { delete p.weeks; }, /PLAN.weeks/],
   ['model answer for unknown task', p => { p.modelAnswers['w99-mon-1'] = { hook: 'x', en: 'y' }; }, /modelAnswers: unknown task ID w99-mon-1/],
   ['model answer without English text', p => { p.modelAnswers[Object.keys(p.modelAnswers)[0]].en = ''; }, /missing\/empty en/],
+  ['renaming to a task that does not exist', p => { p.renamedTaskIds = { 'w1-mon-9': 'w99-mon-1' }; }, /renamedTaskIds: w1-mon-9 → w99-mon-1/],
+  ['renaming a task to itself', p => { const id = firstTask(p).id; p.renamedTaskIds = { [id]: id }; }, /renamedTaskIds/],
 ];
 for (const [name, mutate, expected] of planFailures) {
   test('plan: rejects ' + name, () => {
@@ -198,6 +200,19 @@ for (const [name, mutate, expected] of planFailures) {
     assert.match(validatePlan(data, current, practice, guides, tracks).join('\n'), expected);
   });
 }
+
+test('plan: a removed task ID is an error unless the renumbering declares it', () => {
+  const base = structuredClone(plan);
+  const next = structuredClone(plan);
+  const task = firstTask(next);
+  const old = task.id;
+  task.id = 'w99-mon-1';
+  delete next.renamedTaskIds;
+  assert.deepEqual(removedPlanTasks(base, next), { removed: [old], renamed: [] });
+  next.renamedTaskIds = { [old]: 'w99-mon-1' };
+  assert.deepEqual(removedPlanTasks(base, next), { removed: [], renamed: [old] });
+  assert.deepEqual(validatePlan(next, current, practice, guides, tracks).filter(e => /renamedTaskIds/.test(e)), []);
+});
 
 test('plan task IDs are listed in order for progress-compatibility checks', () => {
   const ids = planTaskIds(plan);

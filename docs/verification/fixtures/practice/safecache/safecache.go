@@ -1,4 +1,4 @@
-// Package safecache is the reference solution for practice task W3-5.
+// Package safecache is the reference solution for practice task W4-5.
 package safecache
 
 import (

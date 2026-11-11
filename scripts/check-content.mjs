@@ -137,6 +137,15 @@ export function planTaskIds(plan) {
   return (plan?.weeks || []).flatMap(week => (week?.days || []).flatMap(day => (day?.tasks || []).map(task => task?.id)));
 }
 
+// Plan task IDs are progress keys in go_prep_plan_v1: an ID that disappears drops a saved mark silently,
+// unless the plan declares the renumbering in renamedTaskIds (old → new).
+export function removedPlanTasks(basePlan, plan) {
+  const current = new Set(planTaskIds(plan));
+  const renamed = plan?.renamedTaskIds || {};
+  const gone = planTaskIds(basePlan).filter(id => !current.has(id));
+  return { removed: gone.filter(id => !Object.hasOwn(renamed, id)), renamed: gone.filter(id => Object.hasOwn(renamed, id)) };
+}
+
 export function validatePlan(plan, data, practice = null, guides = null, tracks = null) {
   const errors = [];
   const require = (condition, message) => { if (!condition) errors.push(message); };
@@ -177,6 +186,11 @@ export function validatePlan(plan, data, practice = null, guides = null, tracks 
     require(taskIds.has(id), `plan.acceptance: unknown task ID ${id}`);
     require(isObject(entry) && text(entry.accept), `plan.acceptance.${id}: missing accept`);
     if (isObject(entry) && entry.exercise !== undefined) require(text(entry.exercise), `plan.acceptance.${id}: empty exercise`);
+  }
+  // A declared renumbering: old task ID → an existing new one (see removedPlanTasks).
+  require(plan.renamedTaskIds === undefined || isObject(plan.renamedTaskIds), 'plan: renamedTaskIds must be an object');
+  for (const [from, to] of Object.entries(isObject(plan.renamedTaskIds) ? plan.renamedTaskIds : {})) {
+    require(/^w\d+-(mon|tue|wed|thu|fri|sat|sun)-\d+$/.test(from) && from !== to && taskIds.has(to), `plan.renamedTaskIds: ${from} → ${to} needs a task ID and an existing new task`);
   }
   require(plan.modelAnswers === undefined || isObject(plan.modelAnswers), 'plan: modelAnswers must be an object');
   for (const [id, entry] of Object.entries(isObject(plan.modelAnswers) ? plan.modelAnswers : {})) {
@@ -469,12 +483,12 @@ function main() {
     for (const group of ['cards', 'quiz', 'simulators']) {
       if (changes[group].removed.length) errors.push(`${group}: stable IDs removed: ${changes[group].removed.join(', ')}`);
     }
-    // Plan task IDs are progress keys in go_prep_plan_v1; removing one silently drops a saved mark.
     const basePlan = loadPlan(file => git(['show', `${base}:${file}`]));
     if (basePlan) {
-      const current = new Set(planTaskIds(plan));
-      changes.planRemoved = planTaskIds(basePlan).filter(id => !current.has(id));
-      if (changes.planRemoved.length) errors.push(`plan: stable task IDs removed: ${changes.planRemoved.join(', ')}`);
+      const { removed, renamed } = removedPlanTasks(basePlan, plan);
+      changes.planRemoved = removed;
+      changes.planRenamedAway = renamed.length;
+      if (removed.length) errors.push(`plan: stable task IDs removed: ${removed.join(', ')}`);
     }
     const basePractice = loadPractice(file => git(['show', `${base}:${file}`]));
     if (basePractice) {

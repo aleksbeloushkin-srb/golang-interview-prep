@@ -1,4 +1,4 @@
-// Week 5 browser checks: cards c45–c48 (m7), quiz q36–q39, practice W5, diagram 10, plan links.
+// Week 6 (week 5 before v91) browser checks: cards c45–c48 (m7), quiz q36–q39, practice W6, diagram 10, plan links.
 const { chromium } = require("playwright");
 const base = "http://127.0.0.1:8765/";
 (async () => {
@@ -29,7 +29,7 @@ const base = "http://127.0.0.1:8765/";
       ok(`${w}: sim10 step ${k + 1}`, r.ov <= 0 && r.title, JSON.stringify(r));
     }
     ok(`${w}: sim10 chip in quick jump`, await p.isVisible('a[href="#/simulators/sim10"].chip'));
-    for (const [day, hrefs] of [["w5/tue", ["#/practice/p-accountsapi", "#/practice/p-httperr", "#/cards/c45", "#/simulators/sim10", "#/quiz/q36", "#/quiz/q39"]], ["w5/wed", ["#/cards/c47"]], ["w5/thu", ["#/cards/c48", "#/quiz/q38"]]]) {
+    for (const [day, hrefs] of [["w6/tue", ["#/practice/p-accountsapi", "#/practice/p-httperr", "#/cards/c45", "#/simulators/sim10", "#/quiz/q36", "#/quiz/q39"]], ["w6/wed", ["#/cards/c47"]], ["w6/thu", ["#/cards/c48", "#/quiz/q38"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(h => ({ missing: h.filter(x => !document.querySelector(`a[href="${x}"]`)), gaps: document.querySelectorAll(".plan-gap").length }), hrefs);
       ok(`${w}: plan ${day} links and no gaps`, !r.missing.length && r.gaps === 0, JSON.stringify(r));

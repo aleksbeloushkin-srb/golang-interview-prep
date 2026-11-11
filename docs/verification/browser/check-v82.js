@@ -40,7 +40,7 @@ const IDS = ["c66", "c67", "c68", "c69", "c70", "c71", "c72"];
     const pressed = await p.$eval('#module-filter-row .chip[data-filter="m10"]', e => e.getAttribute("aria-pressed"));
     ok(`${w}: m10 chip shows 7 cards`, / из 7 /.test(counter + " ") && pressed === "true", counter);
     // Plan days link to the new cards.
-    for (const [day, hrefs] of [["w4/mon", ["#/cards/c72"]], ["w5/thu", ["#/cards/c71"]], ["w6/mon", ["#/cards/c67"]], ["w6/tue", ["#/cards/c68"]], ["w6/wed", ["#/cards/c66"]], ["w10/wed", ["#/cards/c68", "#/cards/c70"]], ["w11/mon", ["#/cards/c70"]]]) {
+    for (const [day, hrefs] of [["w5/mon", ["#/cards/c72"]], ["w6/thu", ["#/cards/c71"]], ["w7/mon", ["#/cards/c67"]], ["w7/tue", ["#/cards/c68"]], ["w7/wed", ["#/cards/c66"]], ["w11/wed", ["#/cards/c68", "#/cards/c70"]], ["w12/mon", ["#/cards/c70"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(h => ({ missing: h.filter(x => !document.querySelector(`a[href="${x}"]`)), gaps: document.querySelectorAll(".plan-gap").length }), hrefs);
       ok(`${w}: plan ${day} links and no gaps`, !r.missing.length && r.gaps === 0, JSON.stringify(r));

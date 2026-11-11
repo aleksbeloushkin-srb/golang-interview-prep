@@ -1,4 +1,4 @@
-// Package transfers is the reference solution for practice task W6-1: concurrent
+// Package transfers is the reference solution for practice task W7-1: concurrent
 // transfers between in-memory accounts, with per-account locks taken in ID order.
 package transfers
 

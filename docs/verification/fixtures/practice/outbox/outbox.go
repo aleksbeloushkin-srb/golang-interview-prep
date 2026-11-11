@@ -1,4 +1,4 @@
-// Package outbox is the reference solution for practice task W6-3: a transactional
+// Package outbox is the reference solution for practice task W7-3: a transactional
 // outbox in memory, a relay that publishes at least once, and an idempotent consumer.
 package outbox
 

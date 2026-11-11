@@ -1,4 +1,4 @@
-// Package review holds the code the channels track gives for review in week 9.
+// Package review holds the code the channels track gives for review in week 10.
 // Each function is shown on the site exactly as written here and has a bug;
 // review_test.go shows the bug.
 package review

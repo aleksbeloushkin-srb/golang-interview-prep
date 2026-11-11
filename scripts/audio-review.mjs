@@ -38,14 +38,14 @@ const RISK = {
   'card:c30:short': '`2^B`, tophash, 6.5',
   'card:c41:short': '`len(s)`, `s[i]`, `[]rune`',
   'card:c43:short': 'import path, `.go`, `internal/`',
-  'plan:w2-mon-1': '`s[1:3]`, `s[a:b:c]`',
-  'plan:w2-mon-2': '`a[:len(a):len(a)]`, 100 MiB',
-  'plan:w2-tue-3': '`len("héllo")`, `utf8.RuneCountInString`',
+  'plan:w3-mon-1': '`s[1:3]`, `s[a:b:c]`',
+  'plan:w3-mon-2': '`a[:len(a):len(a)]`, 100 MiB',
+  'plan:w3-tue-3': '`len("héllo")`, `utf8.RuneCountInString`',
   'card:c2:short': '`-race` → «dash race»',
-  'plan:w2-thu-2': '`-race` → «dash race»',
   'plan:w3-thu-2': '`-race` → «dash race»',
-  'plan:w3-sat-1': '`go test -race`, errgroup',
-  'plan:w3-mon-2': '`gen → square → print` → «then»',
+  'plan:w4-thu-2': '`-race` → «dash race»',
+  'plan:w4-sat-1': '`go test -race`, errgroup',
+  'plan:w4-mon-2': '`gen → square → print` → «then»',
   'card:c12:short': 'I/O, `go.uber.org/goleak` → «Uber\'s go-leak library»',
   'card:c12:jvm': 'IDs → «I-D\'s», pprof',
   'practice:p-counter:talk': 'I/O',
@@ -64,7 +64,7 @@ const link = key => {
 };
 const dur = f => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', root + f], { encoding: 'utf8' })).toFixed(1);
 const keys = Object.keys(m.items).sort((a, b) => (RISK[b] ? 1 : 0) - (RISK[a] ? 1 : 0) || a.localeCompare(b, 'en', { numeric: true }));
-let out = `# Приёмка озвучки на слух — недели 1–3
+let out = `# Приёмка озвучки на слух — недели 1–4
 
 Сгенерировано из \`data/audio.js\` (${keys.length} текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 

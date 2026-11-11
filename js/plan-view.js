@@ -1,4 +1,4 @@
-// Раздел #/plan: программа на 13 недель с отметками выполнения.
+// Раздел #/plan: программа на 14 недель с отметками выполнения.
 // Данные — data/plan.js (PLAN). Прогресс хранится отдельно от карточек
 // под ключом go_prep_plan_v1 и не влияет на go_prep_progress_v2.
 
@@ -115,7 +115,7 @@ function planShowSaved(startBefore) {
   planUpdateCounters(PLAN.weeks.find(w => view.querySelector(`#plan-task-${CSS.escape(w.days[0].tasks[0].id)}`)));
 }
 
-// Номер текущей недели (1…13) и ключ дня; null, если программа ещё не началась.
+// Номер текущей недели (1…14) и ключ дня; null, если программа ещё не началась.
 function planToday() {
   const start = planParseDate(planState.saved.start);
   const now = new Date();
@@ -455,7 +455,7 @@ function planReviewButton() {
 
 function planTodayBanner(today) {
   if (today.before) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: `Программа начнётся через ${today.daysLeft} дн.` });
-  if (today.after) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: "13 недель позади. Дальше — журнал интервью и повторение слабых тем." });
+  if (today.after) return planEl("p", { id: "plan-today", className: "plan-today", role: "status", text: `${PLAN.weeks.length} недель позади. Дальше — журнал интервью и повторение слабых тем.` });
   const week = PLAN.weeks[today.weekNumber - 1];
   const day = week.days.find(d => PLAN_DAY_KEYS[d.label] === today.dayKey);
   if (!day) {
@@ -527,7 +527,7 @@ function planFocusNote() {
 function planCalendar(today) {
   const start = planState.saved.start;
   const weekNow = today.weekNumber || null;
-  const status = today.before ? `до старта ${today.daysLeft} дн.` : today.after ? "13 недель позади" : `сейчас неделя ${weekNow}`;
+  const status = today.before ? `до старта ${today.daysLeft} дн.` : today.after ? `${PLAN.weeks.length} недель позади` : `сейчас неделя ${weekNow}`;
 
   const button = (text, onClick, title) => {
     const node = planEl("button", { type: "button", className: "btn btn-sm", text, title });
@@ -735,7 +735,7 @@ function renderPlan(weekId, dayKey) {
       planEl("p", { className: "muted-text", text: `Бюджет ~${planWeekHours(week)} — ориентир, а не обещание. Не укладываешься — переноси в резерв (${["Пт", "Вс"].filter(label => !week.days.some(day => day.label === label)).join("/")}); сначала обязательные задачи, «по желанию» — если осталось время.` }),
       planTalkRules(),
       ...days,
-      week.id === "w2" ? planPredictBlock() : null,
+      week.id === "w3" ? planPredictBlock() : null, // «Что выведет код» — неделя slice и map
       leetcodeList,
       planListBlock("Проговорить по-английски", week.english, "en"),
       planListBlock("Самопроверка недели", week.selfCheck),
@@ -783,7 +783,7 @@ function handlePlanRoute() {
   const switchingWeek = previousWeek && weekId && !previousWeek.textContent.startsWith(`Неделя ${PLAN.weeks.findIndex(w => w.id === weekId) + 1}.`);
   planState.startNote = ""; // сообщение о смене даты показывается один раз, до перехода
   renderPlan(weekId, dayKey);
-  document.title = "План 13 недель — Go Interview Prep";
+  document.title = `План ${PLAN.weeks.length} недель — Go Interview Prep`;
   if (switchingWeek && !dayKey) {
     const heading = document.getElementById("plan-week-title");
     if (heading) heading.focus({ preventScroll: false });

@@ -1,4 +1,4 @@
-// Package workerpool solves practice task W3-1 with a semaphore instead of a
+// Package workerpool solves practice task W4-1 with a semaphore instead of a
 // fixed pool (K3.5): a goroutine per job, a slot taken before go.
 package workerpool
 

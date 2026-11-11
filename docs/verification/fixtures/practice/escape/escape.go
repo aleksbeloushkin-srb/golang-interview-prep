@@ -1,4 +1,4 @@
-// Package escape is the reference solution for practice task W4-5:
+// Package escape is the reference solution for practice task W5-5:
 // read `go build -gcflags=-m` output and keep values on the stack.
 package escape
 

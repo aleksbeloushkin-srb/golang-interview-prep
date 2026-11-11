@@ -1,4 +1,4 @@
-// Package outbox: practice task W6-3. Replace each TODO with your solution.
+// Package outbox: practice task W7-3. Replace each TODO with your solution.
 package outbox
 
 import (

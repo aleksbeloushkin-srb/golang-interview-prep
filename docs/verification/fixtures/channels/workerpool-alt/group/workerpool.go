@@ -1,4 +1,4 @@
-// Package workerpool solves practice task W3-1 with errgroup.SetLimit (K3.5).
+// Package workerpool solves practice task W4-1 with errgroup.SetLimit (K3.5).
 package workerpool
 
 import (

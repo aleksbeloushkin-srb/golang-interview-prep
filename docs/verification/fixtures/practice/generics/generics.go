@@ -1,4 +1,4 @@
-// Package generics is the reference solution for practice tasks W2-2 and W2-3.
+// Package generics is the reference solution for practice tasks W3-2 and W3-3.
 package generics
 
 import "cmp"
@@ -54,7 +54,7 @@ func (s *Set[T]) Each(f func(T)) {
 	}
 }
 
-// W2-3: the same "maximum" two ways.
+// W3-3: the same "maximum" two ways.
 
 // Max works on any ordered type: same algorithm, different types.
 func Max[T cmp.Ordered](xs []T) (T, bool) {

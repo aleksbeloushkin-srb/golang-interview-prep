@@ -1,4 +1,4 @@
-// Package deferpanic: practice tasks W1-4 and W1-5. Replace each TODO with your solution.
+// Package deferpanic: practice tasks W2-2 and W2-3. Replace each TODO with your solution.
 package deferpanic
 
 // DeferOrder appends 1, 2, 3 to the result with three deferred calls made in that order

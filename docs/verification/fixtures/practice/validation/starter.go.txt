@@ -1,4 +1,4 @@
-// Package validation: practice task W1-3. Replace each TODO with your solution.
+// Package validation: practice task W2-1. Replace each TODO with your solution.
 package validation
 
 // ValidationError is a typed error: it carries data the caller can read with errors.As.

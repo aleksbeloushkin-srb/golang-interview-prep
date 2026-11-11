@@ -1,4 +1,4 @@
-// Package ratelimit is the reference solution for practice task W4-2:
+// Package ratelimit is the reference solution for practice task W5-2:
 // a token bucket rate limiter.
 package ratelimit
 

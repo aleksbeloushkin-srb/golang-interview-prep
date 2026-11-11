@@ -1,8 +1,8 @@
-// Package txprof: practice task W4-6. This is the W2-4 solution, unchanged:
+// Package txprof: practice task W5-6. This is the W3-4 solution, unchanged:
 // sum transactions from CSV lines "account,amount,currency" per account and currency.
 // Run the benchmark with a CPU and a memory profile, find what allocates on
 // every line, change it, and compare the benchmark before and after.
-// The W2-4 tests must keep passing; TestAllocsPerLine fails until you are done.
+// The W3-4 tests must keep passing; TestAllocsPerLine fails until you are done.
 package txprof
 
 import (

@@ -1,4 +1,4 @@
-// Package shutdown is the reference solution for practice task W4-3:
+// Package shutdown is the reference solution for practice task W5-3:
 // graceful shutdown of an HTTP server with background workers and a dependency.
 package shutdown
 

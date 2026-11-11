@@ -9,7 +9,7 @@ const TRACKS = {
     title: "Трек: каналы и context",
     reviewFixture: "docs/verification/fixtures/channels/review/review.go",
     intro: [
-      "Каналы, `select`, `context` и утечки горутин — от аксиом до крупных паттернов, в том порядке, в котором их удобно строить: каждый следующий шаг собирается из предыдущих. Те же каты стоят в днях плана недель 4–12; здесь они подряд, чтобы пройти тему целиком или быстро вспомнить её перед собеседованием.",
+      "Каналы, `select`, `context` и утечки горутин — от аксиом до крупных паттернов, в том порядке, в котором их удобно строить: каждый следующий шаг собирается из предыдущих. Те же каты стоят в днях плана недель 5–13; здесь они подряд, чтобы пройти тему целиком или быстро вспомнить её перед собеседованием.",
       "Видео — после своей попытки. Материал: skill issue, «Полный разбор каналов» и серия роликов после него; В. Балун, «Паттерны использования каналов в Go». Где видео ошибается, ката говорит, как на самом деле."
     ],
     rules: [
@@ -39,7 +39,7 @@ const TRACKS = {
         steps: [
           {
             id: "k1-1", label: "К1.1", title: "Таблица аксиом по памяти: 3 состояния × 3 операции", minutes: 5, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "9 клеток без ошибок; сказано, что компилятор и `go vet` молчат про отправку в nil-канал, а рантайм сообщает deadlock, только когда спят все горутины: в сервисе такая отправка молча висит навсегда — это утечка",
             variation: "буферизованный канал после `close`: сначала оставшиеся значения, потом нулевое и `ok == false`",
             links: ["c14", "sim3"],
@@ -47,7 +47,7 @@ const TRACKS = {
           },
           {
             id: "k1-2", label: "К1.2", title: "Буфер: когда он нужен. Задача squares и `signal.Notify`", minutes: 15,
-            whenRU: "резерв недели 4 (вс), обязательно",
+            whenRU: "резерв недели 5 (вс), обязательно",
             doneWhen: "объяснено, что буфер не ускоряет медленного потребителя — устойчивую скорость задаёт самая медленная сторона, буфер лишь сглаживает всплески — и прячет ошибки синхронизации, пока не заполнится; у буфера 0, 1 и N — каждому своя причина",
             variation: "`signal.Notify` с буфером 1 против `signal.NotifyContext`: при полном буфере сигнал теряется, а не ждёт",
             links: ["c13", "q45", "c59"],
@@ -55,21 +55,21 @@ const TRACKS = {
           },
           {
             id: "k1-3", label: "К1.3", title: "Генератор `writer() <-chan int`", minutes: 5, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "между `make` и `return` нет ничего блокирующего; канал закрывает сам генератор",
             variation: "вернуть `chan int` — теперь читатель может закрыть канал",
             refs: [{ t: "skill issue: генератор, 39:30", u: "https://www.youtube.com/watch?v=k-1OEYl7N8Q&t=2370s" }]
           },
           {
             id: "k1-4", label: "К1.4", title: "Два писателя в один канал", minutes: 10, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "закрывает только горутина-закрыватель после `wg.Wait()`; `-race -count=100` зелёный",
             variation: "ноль писателей: канал всё равно закрывается",
             refs: [{ t: "skill issue: несколько писателей, 40:30", u: "https://www.youtube.com/watch?v=k-1OEYl7N8Q&t=2430s" }]
           },
           {
             id: "k1-5", label: "К1.5", title: "Writer → Doubler → Reader", minutes: 15, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "в `synctest` 10 значений по 500 мс проходят ровно за 5 с виртуального времени; стадия закрывает свой выход, а не вход",
             variation: "Doubler в 3 горутинах — порядок теряется",
             links: ["p-pipeline"],
@@ -77,7 +77,7 @@ const TRACKS = {
           },
           {
             id: "k1-6", label: "К1.6", title: "M писателей и N читателей на одном канале", minutes: 10, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "сумма у читателей равна отправленному; объяснено, почему это не широковещание: каждое значение достаётся одному читателю",
             variation: "широковещание через `close`",
             refs: [{ t: "skill issue: M:N, 51:00", u: "https://www.youtube.com/watch?v=k-1OEYl7N8Q&t=3060s" }]
@@ -96,14 +96,14 @@ const TRACKS = {
         steps: [
           {
             id: "k2-1", label: "К2.1", title: "`select` с двумя готовыми каналами и `default`", minutes: 10, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "на 1000 прогонах встречаются обе ветки: среди готовых выбор случаен, порядок в коде приоритета не даёт",
             variation: "`default` в цикле без паузы — busy loop",
             links: ["c18", "q22", "sim4"]
           },
           {
             id: "k2-2", label: "К2.2", title: "Таймаут тремя способами: `time.After`, `Timer`, `context.WithTimeout`", minutes: 10,
-            whenRU: "резерв недели 4 (вс), обязательно",
+            whenRU: "резерв недели 5 (вс), обязательно",
             doneWhen: "в `synctest` выход ровно в срок; объяснено, что `ctx.Done()` закрывается и будит всех ждущих, а `Timer.C` отправляет одно значение одному получателю и не закрывается",
             variation: "пять горутин ждут один `Timer.C` — просыпается одна",
             links: ["c18", "q11"],
@@ -111,7 +111,7 @@ const TRACKS = {
           },
           {
             id: "k2-3", label: "К2.3", title: "`for-select` читателя: до закрытия или отмены", minutes: 10, optional: true,
-            whenRU: "резерв недели 4 (вс), если недели 3–4 дались с трудом",
+            whenRU: "резерв недели 5 (вс), если недели 4–5 дались с трудом",
             doneWhen: "выходит в обоих случаях; без проверки `ok` после закрытия — бесконечный цикл на нулевых значениях",
             variation: "приоритет отмены: проверка `ctx.Err()` до `select` сужает окно, но строгого приоритета не даёт",
             links: ["c18"],
@@ -119,7 +119,7 @@ const TRACKS = {
           },
           {
             id: "k2-4", label: "К2.4", title: "Писатель с отменой и три правила против утечек", minutes: 15,
-            whenRU: "резерв недели 4 (вс), обязательно",
+            whenRU: "резерв недели 5 (вс), обязательно",
             doneWhen: "получил результат — выйди; неисправимая ошибка — выйди; отменили — выйди; `defer close(out)`; в `synctest` нет зависших горутин; объяснено, почему пустая ветка `case <-ctx.Done():` без `return` писателя не останавливает (в видео так)",
             variation: "забытый писатель (не закрыл канал) и забытый читатель (ушёл раньше)",
             links: ["c22", "c12"],
@@ -231,14 +231,14 @@ const TRACKS = {
           },
           {
             id: "k3-4", label: "К3.4", title: "Pipeline с отменой", minutes: 25,
-            whenRU: "только в прогоне блока 5: это повтор W3-2",
+            whenRU: "только в прогоне блока 5: это повтор W4-2",
             doneWhen: "ранний уход потребителя останавливает все стадии",
             links: ["p-pipeline"],
             refs: [{ t: "Балун: pipeline, 15:00", u: "https://www.youtube.com/watch?v=luQlkud-jKE&t=900s" }]
           },
           {
             id: "k3-5", label: "К3.5", title: "Ограничение работы в полёте: пул, семафор, `SetLimit`", minutes: 30,
-            doneWhen: "одна задача W3-1 в трёх формах — классический пул; семафор на `chan struct{}` со слотом до `go`; `errgroup.SetLimit` — и все три проходят тесты W3-1. Названа позиция Mills: работу ограничивают семафором, а не пулом простаивающих воркеров (сегодня то же даёт `errgroup.SetLimit`); стадия, которая живёт до закрытия входа, — нормальна",
+            doneWhen: "одна задача W4-1 в трёх формах — классический пул; семафор на `chan struct{}` со слотом до `go`; `errgroup.SetLimit` — и все три проходят тесты W4-1. Названа позиция Mills: работу ограничивают семафором, а не пулом простаивающих воркеров (сегодня то же даёт `errgroup.SetLimit`); стадия, которая живёт до закрытия входа, — нормальна",
             variation: "пропуск вместо ожидания: `select` с `default`, `TryGo`, `TryAcquire`; пул ресурсов с идентичностью — канал ресурсов",
             sayEN: "Here's a classic worker pool: N goroutines range over one jobs channel, the producer closes it, and a goroutine closes the results after `wg.Wait()`. In production I'd usually bound in-flight work instead of keeping idle workers: a semaphore — a buffered `chan struct{}` acquired before `go` — or `errgroup.WithContext` with `SetLimit`: `Wait` returns the first error, and the group's context is cancelled so the other tasks can stop if they watch it. A fixed pool still makes sense when each worker owns something, like a connection.",
             links: ["p-workerpool", "p-parallelfetch"],
@@ -270,7 +270,7 @@ const TRACKS = {
           },
           {
             id: "k3-o3", label: "устно", title: "Or-channel, bridge, barrier, promise/future, singleflight", oral: true,
-            whenRU: "устно, рядом с К3.7 (неделя 9)",
+            whenRU: "устно, рядом с К3.7 (неделя 10)",
             doneWhen: "для каждого — когда нужен и чем заменить: or-channel — `context` с отменой; future — горутина и канал с буфером 1 или `errgroup`; singleflight — `golang.org/x/sync/singleflight`; barrier — `sync.WaitGroup` или `errgroup.Wait`; bridge обычно не нужен — читатель сам делает вложенный `range`",
             refs: [{ t: "Балун: or-channel и дальше, 28:00", u: "https://www.youtube.com/watch?v=luQlkud-jKE&t=1680s" }]
           },
@@ -284,7 +284,7 @@ const TRACKS = {
           {
             id: "k3-9", label: "К3.9", title: "Rate limiter: leaky bucket против token bucket", minutes: 25,
             doneWhen: "leaky и token bucket на каналах; отказ против ожидания; сказано, что лимитер на каналах работает только в одном процессе",
-            variation: "сравнить с W4-2 и `golang.org/x/time/rate`",
+            variation: "сравнить с W5-2 и `golang.org/x/time/rate`",
             links: ["p-ratelimit"],
             refs: [{ t: "Балун: rate limiter, 50:30", u: "https://www.youtube.com/watch?v=luQlkud-jKE&t=3030s" }]
           }
@@ -314,7 +314,7 @@ const TRACKS = {
         steps: [
           {
             id: "k5-1", label: "К5", title: "Обязательные каты подряд, вслух",
-            doneWhen: "К2.5, К2.6, К3.1, К3.2, К3.3, К3.4, К3.5, К3.6, К3.8, К3.9 — по 20–30 минут (К3.1 — 10), вслух по-английски, без подсказок; две первые — в субботу недели 12, остальные — в воскресный резерв до мока 1",
+            doneWhen: "К2.5, К2.6, К3.1, К3.2, К3.3, К3.4, К3.5, К3.6, К3.8, К3.9 — по 20–30 минут (К3.1 — 10), вслух по-английски, без подсказок; две первые — в субботу недели 13, остальные — в воскресный резерв до мока 1",
             variation: "тренажёр с готовыми тестами — loong/go-concurrency-exercises"
           }
         ]

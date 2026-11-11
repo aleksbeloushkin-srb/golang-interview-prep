@@ -1,4 +1,4 @@
-// Package fanout: practice task W6-4. Replace the TODO with your solution.
+// Package fanout: practice task W7-4. Replace the TODO with your solution.
 package fanout
 
 import "context"

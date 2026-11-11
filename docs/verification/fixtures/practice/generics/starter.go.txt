@@ -1,4 +1,4 @@
-// Package generics: practice tasks W2-2 and W2-3. Replace each TODO with your solution.
+// Package generics: practice tasks W3-2 and W3-3. Replace each TODO with your solution.
 package generics
 
 import "cmp"
@@ -23,7 +23,7 @@ func (s *Set[T]) Len() int       { panic("TODO") }
 func (s *Set[T]) Remove(v T)     { panic("TODO") }
 func (s *Set[T]) Each(f func(T)) { panic("TODO") }
 
-// W2-3: the same "maximum" two ways.
+// W3-3: the same "maximum" two ways.
 
 // Max returns the largest element of any ordered type; ok is false for an empty slice.
 func Max[T cmp.Ordered](xs []T) (T, bool) { panic("TODO") }

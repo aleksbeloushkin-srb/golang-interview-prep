@@ -1,4 +1,4 @@
-// Package removeslice is the reference solution for practice task W2-1.
+// Package removeslice is the reference solution for practice task W3-1.
 package removeslice
 
 // RemoveInPlace removes s[i] by shifting the tail left inside the same backing

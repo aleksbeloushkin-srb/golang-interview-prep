@@ -27,7 +27,7 @@ const base = "http://127.0.0.1:8765/";
       focus: document.activeElement && document.activeElement.id,
       overflow: document.documentElement.scrollWidth - window.innerWidth
     }));
-    ok(`${tag}: index visible with all tasks`, index.visible && index.items === index.total && index.total === 26 && index.weeks === 7, JSON.stringify(index));
+    ok(`${tag}: index visible with all tasks`, index.visible && index.items === index.total && index.total === 26 && index.weeks === 8, JSON.stringify(index)); // v91: weeks 1–7 and 10
     ok(`${tag}: tab marked current`, index.active === "page");
     ok(`${tag}: focus on heading`, index.focus === "practice-title", index.focus);
     ok(`${tag}: index no overflow`, index.overflow <= 0, index.overflow);
@@ -92,13 +92,13 @@ const base = "http://127.0.0.1:8765/";
       await p.waitForTimeout(150);
       ok("pager goes to the next task", (await p.evaluate(() => location.hash)) === "#/practice/p-pipeline");
 
-      // Plan shows practice links in week 3.
-      await p.goto(base + "#/plan/w3/tue");
+      // Plan shows practice links in week 4.
+      await p.goto(base + "#/plan/w4/tue");
       await p.waitForTimeout(300);
       const planLink = await p.evaluate(() => [...document.querySelectorAll("a[href='#/practice/p-workerpool']")].map(a => a.textContent));
-      ok("plan week 3 links to W3-1", planLink.some(t => t.includes("W3-1")), planLink.join(" | "));
+      ok("plan week 4 links to W4-1", planLink.some(t => t.includes("W4-1")), planLink.join(" | "));
       const gapGone = await p.evaluate(() => !document.body.innerText.includes("Coding-задание workerpool"));
-      ok("plan no longer lists W3-1 as missing on the site", gapGone);
+      ok("plan no longer lists W4-1 as missing on the site", gapGone);
 
       // Extra commands: go get before the tests, profiling after.
       await p.goto(base + "#/practice/p-parallelfetch");
@@ -109,10 +109,10 @@ const base = "http://127.0.0.1:8765/";
       await p.waitForTimeout(150);
       runText = await p.textContent('pre[aria-label="Команды для запуска"]');
       ok("escape run block ends with -gcflags=-m", runText.indexOf("go build -gcflags=-m .") > runText.indexOf("go test -race"), runText);
-      await p.goto(base + "#/plan/w4/wed");
+      await p.goto(base + "#/plan/w5/wed");
       await p.waitForTimeout(300);
       const w4 = await p.evaluate(() => ({ links: ["p-shutdown", "p-leak"].every(id => document.querySelector(`a[href="#/practice/${id}"]`)), gaps: document.querySelectorAll(".plan-gap").length }));
-      ok("plan week 4 links shutdown and leak, no gaps", w4.links && w4.gaps === 0, JSON.stringify(w4));
+      ok("plan week 5 links shutdown and leak, no gaps", w4.links && w4.gaps === 0, JSON.stringify(w4));
 
       // Other routes still work.
       for (const route of ["#/cards", "#/simulators/sim3", "#/quiz/q22", "#/plan", "#/wiki", "#/cheatsheet"]) {

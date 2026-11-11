@@ -1,4 +1,4 @@
-// Package fanin: practice task W3-3. Replace the TODO with your solution.
+// Package fanin: practice task W4-3. Replace the TODO with your solution.
 package fanin
 
 import "context"

@@ -1,4 +1,4 @@
-// Package removeslice: practice task W2-1. Replace each TODO with your solution.
+// Package removeslice: practice task W3-1. Replace each TODO with your solution.
 package removeslice
 
 // RemoveInPlace removes s[i] by shifting the tail left inside the same backing array.

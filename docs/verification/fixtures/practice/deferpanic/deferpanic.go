@@ -1,4 +1,4 @@
-// Package deferpanic is the reference solution for practice tasks W1-4 and W1-5.
+// Package deferpanic is the reference solution for practice tasks W2-2 and W2-3.
 package deferpanic
 
 import "fmt"

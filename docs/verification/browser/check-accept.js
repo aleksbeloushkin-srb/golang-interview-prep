@@ -1,4 +1,4 @@
-// Acceptance criteria rendering for weeks 1–5 and regression of other routes.
+// Acceptance criteria rendering for weeks 1–6 (v91: 14 weeks, criteria cover weeks 1–7) and regression of other routes.
 const { chromium } = require("playwright");
 (async () => {
   const base = "http://127.0.0.1:8765/";
@@ -8,7 +8,7 @@ const { chromium } = require("playwright");
   const errors = []; p.on("pageerror", e => errors.push(e.message)); p.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
   await p.goto(base + "#/plan/w1"); await p.waitForSelector("#plan-week-title");
 
-  const expect = await p.evaluate(() => PLAN.weeks.slice(0, 5).map(w => {
+  const expect = await p.evaluate(() => PLAN.weeks.slice(0, 6).map(w => {
     const tasks = w.days.flatMap(d => d.tasks);
     // v86: a task that is one kata of a track takes «Готово, когда» from that kata.
     const oneKata = t => (t.links || []).filter(id => /^k\d+-/.test(id)).length === 1;
@@ -35,7 +35,7 @@ const { chromium } = require("playwright");
     const a = li.querySelector(".plan-accept"), h = li.querySelector(".plan-hint");
     return Boolean(a && h && (a.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING));
   }));
-  ok("week 7+ has no week-specific criteria", await p.evaluate(() => Object.keys(PLAN.acceptance).every(id => /^w[1-6]-/.test(id))));
+  ok("week 8+ has no week-specific criteria", await p.evaluate(() => Object.keys(PLAN.acceptance).every(id => /^w[1-7]-/.test(id))));
 
   // Criterion text is inserted as text, not markup.
   const injected = await p.evaluate(() => {
@@ -47,16 +47,16 @@ const { chromium } = require("playwright");
   await p.reload(); await p.waitForSelector("#plan-week-title");
 
   // Optional secondary-source tasks do not count toward required totals.
-  await p.goto(base + "#/plan/w1"); await p.waitForTimeout(150);
-  ok("100 Go Mistakes in week 1 is optional", await p.locator(".plan-task.is-optional:has(#plan-task-w1-thu-3)").count() === 1);
-  await p.goto(base + "#/plan/w3"); await p.waitForTimeout(150);
-  ok("100 Go Mistakes in week 3 is optional", await p.locator(".plan-task.is-optional:has(#plan-task-w3-sat-2)").count() === 1);
+  await p.goto(base + "#/plan/w2"); await p.waitForTimeout(150);
+  ok("100 Go Mistakes in week 2 is optional", await p.locator(".plan-task.is-optional:has(#plan-task-w2-tue-3)").count() === 1);
+  await p.goto(base + "#/plan/w4"); await p.waitForTimeout(150);
+  ok("100 Go Mistakes in week 4 is optional", await p.locator(".plan-task.is-optional:has(#plan-task-w4-sat-2)").count() === 1);
 
   // Progress compatibility: a mark saved under v21 data for a task that became optional still loads.
-  await p.evaluate(() => localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-10-12", done: { "w1-thu-3": true, "w3-sat-2": true } })));
+  await p.evaluate(() => localStorage.setItem("go_prep_plan_v1", JSON.stringify({ schema: 1, start: "2026-10-12", done: { "w2-tue-3": true, "w4-sat-2": true } })));
   await p.reload(); await p.waitForSelector("#plan-week-title");
-  await p.goto(base + "#/plan/w3"); await p.waitForTimeout(150);
-  ok("saved mark on now-optional task is kept", await p.isChecked("#plan-task-w3-sat-2"));
+  await p.goto(base + "#/plan/w4"); await p.waitForTimeout(150);
+  ok("saved mark on now-optional task is kept", await p.isChecked("#plan-task-w4-sat-2"));
 
   // Other routes still render.
   for (const [hash, sel] of [["#/cards/c1", "#view-cards"], ["#/quiz/q22", "#view-quiz"], ["#/simulators/sim2", "#view-simulators"], ["#/cheatsheet", "#view-cheatsheet"], ["#/wiki", "#view-wiki"]]) {

@@ -1,4 +1,4 @@
-// Package idempotency: practice task W6-2. Replace each TODO with your solution.
+// Package idempotency: practice task W7-2. Replace each TODO with your solution.
 package idempotency
 
 import (
@@ -49,7 +49,7 @@ func (s *Store) Do(key string, fingerprint [32]byte, fn func() (Response, error)
 	panic("TODO")
 }
 
-// Transferer moves money; it is the ledger of week 5 reduced to one method.
+// Transferer moves money; it is the ledger of week 6 reduced to one method.
 type Transferer interface {
 	Transfer(ctx context.Context, from, to string, amount int64) error
 }

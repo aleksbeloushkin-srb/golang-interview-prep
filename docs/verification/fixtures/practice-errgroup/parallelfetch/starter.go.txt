@@ -1,4 +1,4 @@
-// Package parallelfetch: practice task W4-1. Replace the TODO with your solution.
+// Package parallelfetch: practice task W5-1. Replace the TODO with your solution.
 // Suggested tool: golang.org/x/sync/errgroup (WithContext, SetLimit, Go, Wait).
 package parallelfetch
 
