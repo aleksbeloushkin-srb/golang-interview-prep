@@ -43,11 +43,15 @@ const { chromium } = require("playwright");
     // Plan model answers and practice talk.
     await p.goto(base + "#/plan/w1"); await p.waitForTimeout(300);
     const plan = await p.evaluate(() => ({ models: document.querySelectorAll(".plan-model").length, tts: document.querySelectorAll(".plan-model .tts-play").length }));
-    ok(`${w}: week 1 model answers have 🔊`, plan.models === 12 && plan.tts === 11, JSON.stringify(plan)); // v88: w1-sat-6 is new and waits for a recording (docs/AUDIO_QUEUE_RU.md)
+    // v91: week 1 is stretched over two; w1-sat-10 (new) and w2-sat-4 (since v88) wait for a recording (docs/AUDIO_QUEUE_RU.md).
+    ok(`${w}: week 1 model answers have 🔊`, plan.models === 7 && plan.tts === 6, JSON.stringify(plan));
     await p.goto(base + "#/plan/w2"); await p.waitForTimeout(300);
-    ok(`${w}: week 2 model answers have 🔊`, await p.locator(".plan-model .tts-play").count() === await p.locator(".plan-model").count());
-    await p.goto(base + "#/plan/w4"); await p.waitForTimeout(300);
-    ok(`${w}: week 4 (not recorded) has none`, await p.locator(".plan-model .tts-play").count() === 0);
+    const plan2 = await p.evaluate(() => ({ models: document.querySelectorAll(".plan-model").length, tts: document.querySelectorAll(".plan-model .tts-play").length }));
+    ok(`${w}: week 2 model answers have 🔊`, plan2.models === 7 && plan2.tts === 6, JSON.stringify(plan2));
+    await p.goto(base + "#/plan/w3"); await p.waitForTimeout(300);
+    ok(`${w}: week 3 model answers have 🔊`, await p.locator(".plan-model .tts-play").count() === await p.locator(".plan-model").count());
+    await p.goto(base + "#/plan/w5"); await p.waitForTimeout(300);
+    ok(`${w}: week 5 (not recorded) has none`, await p.locator(".plan-model .tts-play").count() === 0);
     await p.goto(base + "#/practice/p-money"); await p.waitForTimeout(300);
     ok(`${w}: practice talk has 🔊`, await p.locator(".practice-talk .tts-play").count() === 1);
     await p.goto(base + "#/wiki"); await p.waitForTimeout(300);

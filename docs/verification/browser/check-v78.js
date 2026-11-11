@@ -1,4 +1,4 @@
-// v78: module 9 cards c57–c64 (render, answer, code, practice, overflow), the m9 filter chip, plan links from weeks 4–10, knowledge base.
+// v78: module 9 cards c57–c64 (render, answer, code, practice, overflow), the m9 filter chip, plan links from weeks 5–11 (4–10 before v91), knowledge base.
 // Optional argument: a folder for screenshots of c57 and c62 at 1280 and 390.
 const { chromium } = require("playwright");
 const shots = process.argv[2];
@@ -40,7 +40,7 @@ const IDS = ["c57", "c58", "c59", "c60", "c61", "c62", "c63", "c64"];
     const pressed = await p.$eval('#module-filter-row .chip[data-filter="m9"]', e => e.getAttribute("aria-pressed"));
     ok(`${w}: m9 chip shows 8 cards`, / из 8 /.test(counter + " ") && pressed === "true", counter);
     // Plan days link to the new cards.
-    for (const [day, hrefs] of [["w5/mon", ["#/cards/c57", "#/cards/c58"]], ["w5/tue", ["#/cards/c60", "#/cards/c45"]], ["w7/mon", ["#/cards/c61"]], ["w8/tue", ["#/cards/c59", "#/cards/c63"]], ["w10/wed", ["#/cards/c62"]]]) {
+    for (const [day, hrefs] of [["w6/mon", ["#/cards/c57", "#/cards/c58"]], ["w6/tue", ["#/cards/c60", "#/cards/c45"]], ["w8/mon", ["#/cards/c61"]], ["w9/tue", ["#/cards/c59", "#/cards/c63"]], ["w11/wed", ["#/cards/c62"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(h => ({ missing: h.filter(x => !document.querySelector(`a[href="${x}"]`)), gaps: document.querySelectorAll(".plan-gap").length }), hrefs);
       ok(`${w}: plan ${day} links and no gaps`, !r.missing.length && r.gaps === 0, JSON.stringify(r));

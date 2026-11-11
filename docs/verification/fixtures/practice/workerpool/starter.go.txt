@@ -1,4 +1,4 @@
-// Package workerpool: practice task W3-1. Replace the TODO with your solution.
+// Package workerpool: practice task W4-1. Replace the TODO with your solution.
 package workerpool
 
 import "context"

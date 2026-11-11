@@ -1,4 +1,4 @@
-// Package txsum is the reference solution for practice task W2-4:
+// Package txsum is the reference solution for practice task W3-4:
 // sum transactions from CSV lines "account,amount,currency" per account and currency.
 package txsum
 

@@ -1,4 +1,4 @@
-// Package accountsapi is the reference solution for practice task W5-1:
+// Package accountsapi is the reference solution for practice task W6-1:
 // HTTP routes for accounts on the standard ServeMux (Go 1.22+ patterns).
 package accountsapi
 

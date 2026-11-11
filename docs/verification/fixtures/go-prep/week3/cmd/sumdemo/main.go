@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/you/go-prep/week2/asm"
+	"github.com/you/go-prep/week3/asm"
 )
 
 func main() {

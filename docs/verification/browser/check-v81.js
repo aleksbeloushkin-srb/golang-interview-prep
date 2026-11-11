@@ -29,7 +29,7 @@ const REPO = "https://github.com/aleksbeloushkin-srb/go-payments-reference";
     await p.$eval('#view-wiki .wiki-project summary', s => s.click());
     await p.$eval('#view-wiki .wiki-project a[href="#/cards/c62"]', a => a.click()); await p.waitForTimeout(400);
     ok(`${w}: card link opens C62`, await p.evaluate(() => location.hash === "#/cards/c62" && /C62/.test(document.getElementById("card-counter").textContent)));
-    for (const day of ["w5/mon", "w5/tue", "w6/wed", "w8/tue", "w10/wed"]) {
+    for (const day of ["w6/mon", "w6/tue", "w7/wed", "w9/tue", "w11/wed"]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       ok(`${w}: plan ${day} links the repo`, await p.evaluate(repo => !!document.querySelector(`a[href="${repo}"]`), REPO));
     }

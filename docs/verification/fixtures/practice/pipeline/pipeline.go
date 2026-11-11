@@ -1,4 +1,4 @@
-// Package pipeline is the reference solution for practice task W3-2.
+// Package pipeline is the reference solution for practice task W4-2.
 package pipeline
 
 import "context"

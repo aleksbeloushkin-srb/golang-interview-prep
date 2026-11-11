@@ -1,4 +1,4 @@
-// Package leak: practice task W4-4. Replace each TODO with your solution.
+// Package leak: practice task W5-4. Replace each TODO with your solution.
 package leak
 
 import (

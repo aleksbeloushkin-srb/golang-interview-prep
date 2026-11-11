@@ -1,4 +1,4 @@
-// Package shutdown: practice task W4-3. Replace the TODO with your solution.
+// Package shutdown: practice task W5-3. Replace the TODO with your solution.
 package shutdown
 
 import (

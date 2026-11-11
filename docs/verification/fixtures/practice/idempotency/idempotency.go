@@ -1,4 +1,4 @@
-// Package idempotency is the reference solution for practice task W6-2: an
+// Package idempotency is the reference solution for practice task W7-2: an
 // Idempotency-Key store and an HTTP handler that runs a transfer at most once per key.
 package idempotency
 
@@ -69,7 +69,7 @@ func (s *Store) Do(key string, fingerprint [32]byte, fn func() (Response, error)
 	return resp, nil
 }
 
-// Transferer moves money; it is the ledger of week 5 reduced to one method.
+// Transferer moves money; it is the ledger of week 6 reduced to one method.
 type Transferer interface {
 	Transfer(ctx context.Context, from, to string, amount int64) error
 }

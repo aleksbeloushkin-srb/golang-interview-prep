@@ -1,20 +1,39 @@
-// Программа подготовки к офферу Senior Go в EU-компании: 13 недель, ~10 ч в неделю.
+// Программа подготовки к офферу Senior Go в EU-компании: 14 недель, ~10 ч в неделю.
 // Источник данных для раздела #/plan. ID недель и задач стабильны: от них зависит
 // сохранённый прогресс (ключ go_prep_plan_v1). Новые задачи добавлять с новыми ID,
-// не переиспользовать старые.
+// не переиспользовать старые. Исключение — перенумерация v91 (renamedTaskIds ниже): её принял пользователь.
 // Ссылки на материалы сайта: "c12" — карточка, "q9" — задача quiz, "sim3" — диаграмма.
 // Пометка optional: true — глубокий runtime, полезен, но не нужен для прохождения EU-интервью.
 
 const PLAN = {
-  revision: "2026-11-08",
+  revision: "2026-11-11",
   defaultStart: "2026-11-09",
   hoursPerWeek: 10,
   target: "Senior Backend Engineer (Go) · EU-компании с офисом в Сербии или remote CET",
 
+  // Перенумерация 11.11.2026 (v91): неделя 1 растянута на две, бывшие недели 2–13 стали 3–14.
+  // Старый ID задачи → новый. Отметки по старым ID сайт не переносит (решение пользователя); запись нужна
+  // check-content, чтобы отличить перенумерацию от молча потерянной отметки.
+  renamedTaskIds: {
+    "w1-thu-1": "w2-mon-1", "w1-thu-2": "w2-tue-1", "w1-thu-3": "w2-tue-3", "w1-thu-4": "w2-tue-2", "w1-sat-2": "w2-sat-1", "w1-sat-3": "w2-sat-2", "w1-wed-4": "w2-wed-1", "w1-sat-6": "w2-sat-4", "w1-sat-7": "w2-sat-5",
+    "w2-mon-1": "w3-mon-1", "w2-mon-2": "w3-mon-2", "w2-mon-3": "w3-mon-3", "w2-tue-1": "w2-thu-1", "w2-tue-2": "w3-tue-2", "w2-tue-3": "w3-tue-3", "w2-tue-4": "w3-tue-4", "w2-tue-5": "w3-tue-5", "w2-wed-1": "w3-wed-1", "w2-wed-2": "w3-wed-2", "w2-wed-3": "w3-wed-3", "w2-thu-1": "w3-thu-1", "w2-thu-2": "w3-thu-2", "w2-thu-3": "w3-thu-3", "w2-thu-4": "w3-thu-4", "w2-thu-5": "w3-thu-5", "w2-sat-1": "w3-sat-1", "w2-sat-7": "w3-sat-7", "w2-sat-2": "w3-sat-2", "w2-sat-3": "w3-sat-3", "w2-sat-4": "w3-sat-4", "w2-sat-5": "w3-sat-5", "w2-sat-6": "w3-sat-6",
+    "w3-mon-1": "w4-mon-1", "w3-mon-2": "w4-mon-2", "w3-mon-3": "w4-mon-3", "w3-tue-1": "w4-tue-1", "w3-tue-2": "w4-tue-2", "w3-tue-3": "w4-tue-3", "w3-wed-1": "w4-wed-1", "w3-wed-2": "w4-wed-2", "w3-wed-3": "w4-wed-3", "w3-wed-4": "w4-wed-4", "w3-thu-1": "w4-thu-1", "w3-thu-2": "w4-thu-2", "w3-thu-3": "w4-thu-3", "w3-sat-1": "w4-sat-1", "w3-sat-2": "w4-sat-2", "w3-sat-3": "w4-sat-3", "w3-sat-4": "w4-sat-4", "w3-sat-5": "w4-sat-5",
+    "w4-mon-1": "w5-mon-1", "w4-mon-2": "w5-mon-2", "w4-mon-3": "w5-mon-3", "w4-tue-1": "w5-tue-1", "w4-tue-2": "w5-tue-2", "w4-wed-1": "w5-wed-1", "w4-wed-2": "w5-wed-2", "w4-wed-3": "w5-wed-3", "w4-wed-4": "w5-wed-4", "w4-thu-1": "w5-thu-1", "w4-thu-2": "w5-thu-2", "w4-thu-3": "w5-thu-3", "w4-thu-4": "w5-thu-4", "w4-sat-1": "w5-sat-1", "w4-sat-2": "w5-sat-2", "w4-sat-3": "w5-sat-3", "w4-sat-4": "w5-sat-4", "w4-sat-5": "w5-sat-5",
+    "w5-mon-1": "w6-mon-1", "w5-mon-2": "w6-mon-2", "w5-mon-3": "w6-mon-3", "w5-tue-1": "w6-tue-1", "w5-tue-2": "w6-tue-2", "w5-wed-1": "w6-wed-1", "w5-wed-2": "w6-wed-2", "w5-wed-3": "w6-wed-3", "w5-thu-1": "w6-thu-1", "w5-thu-2": "w6-thu-2", "w5-sat-3": "w6-sat-3", "w5-sat-1": "w6-sat-1", "w5-sat-2": "w6-sat-2", "w5-sat-4": "w6-sat-4", "w5-sat-5": "w6-sat-5",
+    "w6-mon-1": "w7-mon-1", "w6-mon-2": "w7-mon-2", "w6-tue-1": "w7-tue-1", "w6-tue-2": "w7-tue-2", "w6-wed-1": "w7-wed-1", "w6-wed-2": "w7-wed-2", "w6-wed-3": "w7-wed-3", "w6-thu-1": "w7-thu-1", "w6-thu-2": "w7-thu-2", "w6-sat-3": "w7-sat-3", "w6-sat-1": "w7-sat-1", "w6-sat-2": "w7-sat-2", "w6-sat-4": "w7-sat-4", "w6-sat-5": "w7-sat-5", "w6-sat-6": "w7-sat-6",
+    "w7-mon-1": "w8-mon-1", "w7-mon-2": "w8-mon-2", "w7-tue-1": "w8-tue-1", "w7-tue-2": "w8-tue-2", "w7-wed-1": "w8-wed-1", "w7-wed-2": "w8-wed-2", "w7-wed-3": "w8-wed-3", "w7-thu-1": "w8-thu-1", "w7-thu-2": "w8-thu-2", "w7-sat-3": "w8-sat-3", "w7-sat-1": "w8-sat-1", "w7-sat-2": "w8-sat-2", "w7-sat-4": "w8-sat-4", "w7-sat-5": "w8-sat-5",
+    "w8-mon-1": "w9-mon-1", "w8-mon-2": "w9-mon-2", "w8-tue-1": "w9-tue-1", "w8-tue-2": "w9-tue-2", "w8-wed-1": "w9-wed-1", "w8-wed-2": "w9-wed-2", "w8-thu-1": "w9-thu-1", "w8-thu-2": "w9-thu-2", "w8-thu-3": "w9-thu-3", "w8-thu-4": "w9-thu-4", "w8-sat-2": "w9-sat-2", "w8-sat-1": "w9-sat-1", "w8-sat-3": "w9-sat-3", "w8-sat-4": "w9-sat-4", "w8-sat-5": "w9-sat-5", "w8-sat-6": "w9-sat-6",
+    "w9-mon-1": "w10-mon-1", "w9-mon-2": "w10-mon-2", "w9-tue-1": "w10-tue-1", "w9-wed-1": "w10-wed-1", "w9-wed-2": "w10-wed-2", "w9-thu-1": "w10-thu-1", "w9-thu-2": "w10-thu-2", "w9-sat-1": "w10-sat-1", "w9-sat-2": "w10-sat-2", "w9-sat-3": "w10-sat-3", "w9-sat-4": "w10-sat-4", "w9-sat-5": "w10-sat-5",
+    "w10-mon-1": "w11-mon-1", "w10-mon-2": "w11-mon-2", "w10-tue-1": "w11-tue-1", "w10-wed-1": "w11-wed-1", "w10-wed-2": "w11-wed-2", "w10-thu-1": "w11-thu-1", "w10-thu-2": "w11-thu-2", "w10-thu-3": "w11-thu-3", "w10-sat-1": "w11-sat-1", "w10-sat-2": "w11-sat-2", "w10-sat-3": "w11-sat-3",
+    "w11-mon-1": "w12-mon-1", "w11-mon-2": "w12-mon-2", "w11-tue-1": "w12-tue-1", "w11-wed-1": "w12-wed-1", "w11-thu-1": "w12-thu-1", "w11-sat-1": "w12-sat-1", "w11-sat-2": "w12-sat-2", "w11-sat-3": "w12-sat-3",
+    "w12-mon-1": "w13-mon-1", "w12-mon-2": "w13-mon-2", "w12-tue-1": "w13-tue-1", "w12-wed-1": "w13-wed-1", "w12-wed-2": "w13-wed-2", "w12-thu-1": "w13-thu-1", "w12-thu-2": "w13-thu-2", "w12-sat-1": "w13-sat-1", "w12-sat-2": "w13-sat-2",
+    "w13-mon-1": "w14-mon-1", "w13-mon-2": "w14-mon-2", "w13-tue-1": "w14-tue-1", "w13-wed-1": "w14-wed-1", "w13-thu-1": "w14-thu-1", "w13-thu-2": "w14-thu-2", "w13-sat-1": "w14-sat-1", "w13-sat-2": "w14-sat-2", "w13-sat-3": "w14-sat-3"
+  },
+
   phases: [
-    { id: "go", title: "Go: язык и конкурентность", weeks: [1, 2, 3, 4] },
-    { id: "project", title: "Проект-портфолио: ledger-сервис", weeks: [5, 6, 7, 8] },
-    { id: "interview", title: "Собеседования и рынок", weeks: [9, 10, 11, 12, 13] }
+    { id: "go", title: "Go: язык и конкурентность", weeks: [1, 2, 3, 4, 5] },
+    { id: "project", title: "Проект-портфолио: ledger-сервис", weeks: [6, 7, 8, 9] },
+    { id: "interview", title: "Собеседования и рынок", weeks: [10, 11, 12, 13, 14] }
   ],
 
   talkSteps: [
@@ -35,9 +54,9 @@ const PLAN = {
     // ───────────────────────────── НЕДЕЛЯ 1 ─────────────────────────────
     {
       id: "w1",
-      title: "Идиомы Go I: типы, интерфейсы, ошибки",
-      goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, ошибках и интерфейсах.",
-      done: "Решены LC 49 и LC 1 (на leetcode.com, на Go); LC 238 и 347 — резерв недели, по желанию. W1-1…W1-5 лежат в go-prep, и go test -race ./week1/... проходит; W1-6 объяснён вслух. Самопроверка недели проговорена вслух по-английски без подсказок.",
+      title: "Идиомы Go I: типы, методы, интерфейсы",
+      goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, методах и интерфейсах.",
+      done: "Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -56,32 +75,85 @@ const PLAN = {
         {
           label: "Ср", minutes: 90, tasks: [
             { id: "w1-wed-1", text: "Tour: methods, interfaces, type assertions, type switches, Stringer, errors (упражнения Readers, rot13Reader и Images — по желанию)", links: ["c39"], refs: [{ t: "Tour: Methods and interfaces", u: "https://go.dev/tour/methods/1" }] },
-            { id: "w1-wed-2", text: "Карточки c33 и c34 — «Коротко по-английски», «Как это работает» и практика без вариантов ответа; quiz q2 и q28", links: ["c34", "c33", "q2", "q28"] },
-            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is) и W1-3 ValidationError (errors.As)", links: ["p-account", "p-validation", "c39", "q29"], talk: "w1-2" }
+            { id: "w1-wed-2", text: "Карточки c33 и c34 — «Коротко по-английски», «Как это работает» и практика без вариантов ответа; quiz q2 и q28", links: ["c34", "c33", "q2", "q28"] }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w1-thu-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", links: ["c39", "q29", "q30", "q20"], refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
-            { id: "w1-thu-2", text: "defer / panic / recover: карточка c35, ловушки q3 и q5 из quiz и их вариации q31 и q32 — отвечать до просмотра вариантов ответа", links: ["c35", "q3", "q5", "q31", "q32"] },
-            { id: "w1-thu-3", text: "Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w1-thu-4", text: "W1-4 порядок defer и W1-5 SafeDiv (recover → error). Проговор W1-5; без текста повторить проговор W1-3 из среды", links: ["p-deferpanic"], talk: "w1-5" }
+            { id: "w1-wed-3", text: "W1-2 Account (Deposit/Withdraw на pointer receiver, sentinel ErrInsufficientFunds, %w, errors.Is). Проговор", links: ["p-account", "c39", "q29"], talk: "w1-2" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w1-sat-1", text: "W1-6 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-6" },
-            { id: "w1-sat-2", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость", links: ["c40", "c65", "q33", "q34", "q52"] },
-            { id: "w1-sat-3", text: "LeetCode 238. Product of Array Except Self + проговор (записать) — резерв недели: пятница или воскресенье", optional: true, lc: 238, talk: "lc238" },
-            { id: "w1-wed-4", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон) — резерв недели: пятница или воскресенье", optional: true, lc: 347, talk: "lc347" },
+            { id: "w1-sat-1", text: "W1-3 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-3" },
+            { id: "w1-sat-8", text: "Повторение — вариация Money (≈30 мин): Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение; тест на обе ветки рядом с тестами W1-1", links: ["p-money"] },
+            { id: "w1-sat-9", text: "Вариация typed nil (≈15 мин): своя ошибка *NotFoundError с методом Error на указателе; функция объявляет var e *NotFoundError и возвращает её как error — до запуска сказать, что даст err == nil, затем исправить возврат", links: ["c33", "q2"] },
             { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
             { id: "w1-sat-5", text: "Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника; почему массив [26]int годится в ключ map", links: ["g-go-types"] },
-            { id: "w1-sat-6", text: "Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы" },
-            { id: "w1-sat-7", text: "Tell me about yourself, версия 0 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go; записать", talk: "why-go" }
+            { id: "w1-sat-10", text: "Самопроверка по типам и интерфейсам вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы" }
           ]
         }
       ],
-      leetcode: [1, 49, 347, 238],
+      leetcode: [1, 49],
+      english: [
+        "What is a zero value and why does it matter?",
+        "When do you use a pointer receiver?",
+        "Why doesn't a value of type T implement an interface whose method has a pointer receiver?",
+        "Why can returning a nil pointer as an error give the caller a non-nil error?"
+      ],
+      selfCheck: [
+        "Какие нулевые значения у int, string, *T, []T, map[K]V, chan T и error?",
+        "Когда метод объявлять на pointer receiver?",
+        "Почему var _ Notifier = Service{} не компилируется, если Notify объявлен на *Service?",
+        "Почему nil-указатель, возвращённый как error, даёт err != nil?"
+      ],
+      gaps: []
+    },
+
+    // ───────────────────────────── НЕДЕЛЯ 2 ─────────────────────────────
+    {
+      id: "w2",
+      title: "Идиомы Go I: ошибки, defer и panic, повторение",
+      goal: "Объяснять по-английски ошибки как значения (sentinel и typed, %w, Is и As), defer, panic и recover и проверить неделю 1 на изменённых условиях.",
+      done: "W2-1…W2-3 лежат в go-prep, и go test -race ./week2/... проходит; вариации среды сделаны; решены LC 347 и LC 238, LC 1 повторена без текста. Самопроверка недели проговорена вслух по-английски без подсказок; рассказ о себе, версия 0, записан.",
+      days: [
+        {
+          label: "Пн", minutes: 90, tasks: [
+            { id: "w2-mon-1", text: "Ошибки глубже: errors.New, fmt.Errorf(\"…: %w\"), errors.Is/As, sentinel vs typed", links: ["c39", "q29", "q30", "q20"], refs: [{ t: "Go blog: Working with Errors in Go 1.13", u: "https://go.dev/blog/go1.13-errors" }, { t: "package errors", u: "https://pkg.go.dev/errors" }] },
+            { id: "w2-mon-2", text: "W2-1 ValidationError: ошибка-тип с полем, errors.As через две обёртки, для корректного пользователя — обычный nil. Проговор", links: ["p-validation"], talk: "w2-1" }
+          ]
+        },
+        {
+          label: "Вт", minutes: 90, tasks: [
+            { id: "w2-tue-1", text: "defer / panic / recover: карточка c35, ловушки q3 и q5 из quiz и их вариации q31 и q32 — отвечать до просмотра вариантов ответа", links: ["c35", "q3", "q5", "q31", "q32"] },
+            { id: "w2-tue-2", text: "W2-2 порядок defer и W2-3 SafeDiv (recover → error). Проговор W2-3; без текста повторить проговор W2-1 из понедельника", links: ["p-deferpanic"], talk: "w2-3" },
+            { id: "w2-tue-3", text: "Дополнительно: 100 Go Mistakes — разделы Functions and Methods, Error Management", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] }
+          ]
+        },
+        {
+          label: "Ср", minutes: 90, tasks: [
+            { id: "w2-wed-1", text: "LeetCode 347. Top K Frequent Elements + проговор (записать на телефон)", lc: 347, talk: "lc347" },
+            { id: "w2-wed-2", text: "Вариация на зачёт (≈20 мин): ErrAccountClosed в W1-2 — закрытый счёт отклоняет Deposit и Withdraw; через Transfer, после двух обёрток, errors.Is отличает его от нехватки средств", links: ["p-account", "c39"] },
+            { id: "w2-wed-3", text: "Вариация на зачёт (≈10 мин): typed nil — в W2-1 вернуть nil *ValidationError через error; до запуска сказать, что увидит вызывающий, затем исправить возврат", links: ["p-validation", "c33", "q2"] },
+            { id: "w2-wed-4", text: "Вариация на зачёт (≈10 мин): defer — значение параметром против захвата переменной замыканием; изменить переменную после defer и предсказать вывод, затем — что вернёт return с именованным и с безымянным результатом", links: ["c35", "q31", "p-deferpanic"] }
+          ]
+        },
+        {
+          label: "Чт", minutes: 90, tasks: [
+            { id: "w2-thu-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c32", "c40", "q33"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] }
+          ]
+        },
+        {
+          label: "Сб", minutes: 240, tasks: [
+            { id: "w2-sat-1", text: "Шпаргалка Go vs Kotlin своими словами: nil/zero values, ошибки, struct vs data class, embedding, interfaces, видимость", links: ["c40", "c65", "q33", "q34", "q52"] },
+            { id: "w2-sat-2", text: "LeetCode 238. Product of Array Except Self + проговор (записать)", lc: 238, talk: "lc238" },
+            { id: "w2-sat-3", text: "Повтор LC 1 без текста (≈15 мин): решить Two Sum с чистого листа и проговорить по 4 шагам, диалог не открывать; follow-up про отсортированный массив — своими словами" },
+            { id: "w2-sat-4", text: "Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы" },
+            { id: "w2-sat-5", text: "Tell me about yourself, версия 0 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go; записать", talk: "why-go" }
+          ]
+        }
+      ],
+      leetcode: [347, 238],
       english: [
         "How does error handling in Go differ from exceptions in Kotlin or Java?",
         "What is a zero value and why does it matter?",
@@ -99,54 +171,53 @@ const PLAN = {
       gaps: []
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 2 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 3 ─────────────────────────────
     {
-      id: "w2",
+      id: "w3",
       title: "Идиомы Go II: slice, map, строки, generics, тесты",
       goal: "Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.",
       done: "10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены; CI в go-prep зелёный, тренировка с ассемблером пройдена.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w2-mon-1", text: "Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]", links: ["c29"], refs: [{ t: "Go Slices: usage and internals", u: "https://go.dev/blog/slices-intro" }, { t: "The mechanics of append", u: "https://go.dev/blog/slices" }] },
-            { id: "w2-mon-2", text: "Ловушки aliasing и удержания памяти — сначала ответ без вариантов", links: ["q6", "q4"] },
-            { id: "w2-mon-3", text: "LeetCode 3. Longest Substring Without Repeating Characters + проговор", lc: 3, talk: "lc3" }
+            { id: "w3-mon-1", text: "Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]", links: ["c29"], refs: [{ t: "Go Slices: usage and internals", u: "https://go.dev/blog/slices-intro" }, { t: "The mechanics of append", u: "https://go.dev/blog/slices" }] },
+            { id: "w3-mon-2", text: "Ловушки aliasing и удержания памяти — сначала ответ без вариантов", links: ["q6", "q4"] },
+            { id: "w3-mon-3", text: "LeetCode 3. Longest Substring Without Repeating Characters + проговор", lc: 3, talk: "lc3" }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w2-tue-1", text: "Map по спецификации: порядок обхода не задан, запись в nil map — panic, адрес элемента взять нельзя, ключ должен быть сравнимым; map не потокобезопасна. Отдельно: после delete map не уменьшает свою таблицу, но удалённые значения сама больше не удерживает", links: ["c32", "c40", "q33"], refs: [{ t: "Spec: Map types", u: "https://go.dev/ref/spec#Map_types" }, { t: "Go maps in action", u: "https://go.dev/blog/maps" }] },
-            { id: "w2-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c30", "c31", "sim7"], optional: true },
-            { id: "w2-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", links: ["c41"], refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w2-tue-4", text: "W2-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", links: ["p-removeslice"], talk: "w2-1" },
-            { id: "w2-tue-5", text: "Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия", links: ["sim9"], optional: true }
+            { id: "w3-tue-2", text: "По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось", links: ["c30", "c31", "sim7"], optional: true },
+            { id: "w3-tue-3", text: "Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures", links: ["c41"], refs: [{ t: "Strings, bytes, runes and characters in Go", u: "https://go.dev/blog/strings" }, { t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w3-tue-4", text: "W3-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)", links: ["p-removeslice"], talk: "w3-1" },
+            { id: "w3-tue-5", text: "Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия", links: ["sim9"], optional: true }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w2-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)", links: ["c42", "p-generics"], refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
-            { id: "w2-wed-2", text: "W2-2 Map/Filter/Reduce и Set[T comparable]; W2-3 та же функция через интерфейс — сравнить", links: ["p-generics", "c42"], talk: "w2-3" },
-            { id: "w2-wed-3", text: "LeetCode 15. 3Sum + проговор", lc: 15, talk: "lc15" }
+            { id: "w3-wed-1", text: "Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)", links: ["c42", "p-generics"], refs: [{ t: "Tutorial: Getting started with generics", u: "https://go.dev/doc/tutorial/generics" }] },
+            { id: "w3-wed-2", text: "W3-2 Map/Filter/Reduce и Set[T comparable]; W3-3 та же функция через интерфейс — сравнить", links: ["p-generics", "c42"], talk: "w3-3" },
+            { id: "w3-wed-3", text: "LeetCode 15. 3Sum + проговор", lc: 15, talk: "lc15" }
           ]
         },
         {
           label: "Чт", minutes: 120, tasks: [
-            { id: "w2-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–2 — пакетами в своём go-prep", links: ["c43", "g-go-prep"] },
-            { id: "w2-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35", "g-go-prep-ci"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
-            { id: "w2-thu-3", text: "Покрыть тестами W1-2 и W2-2 — в go-prep, рядом с тестами практикума", links: ["p-account", "p-generics"] },
-            { id: "w2-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" },
-            { id: "w2-thu-5", text: "Тренировка (≈30 мин): сборка с ассемблером и без — -gcflags=-S, '-N -l', -m, go tool objdump, GOSSAFUNC, бенчмарк с -benchmem", links: ["g-go-prep-asm", "c6", "c24"] }
+            { id: "w3-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–3 — пакетами в своём go-prep", links: ["c43", "g-go-prep"] },
+            { id: "w3-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35", "g-go-prep-ci"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
+            { id: "w3-thu-3", text: "Покрыть тестами W1-2 и W3-2 — в go-prep, рядом с тестами практикума", links: ["p-account", "p-generics"] },
+            { id: "w3-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" },
+            { id: "w3-thu-5", text: "Тренировка (≈30 мин): сборка с ассемблером и без — -gcflags=-S, '-N -l', -m, go tool objdump, GOSSAFUNC, бенчмарк с -benchmem", links: ["g-go-prep-asm", "c6", "c24"] }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w2-sat-1", text: "«Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка", links: ["q1"] },
-            { id: "w2-sat-7", text: "Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией)", optional: true, refs: [{ t: "39 вопросов (Нияз)", u: "https://t.me/niyaz_golang/758" }, { t: "ТОП-12 Ozon", u: "https://t.me/niyaz_golang/672" }] },
-            { id: "w2-sat-2", text: "W2-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера", links: ["p-txsum"], talk: "w2-4" },
-            { id: "w2-sat-3", text: "LeetCode 739. Daily Temperatures + проговор (записать)", lc: 739, talk: "lc739" },
-            { id: "w2-sat-4", text: "Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache", lc: 146, talk: "lc146", optional: true },
-            { id: "w2-sat-5", text: "Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией", optional: true, refs: [{ t: "Habr: «Коллеги, вы меня огорчаете»", u: "https://habr.com/ru/articles/521582" }] },
-            { id: "w2-sat-6", text: "Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов». q1, q2, q3, q6 — те же ловушки, что P9, P6, P5 и P1–P2 из первой задачи дня, но в виде рабочего кода: проверка, что понял, а не запомнил ответ; q4 и q5 — новые", links: ["q1", "q2", "q3", "q4", "q5", "q6"] }
+            { id: "w3-sat-1", text: "«Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка", links: ["q1"] },
+            { id: "w3-sat-7", text: "Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией)", optional: true, refs: [{ t: "39 вопросов (Нияз)", u: "https://t.me/niyaz_golang/758" }, { t: "ТОП-12 Ozon", u: "https://t.me/niyaz_golang/672" }] },
+            { id: "w3-sat-2", text: "W3-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера", links: ["p-txsum"], talk: "w3-4" },
+            { id: "w3-sat-3", text: "LeetCode 739. Daily Temperatures + проговор (записать)", lc: 739, talk: "lc739" },
+            { id: "w3-sat-4", text: "Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache", lc: 146, talk: "lc146", optional: true },
+            { id: "w3-sat-5", text: "Дополнительно: вопросы интервьюера Senior Go с Хабра про slice, map, каналы, ошибки — ответить, потом сверить с документацией", optional: true, refs: [{ t: "Habr: «Коллеги, вы меня огорчаете»", u: "https://habr.com/ru/articles/521582" }] },
+            { id: "w3-sat-6", text: "Контрольная точка: квиз по идиомам — q1–q6 в режиме «сначала ответ без вариантов». q1, q2, q3, q6 — те же ловушки, что P9, P6, P5 и P1–P2 из первой задачи дня, но в виде рабочего кода: проверка, что понял, а не запомнил ответ; q4 и q5 — новые", links: ["q1", "q2", "q3", "q4", "q5", "q6"] }
           ]
         }
       ],
@@ -170,49 +241,49 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 3 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 4 ─────────────────────────────
     {
-      id: "w3",
+      id: "w4",
       title: "Конкурентность I: горутины, каналы, select, sync",
       goal: "Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.",
-      done: "W3-1…W3-5 работают под go test -race (в go-prep: ./week3/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.",
+      done: "W4-1…W4-5 работают под go test -race (в go-prep: ./week4/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w3-mon-1", text: "Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition", links: ["c1", "c2"], refs: [{ t: "The Go Memory Model", u: "https://go.dev/ref/mem" }, { t: "Data Race Detector", u: "https://go.dev/doc/articles/race_detector" }] },
-            { id: "w3-mon-2", text: "Go blog: Pipelines and cancellation", refs: [{ t: "go.dev/blog/pipelines", u: "https://go.dev/blog/pipelines" }] },
-            { id: "w3-mon-3", text: "LeetCode 155. Min Stack + проговор", lc: 155 }
+            { id: "w4-mon-1", text: "Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition", links: ["c1", "c2"], refs: [{ t: "The Go Memory Model", u: "https://go.dev/ref/mem" }, { t: "Data Race Detector", u: "https://go.dev/doc/articles/race_detector" }] },
+            { id: "w4-mon-2", text: "Go blog: Pipelines and cancellation", refs: [{ t: "go.dev/blog/pipelines", u: "https://go.dev/blog/pipelines" }] },
+            { id: "w4-mon-3", text: "LeetCode 155. Min Stack + проговор", lc: 155 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w3-tue-1", text: "Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3", "q45"] },
-            { id: "w3-tue-2", text: "W3-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w3-1", links: ["p-workerpool", "c12", "q15", "c63"] },
-            { id: "w3-tue-3", text: "W3-2 Pipeline generator → square → sink с остановкой через context", links: ["p-pipeline", "c63"] }
+            { id: "w4-tue-1", text: "Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения", links: ["c13", "c14", "sim3", "q45"] },
+            { id: "w4-tue-2", text: "W4-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор", talk: "w4-1", links: ["p-workerpool", "c12", "q15", "c63"] },
+            { id: "w4-tue-3", text: "W4-2 Pipeline generator → square → sink с остановкой через context", links: ["p-pipeline", "c63"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w3-wed-1", text: "select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов", links: ["c18", "q22"] },
-            { id: "w3-wed-2", text: "W3-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода", links: ["p-fanin"] },
-            { id: "w3-wed-3", text: "Code review без вариантов: на вкладке quiz включить «Сначала свой ответ», записать баг и исправление, потом открыть варианты и разбор", links: ["q12", "q15", "q21"] },
-            { id: "w3-wed-4", text: "LeetCode 567. Permutation in String + проговор (записать)", lc: 567 }
+            { id: "w4-wed-1", text: "select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов", links: ["c18", "q22"] },
+            { id: "w4-wed-2", text: "W4-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода", links: ["p-fanin"] },
+            { id: "w4-wed-3", text: "Code review без вариантов: на вкладке quiz включить «Сначала свой ответ», записать баг и исправление, потом открыть варианты и разбор", links: ["q12", "q15", "q21"] },
+            { id: "w4-wed-4", text: "LeetCode 567. Permutation in String + проговор (записать)", lc: 567 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w3-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух", links: ["c15", "c20", "c21", "c22", "c56", "sim12", "sim5", "sim8"] },
-            { id: "w3-thu-2", text: "W3-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W3-5 SafeCache на map + RWMutex", talk: "w3-4", links: ["p-counter", "p-safecache"] },
-            { id: "w3-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for", links: ["q7", "q8", "q13", "q14", "c55", "sim11", "q44", "q46", "q47"] }
+            { id: "w4-thu-1", text: "sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух", links: ["c15", "c20", "c21", "c22", "c56", "sim12", "sim5", "sim8"] },
+            { id: "w4-thu-2", text: "W4-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W4-5 SafeCache на map + RWMutex", talk: "w4-4", links: ["p-counter", "p-safecache"] },
+            { id: "w4-thu-3", text: "Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for", links: ["q7", "q8", "q13", "q14", "c55", "sim11", "q44", "q46", "q47"] }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w3-sat-1", text: "Прогнать W3-1…W3-5 в go-prep: go test -race ./week3/...; для каждой горутины записать владельца и путь завершения", links: ["p-workerpool", "p-pipeline", "p-fanin", "p-counter", "p-safecache"] },
-            { id: "w3-sat-2", text: "Дополнительно: 100 Go Mistakes — Concurrency Foundations", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
-            { id: "w3-sat-3", text: "LeetCode 150. Evaluate Reverse Polish Notation + проговор", lc: 150 },
-            { id: "w3-sat-4", text: "Проговор worker pool и «channel vs mutex» по-английски, записать", talk: "w3-1" },
-            { id: "w3-sat-5", text: "Самопроверка недели вслух" }
+            { id: "w4-sat-1", text: "Прогнать W4-1…W4-5 в go-prep: go test -race ./week4/...; для каждой горутины записать владельца и путь завершения", links: ["p-workerpool", "p-pipeline", "p-fanin", "p-counter", "p-safecache"] },
+            { id: "w4-sat-2", text: "Дополнительно: 100 Go Mistakes — Concurrency Foundations", optional: true, refs: [{ t: "100go.co", u: "https://100go.co/" }] },
+            { id: "w4-sat-3", text: "LeetCode 150. Evaluate Reverse Polish Notation + проговор", lc: 150 },
+            { id: "w4-sat-4", text: "Проговор worker pool и «channel vs mutex» по-английски, записать", talk: "w4-1" },
+            { id: "w4-sat-5", text: "Самопроверка недели вслух" }
           ]
         }
       ],
@@ -234,49 +305,49 @@ const PLAN = {
       gaps: []
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 4 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 5 ─────────────────────────────
     {
-      id: "w4",
+      id: "w5",
       title: "Конкурентность II и минимум рантайма",
       goal: "Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.",
-      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week4/... в go-prep зелёный.",
+      done: "6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week5/... в go-prep зелёный.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w4-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10", "c72"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
-            { id: "w4-mon-2", text: "W4-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w4-1", links: ["p-parallelfetch", "q16", "c63"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
-            { id: "w4-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
+            { id: "w5-mon-1", text: "context: отмена, таймауты, WithoutCancel; передача ctx в I/O", links: ["c22", "q9", "q10", "c72"], refs: [{ t: "package context", u: "https://pkg.go.dev/context" }] },
+            { id: "w5-mon-2", text: "W5-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных", talk: "w5-1", links: ["p-parallelfetch", "q16", "c63"], refs: [{ t: "errgroup", u: "https://pkg.go.dev/golang.org/x/sync/errgroup" }] },
+            { id: "w5-mon-3", text: "LeetCode 200. Number of Islands + проговор", lc: 200 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w4-tue-1", text: "select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле", links: ["q16", "q17", "q11"] },
-            { id: "w4-tue-2", text: "W4-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор", links: ["p-ratelimit"], talk: "w4-2", refs: [{ t: "x/time/rate", u: "https://pkg.go.dev/golang.org/x/time/rate" }] }
+            { id: "w5-tue-1", text: "select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле", links: ["q16", "q17", "q11"] },
+            { id: "w5-tue-2", text: "W5-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор", links: ["p-ratelimit"], talk: "w5-2", refs: [{ t: "x/time/rate", u: "https://pkg.go.dev/golang.org/x/time/rate" }] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w4-wed-1", text: "Утечки горутин: как найти и предотвратить", links: ["p-leak", "c12"] },
-            { id: "w4-wed-2", text: "W4-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров", talk: "w4-3", links: ["p-shutdown", "c22"], refs: [{ t: "http.Server.Shutdown", u: "https://pkg.go.dev/net/http#Server.Shutdown" }, { t: "signal.NotifyContext", u: "https://pkg.go.dev/os/signal#NotifyContext" }] },
-            { id: "w4-wed-3", text: "W4-4 Написать утечку намеренно и найти её goroutine-профилем pprof", links: ["p-leak"] },
-            { id: "w4-wed-4", text: "LeetCode 102. Binary Tree Level Order Traversal + проговор", lc: 102 }
+            { id: "w5-wed-1", text: "Утечки горутин: как найти и предотвратить", links: ["p-leak", "c12"] },
+            { id: "w5-wed-2", text: "W5-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров", talk: "w5-3", links: ["p-shutdown", "c22"], refs: [{ t: "http.Server.Shutdown", u: "https://pkg.go.dev/net/http#Server.Shutdown" }, { t: "signal.NotifyContext", u: "https://pkg.go.dev/os/signal#NotifyContext" }] },
+            { id: "w5-wed-3", text: "W5-4 Написать утечку намеренно и найти её goroutine-профилем pprof", links: ["p-leak"] },
+            { id: "w5-wed-4", text: "LeetCode 102. Binary Tree Level Order Traversal + проговор", lc: 102 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w4-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту»", links: ["c7", "sim2", "c8", "c10"] },
-            { id: "w4-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["p-escape", "c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
-            { id: "w4-thu-3", text: "W4-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода", links: ["p-escape"] },
-            { id: "w4-thu-4", text: "По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы", links: ["c3", "c4", "c5", "c6", "c9", "c11", "c16", "c17", "c19", "c25", "c28", "c36", "c37", "sim1", "sim4"], optional: true }
+            { id: "w5-thu-1", text: "Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту»", links: ["c7", "sim2", "c8", "c10"] },
+            { id: "w5-thu-2", text: "Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT", links: ["p-escape", "c23", "c24", "c26", "c27", "sim6"], refs: [{ t: "A Guide to the Go Garbage Collector", u: "https://go.dev/doc/gc-guide" }] },
+            { id: "w5-thu-3", text: "W5-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода", links: ["p-escape"] },
+            { id: "w5-thu-4", text: "По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы", links: ["c3", "c4", "c5", "c6", "c9", "c11", "c16", "c17", "c19", "c25", "c28", "c36", "c37", "sim1", "sim4"], optional: true }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w4-sat-1", text: "W4-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list", links: ["p-profile"], refs: [{ t: "Go Diagnostics", u: "https://go.dev/doc/diagnostics" }] },
-            { id: "w4-sat-2", text: "Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое", links: ["c38"] },
-            { id: "w4-sat-3", text: "LeetCode 98. Validate Binary Search Tree + проговор", lc: 98 },
-            { id: "w4-sat-4", text: "Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов»", links: ["q5", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q21", "q22"] },
-            { id: "w4-sat-5", text: "Виртуальный live coding (Claude как интервьюер): «финальный босс» — processParallel(in, out, 5) за 5 с с тестом на утечки; проговор по-английски, разбор. В воскресный резерв — каты блоков 1–2 трека (К1.2, К2.2, К2.4 обязательно)", links: ["k2-6", "p-workerpool", "k1", "k2"] }
+            { id: "w5-sat-1", text: "W5-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list", links: ["p-profile"], refs: [{ t: "Go Diagnostics", u: "https://go.dev/doc/diagnostics" }] },
+            { id: "w5-sat-2", text: "Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое", links: ["c38"] },
+            { id: "w5-sat-3", text: "LeetCode 98. Validate Binary Search Tree + проговор", lc: 98 },
+            { id: "w5-sat-4", text: "Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов»", links: ["q5", "q7", "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16", "q17", "q21", "q22"] },
+            { id: "w5-sat-5", text: "Виртуальный live coding (Claude как интервьюер): «финальный босс» — processParallel(in, out, 5) за 5 с с тестом на утечки; проговор по-английски, разбор. В воскресный резерв — каты блоков 1–2 трека (К1.2, К2.2, К2.4 обязательно)", links: ["k2-6", "p-workerpool", "k1", "k2"] }
           ]
         }
       ],
@@ -296,55 +367,55 @@ const PLAN = {
         "Что задаёт GOGC и чего не гарантирует GOMEMLIMIT?"
       ],
       gaps: [
-        "Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 3–4.",
+        "Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 4–5.",
         "Нет задачи на чтение trace-вывода (go tool trace); профиль pprof разбирается в «Бенчмарк и профиль» и «Утечка горутин»."
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 5 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 6 ─────────────────────────────
     {
-      id: "w5",
+      id: "w6",
       title: "Проект I: каркас ledger-сервиса",
       goal: "Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.",
       done: "Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском; каты К2.5 и К2.7 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w5-mon-1", text: "ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope" },
-            { id: "w5-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах", links: ["c57", "c58"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w5-mon-3", text: "LeetCode 230. Kth Smallest Element in a BST + проговор", lc: 230 }
+            { id: "w6-mon-1", text: "ADR-001 (EN): scope — счета, переводы, балансы, double-entry; что вне scope" },
+            { id: "w6-mon-2", text: "Раскладка: cmd/ledger, internal/http, internal/ledger, internal/store; Money в int64 минорных единицах", links: ["c57", "c58"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-mon-3", text: "LeetCode 230. Kth Smallest Element in a BST + проговор", lc: 230 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w5-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37", "c60"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }, { t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w5-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W1-3)", links: ["p-httperr", "c46", "q39"] }
+            { id: "w6-tue-1", text: "HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)", links: ["p-accountsapi", "c45", "sim10", "q36", "q37", "c60"], refs: [{ t: "Routing enhancements (Go 1.22)", u: "https://go.dev/blog/routing-enhancements" }, { t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w6-tue-2", text: "Валидация входа и ошибки → HTTP-коды через errors.As (из W2-1)", links: ["p-httperr", "c46", "q39"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w5-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", links: ["c64"], refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
-            { id: "w5-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["c47", "q18", "q19"] },
-            { id: "w5-wed-3", text: "LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор", lc: 236 }
+            { id: "w6-wed-1", text: "PostgreSQL через pgx/v5 и pgxpool; миграции (goose или golang-migrate)", links: ["c64"], refs: [{ t: "pgx", u: "https://pkg.go.dev/github.com/jackc/pgx/v5" }] },
+            { id: "w6-wed-2", text: "Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений", links: ["c47", "q18", "q19"] },
+            { id: "w6-wed-3", text: "LeetCode 236. Lowest Common Ancestor of a Binary Tree + проговор", lc: 236 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w5-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", links: ["c48", "q38", "c71"], refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
-            { id: "w5-thu-2", text: "Docker Compose: postgres + сервис; healthcheck" }
+            { id: "w6-thu-1", text: "log/slog в JSON, request id в контексте; конфиг из переменных окружения", links: ["c48", "q38", "c71"], refs: [{ t: "log/slog", u: "https://pkg.go.dev/log/slog" }] },
+            { id: "w6-thu-2", text: "Docker Compose: postgres + сервис; healthcheck" }
           ]
         },
         {
           label: "Пт", minutes: 45, tasks: [
-            { id: "w5-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
+            { id: "w6-sat-3", text: "LeetCode 215. Kth Largest Element in an Array (heap) + проговор", lc: 215 }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w5-sat-1", text: "Перевод end-to-end: создание счетов, перевод, проверка балансов через curl" },
-            { id: "w5-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", links: ["c57"], talk: "proj-structure" },
-            { id: "w5-sat-4", text: "Ката К2.5 (20 мин): обёртка с таймаутом — три версии, утечку находит тест", links: ["k2-5", "p-timeout"] },
-            { id: "w5-sat-5", text: "Ката К2.7 (20 мин): одна утечка — три детектора: goleak, профиль goroutineleak, synctest", links: ["k2-7", "p-leak"] }
+            { id: "w6-sat-1", text: "Перевод end-to-end: создание счетов, перевод, проверка балансов через curl" },
+            { id: "w6-sat-2", text: "Проговор по-английски: «Walk me through your project structure and why»", links: ["c57"], talk: "proj-structure" },
+            { id: "w6-sat-4", text: "Ката К2.5 (20 мин): обёртка с таймаутом — три версии, утечку находит тест", links: ["k2-5", "p-timeout"] },
+            { id: "w6-sat-5", text: "Ката К2.7 (20 мин): одна утечка — три детектора: goleak, профиль goroutineleak, synctest", links: ["k2-7", "p-leak"] }
           ]
         }
       ],
@@ -365,50 +436,50 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 6 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 7 ─────────────────────────────
     {
-      id: "w6",
+      id: "w7",
       title: "Проект II: транзакции, идемпотентность, outbox → Kafka",
       goal: "Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.",
       done: "Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат; каты К3.1 и К3.2 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w6-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", links: ["c49", "c50", "p-transfers", "c67"], refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
-            { id: "w6-mon-2", text: "LeetCode 973. K Closest Points to Origin + проговор", lc: 973 }
+            { id: "w7-mon-1", text: "Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока", links: ["c49", "c50", "p-transfers", "c67"], refs: [{ t: "PostgreSQL: Transaction Isolation", u: "https://www.postgresql.org/docs/current/transaction-iso.html" }] },
+            { id: "w7-mon-2", text: "LeetCode 973. K Closest Points to Origin + проговор", lc: 973 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w6-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", links: ["c51", "p-idempotency", "c68"], talk: "idem" },
-            { id: "w6-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»", links: ["q40", "p-idempotency", "c2"] }
+            { id: "w7-tue-1", text: "Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка", links: ["c51", "p-idempotency", "c68"], talk: "idem" },
+            { id: "w7-tue-2", text: "Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»", links: ["q40", "p-idempotency", "c2"] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w6-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w6-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63", "c66"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w6-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
+            { id: "w7-wed-1", text: "Transactional outbox: запись события в той же транзакции, что и перевод", links: ["c52", "q42", "p-outbox", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w7-wed-2", text: "Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи", links: ["p-outbox", "c52", "c12", "c22", "c63", "c66"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w7-wed-3", text: "LeetCode 621. Task Scheduler + проговор", lc: 621 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w6-thu-1", text: "Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу", links: ["c53", "q43", "p-outbox"], refs: [{ t: "Apache Kafka documentation", u: "https://kafka.apache.org/documentation/" }] },
-            { id: "w6-thu-2", text: "Docker Compose: добавить Kafka" }
+            { id: "w7-thu-1", text: "Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу", links: ["c53", "q43", "p-outbox"], refs: [{ t: "Apache Kafka documentation", u: "https://kafka.apache.org/documentation/" }] },
+            { id: "w7-thu-2", text: "Docker Compose: добавить Kafka" }
           ]
         },
         {
           label: "Пт", minutes: 45, tasks: [
-            { id: "w6-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 }
+            { id: "w7-sat-3", text: "LeetCode 435. Non-overlapping Intervals + проговор", lc: 435 }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w6-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race", links: ["p-transfers", "q41", "c50"] },
-            { id: "w6-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", links: ["c51", "c52"], talk: "outbox" },
-            { id: "w6-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", links: ["c54"], refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] },
-            { id: "w6-sat-5", text: "Ката К3.1 (10 мин): fan-in на время — Merge(ctx, ins...) с чистого листа", links: ["k3-1", "p-fanin"] },
-            { id: "w6-sat-6", text: "Ката К3.2 (25 мин): fan-out по ключу — как партиции Kafka этой недели", links: ["k3-2", "p-fanout"] }
+            { id: "w7-sat-1", text: "Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race", links: ["p-transfers", "q41", "c50"] },
+            { id: "w7-sat-2", text: "Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?»", links: ["c51", "c52"], talk: "outbox" },
+            { id: "w7-sat-4", text: "Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1", links: ["c54"], refs: [{ t: "PostgreSQL: Indexes", u: "https://www.postgresql.org/docs/current/indexes.html" }, { t: "PostgreSQL: Using EXPLAIN", u: "https://www.postgresql.org/docs/current/using-explain.html" }] },
+            { id: "w7-sat-5", text: "Ката К3.1 (10 мин): fan-in на время — Merge(ctx, ins...) с чистого листа", links: ["k3-1", "p-fanin"] },
+            { id: "w7-sat-6", text: "Ката К3.2 (25 мин): fan-out по ключу — как партиции Kafka этой недели", links: ["k3-2", "p-fanout"] }
           ]
         }
       ],
@@ -425,54 +496,54 @@ const PLAN = {
         "Какой уровень изоляции выбран для перевода и почему?"
       ],
       gaps: [
-        "Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W6-3.",
+        "Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W7-3.",
         "Практикум недели работает в памяти; PostgreSQL и Kafka в Docker Compose проверяются только в своём проекте."
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 7 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 8 ─────────────────────────────
     {
-      id: "w7",
+      id: "w8",
       title: "Проект III: gRPC, тесты, бенчмарки",
       goal: "У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.",
       done: "Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов; каты К3.5 и К3.8 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w7-mon-1", text: "proto + генерация (buf или protoc); gRPC Transfer и GetBalance", links: ["c61"], refs: [{ t: "gRPC Go quick start", u: "https://grpc.io/docs/languages/go/quickstart/" }] },
-            { id: "w7-mon-2", text: "LeetCode 133. Clone Graph + проговор", lc: 133 }
+            { id: "w8-mon-1", text: "proto + генерация (buf или protoc); gRPC Transfer и GetBalance", links: ["c61"], refs: [{ t: "gRPC Go quick start", u: "https://grpc.io/docs/languages/go/quickstart/" }] },
+            { id: "w8-mon-2", text: "LeetCode 133. Clone Graph + проговор", lc: 133 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w7-tue-1", text: "Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы", links: ["c61"] },
-            { id: "w7-tue-2", text: "Проговор: «REST vs gRPC — when would you choose which?»", links: ["c61", "c60"], talk: "grpc-rest" }
+            { id: "w8-tue-1", text: "Interceptors: логирование, дедлайн, перевод ошибок в gRPC-статусы", links: ["c61"] },
+            { id: "w8-tue-2", text: "Проговор: «REST vs gRPC — when would you choose which?»", links: ["c61", "c60"], talk: "grpc-rest" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w7-wed-1", text: "Unit-тесты: table-driven, фейки на границах, без sleep для синхронизации" },
-            { id: "w7-wed-2", text: "testing/synctest для кода со временем (Go 1.25)", links: ["c38"], refs: [{ t: "testing/synctest", u: "https://pkg.go.dev/testing/synctest" }] },
-            { id: "w7-wed-3", text: "LeetCode 207. Course Schedule + проговор", lc: 207 }
+            { id: "w8-wed-1", text: "Unit-тесты: table-driven, фейки на границах, без sleep для синхронизации" },
+            { id: "w8-wed-2", text: "testing/synctest для кода со временем (Go 1.25)", links: ["c38"], refs: [{ t: "testing/synctest", u: "https://pkg.go.dev/testing/synctest" }] },
+            { id: "w8-wed-3", text: "LeetCode 207. Course Schedule + проговор", lc: 207 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w7-thu-1", text: "Интеграционные тесты: testcontainers-go для PostgreSQL и Kafka", refs: [{ t: "testcontainers-go", u: "https://golang.testcontainers.org/" }] },
-            { id: "w7-thu-2", text: "golangci-lint и go test -race в CI" }
+            { id: "w8-thu-1", text: "Интеграционные тесты: testcontainers-go для PostgreSQL и Kafka", refs: [{ t: "testcontainers-go", u: "https://golang.testcontainers.org/" }] },
+            { id: "w8-thu-2", text: "golangci-lint и go test -race в CI" }
           ]
         },
         {
           label: "Пт", minutes: 45, tasks: [
-            { id: "w7-sat-3", text: "LeetCode 994. Rotting Oranges + проговор", lc: 994 }
+            { id: "w8-sat-3", text: "LeetCode 994. Rotting Oranges + проговор", lc: 994 }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w7-sat-1", text: "Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis", links: ["c24"] },
-            { id: "w7-sat-2", text: "Покрытие: где тестов нет намеренно и почему (записать в README)" },
-            { id: "w7-sat-4", text: "Ката К3.5 (30 мин): ограничение работы в полёте — задача W3-1 пулом, семафором и errgroup.SetLimit", links: ["k3-5", "p-workerpool"] },
-            { id: "w7-sat-5", text: "Ката К3.8 (25 мин): errgroup на каналах и sync.Once; сравнить с x/sync/errgroup", links: ["k3-8", "p-parallelfetch"] }
+            { id: "w8-sat-1", text: "Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis", links: ["c24"] },
+            { id: "w8-sat-2", text: "Покрытие: где тестов нет намеренно и почему (записать в README)" },
+            { id: "w8-sat-4", text: "Ката К3.5 (30 мин): ограничение работы в полёте — задача W4-1 пулом, семафором и errgroup.SetLimit", links: ["k3-5", "p-workerpool"] },
+            { id: "w8-sat-5", text: "Ката К3.8 (25 мин): errgroup на каналах и sync.Once; сравнить с x/sync/errgroup", links: ["k3-8", "p-parallelfetch"] }
           ]
         }
       ],
@@ -493,51 +564,51 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 8 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 9 ─────────────────────────────
     {
-      id: "w8",
+      id: "w9",
       title: "Проект IV: production-readiness, CV",
       goal: "Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.",
       done: "Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском; каты К3.6 и К3.9 решены на время, тесты зелёные.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w8-mon-1", text: "OpenTelemetry: трассы и метрики для HTTP/gRPC; /healthz и /readyz", refs: [{ t: "OpenTelemetry Go", u: "https://opentelemetry.io/docs/languages/go/" }] },
-            { id: "w8-mon-2", text: "LeetCode 210. Course Schedule II + проговор", lc: 210 }
+            { id: "w9-mon-1", text: "OpenTelemetry: трассы и метрики для HTTP/gRPC; /healthz и /readyz", refs: [{ t: "OpenTelemetry Go", u: "https://opentelemetry.io/docs/languages/go/" }] },
+            { id: "w9-mon-2", text: "LeetCode 210. Course Schedule II + проговор", lc: 210 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w8-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W4-3)", links: ["c59", "c63", "c61"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
-            { id: "w8-tue-2", text: "GitHub Actions: lint, test -race, build Docker-образа" }
+            { id: "w9-tue-1", text: "Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W5-3)", links: ["c59", "c63", "c61"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }] },
+            { id: "w9-tue-2", text: "GitHub Actions: lint, test -race, build Docker-образа" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w8-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше", links: ["c58", "c64", "c71"] },
-            { id: "w8-wed-2", text: "LeetCode 684. Redundant Connection (union-find) + проговор", lc: 684 }
+            { id: "w9-wed-1", text: "README: схема архитектуры, как запустить, 3–5 ADR, компромиссы и что бы сделал дальше", links: ["c58", "c64", "c71"] },
+            { id: "w9-wed-2", text: "LeetCode 684. Redundant Connection (union-find) + проговор", lc: 684 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w8-thu-1", text: "Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком" },
-            { id: "w8-thu-2", text: "Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации" },
-            { id: "w8-thu-3", text: "Ключевые слова из 5 целевых вакансий в CV (≈20 мин): стек, домен, уровень — только то, что реально делал; так CV проходит автоматический отбор (ATS)" },
-            { id: "w8-thu-4", text: "«Tell me about yourself» v1 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go и эта компания; записать", optional: true }
+            { id: "w9-thu-1", text: "Черновик CV на английском: «Senior backend engineer, Go + Kotlin, fintech»; проект — отдельной строкой со стеком" },
+            { id: "w9-thu-2", text: "Проверить карьерные страницы целевых компаний: открытые вакансии, требования к локации" },
+            { id: "w9-thu-3", text: "Ключевые слова из 5 целевых вакансий в CV (≈20 мин): стек, домен, уровень — только то, что реально делал; так CV проходит автоматический отбор (ATS)" },
+            { id: "w9-thu-4", text: "«Tell me about yourself» v1 (≈15 мин): 60–90 секунд по-английски — кто ты, чем силён, почему Go и эта компания; записать", optional: true }
           ]
         },
         {
           label: "Пт", minutes: 45, tasks: [
-            { id: "w8-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 }
+            { id: "w9-sat-2", text: "LeetCode 743. Network Delay Time (Dijkstra) + проговор", lc: 743 }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w8-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском; среди них — два о каналах в эталонном коде: К4.1 и К4.2", links: ["k4-1", "k4-2"], talk: "deep-dive" },
-            { id: "w8-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" },
-            { id: "w8-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2", "c59"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] },
-            { id: "w8-sat-5", text: "Ката К3.6 (25 мин): остановка — done-канал и Shutdown, повторный вызов безопасен", links: ["k3-6", "p-shutdown"] },
-            { id: "w8-sat-6", text: "Ката К3.9 (25 мин): rate limiter — leaky bucket против token bucket", links: ["k3-9", "p-ratelimit"] }
+            { id: "w9-sat-1", text: "Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском; среди них — два о каналах в эталонном коде: К4.1 и К4.2", links: ["k4-1", "k4-2"], talk: "deep-dive" },
+            { id: "w9-sat-3", text: "Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки" },
+            { id: "w9-sat-4", text: "Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds", links: ["c7", "sim2", "c59"], refs: [{ t: "Kubernetes: Pod lifecycle и завершение", u: "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/" }, { t: "Kubernetes: liveness/readiness/startup probes", u: "https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/" }, { t: "Kubernetes: requests и limits", u: "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/" }] },
+            { id: "w9-sat-5", text: "Ката К3.6 (25 мин): остановка — done-канал и Shutdown, повторный вызов безопасен", links: ["k3-6", "p-shutdown"] },
+            { id: "w9-sat-6", text: "Ката К3.9 (25 мин): rate limiter — leaky bucket против token bucket", links: ["k3-9", "p-ratelimit"] }
           ]
         }
       ],
@@ -557,43 +628,43 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 9 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 10 ─────────────────────────────
     {
-      id: "w9",
+      id: "w10",
       title: "Take-home, code review, первая волна откликов",
       goal: "Сделать take-home в формате EU-компаний и уверенно ревьюить чужой Go-код за 40 минут.",
       done: "Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w9-mon-1", text: "Take-home, часть 1 (≈90 мин): Go-клиент к REST API (create/fetch/delete, ошибки, ретраи, контекст) в формате задания Form3. Общий таймбокс 5–6 ч" },
-            { id: "w9-mon-2", text: "Дополнительно: LeetCode 70. Climbing Stairs + проговор", lc: 70, optional: true }
+            { id: "w10-mon-1", text: "Take-home, часть 1 (≈90 мин): Go-клиент к REST API (create/fetch/delete, ошибки, ретраи, контекст) в формате задания Form3. Общий таймбокс 5–6 ч" },
+            { id: "w10-mon-2", text: "Дополнительно: LeetCode 70. Climbing Stairs + проговор", lc: 70, optional: true }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w9-tue-1", text: "Take-home, часть 2 (≈90 мин): тесты, README с решениями, без лишних зависимостей" }
+            { id: "w10-tue-1", text: "Take-home, часть 2 (≈90 мин): тесты, README с решениями, без лишних зависимостей" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w9-wed-1", text: "Code review (≈80 мин): 2 чужих Go-PR по 40 минут, комментарии письменно на английском", refs: [{ t: "Google: code review practices", u: "https://google.github.io/eng-practices/review/" }, { t: "Go Code Review Comments", u: "https://go.dev/wiki/CodeReviewComments" }] },
-            { id: "w9-wed-2", text: "Дополнительно: LeetCode 198. House Robber + проговор", lc: 198, optional: true }
+            { id: "w10-wed-1", text: "Code review (≈80 мин): 2 чужих Go-PR по 40 минут, комментарии письменно на английском", refs: [{ t: "Google: code review practices", u: "https://google.github.io/eng-practices/review/" }, { t: "Go Code Review Comments", u: "https://go.dev/wiki/CodeReviewComments" }] },
+            { id: "w10-wed-2", text: "Дополнительно: LeetCode 198. House Robber + проговор", lc: 198, optional: true }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w9-thu-1", text: "Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа", links: ["q4", "q10", "q12", "q18", "q19", "q20"] },
-            { id: "w9-thu-2", text: "Собрать чек-лист ревьюера Go (≈45 мин): ошибки, контекст, горутины, ресурсы, тесты, API" }
+            { id: "w10-thu-1", text: "Code review по quiz сайта (≈45 мин): прочитать код задачи и написать комментарии ревьюера до вариантов ответа", links: ["q4", "q10", "q12", "q18", "q19", "q20"] },
+            { id: "w10-thu-2", text: "Собрать чек-лист ревьюера Go (≈45 мин): ошибки, контекст, горутины, ресурсы, тесты, API" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w9-sat-1", text: "Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка" },
-            { id: "w9-sat-2", text: "Ещё 1 чужой PR в формате 40 минут — код с каналами из трека: tee с копией внутри цикла и «быстрый» tee (К3.3), or-done без select (К3.7), «решение без утечек» финального босса (К2.6)", links: ["k3-3", "k3-7", "p-tee"] },
-            { id: "w9-sat-3", text: "Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10" },
-            { id: "w9-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true },
-            { id: "w9-sat-5", text: "Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов" }
+            { id: "w10-sat-1", text: "Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка" },
+            { id: "w10-sat-2", text: "Ещё 1 чужой PR в формате 40 минут — код с каналами из трека: tee с копией внутри цикла и «быстрый» tee (К3.3), or-done без select (К3.7), «решение без утечек» финального босса (К2.6)", links: ["k3-3", "k3-7", "p-tee"] },
+            { id: "w10-sat-3", text: "Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10" },
+            { id: "w10-sat-4", text: "Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв)", lc: 322, optional: true },
+            { id: "w10-sat-5", text: "Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов" }
           ]
         }
       ],
@@ -613,42 +684,42 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 10 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 11 ─────────────────────────────
     {
-      id: "w10",
+      id: "w11",
       title: "System Design I",
       goal: "По шаблону за 40 минут вести дизайн вслух на английском и в каждом дизайне объяснять, почему Go.",
       done: "3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w10-mon-1", text: "Шаблон ответа: requirements → API → data model → high-level → deep dive → bottlenecks → trade-offs", talk: "sd-template" },
-            { id: "w10-mon-2", text: "LeetCode 300. Longest Increasing Subsequence + проговор", lc: 300 }
+            { id: "w11-mon-1", text: "Шаблон ответа: requirements → API → data model → high-level → deep dive → bottlenecks → trade-offs", talk: "sd-template" },
+            { id: "w11-mon-2", text: "LeetCode 300. Longest Increasing Subsequence + проговор", lc: 300 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w10-tue-1", text: "Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый)", links: ["c69"], refs: [{ t: "Rate limiter 100K RPS (itvector)", u: "https://itvector.io/articles/rate-limiter-100k-rps" }] }
+            { id: "w11-tue-1", text: "Дизайн 1: Rate limiter на 100K RPS (один инстанс → распределённый)", links: ["c69"], refs: [{ t: "Rate limiter 100K RPS (itvector)", u: "https://itvector.io/articles/rate-limiter-100k-rps" }] }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w10-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62", "c68", "c70"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }, { t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
-            { id: "w10-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
+            { id: "w11-wed-1", text: "Дизайн 2: Payments / ledger — на основе своего проекта (идемпотентность, outbox, сверка)", links: ["c62", "c68", "c70"], refs: [{ t: "Pinkponies Bank: платёжный сервис (GitHub)", u: "https://github.com/aleksbeloushkin-srb/go-payments-reference" }, { t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
+            { id: "w11-wed-2", text: "LeetCode 139. Word Break + проговор", lc: 139 }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w10-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62", "c69"], refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
-            { id: "w10-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
-            { id: "w10-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
+            { id: "w11-thu-1", text: "Дизайн 3: Notification service (каналы доставки, ретраи, дедупликация, приоритеты)", links: ["c62", "c69"], refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
+            { id: "w11-thu-2", text: "Отклики волны 2 до праздников: Topi, Bolt, Zendesk" },
+            { id: "w11-thu-3", text: "Рефералы: 3 контакта в целевых компаниях через LinkedIn и сообщества — коротко, с конкретной вакансией", optional: true }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w10-sat-1", text: "Виртуальный System Design (Claude как интервьюер) по одному из трёх дизайнов, 45 минут" },
-            { id: "w10-sat-2", text: "Переслушать запись: где не назвал компромисс или не спросил требования" },
-            { id: "w10-sat-3", text: "LeetCode 62. Unique Paths + проговор", lc: 62 }
+            { id: "w11-sat-1", text: "Виртуальный System Design (Claude как интервьюер) по одному из трёх дизайнов, 45 минут" },
+            { id: "w11-sat-2", text: "Переслушать запись: где не назвал компромисс или не спросил требования" },
+            { id: "w11-sat-3", text: "LeetCode 62. Unique Paths + проговор", lc: 62 }
           ]
         }
       ],
@@ -670,39 +741,39 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 11 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 12 ─────────────────────────────
     {
-      id: "w11",
+      id: "w12",
       title: "System Design II: event-driven и предметные дизайны",
       goal: "Уверенно вести дизайн event-driven систем и предметные задачи целевых компаний.",
       done: "Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w11-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", links: ["c70", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
-            { id: "w11-mon-2", text: "LeetCode 33. Search in Rotated Sorted Array + проговор", lc: 33 }
+            { id: "w12-mon-1", text: "Event-driven: Kafka (партиции, порядок, consumer groups), outbox, sagas, ретраи и DLQ", links: ["c70", "c66"], talk: "outbox", refs: [{ t: "Pinkponies Bank: банк из трёх сервисов (GitHub)", u: "https://github.com/aleksbeloushkin-srb/pinkponies-bank" }] },
+            { id: "w12-mon-2", text: "LeetCode 33. Search in Rotated Sorted Array + проговор", lc: 33 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w11-tue-1", text: "Дизайн 4: Dispatch / delivery (назначение курьеров, гео-данные) — под Delivery Hero и Wolt" }
+            { id: "w12-tue-1", text: "Дизайн 4: Dispatch / delivery (назначение курьеров, гео-данные) — под Delivery Hero и Wolt" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w11-wed-1", text: "Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва", links: ["c69"] }
+            { id: "w12-wed-1", text: "Дизайн 5: Inventory с резервированием (Quick Commerce): гонки за остаток, TTL резерва", links: ["c69"] }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w11-thu-1", text: "Дизайн 6: Multi-tenant SaaS (тикеты, как Zendesk): изоляция арендаторов, шардирование, noisy neighbour" }
+            { id: "w12-thu-1", text: "Дизайн 6: Multi-tenant SaaS (тикеты, как Zendesk): изоляция арендаторов, шардирование, noisy neighbour" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w11-sat-1", text: "Повторить один дизайн с нуля за 40 минут и записать" },
-            { id: "w11-sat-2", text: "2 повторные задачи LeetCode из слабых тем с проговором" },
-            { id: "w11-sat-3", text: "Проговор «Kafka vs RabbitMQ: when would you choose which?» — журнал с партициями и хранением против брокера очередей с маршрутизацией и подтверждениями", optional: true, refs: [{ t: "Apache Kafka: документация", u: "https://kafka.apache.org/documentation/" }, { t: "RabbitMQ: queues", u: "https://www.rabbitmq.com/docs/queues" }] }
+            { id: "w12-sat-1", text: "Повторить один дизайн с нуля за 40 минут и записать" },
+            { id: "w12-sat-2", text: "2 повторные задачи LeetCode из слабых тем с проговором" },
+            { id: "w12-sat-3", text: "Проговор «Kafka vs RabbitMQ: when would you choose which?» — журнал с партициями и хранением против брокера очередей с маршрутизацией и подтверждениями", optional: true, refs: [{ t: "Apache Kafka: документация", u: "https://kafka.apache.org/documentation/" }, { t: "RabbitMQ: queues", u: "https://www.rabbitmq.com/docs/queues" }] }
           ]
         }
       ],
@@ -722,40 +793,40 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 12 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 13 ─────────────────────────────
     {
-      id: "w12",
+      id: "w13",
       title: "Behavioral, легенда, CV",
       goal: "8 STAR-историй и рассказ о себе звучат естественно по-английски; CV и LinkedIn готовы.",
       done: "Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w12-mon-1", text: "STAR-истории 1–4: инцидент в проде, конфликт/несогласие, ownership, неопределённость", talk: "star" },
-            { id: "w12-mon-2", text: "LeetCode 981. Time Based Key-Value Store + проговор", lc: 981 }
+            { id: "w13-mon-1", text: "STAR-истории 1–4: инцидент в проде, конфликт/несогласие, ownership, неопределённость", talk: "star" },
+            { id: "w13-mon-2", text: "LeetCode 981. Time Based Key-Value Store + проговор", lc: 981 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w12-tue-1", text: "STAR-истории 5–8: менторство, дедлайн, кросс-командная работа, ошибка и вывод", talk: "star" }
+            { id: "w13-tue-1", text: "STAR-истории 5–8: менторство, дедлайн, кросс-командная работа, ошибка и вывод", talk: "star" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w12-wed-1", text: "«Why Go / why move from JVM?» и «Tell me about yourself» v2", talk: "why-go" },
-            { id: "w12-wed-2", text: "Deep-dive по финтех-опыту без NDA-деталей: что можно говорить, что обобщить" }
+            { id: "w13-wed-1", text: "«Why Go / why move from JVM?» и «Tell me about yourself» v2", talk: "why-go" },
+            { id: "w13-wed-2", text: "Deep-dive по финтех-опыту без NDA-деталей: что можно говорить, что обобщить" }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w12-thu-1", text: "Финал CV и LinkedIn; позиционирование «Go + Kotlin backend, fintech»" },
-            { id: "w12-thu-2", text: "Вопросы к компании: команда, on-call, процесс релизов, рост" }
+            { id: "w13-thu-1", text: "Финал CV и LinkedIn; позиционирование «Go + Kotlin backend, fintech»" },
+            { id: "w13-thu-2", text: "Вопросы к компании: команда, on-call, процесс релизов, рост" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w12-sat-1", text: "Прогон всех историй вслух с записью, сократить каждую до 2 минут" },
-            { id: "w12-sat-2", text: "Прогон на время, часть 1: каты К2.5 и К2.6 вслух, по 20–30 мин; остальные восемь — в воскресный резерв до мока 1", links: ["k5-1"] }
+            { id: "w13-sat-1", text: "Прогон всех историй вслух с записью, сократить каждую до 2 минут" },
+            { id: "w13-sat-2", text: "Прогон на время, часть 1: каты К2.5 и К2.6 вслух, по 20–30 мин; остальные восемь — в воскресный резерв до мока 1", links: ["k5-1"] }
           ]
         }
       ],
@@ -776,40 +847,40 @@ const PLAN = {
       ]
     },
 
-    // ───────────────────────────── НЕДЕЛЯ 13 ─────────────────────────────
+    // ───────────────────────────── НЕДЕЛЯ 14 ─────────────────────────────
     {
-      id: "w13",
+      id: "w14",
       title: "Моки и пик откликов",
       goal: "Пройти полный цикл интервью в тренировочном режиме и выйти на реальные собеседования.",
       done: "3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
-            { id: "w13-mon-1", text: "Мок 1: live coding (Pramp, interviewing.io или знакомые)", refs: [{ t: "Pramp", u: "https://www.pramp.com/" }, { t: "interviewing.io", u: "https://interviewing.io/" }] },
-            { id: "w13-mon-2", text: "LeetCode 1396. Design Underground System + проговор", lc: 1396 }
+            { id: "w14-mon-1", text: "Мок 1: live coding (Pramp, interviewing.io или знакомые)", refs: [{ t: "Pramp", u: "https://www.pramp.com/" }, { t: "interviewing.io", u: "https://interviewing.io/" }] },
+            { id: "w14-mon-2", text: "LeetCode 1396. Design Underground System + проговор", lc: 1396 }
           ]
         },
         {
           label: "Вт", minutes: 90, tasks: [
-            { id: "w13-tue-1", text: "Мок 2: System Design" }
+            { id: "w14-tue-1", text: "Мок 2: System Design" }
           ]
         },
         {
           label: "Ср", minutes: 90, tasks: [
-            { id: "w13-wed-1", text: "Полный виртуальный собес по плану Delivery Hero: coding + design + hiring manager + bar raiser" }
+            { id: "w14-wed-1", text: "Полный виртуальный собес по плану Delivery Hero: coding + design + hiring manager + bar raiser" }
           ]
         },
         {
           label: "Чт", minutes: 90, tasks: [
-            { id: "w13-thu-1", text: "Мок 3: behavioral + Craft Deep-Dive" },
-            { id: "w13-thu-2", text: "Отклики волны 3: Delivery Hero, Wolt (с релокацией)" }
+            { id: "w14-thu-1", text: "Мок 3: behavioral + Craft Deep-Dive" },
+            { id: "w14-thu-2", text: "Отклики волны 3: Delivery Hero, Wolt (с релокацией)" }
           ]
         },
         {
           label: "Сб", minutes: 240, tasks: [
-            { id: "w13-sat-1", text: "Журнал интервью: после каждого реального собеса записать вопросы и где запнулся; добавить их на сайт" },
-            { id: "w13-sat-2", text: "Вилки и переговоры: подготовить диапазон и ответ на вопрос о зарплатных ожиданиях" },
-            { id: "w13-sat-3", text: "2 задачи LeetCode на время (45 минут, вслух)" }
+            { id: "w14-sat-1", text: "Журнал интервью: после каждого реального собеса записать вопросы и где запнулся; добавить их на сайт" },
+            { id: "w14-sat-2", text: "Вилки и переговоры: подготовить диапазон и ответ на вопрос о зарплатных ожиданиях" },
+            { id: "w14-sat-3", text: "2 задачи LeetCode на время (45 минут, вслух)" }
           ]
         }
       ],
@@ -949,34 +1020,40 @@ const PLAN = {
       edge: "Negative amounts, zero, amounts below one euro like 0.05."
     },
     "w1-2": {
-      title: "W1-2. Account и W1-3. ValidationError",
-      approach: "Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is. ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.",
+      title: "W1-2. Account",
+      approach: "Withdraw needs a pointer receiver because it mutates the balance. On insufficient funds I return a sentinel error wrapped with context using %w, so the caller can still check it with errors.Is.",
       edge: "A zero or negative amount, withdrawing exactly the balance or one unit more, and a successful transfer that keeps the total. Each is a row in a table-driven test. Rolling the money back matters only once Deposit can fail, for example on a closed account.",
-      followUp: "How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value."
+      followUp: "Why not compare err == ErrInsufficientFunds? — After wrapping, err is a different value; errors.Is walks the chain and still finds the sentinel."
     },
-    "w1-5": {
-      title: "W1-5. SafeDiv",
-      approach: "A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.",
-      edge: "b equal to zero, a normal division like 7 / 2, and a panic two calls deeper, which recover still catches in the same goroutine.",
-      followUp: "Would you use recover like this in production? — In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server."
-    },
-    "w1-6": {
-      title: "W1-6. Method sets",
+    "w1-3": {
+      title: "W1-3. Method sets",
       approach: "The method set of T contains only value-receiver methods; the method set of *T contains both. So if Notify has a pointer receiver, only *Service satisfies Notifier, and passing a Service value fails at compile time.",
       edge: "An element of map[string]Service cannot call Notify at all, and a struct that embeds *Service does satisfy Notifier.",
       followUp: "Why does the spec have this rule? — The usual rationale: the interface stores a copy that is not addressable, so a pointer method would have nothing to point to and could not change the caller's value."
     },
     "w2-1": {
-      title: "W2-1. Remove",
+      title: "W2-1. ValidationError",
+      approach: "ValidationError is a struct that carries the field name; errors.As walks the wrapped chain and extracts it, so the handler can return a 400 with the exact field.",
+      edge: "A valid user gets a literal nil, not a nil *ValidationError; when both fields are invalid, the email error comes first; errors.As still works through errors.Join.",
+      followUp: "How do errors.Is and errors.As differ? — errors.Is compares against a specific value; errors.As matches by type and gives me the value."
+    },
+    "w2-3": {
+      title: "W2-3. SafeDiv",
+      approach: "A deferred function calls recover; if a panic happened, it converts it into an error through a named return value.",
+      edge: "b equal to zero, a normal division like 7 / 2, and a panic two calls deeper, which recover still catches in the same goroutine.",
+      followUp: "Would you use recover like this in production? — In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server."
+    },
+    "w3-1": {
+      title: "W3-1. Remove",
       approach: "The order-preserving version is append(s[:i], s[i+1:]...). The catch is that it writes into the same backing array, so the caller's original slice changes too. The fast version swaps in the last element: O(1), but it loses the order.",
       edge: "slices.Delete also modifies the shared backing array, and since Go 1.22 it zeroes the vacated tail elements. If the caller still needs the original, I make an independent copy first, for example with slices.Clone."
     },
-    "w2-3": {
-      title: "W2-3. Generics vs interfaces",
+    "w3-3": {
+      title: "W3-3. Generics vs interfaces",
       approach: "I use generics when the logic is identical for every type, like Map or a Set. I use an interface when each type behaves differently. Rule of thumb: write the concrete version first and generalize when a second use case appears."
     },
-    "w2-4": {
-      title: "W2-4. txsum CLI",
+    "w3-4": {
+      title: "W3-4. txsum CLI",
       approach: "I read the CSV with encoding/csv, parse each row into a transaction and aggregate balances in a map keyed by account and currency, using int64 minor units. Bad rows don't stop the run: I collect them with line numbers and report at the end, with a non-zero exit code if any failed.",
       edge: "Table-driven test for the row parser: valid row, missing column, non-numeric amount, unknown currency."
     },
@@ -991,31 +1068,31 @@ const PLAN = {
         "P9 loop variable — since Go 1.22 a variable declared by the loop (:=) is new in each iteration; before 1.22, or with for i = range over an existing variable, all closures share one."
       ]
     },
-    "w3-1": {
-      title: "W3-1. Worker pool",
+    "w4-1": {
+      title: "W4-1. Worker pool",
       clarify: "How many workers? Do results need to keep the input order? What happens if one job fails?",
       approach: "I start N workers that range over a jobs channel and send to a results channel. The producer closes jobs after the last send; a separate goroutine waits on a WaitGroup for all workers and then closes results, so the consumer's range loop ends. Every goroutine has an owner and a clear exit: the channel closing or ctx.Done().",
       complexity: "Concurrency is bounded by N, so memory and connections stay predictable under load.",
       edge: "Zero jobs; cancellation in the middle; a slow consumer — that's backpressure, the workers block on send instead of buffering unboundedly."
     },
-    "w3-4": {
-      title: "W3-4. Mutex vs atomic vs channel",
+    "w4-4": {
+      title: "W4-4. Mutex vs atomic vs channel",
       approach: "For a single counter an atomic operation is usually the simplest fit; whether it is faster depends on contention, so I'd compare with a benchmark rather than assume. A mutex is right when the invariant spans several fields. A channel fits when I'm transferring ownership of data or coordinating work, not just protecting a variable.",
       edge: "An atomic protects one value; it doesn't make a check-then-act sequence on two values safe."
     },
-    "w4-1": {
-      title: "W4-1. ParallelFetch with errgroup",
+    "w5-1": {
+      title: "W5-1. ParallelFetch with errgroup",
       clarify: "Should one failure cancel the rest? Is there a limit on concurrent requests?",
       approach: "errgroup.WithContext gives me a context that is cancelled on the first error. SetLimit bounds concurrency. Each fetch uses the group's context, so the other requests stop early. Wait returns the first error.",
       edge: "The derived context is cancelled after Wait returns, so it must not be used for work after Wait."
     },
-    "w4-2": {
-      title: "W4-2. Rate limiter",
+    "w5-2": {
+      title: "W5-2. Rate limiter",
       approach: "For a single instance, a token bucket: tokens refill at a fixed rate up to a burst size; a request takes a token or is rejected or waits. In Go I'd use golang.org/x/time/rate rather than hand-roll it. Across many instances the state must be shared — for example Redis with an atomic script — or each instance gets a share of the global limit.",
       edge: "Burst behaviour; clock skew between instances; what the client sees on rejection — 429 with Retry-After."
     },
-    "w4-3": {
-      title: "W4-3. Graceful shutdown",
+    "w5-3": {
+      title: "W5-3. Graceful shutdown",
       approach: "signal.NotifyContext gives me a context cancelled on SIGTERM. I stop accepting new requests with server.Shutdown and a timeout, cancel background workers through their context, and wait for them with a WaitGroup or errgroup before closing the database pool.",
       edge: "Shutdown order matters: stop intake first, drain in-flight work, then close dependencies. Kubernetes gives a grace period, so the timeout must fit inside it."
     },
@@ -1073,7 +1150,7 @@ const PLAN = {
     }
   },
 
-  // ─────────────── КРИТЕРИИ ПРИЁМКИ НЕДЕЛЬ 1–5 ───────────────
+  // ─────────────── КРИТЕРИИ ПРИЁМКИ НЕДЕЛЬ 1–7 ───────────────
   // accept — что сделать самостоятельно и на каком изменённом условии проверить перенос.
   // exercise — упражнение, которого на сайте пока нет (план наполнения), если оно нужно.
   // Задачи LeetCode без своей записи используют lcAccept.
@@ -1087,135 +1164,144 @@ const PLAN = {
     "w1-tue-3": { accept: "Тесты практикума зелёные: 1250 → «12.50 EUR», 5 → «0.05 EUR», ноль, отрицательные суммы, JPY и BHD; одна фраза по-английски, почему не float64. Изменённое условие: Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение." },
     "w1-wed-1": { accept: "Без подсказки: type switch по ошибке и Stringer на своём типе; для обёрнутых ошибок — errors.As, а не type switch." },
     "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 (nil-указатель внутри error) и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов." },
-    "w1-wed-3": { accept: "Тесты W1-2 и W1-3 зелёные, включая два уровня обёртки; errors.As достаёт *ValidationError с верным Field. Изменённое условие: добавить ErrAccountClosed — errors.Is различает обе причины." },
-    "w1-thu-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v), q30 (errors.Join, Go 1.20) и q20 (ошибка Close) объяснены до вариантов." },
-    "w1-thu-2": { accept: "q3, q5, q31, q32: ответ до вариантов совпал с разбором и по результату, и по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5." },
-    "w1-thu-4": { accept: "Порядок трёх defer предсказан до запуска; SafeDiv(1, 0) возвращает 0 и ошибку без паники наружу. Изменённое условие: деление на два вызова глубже, затем в отдельной горутине — объяснено, почему в первом случае recover ловит панику, а во втором нет." },
+    "w1-wed-3": { accept: "Тесты W1-2 зелёные: успешный перевод, нехватка средств через две обёртки, после ошибки балансы прежние. Без подсказки: почему ресивер — указатель и почему err == ErrInsufficientFunds перестаёт работать после %w, а errors.Is — нет; проговор W1-2 — вслух по шагам. Изменённое условие — в среду недели 2: ErrAccountClosed." },
     "w1-sat-1": { accept: "Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация." },
-    "w1-sat-2": { accept: "Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 и c65 — ответ до раскрытия; q33 (ключ map), q34 и q52 (встраивание) — до вариантов." },
+    "w1-sat-8": { accept: "Add складывает суммы одной валюты, а при разных валютах возвращает ошибку и нулевую Money без сложения; table-driven тест на обе ветки и на отрицательную сумму проходит под -race. По-английски одной фразой: почему ошибка, а не молчаливое сложение." },
+    "w1-sat-9": { accept: "До запуска сказано, что err == nil даёт false, и объяснено по-английски через «динамический тип и значение»: в интерфейсе тип *NotFoundError и nil-указатель. После исправления — return nil литералом — err == nil даёт true." },
     "w1-sat-4": { accept: "LC 1 решён без подсказки; диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен." },
     "w1-sat-5": { accept: "LC 49 проговорена без подсказок за 5 минут; запись сделана." },
-    "w1-sat-6": { accept: "Все вопросы обоих блоков, кроме Tell me about yourself (это отдельная задача), — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора." },
-    "w1-sat-7": { accept: "Запись 60–90 секунд без чтения с листа: роль, один результат с числом, почему Go." },
+    "w1-sat-10": { accept: "Все вопросы обоих блоков — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора." },
 
-    "w2-mon-1": { accept: "c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки." },
-    "w2-mon-2": { accept: "q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает." },
-    "w2-tue-1": { accept: "Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; P3 (ниже на этой странице) решена; q33 — до вариантов." },
-    "w2-tue-3": { accept: "P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке." },
-    "w2-tue-4": { accept: "Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22." },
-    "w2-wed-1": { accept: "Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым." },
-    "w2-wed-2": { accept: "Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена." },
-    "w2-thu-1": { accept: "c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–2 лежат в week1/ и week2/, go test ./... из корня проходит." },
-    "w2-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup. CI в go-prep зелёный; намеренно сломанный тест делает его красным." },
-    "w2-thu-3": { accept: "Тесты W1-2 и W2-2 покрывают ошибки и граничные случаи, а не только успешный путь; go test -cover ./week1/account ./week2/generics показывает покрытие." },
-    "w2-thu-5": { accept: "Без подсказки: где Add держит аргументы на amd64 и arm64; что делают -N и -l и когда они нужны; почему встроенной функции может не быть в бинарнике; чем -gcflags отличается от -gcflags=all=." },
-    "w2-thu-4": { accept: "P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски." },
-    "w2-sat-1": { accept: "10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod." },
-    "w2-sat-2": { accept: "Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках." },
-    "w2-sat-6": { accept: "q1–q6: ответ до вариантов, причина названа верно не меньше чем в 5 из 6; ошибки — в повтор." },
+    "w2-mon-1": { accept: "Без подсказки по-английски: чем Is отличается от As, когда sentinel, когда typed error; q29 (%w → %v), q30 (errors.Join, Go 1.20) и q20 (ошибка Close) объяснены до вариантов." },
+    "w2-mon-2": { accept: "Тесты W2-1 зелёные, включая два уровня обёртки, границу возраста и порядок полей; errors.As достаёт *ValidationError с верным Field; для корректного пользователя — обычный nil. Проговор W2-1 — вслух по шагам." },
+    "w2-tue-1": { accept: "q3, q5, q31, q32: ответ до вариантов совпал с разбором и по результату, и по причине; объяснение по-английски; названо, чем q31 (безымянный результат) отличается от q3, а q32 (recover в своей горутине) — от q5." },
+    "w2-tue-2": { accept: "Порядок трёх defer предсказан до запуска; SafeDiv(1, 0) возвращает 0 и ошибку без паники наружу. Изменённое условие: деление на два вызова глубже, затем в отдельной горутине — объяснено, почему в первом случае recover ловит панику, а во втором нет." },
+    "w2-wed-2": { accept: "Тест: перевод с закрытого счёта и на закрытый — errors.Is(err, ErrAccountClosed) истинно, а errors.Is(err, ErrInsufficientFunds) ложно, при нехватке средств — наоборот; после отказа балансы прежние, в том числе когда Deposit отказал уже после Withdraw. По-английски: почему sentinel, а не сравнение текста ошибки." },
+    "w2-wed-3": { accept: "До запуска сказано, что для корректного пользователя err != nil и почему: в интерфейсе тип *ValidationError и nil-указатель; TestValid это ловит. Исправление — return nil литералом, тесты W2-1 снова зелёные." },
+    "w2-wed-4": { accept: "До запуска предсказано: аргумент defer вычисляется в момент defer, замыкание читает переменную при выходе, вызовы идут в обратном порядке; отложенное замыкание меняет именованный результат после return, а безымянный — нет. Предсказание совпало с запуском." },
+    "w2-thu-1": { accept: "Без подсказки: правила map из спецификации и отличие «таблица не уменьшается» от «удалённые значения map не удерживает»; до запуска сказано, что вернёт чтение из nil map и что сделает запись в неё; q33 — до вариантов." },
+    "w2-sat-1": { accept: "Таблица своими словами; к каждой строке — пример кода, который ведёт себя иначе, чем в Kotlin. c40 и c65 — ответ до раскрытия; q33 (ключ map), q34 и q52 (встраивание) — до вариантов." },
+    "w2-sat-3": { accept: "LC 1 решена заново без подсказки и проговорена за 5 минут без текста; follow-up про отсортированный массив — два указателя — объяснён; запись сделана." },
+    "w2-sat-4": { accept: "Все вопросы обоих блоков, кроме Tell me about yourself (это отдельная задача), — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора." },
+    "w2-sat-5": { accept: "Запись 60–90 секунд без чтения с листа: роль, один результат с числом, почему Go." },
 
-    "w3-mon-1": { accept: "c1 и c2: ответ по-английски до раскрытия; практика c2 выполнена. Изменённое условие: свой пример логической гонки без data race." },
-    "w3-mon-2": { accept: "Пересказана схема отмены пайплайна: кто сигнализирует остановку и как каждая стадия завершается." },
-    "w3-tue-1": { accept: "Таблица nil/open/closed для отправки, приёма и close — по памяти; шаги sim3 предсказаны до переключения." },
-    "w3-tue-2": { accept: "Тесты: не больше N одновременных задач, все результаты получены, отмена в середине завершает всех воркеров, медленный потребитель не ведёт к неограниченной памяти; -race чистый." },
-    "w3-tue-3": { accept: "Тест: отмена или ранний выход потребителя останавливает все стадии; зависших горутин нет." },
-    "w3-wed-1": { accept: "c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены." },
-    "w3-wed-2": { accept: "Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов." },
-    "w3-wed-3": { accept: "q12, q15, q21 в режиме «Сначала свой ответ» (вкладка quiz): дефект и исправление записаны до вариантов и совпали с разбором по причине." },
-    "w3-thu-1": { accept: "c15, c20, c21, c22, c56: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант и почему Wait вызывают в цикле." },
-    "w3-thu-2": { accept: "Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее»." },
-    "w3-thu-3": { accept: "q7, q8, q13, q14, q44, q46, q47: дефект до вариантов; исправленный код объяснён. c55: ответ до раскрытия, названы четыре условия Коффмана и какое ломает порядок блокировок." },
-    "w3-sat-1": { accept: "Для каждой горутины W3-1…W3-5 записаны владелец и условие завершения; все тесты под -race проходят." },
-    "w3-sat-4": { accept: "Запись 3–5 минут: worker pool по 4 шагам и выбор mutex или channel на примере." },
-    "w3-sat-5": { accept: "Вопросы самопроверки — по-английски без подсказки." },
+    "w3-mon-1": { accept: "c29: ответ до раскрытия; объяснено, зачем ограничивать cap в s[a:b:c]. Изменённое условие: append после s[:1:1]. P1, P2 и P10 из блока «Что выведет код» (ниже на этой странице) решены до сверки." },
+    "w3-mon-2": { accept: "q4 и q6: дефект найден до вариантов. q6 — исправление копией или ограничением cap; q4 — только копией: ограничение cap большой массив не освобождает." },
+    "w3-tue-3": { accept: "P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке." },
+    "w3-tue-4": { accept: "Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22." },
+    "w3-wed-1": { accept: "Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым." },
+    "w3-wed-2": { accept: "Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена." },
+    "w3-thu-1": { accept: "c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–3 лежат в week1/, week2/ и week3/, go test ./... из корня проходит." },
+    "w3-thu-2": { accept: "Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup. CI в go-prep зелёный; намеренно сломанный тест делает его красным." },
+    "w3-thu-3": { accept: "Тесты W1-2 и W3-2 покрывают ошибки и граничные случаи, а не только успешный путь; go test -cover ./week1/account ./week3/generics показывает покрытие." },
+    "w3-thu-5": { accept: "Без подсказки: где Add держит аргументы на amd64 и arm64; что делают -N и -l и когда они нужны; почему встроенной функции может не быть в бинарнике; чем -gcflags отличается от -gcflags=all=." },
+    "w3-thu-4": { accept: "P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски." },
+    "w3-sat-1": { accept: "10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod." },
+    "w3-sat-2": { accept: "Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках." },
+    "w3-sat-6": { accept: "q1–q6: ответ до вариантов, причина названа верно не меньше чем в 5 из 6; ошибки — в повтор." },
 
-    "w4-mon-1": { accept: "c22, q9, q10: ответ до раскрытия; объяснено, что отмена контекста не останавливает код, который ctx не проверяет." },
-    "w4-mon-2": { accept: "Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait." },
-    "w4-tue-1": { accept: "q16, q17, q11: ответ до вариантов; для q11 названо, что изменилось в Go 1.23 и почему важна версия в go.mod." },
-    "w4-tue-2": { accept: "Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано." },
-    "w4-wed-1": { accept: "c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя." },
-    "w4-wed-2": { accept: "Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается." },
-    "w4-wed-3": { accept: "Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine." },
-    "w4-thu-1": { accept: "c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия." },
-    "w4-thu-2": { accept: "c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM." },
-    "w4-thu-3": { accept: "Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно." },
-    "w4-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости." },
-    "w4-sat-2": { accept: "c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями." },
-    "w4-sat-4": { accept: "Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор." },
-    "w4-sat-5": { accept: "«Финальный босс» решён вслух за 40 минут, тест на утечки зелёный (что это значит — в шаге К2.6); получен разбор; три слабых места записаны." },
+    "w4-mon-1": { accept: "c1 и c2: ответ по-английски до раскрытия; практика c2 выполнена. Изменённое условие: свой пример логической гонки без data race." },
+    "w4-mon-2": { accept: "Пересказана схема отмены пайплайна: кто сигнализирует остановку и как каждая стадия завершается." },
+    "w4-tue-1": { accept: "Таблица nil/open/closed для отправки, приёма и close — по памяти; шаги sim3 предсказаны до переключения." },
+    "w4-tue-2": { accept: "Тесты: не больше N одновременных задач, все результаты получены, отмена в середине завершает всех воркеров, медленный потребитель не ведёт к неограниченной памяти; -race чистый." },
+    "w4-tue-3": { accept: "Тест: отмена или ранний выход потребителя останавливает все стадии; зависших горутин нет." },
+    "w4-wed-1": { accept: "c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены." },
+    "w4-wed-2": { accept: "Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов." },
+    "w4-wed-3": { accept: "q12, q15, q21 в режиме «Сначала свой ответ» (вкладка quiz): дефект и исправление записаны до вариантов и совпали с разбором по причине." },
+    "w4-thu-1": { accept: "c15, c20, c21, c22, c56: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант и почему Wait вызывают в цикле." },
+    "w4-thu-2": { accept: "Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее»." },
+    "w4-thu-3": { accept: "q7, q8, q13, q14, q44, q46, q47: дефект до вариантов; исправленный код объяснён. c55: ответ до раскрытия, названы четыре условия Коффмана и какое ломает порядок блокировок." },
+    "w4-sat-1": { accept: "Для каждой горутины W4-1…W4-5 записаны владелец и условие завершения; все тесты под -race проходят." },
+    "w4-sat-4": { accept: "Запись 3–5 минут: worker pool по 4 шагам и выбор mutex или channel на примере." },
+    "w4-sat-5": { accept: "Вопросы самопроверки — по-английски без подсказки." },
 
-    "w5-mon-1": { accept: "ADR на английском: контекст, решение, альтернативы, последствия; что в scope и вне его." },
-    "w5-mon-2": { accept: "Пакет ledger не импортирует net/http и драйвер БД; Money в int64 покрыт тестами." },
-    "w5-tue-1": { accept: "Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405. c45 и диаграмма 10 — ответ до раскрытия; q36 и q37 — до вариантов." },
-    "w5-tue-2": { accept: "Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай. c46 — ответ до раскрытия; q39 — до вариантов." },
-    "w5-wed-1": { accept: "Миграции применяются на чистой БД; у пула заданы лимиты и таймаут подключения." },
-    "w5-wed-2": { accept: "q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации. c47 — ответ до раскрытия." },
-    "w5-thu-1": { accept: "JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения. c48 — ответ до раскрытия; q38 — до вариантов." },
-    "w5-thu-2": { accept: "docker compose up поднимает сервис после healthcheck БД." },
-    "w5-sat-1": { accept: "Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится." },
-    "w5-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." },
+    "w5-mon-1": { accept: "c22, q9, q10: ответ до раскрытия; объяснено, что отмена контекста не останавливает код, который ctx не проверяет." },
+    "w5-mon-2": { accept: "Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait." },
+    "w5-tue-1": { accept: "q16, q17, q11: ответ до вариантов; для q11 названо, что изменилось в Go 1.23 и почему важна версия в go.mod." },
+    "w5-tue-2": { accept: "Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано." },
+    "w5-wed-1": { accept: "c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя." },
+    "w5-wed-2": { accept: "Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается." },
+    "w5-wed-3": { accept: "Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine." },
+    "w5-thu-1": { accept: "c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия." },
+    "w5-thu-2": { accept: "c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM." },
+    "w5-thu-3": { accept: "Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно." },
+    "w5-sat-1": { accept: "Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости." },
+    "w5-sat-2": { accept: "c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями." },
+    "w5-sat-4": { accept: "Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор." },
+    "w5-sat-5": { accept: "«Финальный босс» решён вслух за 40 минут, тест на утечки зелёный (что это значит — в шаге К2.6); получен разбор; три слабых места записаны." },
 
-    "w6-mon-1": { accept: "Перевод — одна транзакция: обе строки блокируются SELECT … FOR UPDATE по возрастанию ID, баланс проверяется под блокировкой, 40001 и 40P01 повторяются с BEGIN. c49 и c50 — ответ до раскрытия; W6-1 проходит go test -race." },
-    "w6-tue-1": { accept: "Таблица idempotency_keys: ключ с UNIQUE, отпечаток запроса, сохранённые статус и тело; повтор возвращает сохранённый ответ, другой payload с тем же ключом — 422. c51 — ответ до раскрытия; W6-2 проходит go test -race." },
-    "w6-tue-2": { accept: "Тест: два одинаковых запроса одновременно — один перевод. Ключ занимается INSERT … ON CONFLICT DO NOTHING в транзакции перевода; объяснено, почему -race молчит при «проверить, потом вставить». q40 — до вариантов." },
-    "w6-wed-1": { accept: "Событие пишется в outbox в той же транзакции, что и перевод; при откате нет ни перевода, ни события. c52 — ответ до раскрытия; q42 — до вариантов." },
-    "w6-wed-2": { accept: "Relay — одна горутина с владельцем: останавливается по ctx, после ошибки повторяет то же событие, отправленным помечает только после подтверждения; при остановке сервиса её дожидаются. W6-3 проходит go test -race." },
-    "w6-thu-1": { accept: "Потребитель фиксирует offset после обработки; ID события и результат — в одной транзакции; дубликат не меняет данные (тест); ключ сообщения — ID счёта. c53 — ответ до раскрытия; q43 — до вариантов." },
-    "w6-thu-2": { accept: "docker compose up поднимает Kafka и сервис; relay публикует событие перевода, потребитель его читает." },
-    "w6-sat-1": { accept: "100 параллельных переводов: сумма балансов неизменна, отрицательных балансов нет, -race чистый, встречные переводы не дают дедлока. q41 — до вариантов." },
-    "w6-sat-2": { accept: "Две записи по 2 минуты по-английски: идемпотентность (ключ, отпечаток, атомарный захват) и outbox (двойная запись, at-least-once, дедупликация)." },
-    "w6-sat-4": { accept: "Для запроса истории счёта — EXPLAIN ANALYZE до и после составного индекса (account_id, created_at); найден и убран N+1. c54 — ответ до раскрытия." }
+    "w6-mon-1": { accept: "ADR на английском: контекст, решение, альтернативы, последствия; что в scope и вне его." },
+    "w6-mon-2": { accept: "Пакет ledger не импортирует net/http и драйвер БД; Money в int64 покрыт тестами." },
+    "w6-tue-1": { accept: "Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405. c45 и диаграмма 10 — ответ до раскрытия; q36 и q37 — до вариантов." },
+    "w6-tue-2": { accept: "Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай. c46 — ответ до раскрытия; q39 — до вариантов." },
+    "w6-wed-1": { accept: "Миграции применяются на чистой БД; у пула заданы лимиты и таймаут подключения." },
+    "w6-wed-2": { accept: "q18 и q19: ответ до вариантов; в коде проверяются rows.Close и rows.Err, Rollback безопасен после Commit; тест на ошибку посреди итерации. c47 — ответ до раскрытия." },
+    "w6-thu-1": { accept: "JSON-логи с request id; секреты не логируются; конфиг из окружения с понятной ошибкой при отсутствии значения. c48 — ответ до раскрытия; q38 — до вариантов." },
+    "w6-thu-2": { accept: "docker compose up поднимает сервис после healthcheck БД." },
+    "w6-sat-1": { accept: "Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится." },
+    "w6-sat-2": { accept: "Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил." },
+
+    "w7-mon-1": { accept: "Перевод — одна транзакция: обе строки блокируются SELECT … FOR UPDATE по возрастанию ID, баланс проверяется под блокировкой, 40001 и 40P01 повторяются с BEGIN. c49 и c50 — ответ до раскрытия; W7-1 проходит go test -race." },
+    "w7-tue-1": { accept: "Таблица idempotency_keys: ключ с UNIQUE, отпечаток запроса, сохранённые статус и тело; повтор возвращает сохранённый ответ, другой payload с тем же ключом — 422. c51 — ответ до раскрытия; W7-2 проходит go test -race." },
+    "w7-tue-2": { accept: "Тест: два одинаковых запроса одновременно — один перевод. Ключ занимается INSERT … ON CONFLICT DO NOTHING в транзакции перевода; объяснено, почему -race молчит при «проверить, потом вставить». q40 — до вариантов." },
+    "w7-wed-1": { accept: "Событие пишется в outbox в той же транзакции, что и перевод; при откате нет ни перевода, ни события. c52 — ответ до раскрытия; q42 — до вариантов." },
+    "w7-wed-2": { accept: "Relay — одна горутина с владельцем: останавливается по ctx, после ошибки повторяет то же событие, отправленным помечает только после подтверждения; при остановке сервиса её дожидаются. W7-3 проходит go test -race." },
+    "w7-thu-1": { accept: "Потребитель фиксирует offset после обработки; ID события и результат — в одной транзакции; дубликат не меняет данные (тест); ключ сообщения — ID счёта. c53 — ответ до раскрытия; q43 — до вариантов." },
+    "w7-thu-2": { accept: "docker compose up поднимает Kafka и сервис; relay публикует событие перевода, потребитель его читает." },
+    "w7-sat-1": { accept: "100 параллельных переводов: сумма балансов неизменна, отрицательных балансов нет, -race чистый, встречные переводы не дают дедлока. q41 — до вариантов." },
+    "w7-sat-2": { accept: "Две записи по 2 минуты по-английски: идемпотентность (ключ, отпечаток, атомарный захват) и outbox (двойная запись, at-least-once, дедупликация)." },
+    "w7-sat-4": { accept: "Для запроса истории счёта — EXPLAIN ANALYZE до и после составного индекса (account_id, created_at); найден и убран N+1. c54 — ответ до раскрытия." }
   },
 
-  // ─────────────── ОБРАЗЦЫ ОТВЕТОВ НА АНГЛИЙСКОМ (НЕДЕЛИ 1–3, 5–6) ───────────────
+  // ─────────────── ОБРАЗЦЫ ОТВЕТОВ НА АНГЛИЙСКОМ (НЕДЕЛИ 1–4, 6–7) ───────────────
   // hook — одна строка для запоминания; en — короткий ответ для интервью.
   // Открывать после своей попытки вслух; сверять смысл, а не заучивать дословно.
   modelAnswers: {
-    "w6-mon-1": {
+    "w7-mon-1": {
       hook: "Read Committed + FOR UPDATE in ID order; retry 40001 and 40P01 from BEGIN.",
       en: "PostgreSQL defaults to Read Committed, where each statement sees its own snapshot. For a transfer I open one transaction, lock both account rows with SELECT FOR UPDATE in ascending ID order, check the balance under the lock and update both rows. A stable lock order means opposite transfers cannot deadlock. Repeatable Read or Serializable would also work, but then I must retry the whole transaction on serialization failures, SQLSTATE 40001; deadlocks, 40P01, are retried too."
     },
-    "w6-tue-1": {
+    "w7-tue-1": {
       hook: "Key + request fingerprint + stored response; same key, other body → 422.",
       en: "A client may retry a payment, so it sends an Idempotency-Key that makes the retry safe. I store the key in a table with a unique constraint, together with a hash of the request and the response I returned. A repeat with the same key and the same request gets the stored response, and no money moves again. The same key with a different body is rejected with 422. Business outcomes like insufficient funds are stored too; infrastructure failures are rolled back, so the client can retry."
     },
-    "w6-tue-2": {
+    "w7-tue-2": {
       hook: "Claim the key atomically: INSERT … ON CONFLICT DO NOTHING in the transfer's transaction.",
       en: "Check-then-insert fails under concurrency: both requests check, find nothing and both transfer. There is no data race, so the race detector stays silent. I claim the key with INSERT ON CONFLICT DO NOTHING on a unique column, in the same transaction as the transfer. A concurrent duplicate blocks on the unique index until the first transaction ends; in Read Committed it then sees the conflict and returns the stored response, or claims the key if the first one rolled back."
     },
-    "w6-wed-1": {
+    "w7-wed-1": {
       hook: "Event row in the same transaction; a relay publishes; at-least-once.",
       en: "Publishing after commit is a dual write: if the process dies between the commit and the send, the event is lost, and sending first can announce a transfer that then rolls back. So I insert the event into an outbox table in the same transaction as the transfer: either both are committed or neither is. A relay publishes the rows later, so delivery is at-least-once, and consumers must deduplicate."
     },
-    "w6-wed-2": {
+    "w7-wed-2": {
       hook: "One owned goroutine: poll, publish in order, mark after the ack, stop on ctx.",
       en: "The relay moves events from the outbox table to Kafka; it is one goroutine started and stopped by main. It polls unsent rows in ID order, publishes each with the account ID as the key, and marks a row sent only after the broker acknowledged it. On an error it stops the batch and retries the same row after a pause, which keeps per-account order. It returns when its context is cancelled, and shutdown waits for it. A lost acknowledgement means a duplicate, which the consumer handles."
     },
-    "w6-thu-1": {
+    "w7-thu-1": {
       hook: "Commit the offset after the effect; dedupe by event ID; order per partition.",
       en: "My consumer is at-least-once: it commits the offset only after the effect is committed in the database. A crash or a rebalance in between replays messages, so the handler stores the event ID in the same transaction as the effect and skips IDs it has seen. Ordering is per partition: events are keyed by account ID and the producer hashes the key, so one account's events stay in one partition, and within a group each partition is read by one consumer at a time."
     },
-    "w6-sat-1": {
+    "w7-sat-1": {
       hook: "Per-account locks in ID order; check under the lock; 100 goroutines under -race.",
       en: "Each account has its own lock, and a transfer takes both locks in ascending ID order, so opposite transfers cannot deadlock. The balance is checked under the locks, so two transfers cannot spend the same money. The test starts a hundred goroutines doing random transfers under the race detector, checks that the total never changes and that no balance goes negative, and fails by timeout if something hangs."
     },
-    "w6-sat-4": {
+    "w7-sat-4": {
       hook: "EXPLAIN ANALYZE; composite index (account_id, created_at); N+1 → one query.",
       en: "I run EXPLAIN ANALYZE on the real query: it shows the plan with actual times and row counts. For an account's history, newest first, a sequential scan over all transfers points to a missing index, so I add a B-tree index on account_id and created_at, and the plan becomes an index scan without a sort. N+1 is one query per row of a list; I replace it with a join or one query with id = ANY of an array."
     },
-    "w5-tue-1": {
+    "w6-tue-1": {
       hook: "One goroutine per connection; r.Context() ends when the client leaves or the handler returns; four timeouts, zero means none.",
       en: "net/http serves each connection in its own goroutine and runs the handler there; Go 1.22 patterns match method and path, give 405 with Allow, and r.PathValue reads the id. I pass r.Context() to every downstream call, because it is cancelled when the client disconnects and after the handler returns. On http.Server I set ReadHeaderTimeout and IdleTimeout, usually ReadTimeout and WriteTimeout, since zero means no limit. Tests go through httptest against the real handler."
     },
-    "w5-tue-2": {
+    "w6-tue-2": {
       hook: "Domain errors in, status codes out — in one function; 500 hides the cause and logs it once.",
       en: "The domain returns sentinel and typed errors and doesn't import net/http. One function at the HTTP boundary maps them with errors.Is and errors.As, so wrapped errors still match: validation to 400 with the field, not found to 404, insufficient funds to 409. Anything else is a 500 with a generic body, and the real error is logged once with the request id. errors.As needs a pointer to the type that implements error."
     },
-    "w5-wed-2": {
+    "w6-wed-2": {
       hook: "*sql.DB is a pool: defer rows.Close, check rows.Err, defer tx.Rollback, everything on tx.",
       en: "*sql.DB is a connection pool, not one connection: I get it once from sql.Open, with limits on open and idle connections. Every Rows holds a connection until it is closed, so after checking the query error I defer rows.Close() and check rows.Err() after the loop. A transaction pins one connection: I begin it with the request context, defer Rollback, which is a no-op after Commit, and run every statement on tx, not on db."
     },
-    "w5-thu-1": {
+    "w6-thu-1": {
       hook: "One JSON logger, request_id via With in middleware, LogValue for secrets, log errors once.",
       en: "I create one slog logger with a JSON handler at startup, and a middleware adds request_id with With and puts that logger into the request context. I log key-value attributes, not formatted strings. Types with secrets get a LogValue method, so passwords and tokens never reach the log, and each error is logged once, where it is handled."
     },
@@ -1239,128 +1325,133 @@ const PLAN = {
       hook: "Interface = type + value; nil only if both are nil. Service has value methods, *Service has both.",
       en: "A typed nil inside an interface is not really nil: returning a nil *MyErr as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; *Service's has both. So if Notify has a pointer receiver, *Service implements the interface and Service does not. Calling v.Notify() on a Service variable is only shorthand for (&v).Notify(); an element of map[K]Service or a function result of type Service cannot be called that way, while an element of map[K]*Service or a result of type *Service can."
     },
-    "w1-wed-3": {
-      hook: "Wrap with %w; Is compares, As extracts.",
-      en: "I wrap errors with fmt.Errorf(\"withdraw: %w\", err) to add context while keeping the cause. errors.Is walks the chain and compares with a sentinel such as ErrInsufficientFunds; errors.As finds the first error of the target type, such as *ValidationError, and lets me read its fields. A test should check both after one and after two levels of wrapping."
-    },
-    "w1-thu-1": {
-      hook: "Sentinel for a condition, typed error for data; %v breaks the chain.",
-      en: "I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With %w the cause stays in the chain; with %v it becomes plain text, so errors.Is and errors.As stop matching. errors.Join, since Go 1.20, combines several errors, and Is and As check each of them."
-    },
-    "w1-thu-2": {
-      hook: "Defer arguments are evaluated immediately; deferred closures can change named results.",
-      en: "defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
-    },
-    "w1-thu-4": {
-      hook: "recover works only in a deferred call of the panicking goroutine.",
-      en: "A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
-    },
     "w1-sat-1": {
       hook: "Service lacks pointer-receiver methods in its method set; &Service{} has them.",
       en: "It comes down to method sets: var _ Notifier = Service{} fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; &Service{} works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value."
     },
-    "w1-sat-2": {
+    "w1-sat-10": {
+      hook: "Zero values are usable; pointer receiver to mutate or avoid copies; T lacks pointer methods; typed nil is not nil.",
+      en: "Zero values: 0 for int, \"\" for string, and nil for *T, []T, map[K]V, chan T and error. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync.Mutex; then I keep all methods of the type on pointers. If Notify has a pointer receiver, the method set of Service does not include it, so var _ Notifier = Service{} fails to compile, while &Service{} works. A nil *MyErr returned as error is not nil, because the interface stores the type *MyErr; it is nil only when both type and value are nil."
+    },
+
+    "w2-mon-1": {
+      hook: "Sentinel for a condition, typed error for data; %v breaks the chain.",
+      en: "I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With %w the cause stays in the chain; with %v it becomes plain text, so errors.Is and errors.As stop matching. errors.Join, since Go 1.20, combines several errors, and Is and As check each of them."
+    },
+    "w2-mon-2": {
+      hook: "Wrap with %w; Is compares, As extracts.",
+      en: "I wrap errors with fmt.Errorf(\"withdraw: %w\", err) to add context while keeping the cause. errors.Is walks the chain and compares with a sentinel such as ErrInsufficientFunds; errors.As finds the first error of the target type, such as *ValidationError, and lets me read its fields. A test should check both after one and after two levels of wrapping."
+    },
+    "w2-tue-1": {
+      hook: "Defer arguments are evaluated immediately; deferred closures can change named results.",
+      en: "defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value."
+    },
+    "w2-tue-2": {
+      hook: "recover works only in a deferred call of the panicking goroutine.",
+      en: "A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. SafeDiv defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors."
+    },
+    "w2-thu-1": {
+      hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
+      en: "A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
+    },
+    "w2-sat-1": {
       hook: "For the zero-values row: var x T is ready — 0, \"\", false or nil; nil map writes panic, nil channels block.",
       en: "Every declared variable starts at its zero value: var n int is 0, var s string is \"\", var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but m[k] = v panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys."
     },
-    "w1-sat-6": {
+    "w2-sat-4": {
       hook: "Zero values are usable; Is compares, As extracts; pointer receiver to mutate or avoid copies; defer is LIFO.",
       en: "Zero values: 0 for int, \"\" for string, and nil for *T, []T, map[K]V, chan T and error. errors.Is checks whether the chain contains a specific value, such as a sentinel; errors.As finds the first error of a given type and lets me read its fields. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync.Mutex; then I keep all methods of the type on pointers. A nil *MyErr returned as error is not nil, because the interface stores the type *MyErr; it is nil only when both type and value are nil. Deferred calls run last in, first out when the function returns, and their arguments are evaluated when the defer statement runs."
     },
 
-    "w2-mon-1": {
+    "w3-mon-1": {
       hook: "A slice is pointer, len, cap over a shared array.",
       en: "A slice is only a view onto an underlying array: a descriptor with a pointer, a length and a capacity. So s[1:3] copies no elements, and because re-slicing shares the array, a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:]; copy or slices.Clone gives an independent slice."
     },
-    "w2-mon-2": {
+    "w3-mon-2": {
       hook: "Aliasing: limit cap or copy. Retention: only a copy frees the array.",
       en: "Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a[:len(a):len(a)] so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100 MiB array reachable, and only a copy, such as bytes.Clone or make plus copy, lets the array be collected."
     },
-    "w2-tue-1": {
-      hook: "Map order is unspecified; reading nil is fine, writing nil panics.",
-      en: "A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so m[k].f = 1 does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable."
-    },
-    "w2-tue-3": {
+    "w3-tue-3": {
       hook: "len counts bytes; range decodes runes.",
       en: "Strings are bytes, not characters: len(\"héllo\") is 6, not 5, because a string is an immutable sequence of bytes, usually UTF-8, and é takes two of them. len(s) counts bytes and s[i] returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes (code points) I use utf8.RuneCountInString, and I convert to []rune only when I really need to index by code point."
     },
-    "w2-tue-4": {
+    "w3-tue-4": {
       hook: "Removing in place changes the caller's array; copy first for independence.",
       en: "Removing in place changes the caller's data: append(s[:i], s[i+1:]...) shifts elements inside the shared array, so the caller's slice sees the change. slices.Delete also modifies the array and, since Go 1.22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices.Clone or build a new slice."
     },
-    "w2-wed-1": {
+    "w3-wed-1": {
       hook: "Set[T comparable] because map keys must be comparable.",
       en: "Generics let one type work for many element types: a generic Set[T comparable] is a map[T]struct{} with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys."
     },
-    "w2-wed-2": {
+    "w3-wed-2": {
       hook: "Generics for same algorithm over types; interfaces for different behaviour.",
       en: "Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice."
     },
-    "w2-thu-1": {
+    "w3-thu-1": {
       hook: "Module = versioned set of packages; internal/ limits importers.",
       en: "A module is the unit of versioning and a package the unit of compilation: go.mod declares the module path, such as module example.com/shop, and a package is one directory compiled together. Code under internal/ can be imported only by packages in the tree rooted at the parent of that internal directory. cmd/ for binaries and internal/ for private code is a common layout, not a language rule."
     },
-    "w2-thu-2": {
+    "w3-thu-2": {
       hook: "Named cases with t.Run; t.Helper fixes line numbers; t.Parallel only with isolated data.",
       en: "A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t.Run, so a failure shows the case name and one case can be run with -run. t.Helper marks a helper so failures point to the caller's line. t.Parallel runs a test alongside others, so I use it only when cases don't share mutable data. CI runs go test -race."
     },
-    "w2-sat-2": {
+    "w3-sat-2": {
       hook: "Validate each line, report all errors, exit non-zero on failure.",
       en: "txsum is a small CLI that totals transactions from a CSV file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency."
     },
 
-    "w3-mon-1": {
+    "w4-mon-1": {
       hook: "Data race: unsynchronized access with a write. Race condition: timing-dependent logic.",
       en: "In Go, concurrent work runs in goroutines, which the Go runtime schedules onto a few OS threads. go f() starts one with a small growable stack, so a program can run many; a WaitGroup lets the caller wait for them. Running them together can cause two different bugs. A data race is unsynchronized access to the same memory from two goroutines, at least one writing; the race detector reports it when a run hits it. A race condition is a timing-dependent logic bug, possible without a data race: a check and an update in two separate critical sections."
     },
-    "w3-tue-1": {
+    "w4-tue-1": {
       hook: "nil blocks forever; a buffer only absorbs bursts; closed: send panics, receive drains, then zero, false.",
       en: "A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the sending side closes it, once, after the last send."
     },
-    "w3-tue-2": {
+    "w4-tue-2": {
       hook: "Producer closes jobs; WaitGroup closes results; every blocking step watches ctx.",
       en: "A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a WaitGroup and then closes results, so the consumer's range loop ends. Workers and the producer select on ctx.Done at every send and receive, so cancelling ctx releases all of them; a consumer that stops early must cancel."
     },
-    "w3-tue-3": {
+    "w4-tue-3": {
       hook: "Each stage owns and closes its output; every send selects on ctx.Done.",
       en: "The pipeline has three stages, generator, square and sink, and stops through a context. Generator and square each own their output and close it when they return. Every send sits in a select with ctx.Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited."
     },
-    "w3-wed-1": {
+    "w4-wed-1": {
       hook: "Random among ready cases; checking ctx first is not priority.",
       en: "In Go, select lets one goroutine wait on several channel operations at once. If several cases are ready, it picks one pseudo-randomly, so there is no priority between them. A default case makes the select non-blocking. Checking ctx.Err() before the select doesn't give cancellation priority either, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen."
     },
-    "w3-wed-2": {
+    "w4-wed-2": {
       hook: "One forwarder per input; close output after all forwarders finish.",
       en: "Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A WaitGroup tracks the forwarders, and one more goroutine closes the output after all of them return. Each forwarder selects on ctx.Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order."
     },
-    "w3-thu-1": {
+    "w4-thu-1": {
       hook: "Atomics protect one variable; invariants across fields need a mutex; Cond.Wait goes in a for loop.",
       en: "The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic.AddInt64 on a counter, and one balance can also use a CompareAndSwap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs a lock around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns."
     },
-    "w3-mon-2": {
+    "w4-mon-2": {
       hook: "Close outputs when done; a done channel or ctx stops every stage.",
       en: "A pipeline is a chain of stages connected by channels, such as gen → square → print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send sits in a select with done or ctx.Done; closing done or cancelling ctx frees them all."
     },
-    "w3-thu-3": {
+    "w4-thu-3": {
       hook: "One WaitGroup by pointer; no re-lock; recheck under Lock; copy, don't leak pointers.",
       en: "Most sync bugs come from a few traps, and each has a simple fix. Calling Done on a copy of a WaitGroup leaves the original counter unchanged, so Wait blocks; pass a pointer, or use wg.Go in Go 1.25+. A goroutine that locks a Mutex it already holds deadlocks, because Go mutexes are not reentrant. A check under RLock is stale after RUnlock, so check-then-insert must recheck under Lock. A pointer returned from a protected map lets callers change the value after unlock, so I copy the value while holding the lock."
     },
-    "w3-sat-1": {
+    "w4-sat-1": {
       hook: "For every goroutine: who starts it, who stops it, how it ends.",
       en: "Before I call concurrent code done, I check every goroutine's lifecycle. For each one I name its owner and its exit path. It returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a WaitGroup or errgroup. If I can't name the exit path, the goroutine can leak. go test -race finds data races only in the paths the tests run; it does not find deadlocks or logic errors."
     },
-    "w3-sat-4": {
+    "w4-sat-4": {
       hook: "Channels transfer ownership; mutexes protect shared state.",
       en: "Channels and mutexes solve different problems, so I choose by who owns the data. I use a channel when work or data moves between goroutines and ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. Either way the goal is clear ownership; I measure before claiming either is faster."
     },
-    "w3-thu-2": {
+    "w4-thu-2": {
       hook: "Same result three ways; choose by clarity and measured contention; never leak internal state.",
       en: "A counter and a cache both hold shared state, but the cache adds an aliasing trap. A counter built with a Mutex, with atomic.Int64 or with one owner goroutine gives the same result under -race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RWMutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead."
     }
   },
 
   // ─────────────────────── «ЧТО ВЫВЕДЕТ КОД» ───────────────────────
-  // Для недели 2. Фрагменты: для запуска нужны package main, import "fmt" и func main (у P5/P6 main уже есть).
+  // Для недели 3. Фрагменты: для запуска нужны package main, import "fmt" и func main (у P5/P6 main уже есть).
   // output — вывод на Go 1.22+ с версией языка модуля ≥ 1.22; why/whyRU — объяснение EN/RU; version — где вывод зависит от версии.
   predict: [
     { id: "p1", code: "s := []int{1, 2, 3}\nt := s[:2]\nt = append(t, 99)\nfmt.Println(s)", output: "[1 2 99]", why: "t has capacity 3, so append writes into the shared backing array and overwrites s[2].", whyRU: "У t ёмкость 3, поэтому append пишет в общий массив и перезаписывает s[2]." },

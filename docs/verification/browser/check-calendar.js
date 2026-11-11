@@ -81,13 +81,14 @@ const { chromium } = require("playwright");
     ok(`${week}: model answers rendered`, shown === expected && shown > 0, `${shown}/${expected}`);
     ok(`${week}: model answers collapsed by default`, await p.locator(".plan-model[open]").count() === 0);
   }
-  await p.goto(base + "#/plan/w1"); await p.waitForTimeout(150);
-  await p.click(".plan-task:has(#plan-task-w1-wed-3) .plan-model summary");
-  const m = await p.textContent(".plan-task:has(#plan-task-w1-wed-3) .plan-model");
-  ok("w1-wed-3 answer opens and is English", m.includes("Remember: Wrap with %w; Is compares, As extracts.") && m.includes("errors.As finds"), m.slice(0, 60));
-  ok("lang=en on answer", await p.locator('.plan-task:has(#plan-task-w1-wed-3) .plan-model p[lang="en"]').count() === 2);
-  await p.goto(base + "#/plan/w4"); await p.waitForTimeout(150);
-  ok("week 4 has no model answers yet", await p.locator(".plan-model").count() === 0);
+  // v91: the answer of w1-wed-3 (Is and As) moved with W2-1 ValidationError to w2-mon-2.
+  await p.goto(base + "#/plan/w2"); await p.waitForTimeout(150);
+  await p.click(".plan-task:has(#plan-task-w2-mon-2) .plan-model summary");
+  const m = await p.textContent(".plan-task:has(#plan-task-w2-mon-2) .plan-model");
+  ok("w2-mon-2 answer opens and is English", m.includes("Remember: Wrap with %w; Is compares, As extracts.") && m.includes("errors.As finds"), m.slice(0, 60));
+  ok("lang=en on answer", await p.locator('.plan-task:has(#plan-task-w2-mon-2) .plan-model p[lang="en"]').count() === 2);
+  await p.goto(base + "#/plan/w5"); await p.waitForTimeout(150);
+  ok("week 5 has no model answers yet", await p.locator(".plan-model").count() === 0);
 
   // Overflow with calendar and open answers.
   for (const [width, zoom] of [[320, 1], [320, 2], [390, 2], [430, 1], [1440, 1]]) {

@@ -1,4 +1,4 @@
-// Browser checks for weeks 1–2: cards c39–c44 (m6), quiz q28–q35, plan links and gaps.
+// Browser checks for weeks 1–3 (weeks 1–2 before v91): cards c39–c44 (m6), quiz q28–q35, plan links and gaps.
 const { chromium } = require("playwright");
 const base = "http://127.0.0.1:8765/";
 (async () => {
@@ -46,16 +46,16 @@ const base = "http://127.0.0.1:8765/";
     const reveal = await p.evaluate(() => document.body.innerText.includes("t.Cleanup(db.Close)") || [...document.querySelectorAll("details summary")].some(s => s.textContent.includes("Исправленный")));
     ok(`${w}: q35 answer reveals the corrected example`, reveal);
 
-    // Plan: weeks 1–2 link the new content and no longer list gaps.
-    for (const [day, hrefs] of [["w1/tue", ["#/practice/p-money"]], ["w1/wed", ["#/practice/p-account", "#/practice/p-validation", "#/quiz/q28", "#/quiz/q29", "#/cards/c39"]], ["w1/thu", ["#/practice/p-deferpanic", "#/quiz/q31", "#/quiz/q32", "#/quiz/q30"]], ["w1/sat", ["#/cards/c40", "#/quiz/q33", "#/quiz/q34"]], ["w2/tue", ["#/practice/p-removeslice", "#/cards/c41"]], ["w2/wed", ["#/practice/p-generics", "#/cards/c42"]], ["w2/thu", ["#/cards/c43", "#/cards/c44", "#/quiz/q35"]], ["w2/sat", ["#/practice/p-txsum"]]]) {
+    // Plan: weeks 1–3 link the new content and no longer list gaps (v91: week 1 is stretched over two).
+    for (const [day, hrefs] of [["w1/tue", ["#/practice/p-money"]], ["w1/thu", ["#/practice/p-account", "#/quiz/q28", "#/quiz/q29", "#/cards/c39"]], ["w2/mon", ["#/practice/p-validation", "#/quiz/q30"]], ["w2/tue", ["#/practice/p-deferpanic", "#/quiz/q31", "#/quiz/q32"]], ["w2/sat", ["#/cards/c40", "#/quiz/q33", "#/quiz/q34"]], ["w3/tue", ["#/practice/p-removeslice", "#/cards/c41"]], ["w3/wed", ["#/practice/p-generics", "#/cards/c42"]], ["w3/thu", ["#/cards/c43", "#/cards/c44", "#/quiz/q35"]], ["w3/sat", ["#/practice/p-txsum"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(hrefs => ({ missing: hrefs.filter(h => !document.querySelector(`a[href="${h}"]`)), gaps: document.querySelectorAll(".plan-gap").length, overflow: document.documentElement.scrollWidth - window.innerWidth }), hrefs);
       ok(`${w}: plan ${day} links new content`, r.missing.length === 0, r.missing.join(","));
       ok(`${w}: plan ${day} has no gaps`, r.gaps === 0, r.gaps);
       ok(`${w}: plan ${day} no overflow`, r.overflow <= 0, r.overflow);
     }
-    const allGaps = await p.evaluate(() => Object.entries(PLAN.acceptance).filter(([k, v]) => /^w[12]-/.test(k) && v.exercise).map(([k]) => k));
-    ok(`${w}: no exercise gaps left in weeks 1–2`, allGaps.length === 0, allGaps.join(","));
+    const allGaps = await p.evaluate(() => Object.entries(PLAN.acceptance).filter(([k, v]) => /^w[123]-/.test(k) && v.exercise).map(([k]) => k));
+    ok(`${w}: no exercise gaps left in weeks 1–3`, allGaps.length === 0, allGaps.join(","));
 
     // Wiki shows all cards.
     await p.goto(base + "#/wiki"); await p.waitForTimeout(400);

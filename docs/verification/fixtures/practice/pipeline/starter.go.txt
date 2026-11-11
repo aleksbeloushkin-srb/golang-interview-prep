@@ -1,4 +1,4 @@
-// Package pipeline: practice task W3-2. Replace each TODO with your solution.
+// Package pipeline: practice task W4-2. Replace each TODO with your solution.
 package pipeline
 
 import "context"

@@ -21,7 +21,7 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 
 | Section | Route | What it does |
 |---|---|---|
-| Plan | `#/plan` | 13 weeks, 189 tasks by day, each linked to its material |
+| Plan | `#/plan` | 14 weeks, 197 tasks by day, each linked to its material |
 | Cards | `#/cards` | 72 questions in 10 modules, answered from memory, with a review schedule |
 | Diagrams | `#/simulators` | 12 step-by-step diagrams, 95 steps |
 | Quiz | `#/quiz` | 55 code traps: what it prints, where the bug is, how to fix it |
@@ -31,7 +31,7 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 
 ### Plan
 
-- Weeks 1–4: the language and concurrency. Weeks 5–8: a practice project, a ledger service. Weeks 9–13: interview formats — take-home and code review, system design, behavioral, mock interviews.
+- Weeks 1–5: the language and concurrency. Weeks 6–9: a practice project, a ledger service. Weeks 10–14: interview formats — take-home and code review, system design, behavioral, mock interviews.
 - The calendar starts on your own date (the Monday of week 1) and can be shifted by a week; it highlights today and what is left for the day.
 - Tasks are checked off with a counter per week. Many have a "Done when" criterion; LeetCode problems have a hint to open after your attempt; some tasks have a model answer in English. Plan marks can be exported and imported as JSON.
 - Talk-through trainer: Clarify → Approach → Complexity → Edge cases, a timer per step, a model answer, a self-rating and your weak steps.
@@ -67,12 +67,12 @@ A snippet, four to six options, an explanation in Russian, an answer to say in E
 
 ### Practice
 
-- 26 tasks for weeks 1–6 and 9: money and errors, `defer`, generics, a CSV tool, worker pool, pipeline, fan-in and fan-out, errgroup, token bucket, graceful shutdown, a goroutine leak, escape analysis, pprof, an HTTP API, a timeout wrapper, parallel transfers, idempotency, outbox, tee and or-done.
+- 26 tasks for weeks 1–7 and 10: money and errors, `defer`, generics, a CSV tool, worker pool, pipeline, fan-in and fan-out, errgroup, token bucket, graceful shutdown, a goroutine leak, escape analysis, pprof, an HTTP API, a timeout wrapper, parallel transfers, idempotency, outbox, tee and or-done.
 - Each has a contract in English and Russian, a starter, tests for `go test -race`, hints one at a time, a reference solution, a one-minute English explanation, common mistakes and variations; 15 also have "3 checks before you submit".
 - "Check on server" runs your pasted solution against the same tests with `-race` on Go 1.27.3, without network access; it needs sign-in.
 - Reference solutions and tests are in `docs/verification/fixtures/practice/`; the tests were checked against deliberately broken solutions.
 - **Your `go-prep` repository** (`#/practice/go-prep`): one module with a package per task, drills for run, build, vet and test, CI on GitHub Actions, compiler and assembly output (`-S`, `-m`, `GOSSAFUNC`, objdump), a command reference, and where Go keeps its files: `GOROOT`, `GOPATH` and the caches.
-- **"Channels and context" track** (`#/practice/track-channels`): 28 katas in 5 blocks, from channel basics through `select`, `context` and leaks to fan-in, fan-out, pipelines, bounded concurrency, errgroup and rate limiting, with code-review exercises and a table of Go version differences. The katas also appear in plan days of weeks 4–12; a kata is done when its plan task is checked.
+- **"Channels and context" track** (`#/practice/track-channels`): 28 katas in 5 blocks, from channel basics through `select`, `context` and leaks to fan-in, fan-out, pipelines, bounded concurrency, errgroup and rate limiting, with code-review exercises and a table of Go version differences. The katas also appear in plan days of weeks 5–13; a kata is done when its plan task is checked.
 
 ### Knowledge base
 
@@ -83,7 +83,7 @@ All 72 card topics on one page, and two reference projects with a reading order 
 
 ### Audio
 
-148 English recordings (Kokoro TTS, voices Michael and a slower Heart): short answers and Java comparisons for 52 cards, plan model answers for weeks 1–3, and explanations for 12 practice tasks. The "Listen" button appears only if the recording matches the current text.
+148 English recordings (Kokoro TTS, voices Michael and a slower Heart): short answers and Java comparisons for 52 cards, plan model answers for weeks 1–4, and explanations for 12 practice tasks. The "Listen" button appears only if the recording matches the current text.
 
 ## Sign-in and progress
 

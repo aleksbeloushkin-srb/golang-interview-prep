@@ -76,12 +76,12 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     // --- Signed out: read-only.
     await p.goto(base + "#/plan");
     await p.evaluate(() => localStorage.setItem("go_prep_progress_v2", JSON.stringify({ c1: "known" })));
-    await p.goto(base + "#/plan/w3/tue");
+    await p.goto(base + "#/plan/w4/tue");
     await p.waitForTimeout(300);
     ok(`${w}: signed out shows the sign-in button`, await p.isVisible("#account .account-signin"));
     await p.locator(".plan-task input[type=checkbox]").first().click();
     const ro = await p.evaluate(() => ({ checked: document.querySelector(".plan-task input[type=checkbox]").checked, notice: !document.getElementById("signin-notice").classList.contains("hidden"), text: document.getElementById("signin-notice").textContent, plan: localStorage.getItem("go_prep_plan_v1") }));
-    ok(`${w}: plan checkbox does not change without sign-in`, !ro.checked && ro.notice && /только на чтение/.test(ro.text) && !(ro.plan || "").includes("w3-mon-1"), JSON.stringify(ro));
+    ok(`${w}: plan checkbox does not change without sign-in`, !ro.checked && ro.notice && /только на чтение/.test(ro.text) && !(ro.plan || "").includes("w4-mon-1"), JSON.stringify(ro));
     const toast = await p.evaluate(() => { const n = document.getElementById("signin-notice"); const r = n.getBoundingClientRect(); return { fixed: getComputedStyle(n).position === "fixed", inView: r.top >= 0 && r.bottom <= innerHeight, close: Boolean(n.querySelector(".signin-notice-close")) }; });
     ok(`${w}: sign-in notice floats in view with a close button`, toast.fixed && toast.inView && toast.close, JSON.stringify(toast));
     await p.click("#signin-notice .signin-notice-close");
@@ -97,7 +97,7 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     ok(`${w}: practice check asks to sign in`, /Войти и проверить/.test(await p.locator(".practice-section .btn").filter({ hasText: /проверить/i }).first().textContent()));
 
     // --- Sign in: PKCE, back to the route, URL cleaned.
-    await p.goto(base + "#/plan/w3/tue");
+    await p.goto(base + "#/plan/w4/tue");
     await p.waitForTimeout(200);
     await p.click("#account .account-signin");
     await signedIn(p);
@@ -106,7 +106,7 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
     const tk = calls.token[0] || {};
     ok(`${w}: token request sends the verifier, not a secret`, tk.grant_type === "authorization_code" && tk.code === "code-123" && tk.code_verifier && tk.code_verifier.length >= 43 && !tk.client_secret, JSON.stringify(tk));
     const after = await p.evaluate(() => ({ url: location.href, email: document.querySelector(".account-email").textContent, pending: sessionStorage.getItem("go_prep_auth_pending_v1"), stored: JSON.stringify(localStorage).includes("access-1") || JSON.stringify(sessionStorage).includes("access-1"), noticeHidden: document.getElementById("signin-notice").classList.contains("hidden") }));
-    ok(`${w}: back on the route with a clean URL`, after.url === base + "#/plan/w3/tue", after.url);
+    ok(`${w}: back on the route with a clean URL`, after.url === base + "#/plan/w4/tue", after.url);
     ok(`${w}: email shown, notice hidden, token not in storage`, after.email === "aleks@example.com" && !after.pending && !after.stored && after.noticeHidden, JSON.stringify(after));
 
     // First sync: the server is empty, so the browser's progress is uploaded.
@@ -128,7 +128,7 @@ const signedIn = p => p.waitForSelector("#account .account-avatar", { timeout: 8
       const before = calls.authorize.length;
       await p.reload();
       await signedIn(p);
-      ok(`${w}: reload ${k} signs in again without a click`, calls.authorize.length === before + 1 && p.url() === base + "#/plan/w3/tue", `${calls.authorize.length} ${p.url()}`);
+      ok(`${w}: reload ${k} signs in again without a click`, calls.authorize.length === before + 1 && p.url() === base + "#/plan/w4/tue", `${calls.authorize.length} ${p.url()}`);
     }
 
     // Practice: failing then passing check; solved badge.

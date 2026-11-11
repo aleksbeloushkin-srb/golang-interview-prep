@@ -1,4 +1,4 @@
-// Package txsum: practice task W2-4. Sum transactions from CSV lines
+// Package txsum: practice task W3-4. Sum transactions from CSV lines
 // "account,amount,currency" per account and currency. Replace each TODO.
 package txsum
 

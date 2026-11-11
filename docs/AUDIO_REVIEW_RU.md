@@ -1,4 +1,4 @@
-# Приёмка озвучки на слух — недели 1–3
+# Приёмка озвучки на слух — недели 1–4
 
 Сгенерировано из `data/audio.js` (148 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
@@ -13,302 +13,302 @@
 
 | Ключ | Голос | с | Риск | Термины | Числа | Условие слышно | Паузы/темп | Итог | Комментарий |
 |---|---|---|---|---|---|---|---|---|---|
-| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.6 | `-race` → «dash race» |  |  |  |  |  |  |
+| [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 32.5 | `-race` → «dash race» |  |  |  |  |  |  |
 | [card:c2:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 33.6 | `-race` → «dash race» |  |  |  |  |  |  |
 | [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 38.9 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
-| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 39.6 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
+| [card:c7:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 39.5 | `GOMAXPROCS=4`, cgo |  |  |  |  |  |  |
 | [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 18.0 | IDs → «I-D's», pprof |  |  |  |  |  |  |
-| [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 17.9 | IDs → «I-D's», pprof |  |  |  |  |  |  |
+| [card:c12:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 17.8 | IDs → «I-D's», pprof |  |  |  |  |  |  |
 | [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Michael | 42.2 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
-| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 42.5 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 39.5 | hchan, confinement |  |  |  |  |  |  |
-| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 40.6 | hchan, confinement |  |  |  |  |  |  |
-| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.3 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
-| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
-| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.5 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
-| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.3 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 39.4 | 1 ms → «one millisecond» |  |  |  |  |  |  |
-| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 41.6 | 1 ms → «one millisecond» |  |  |  |  |  |  |
-| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 45.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
+| [card:c12:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12) | Heart | 42.4 | I/O, `go.uber.org/goleak` → «Uber's go-leak library» |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 39.4 | hchan, confinement |  |  |  |  |  |  |
+| [card:c15:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 40.5 | hchan, confinement |  |  |  |  |  |  |
+| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 40.2 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
+| [card:c17:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 41.1 | `recvq`, `goready`, `sendDirect` |  |  |  |  |  |  |
+| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 49.4 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
+| [card:c20:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 50.2 | `CompareAndSwapInt64(&x, old, new)` |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 39.3 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c21:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 41.5 | 1 ms → «one millisecond» |  |  |  |  |  |  |
+| [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 44.9 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
 | [card:c23:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 47.0 | `-gcflags=-m`, `-benchmem` |  |  |  |  |  |  |
 | [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 45.3 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
 | [card:c25:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 46.4 | mcache, mcentral, mheap, 32 KiB, noscan |  |  |  |  |  |  |
-| [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 17.1 | `-Xmx` |  |  |  |  |  |  |
+| [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 17.0 | `-Xmx` |  |  |  |  |  |  |
 | [card:c27:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 17.5 | `-Xmx` |  |  |  |  |  |  |
 | [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Michael | 49.7 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
 | [card:c27:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27) | Heart | 51.4 | GOGC, GOMEMLIMIT, 200/400 MiB, OOM |  |  |  |  |  |  |
-| [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.8 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
+| [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 23.7 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
 | [card:c29:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 23.9 | ArrayList, subList, ByteBuffer |  |  |  |  |  |  |
-| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 35.0 | `s[1:3]` |  |  |  |  |  |  |
-| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 36.0 | `s[1:3]` |  |  |  |  |  |  |
+| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Michael | 34.9 | `s[1:3]` |  |  |  |  |  |  |
+| [card:c29:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c29) | Heart | 35.9 | `s[1:3]` |  |  |  |  |  |  |
 | [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 26.5 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
 | [card:c30:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 26.9 | `2^B`, tophash, 6.5 |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 28.3 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
 | [card:c33:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 28.7 | `*MyError`, «err is not nil» |  |  |  |  |  |  |
-| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.5 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
+| [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 42.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
 | [card:c34:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 43.4 | `*Counter`, `(&c).Set()`, `map[K]Counter` |  |  |  |  |  |  |
 | [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 40.1 | «directly», «panicking goroutine» |  |  |  |  |  |  |
-| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 41.7 | «directly», «panicking goroutine» |  |  |  |  |  |  |
-| [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 26.0 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
-| [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 26.5 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
-| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 40.9 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
-| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 41.2 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
-| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.7 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
+| [card:c35:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 41.6 | «directly», «panicking goroutine» |  |  |  |  |  |  |
+| [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 25.9 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
+| [card:c39:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 26.4 | `getCause`, `addSuppressed` |  |  |  |  |  |  |
+| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Michael | 40.8 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
+| [card:c39:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c39) | Heart | 41.1 | `fmt.Errorf`, `%w`, `io.EOF`, Go 1.20 |  |  |  |  |  |  |
+| [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 42.6 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
 | [card:c40:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 43.9 | `nil`, пустая строка, длинное перечисление |  |  |  |  |  |  |
-| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 25.7 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
-| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 26.0 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
-| [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 36.7 | import path, `.go`, `internal/` |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 25.6 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c41:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 25.9 | `len(s)`, `s[i]`, `[]rune` |  |  |  |  |  |  |
+| [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 36.6 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c43:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 38.2 | import path, `.go`, `internal/` |  |  |  |  |  |  |
 | [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 47.1 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
-| [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 48.6 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
-| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 24.0 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
-| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 24.5 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
-| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 38.9 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
-| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 39.6 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
-| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 20.0 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
-| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 20.9 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
+| [card:c47:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 48.5 | `*sql.DB`, `BeginTx(ctx, nil)` |  |  |  |  |  |  |
+| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 23.9 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
+| [card:c55:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 24.4 | jstack, «all goroutines are asleep - deadlock!», TryLock |  |  |  |  |  |  |
+| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Michael | 38.8 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
+| [card:c55:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55) | Heart | 39.5 | Coffman, livelock, «hold and wait» |  |  |  |  |  |  |
+| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 19.9 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
+| [card:c56:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 20.8 | `newCondition()`, signalAll, «spurious wakeups» |  |  |  |  |  |  |
 | [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Michael | 39.6 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
-| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 40.8 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
-| [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 27.4 | `x := expr` |  |  |  |  |  |  |
+| [card:c56:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56) | Heart | 40.7 | `c.L`, Wait/Signal/Broadcast |  |  |  |  |  |  |
+| [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Michael | 27.3 | `x := expr` |  |  |  |  |  |  |
 | [plan:w1-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/mon) | Heart | 28.0 | `x := expr` |  |  |  |  |  |  |
-| [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 36.9 | `for i := range` против `for i = range` |  |  |  |  |  |  |
+| [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 36.8 | `for i := range` против `for i = range` |  |  |  |  |  |  |
 | [plan:w1-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Heart | 37.2 | `for i := range` против `for i = range` |  |  |  |  |  |  |
 | [plan:w1-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Michael | 44.4 | 12.50 EUR, 1250, −0.05 EUR |  |  |  |  |  |  |
 | [plan:w1-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Heart | 45.0 | 12.50 EUR, 1250, −0.05 EUR |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 50.0 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 51.5 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
-| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 43.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
-| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 45.1 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
-| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
-| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
-| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 27.4 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w2-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 28.3 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
-| [plan:w2-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 33.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
-| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 39.2 | `gen → square → print` → «then» |  |  |  |  |  |  |
-| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 39.7 | `gen → square → print` → «then» |  |  |  |  |  |  |
-| [plan:w3-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 29.4 | `go test -race`, errgroup |  |  |  |  |  |  |
-| [plan:w3-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 29.4 | `go test -race`, errgroup |  |  |  |  |  |  |
-| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 29.8 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 30.3 | `-race` → «dash race» |  |  |  |  |  |  |
-| [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Michael | 39.1 | I/O |  |  |  |  |  |  |
+| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 43.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 45.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 27.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 28.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 33.7 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 39.1 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 39.7 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w4-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Michael | 29.4 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w4-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Heart | 29.3 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 29.7 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 30.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Michael | 39.0 | I/O |  |  |  |  |  |  |
 | [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Heart | 40.7 | I/O |  |  |  |  |  |  |
-| [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Michael | 29.9 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
+| [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Michael | 29.8 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Heart | 30.4 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Michael | 38.8 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
 | [practice:p-money:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money) | Heart | 39.4 | 12.50 EUR, −0.05 EUR |  |  |  |  |  |  |
-| [card:c1:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Michael | 21.5 |  |  |  |  |  |  |  |
+| [card:c1:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Michael | 21.4 |  |  |  |  |  |  |  |
 | [card:c1:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Heart | 22.1 |  |  |  |  |  |  |  |
 | [card:c1:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Michael | 36.7 |  |  |  |  |  |  |  |
 | [card:c1:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c1) | Heart | 37.1 |  |  |  |  |  |  |  |
 | [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Michael | 13.8 |  |  |  |  |  |  |  |
-| [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 13.9 |  |  |  |  |  |  |  |
+| [card:c2:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2) | Heart | 13.8 |  |  |  |  |  |  |  |
 | [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Michael | 16.4 |  |  |  |  |  |  |  |
-| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.2 |  |  |  |  |  |  |  |
-| [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 15.9 |  |  |  |  |  |  |  |
+| [card:c7:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7) | Heart | 17.1 |  |  |  |  |  |  |  |
+| [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 15.8 |  |  |  |  |  |  |  |
 | [card:c13:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 36.8 |  |  |  |  |  |  |  |
-| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 38.2 |  |  |  |  |  |  |  |
-| [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 13.6 |  |  |  |  |  |  |  |
-| [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 13.7 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Michael | 36.7 |  |  |  |  |  |  |  |
+| [card:c13:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13) | Heart | 38.1 |  |  |  |  |  |  |  |
+| [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 13.5 |  |  |  |  |  |  |  |
+| [card:c14:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 13.6 |  |  |  |  |  |  |  |
 | [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Michael | 37.0 |  |  |  |  |  |  |  |
 | [card:c14:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14) | Heart | 37.9 |  |  |  |  |  |  |  |
-| [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 15.6 |  |  |  |  |  |  |  |
-| [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 12.5 |  |  |  |  |  |  |  |
+| [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Michael | 15.5 |  |  |  |  |  |  |  |
+| [card:c15:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15) | Heart | 16.1 |  |  |  |  |  |  |  |
+| [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 12.4 |  |  |  |  |  |  |  |
 | [card:c16:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 12.6 |  |  |  |  |  |  |  |
 | [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Michael | 36.0 |  |  |  |  |  |  |  |
-| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 36.6 |  |  |  |  |  |  |  |
-| [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 11.3 |  |  |  |  |  |  |  |
-| [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 11.6 |  |  |  |  |  |  |  |
+| [card:c16:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16) | Heart | 36.5 |  |  |  |  |  |  |  |
+| [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Michael | 11.2 |  |  |  |  |  |  |  |
+| [card:c17:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17) | Heart | 11.5 |  |  |  |  |  |  |  |
 | [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 13.8 |  |  |  |  |  |  |  |
-| [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 14.6 |  |  |  |  |  |  |  |
-| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 28.2 |  |  |  |  |  |  |  |
+| [card:c18:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 14.5 |  |  |  |  |  |  |  |
+| [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Michael | 28.1 |  |  |  |  |  |  |  |
 | [card:c18:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18) | Heart | 28.8 |  |  |  |  |  |  |  |
 | [card:c19:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) | Michael | 28.4 |  |  |  |  |  |  |  |
-| [card:c19:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) | Heart | 29.4 |  |  |  |  |  |  |  |
-| [card:c20:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 17.3 |  |  |  |  |  |  |  |
-| [card:c20:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 17.8 |  |  |  |  |  |  |  |
+| [card:c19:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19) | Heart | 29.3 |  |  |  |  |  |  |  |
+| [card:c20:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Michael | 17.2 |  |  |  |  |  |  |  |
+| [card:c20:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20) | Heart | 17.7 |  |  |  |  |  |  |  |
 | [card:c21:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Michael | 18.1 |  |  |  |  |  |  |  |
-| [card:c21:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 18.3 |  |  |  |  |  |  |  |
-| [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 21.2 |  |  |  |  |  |  |  |
+| [card:c21:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21) | Heart | 18.2 |  |  |  |  |  |  |  |
+| [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 21.1 |  |  |  |  |  |  |  |
 | [card:c22:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 22.4 |  |  |  |  |  |  |  |
 | [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Michael | 37.2 |  |  |  |  |  |  |  |
-| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 38.6 |  |  |  |  |  |  |  |
-| [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 17.2 |  |  |  |  |  |  |  |
+| [card:c22:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22) | Heart | 38.5 |  |  |  |  |  |  |  |
+| [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Michael | 17.1 |  |  |  |  |  |  |  |
 | [card:c23:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23) | Heart | 18.3 |  |  |  |  |  |  |  |
 | [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 14.0 |  |  |  |  |  |  |  |
-| [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 14.1 |  |  |  |  |  |  |  |
+| [card:c24:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 14.0 |  |  |  |  |  |  |  |
 | [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Michael | 42.4 |  |  |  |  |  |  |  |
-| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 43.0 |  |  |  |  |  |  |  |
+| [card:c24:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24) | Heart | 42.9 |  |  |  |  |  |  |  |
 | [card:c25:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Michael | 17.9 |  |  |  |  |  |  |  |
 | [card:c25:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25) | Heart | 18.7 |  |  |  |  |  |  |  |
-| [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 19.2 |  |  |  |  |  |  |  |
-| [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 19.7 |  |  |  |  |  |  |  |
+| [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 19.1 |  |  |  |  |  |  |  |
+| [card:c26:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 19.6 |  |  |  |  |  |  |  |
 | [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Michael | 42.5 |  |  |  |  |  |  |  |
 | [card:c26:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26) | Heart | 43.6 |  |  |  |  |  |  |  |
-| [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 22.6 |  |  |  |  |  |  |  |
+| [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 22.5 |  |  |  |  |  |  |  |
 | [card:c28:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 23.5 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.4 |  |  |  |  |  |  |  |
-| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.7 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Michael | 37.3 |  |  |  |  |  |  |  |
+| [card:c28:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28) | Heart | 38.6 |  |  |  |  |  |  |  |
 | [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Michael | 19.2 |  |  |  |  |  |  |  |
-| [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 20.2 |  |  |  |  |  |  |  |
-| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 16.2 |  |  |  |  |  |  |  |
-| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Heart | 16.2 |  |  |  |  |  |  |  |
-| [card:c31:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 32.0 |  |  |  |  |  |  |  |
+| [card:c30:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30) | Heart | 20.1 |  |  |  |  |  |  |  |
+| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 16.1 |  |  |  |  |  |  |  |
+| [card:c31:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Heart | 16.1 |  |  |  |  |  |  |  |
+| [card:c31:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Michael | 31.9 |  |  |  |  |  |  |  |
 | [card:c31:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) | Heart | 32.4 |  |  |  |  |  |  |  |
 | [card:c32:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Michael | 21.6 |  |  |  |  |  |  |  |
-| [card:c32:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Heart | 22.5 |  |  |  |  |  |  |  |
-| [card:c32:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Michael | 24.5 |  |  |  |  |  |  |  |
+| [card:c32:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Heart | 22.4 |  |  |  |  |  |  |  |
+| [card:c32:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Michael | 24.4 |  |  |  |  |  |  |  |
 | [card:c32:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c32) | Heart | 25.0 |  |  |  |  |  |  |  |
 | [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Michael | 14.4 |  |  |  |  |  |  |  |
-| [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 15.3 |  |  |  |  |  |  |  |
-| [card:c34:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 15.8 |  |  |  |  |  |  |  |
+| [card:c33:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33) | Heart | 15.2 |  |  |  |  |  |  |  |
+| [card:c34:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Michael | 15.7 |  |  |  |  |  |  |  |
 | [card:c34:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34) | Heart | 16.1 |  |  |  |  |  |  |  |
-| [card:c35:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 21.4 |  |  |  |  |  |  |  |
-| [card:c35:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 21.7 |  |  |  |  |  |  |  |
-| [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 24.5 |  |  |  |  |  |  |  |
-| [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 25.2 |  |  |  |  |  |  |  |
+| [card:c35:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Michael | 21.3 |  |  |  |  |  |  |  |
+| [card:c35:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c35) | Heart | 21.6 |  |  |  |  |  |  |  |
+| [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Michael | 24.4 |  |  |  |  |  |  |  |
+| [card:c40:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c40) | Heart | 25.1 |  |  |  |  |  |  |  |
 | [card:c41:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Michael | 18.6 |  |  |  |  |  |  |  |
-| [card:c41:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 19.1 |  |  |  |  |  |  |  |
-| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 22.4 |  |  |  |  |  |  |  |
-| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Heart | 23.1 |  |  |  |  |  |  |  |
-| [card:c42:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 27.4 |  |  |  |  |  |  |  |
+| [card:c41:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41) | Heart | 19.0 |  |  |  |  |  |  |  |
+| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 22.3 |  |  |  |  |  |  |  |
+| [card:c42:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Heart | 23.0 |  |  |  |  |  |  |  |
+| [card:c42:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Michael | 27.3 |  |  |  |  |  |  |  |
 | [card:c42:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42) | Heart | 27.5 |  |  |  |  |  |  |  |
 | [card:c43:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Michael | 18.9 |  |  |  |  |  |  |  |
 | [card:c43:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43) | Heart | 19.5 |  |  |  |  |  |  |  |
-| [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 23.2 |  |  |  |  |  |  |  |
+| [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 23.1 |  |  |  |  |  |  |  |
 | [card:c44:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 23.9 |  |  |  |  |  |  |  |
-| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 31.3 |  |  |  |  |  |  |  |
+| [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Michael | 31.2 |  |  |  |  |  |  |  |
 | [card:c44:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44) | Heart | 32.8 |  |  |  |  |  |  |  |
-| [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 23.5 |  |  |  |  |  |  |  |
+| [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Michael | 23.4 |  |  |  |  |  |  |  |
 | [card:c47:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c47) | Heart | 23.8 |  |  |  |  |  |  |  |
-| [card:c57:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Michael | 32.8 |  |  |  |  |  |  |  |
+| [card:c57:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Michael | 32.7 |  |  |  |  |  |  |  |
 | [card:c57:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Heart | 33.3 |  |  |  |  |  |  |  |
 | [card:c57:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Michael | 45.5 |  |  |  |  |  |  |  |
 | [card:c57:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57) | Heart | 46.8 |  |  |  |  |  |  |  |
-| [card:c58:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 26.3 |  |  |  |  |  |  |  |
+| [card:c58:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 26.2 |  |  |  |  |  |  |  |
 | [card:c58:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Heart | 26.8 |  |  |  |  |  |  |  |
-| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 42.8 |  |  |  |  |  |  |  |
-| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Heart | 44.7 |  |  |  |  |  |  |  |
-| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Michael | 37.3 |  |  |  |  |  |  |  |
-| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 38.6 |  |  |  |  |  |  |  |
+| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Michael | 42.7 |  |  |  |  |  |  |  |
+| [card:c58:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58) | Heart | 44.6 |  |  |  |  |  |  |  |
+| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Michael | 37.2 |  |  |  |  |  |  |  |
+| [card:c59:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 38.5 |  |  |  |  |  |  |  |
 | [card:c59:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Michael | 44.3 |  |  |  |  |  |  |  |
-| [card:c59:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 46.7 |  |  |  |  |  |  |  |
-| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 28.1 |  |  |  |  |  |  |  |
-| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Heart | 28.8 |  |  |  |  |  |  |  |
-| [card:c60:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 46.3 |  |  |  |  |  |  |  |
+| [card:c59:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59) | Heart | 46.6 |  |  |  |  |  |  |  |
+| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 28.0 |  |  |  |  |  |  |  |
+| [card:c60:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Heart | 28.7 |  |  |  |  |  |  |  |
+| [card:c60:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Michael | 46.2 |  |  |  |  |  |  |  |
 | [card:c60:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60) | Heart | 48.0 |  |  |  |  |  |  |  |
-| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 33.6 |  |  |  |  |  |  |  |
-| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Heart | 34.2 |  |  |  |  |  |  |  |
-| [card:c61:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 52.2 |  |  |  |  |  |  |  |
+| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 33.5 |  |  |  |  |  |  |  |
+| [card:c61:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Heart | 34.1 |  |  |  |  |  |  |  |
+| [card:c61:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Michael | 52.1 |  |  |  |  |  |  |  |
 | [card:c61:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61) | Heart | 53.2 |  |  |  |  |  |  |  |
 | [card:c62:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Michael | 28.6 |  |  |  |  |  |  |  |
-| [card:c62:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 29.0 |  |  |  |  |  |  |  |
+| [card:c62:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 28.9 |  |  |  |  |  |  |  |
 | [card:c62:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Michael | 40.9 |  |  |  |  |  |  |  |
-| [card:c62:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 42.1 |  |  |  |  |  |  |  |
-| [card:c63:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Michael | 34.4 |  |  |  |  |  |  |  |
+| [card:c62:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c62) | Heart | 42.0 |  |  |  |  |  |  |  |
+| [card:c63:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Michael | 34.3 |  |  |  |  |  |  |  |
 | [card:c63:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Heart | 35.4 |  |  |  |  |  |  |  |
 | [card:c63:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Michael | 43.1 |  |  |  |  |  |  |  |
-| [card:c63:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Heart | 44.1 |  |  |  |  |  |  |  |
-| [card:c64:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 22.3 |  |  |  |  |  |  |  |
+| [card:c63:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63) | Heart | 44.0 |  |  |  |  |  |  |  |
+| [card:c64:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 22.2 |  |  |  |  |  |  |  |
 | [card:c64:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Heart | 23.1 |  |  |  |  |  |  |  |
-| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 52.4 |  |  |  |  |  |  |  |
-| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Heart | 53.3 |  |  |  |  |  |  |  |
+| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Michael | 52.3 |  |  |  |  |  |  |  |
+| [card:c64:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64) | Heart | 53.2 |  |  |  |  |  |  |  |
 | [card:c65:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Michael | 39.1 |  |  |  |  |  |  |  |
 | [card:c65:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Heart | 40.1 |  |  |  |  |  |  |  |
-| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Michael | 41.3 |  |  |  |  |  |  |  |
-| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Heart | 42.8 |  |  |  |  |  |  |  |
-| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Michael | 28.8 |  |  |  |  |  |  |  |
-| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 29.5 |  |  |  |  |  |  |  |
+| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Michael | 41.2 |  |  |  |  |  |  |  |
+| [card:c65:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c65) | Heart | 42.7 |  |  |  |  |  |  |  |
+| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Michael | 28.7 |  |  |  |  |  |  |  |
+| [card:c66:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 29.4 |  |  |  |  |  |  |  |
 | [card:c66:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Michael | 38.8 |  |  |  |  |  |  |  |
-| [card:c66:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 40.5 |  |  |  |  |  |  |  |
-| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 36.5 |  |  |  |  |  |  |  |
-| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Heart | 38.1 |  |  |  |  |  |  |  |
-| [card:c67:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 45.0 |  |  |  |  |  |  |  |
+| [card:c66:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66) | Heart | 40.4 |  |  |  |  |  |  |  |
+| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 36.4 |  |  |  |  |  |  |  |
+| [card:c67:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Heart | 38.0 |  |  |  |  |  |  |  |
+| [card:c67:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Michael | 44.9 |  |  |  |  |  |  |  |
 | [card:c67:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67) | Heart | 46.4 |  |  |  |  |  |  |  |
-| [card:c68:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 35.9 |  |  |  |  |  |  |  |
+| [card:c68:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 35.8 |  |  |  |  |  |  |  |
 | [card:c68:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Heart | 37.1 |  |  |  |  |  |  |  |
-| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 43.0 |  |  |  |  |  |  |  |
-| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Heart | 44.2 |  |  |  |  |  |  |  |
-| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Michael | 29.7 |  |  |  |  |  |  |  |
-| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 29.9 |  |  |  |  |  |  |  |
+| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Michael | 42.9 |  |  |  |  |  |  |  |
+| [card:c68:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68) | Heart | 44.1 |  |  |  |  |  |  |  |
+| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Michael | 29.6 |  |  |  |  |  |  |  |
+| [card:c69:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 29.8 |  |  |  |  |  |  |  |
 | [card:c69:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Michael | 41.4 |  |  |  |  |  |  |  |
-| [card:c69:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 42.4 |  |  |  |  |  |  |  |
+| [card:c69:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c69) | Heart | 42.3 |  |  |  |  |  |  |  |
 | [card:c70:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Michael | 28.1 |  |  |  |  |  |  |  |
-| [card:c70:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Heart | 27.9 |  |  |  |  |  |  |  |
-| [card:c70:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Michael | 43.5 |  |  |  |  |  |  |  |
+| [card:c70:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Heart | 27.8 |  |  |  |  |  |  |  |
+| [card:c70:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Michael | 43.4 |  |  |  |  |  |  |  |
 | [card:c70:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c70) | Heart | 45.0 |  |  |  |  |  |  |  |
-| [card:c71:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 30.7 |  |  |  |  |  |  |  |
+| [card:c71:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 30.6 |  |  |  |  |  |  |  |
 | [card:c71:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Heart | 31.1 |  |  |  |  |  |  |  |
-| [card:c71:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 40.2 |  |  |  |  |  |  |  |
+| [card:c71:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Michael | 40.1 |  |  |  |  |  |  |  |
 | [card:c71:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71) | Heart | 40.8 |  |  |  |  |  |  |  |
-| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 36.9 |  |  |  |  |  |  |  |
-| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 38.0 |  |  |  |  |  |  |  |
-| [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 44.2 |  |  |  |  |  |  |  |
+| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 36.8 |  |  |  |  |  |  |  |
+| [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 37.9 |  |  |  |  |  |  |  |
+| [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 44.1 |  |  |  |  |  |  |  |
 | [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 45.6 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
-| [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 28.5 |  |  |  |  |  |  |  |
-| [plan:w1-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 38.6 |  |  |  |  |  |  |  |
-| [plan:w1-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 40.1 |  |  |  |  |  |  |  |
-| [plan:w1-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Michael | 25.3 |  |  |  |  |  |  |  |
-| [plan:w1-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Heart | 25.4 |  |  |  |  |  |  |  |
-| [plan:w1-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Michael | 21.8 |  |  |  |  |  |  |  |
-| [plan:w1-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Heart | 22.1 |  |  |  |  |  |  |  |
-| [plan:w1-thu-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Michael | 29.7 |  |  |  |  |  |  |  |
-| [plan:w1-thu-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/thu) | Heart | 30.8 |  |  |  |  |  |  |  |
-| [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 27.5 |  |  |  |  |  |  |  |
-| [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 27.6 |  |  |  |  |  |  |  |
-| [plan:w1-wed-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 26.3 |  |  |  |  |  |  |  |
-| [plan:w1-wed-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 26.4 |  |  |  |  |  |  |  |
-| [plan:w2-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Michael | 27.9 |  |  |  |  |  |  |  |
-| [plan:w2-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
-| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
-| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
-| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 43.0 |  |  |  |  |  |  |  |
-| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 44.2 |  |  |  |  |  |  |  |
-| [plan:w2-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 25.7 |  |  |  |  |  |  |  |
-| [plan:w2-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 26.6 |  |  |  |  |  |  |  |
-| [plan:w2-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Michael | 20.6 |  |  |  |  |  |  |  |
-| [plan:w2-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 21.4 |  |  |  |  |  |  |  |
-| [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Michael | 26.4 |  |  |  |  |  |  |  |
-| [plan:w2-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
-| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 38.5 |  |  |  |  |  |  |  |
-| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 39.8 |  |  |  |  |  |  |  |
-| [plan:w3-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 25.6 |  |  |  |  |  |  |  |
-| [plan:w3-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 26.2 |  |  |  |  |  |  |  |
-| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 40.2 |  |  |  |  |  |  |  |
-| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 41.7 |  |  |  |  |  |  |  |
-| [plan:w3-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 38.7 |  |  |  |  |  |  |  |
-| [plan:w3-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 39.4 |  |  |  |  |  |  |  |
-| [plan:w3-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 40.9 |  |  |  |  |  |  |  |
-| [plan:w3-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 42.0 |  |  |  |  |  |  |  |
-| [plan:w3-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 28.8 |  |  |  |  |  |  |  |
-| [plan:w3-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 30.0 |  |  |  |  |  |  |  |
-| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 25.6 |  |  |  |  |  |  |  |
-| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 26.5 |  |  |  |  |  |  |  |
-| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 29.1 |  |  |  |  |  |  |  |
-| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 30.2 |  |  |  |  |  |  |  |
-| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 34.5 |  |  |  |  |  |  |  |
-| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 35.4 |  |  |  |  |  |  |  |
+| [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 28.4 |  |  |  |  |  |  |  |
+| [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 27.4 |  |  |  |  |  |  |  |
+| [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 27.5 |  |  |  |  |  |  |  |
+| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 25.3 |  |  |  |  |  |  |  |
+| [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 25.3 |  |  |  |  |  |  |  |
+| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 26.3 |  |  |  |  |  |  |  |
+| [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 26.4 |  |  |  |  |  |  |  |
+| [plan:w2-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Michael | 38.6 |  |  |  |  |  |  |  |
+| [plan:w2-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 40.0 |  |  |  |  |  |  |  |
+| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 42.9 |  |  |  |  |  |  |  |
+| [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 44.2 |  |  |  |  |  |  |  |
+| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 21.7 |  |  |  |  |  |  |  |
+| [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 22.0 |  |  |  |  |  |  |  |
+| [plan:w2-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 29.7 |  |  |  |  |  |  |  |
+| [plan:w2-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 30.8 |  |  |  |  |  |  |  |
+| [plan:w3-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 27.8 |  |  |  |  |  |  |  |
+| [plan:w3-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
+| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
+| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
+| [plan:w3-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 25.6 |  |  |  |  |  |  |  |
+| [plan:w3-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 26.6 |  |  |  |  |  |  |  |
+| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 20.6 |  |  |  |  |  |  |  |
+| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 21.3 |  |  |  |  |  |  |  |
+| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 26.3 |  |  |  |  |  |  |  |
+| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
+| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 38.5 |  |  |  |  |  |  |  |
+| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 39.7 |  |  |  |  |  |  |  |
+| [plan:w4-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Michael | 25.6 |  |  |  |  |  |  |  |
+| [plan:w4-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Heart | 26.2 |  |  |  |  |  |  |  |
+| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 40.2 |  |  |  |  |  |  |  |
+| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 41.7 |  |  |  |  |  |  |  |
+| [plan:w4-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 38.6 |  |  |  |  |  |  |  |
+| [plan:w4-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 39.3 |  |  |  |  |  |  |  |
+| [plan:w4-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 40.8 |  |  |  |  |  |  |  |
+| [plan:w4-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 42.0 |  |  |  |  |  |  |  |
+| [plan:w4-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 28.7 |  |  |  |  |  |  |  |
+| [plan:w4-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 29.9 |  |  |  |  |  |  |  |
+| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 25.5 |  |  |  |  |  |  |  |
+| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 26.5 |  |  |  |  |  |  |  |
+| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 29.0 |  |  |  |  |  |  |  |
+| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 30.1 |  |  |  |  |  |  |  |
+| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 34.4 |  |  |  |  |  |  |  |
+| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 35.3 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Michael | 33.2 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Heart | 34.3 |  |  |  |  |  |  |  |
-| [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Michael | 29.3 |  |  |  |  |  |  |  |
+| [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Michael | 29.2 |  |  |  |  |  |  |  |
 | [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Heart | 29.4 |  |  |  |  |  |  |  |
-| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Michael | 39.5 |  |  |  |  |  |  |  |
-| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Heart | 40.4 |  |  |  |  |  |  |  |
-| [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Michael | 44.0 |  |  |  |  |  |  |  |
+| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Michael | 39.4 |  |  |  |  |  |  |  |
+| [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Heart | 40.3 |  |  |  |  |  |  |  |
+| [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Michael | 43.9 |  |  |  |  |  |  |  |
 | [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Heart | 45.3 |  |  |  |  |  |  |  |
-| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Michael | 35.4 |  |  |  |  |  |  |  |
-| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Heart | 36.4 |  |  |  |  |  |  |  |
-| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Michael | 36.8 |  |  |  |  |  |  |  |
-| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Heart | 37.6 |  |  |  |  |  |  |  |
-| [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Michael | 41.4 |  |  |  |  |  |  |  |
+| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Michael | 35.3 |  |  |  |  |  |  |  |
+| [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Heart | 36.3 |  |  |  |  |  |  |  |
+| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Michael | 36.7 |  |  |  |  |  |  |  |
+| [practice:p-safecache:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache) | Heart | 37.5 |  |  |  |  |  |  |  |
+| [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Michael | 41.3 |  |  |  |  |  |  |  |
 | [practice:p-txsum:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum) | Heart | 41.6 |  |  |  |  |  |  |  |
 | [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Michael | 29.6 |  |  |  |  |  |  |  |
-| [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Heart | 30.3 |  |  |  |  |  |  |  |
+| [practice:p-validation:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-validation) | Heart | 30.2 |  |  |  |  |  |  |  |
 | [practice:p-workerpool:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool) | Michael | 42.0 |  |  |  |  |  |  |  |
-| [practice:p-workerpool:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool) | Heart | 43.6 |  |  |  |  |  |  |  |
+| [practice:p-workerpool:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool) | Heart | 43.5 |  |  |  |  |  |  |  |
 
 ## Что читает синтезатор
 
@@ -442,31 +442,31 @@
 
 > A typed nil inside an interface is not really nil: returning a nil pointer to My Err as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; the method set of pointer to Service has both. So if Notify has a pointer receiver, pointer to Service implements the interface and Service does not. Calling v dot Notify on a Service variable is only shorthand for taking the address of v, then calling Notify; an element of map of K to Service or a function result of type Service cannot be called that way, while an element of map of K to pointer to Service or a result of type pointer to Service can.
 
-**plan:w2-mon-1** (хеш текста `fa451292`)
+**plan:w3-mon-1** (хеш текста `fa451292`)
 
 > A slice is only a view onto an underlying array: a descriptor with a pointer, a length and a capacity. So slicing s from one to three copies no elements, and because re-slicing shares the array, a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows; copy or slices dot Clone gives an independent slice.
 
-**plan:w2-mon-2** (хеш текста `4bad243c`)
+**plan:w3-mon-2** (хеш текста `4bad243c`)
 
 > Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a full slice expression so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100-megabyte array reachable, and only a copy, such as bytes dot Clone or make plus copy, lets the array be collected.
 
-**plan:w2-thu-2** (хеш текста `63012adb`)
+**plan:w3-thu-2** (хеш текста `63012adb`)
 
 > A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t dot Run, so a failure shows the case name and one case can be run with -run. t dot Helper marks a helper so failures point to the caller's line. t dot Parallel runs a test alongside others, so I use it only when cases don't share mutable data. C-I runs go test dash race.
 
-**plan:w2-tue-3** (хеш текста `eda6ef4e`)
+**plan:w3-tue-3** (хеш текста `eda6ef4e`)
 
 > Strings are bytes, not characters: the length of héllo is 6, not 5, because a string is an immutable sequence of bytes, usually U-T-F-8, and é takes two of them. len of s counts bytes and s of i returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes, code points, I use utf8 dot Rune Count In String, and I convert to slice of rune only when I really need to index by code point.
 
-**plan:w3-mon-2** (хеш текста `22a1fb09`)
+**plan:w4-mon-2** (хеш текста `22a1fb09`)
 
 > A pipeline is a chain of stages connected by channels, such as gen, then square, then print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send sits in a select with done or ctx dot Done; closing done or cancelling ctx frees them all.
 
-**plan:w3-sat-1** (хеш текста `1d2d8d76`)
+**plan:w4-sat-1** (хеш текста `1d2d8d76`)
 
 > Before I call concurrent code done, I check every goroutine's lifecycle. For each one I name its owner and its exit path. It returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a Wait Group or an err group. If I can't name the exit path, the goroutine can leak. go test dash race finds data races only in the paths the tests run; it does not find deadlocks or logic errors.
 
-**plan:w3-thu-2** (хеш текста `04d5573b`)
+**plan:w4-thu-2** (хеш текста `04d5573b`)
 
 > A counter and a cache both hold shared state, but the cache adds an aliasing trap. A counter built with a Mutex, with atomic dot Int64 or with one owner goroutine gives the same result under dash race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RW Mutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead.
 
@@ -786,87 +786,87 @@
 
 > It comes down to method sets: var underscore Notifier equals a Service literal fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; address of a Service literal works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value.
 
-**plan:w1-sat-2** (хеш текста `6bff937d`)
-
-> Every declared variable starts at its zero value: var n int is zero, var s string is the empty string, var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but assigning to it, m of k equals v, panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
-
-**plan:w1-thu-1** (хеш текста `9a4045da`)
-
-> I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With percent w the cause stays in the chain; with percent v it becomes plain text, so errors dot Is and errors dot As stop matching. errors dot Join, since Go one 20, combines several errors, and Is and As check each of them.
-
-**plan:w1-thu-2** (хеш текста `93c596a8`)
-
-> defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
-
-**plan:w1-thu-4** (хеш текста `6ceaff76`)
-
-> A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. Safe Div defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
-
 **plan:w1-wed-1** (хеш текста `90c56110`)
 
 > A type switch branches on the dynamic type stored in an interface: switch v colon-equals x dot type runs the first case whose type matches it; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the F-M-T interface with a String method that returns a string; F-M-T uses it for percent v and percent s, which is how a type controls its printed form.
 
-**plan:w1-wed-3** (хеш текста `3f00ed4f`)
+**plan:w2-mon-1** (хеш текста `9a4045da`)
+
+> I use a sentinel error when callers only branch on a fixed condition, and a typed error when they need details such as the invalid field. With percent w the cause stays in the chain; with percent v it becomes plain text, so errors dot Is and errors dot As stop matching. errors dot Join, since Go one 20, combines several errors, and Is and As check each of them.
+
+**plan:w2-mon-2** (хеш текста `3f00ed4f`)
 
 > I wrap errors with F-M-T dot Error-f, withdraw: percent w, err, to add context while keeping the cause. errors dot Is walks the chain and compares with a sentinel such as Err Insufficient Funds; errors dot As finds the first error of the target type, such as pointer to Validation Error, and lets me read its fields. A test should check both after one and after two levels of wrapping.
 
-**plan:w2-sat-2** (хеш текста `24d403dd`)
+**plan:w2-sat-1** (хеш текста `6bff937d`)
 
-> txsum is a small C-L-I that totals transactions from a C-S-V file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
+> Every declared variable starts at its zero value: var n int is zero, var s string is the empty string, var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but assigning to it, m of k equals v, panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
 
-**plan:w2-thu-1** (хеш текста `6f28e549`)
-
-> A module is the unit of versioning and a package the unit of compilation: go dot mod declares the module path, such as module example dot com slash shop, and a package is one directory compiled together. Code in an internal directory can be imported only by packages in the tree rooted at the parent of that internal directory. cmd for binaries and internal for private code is a common layout, not a language rule.
-
-**plan:w2-tue-1** (хеш текста `3a44b4c6`)
+**plan:w2-thu-1** (хеш текста `3a44b4c6`)
 
 > A Go map is a built-in hash table with a few rules worth knowing. Iteration order is not specified, so code must not depend on it. Reading a missing key returns the zero value; v, ok tells absence from a stored zero. A nil map can be read but not written. Map elements are not addressable, so assigning to a field, m of k dot f, does not compile for struct values. Any concurrent access where at least one goroutine writes needs synchronization; the runtime may detect it and stop with a fatal error. Deleting entries does not shrink the table, but deleted values are no longer kept reachable.
 
-**plan:w2-tue-4** (хеш текста `4fe73252`)
+**plan:w2-tue-1** (хеш текста `93c596a8`)
+
+> defer schedules cleanup for when the function returns; deferred calls run in last-in-first-out order, but their arguments are evaluated when the defer statement executes. A deferred closure can read and change named results after the return statement has set them; with unnamed results it cannot change the returned value.
+
+**plan:w2-tue-2** (хеш текста `6ceaff76`)
+
+> A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. Safe Div defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
+
+**plan:w3-sat-2** (хеш текста `24d403dd`)
+
+> txsum is a small C-L-I that totals transactions from a C-S-V file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
+
+**plan:w3-thu-1** (хеш текста `6f28e549`)
+
+> A module is the unit of versioning and a package the unit of compilation: go dot mod declares the module path, such as module example dot com slash shop, and a package is one directory compiled together. Code in an internal directory can be imported only by packages in the tree rooted at the parent of that internal directory. cmd for binaries and internal for private code is a common layout, not a language rule.
+
+**plan:w3-tue-4** (хеш текста `4fe73252`)
 
 > Removing in place changes the caller's data: appending the tail after i to the part before i shifts elements inside the shared array, so the caller's slice sees the change. slices dot Delete also modifies the array and, since Go one 22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices dot Clone or build a new slice.
 
-**plan:w2-wed-1** (хеш текста `44ead2fc`)
+**plan:w3-wed-1** (хеш текста `44ead2fc`)
 
 > Generics let one type work for many element types: a generic Set[T comparable] is a map from T to an empty struct with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys.
 
-**plan:w2-wed-2** (хеш текста `09e54783`)
+**plan:w3-wed-2** (хеш текста `09e54783`)
 
 > Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice.
 
-**plan:w3-mon-1** (хеш текста `4a1de081`)
+**plan:w4-mon-1** (хеш текста `4a1de081`)
 
 > In Go, concurrent work runs in goroutines, which the Go runtime schedules onto a few O-S threads. go f starts one with a small growable stack, so a program can run many; a Wait Group lets the caller wait for them. Running them together can cause two different bugs. A data race is unsynchronized access to the same memory from two goroutines, at least one writing; the race detector reports it when a run hits it. A race condition is a timing-dependent logic bug, possible without a data race: a check and an update in two separate critical sections.
 
-**plan:w3-sat-4** (хеш текста `4b3c0a24`)
+**plan:w4-sat-4** (хеш текста `4b3c0a24`)
 
 > Channels and mutexes solve different problems, so I choose by who owns the data. I use a channel when work or data moves between goroutines and ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. Either way the goal is clear ownership; I measure before claiming either is faster.
 
-**plan:w3-thu-1** (хеш текста `e770fc82`)
+**plan:w4-thu-1** (хеш текста `e770fc82`)
 
 > The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic dot Add Int64 on a counter, and one balance can also use a Compare And Swap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs a lock around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns.
 
-**plan:w3-thu-3** (хеш текста `df7f3896`)
+**plan:w4-thu-3** (хеш текста `df7f3896`)
 
 > Most sync bugs come from a few traps, and each has a simple fix. Calling Done on a copy of a Wait Group leaves the original counter unchanged, so Wait blocks; pass a pointer, or use wg dot Go in Go one 25 or later. A goroutine that locks a Mutex it already holds deadlocks, because Go mutexes are not reentrant. A check under R Lock is stale after R Unlock, so check-then-insert must recheck under Lock. A pointer returned from a protected map lets callers change the value after unlock, so I copy the value while holding the lock.
 
-**plan:w3-tue-1** (хеш текста `ac857e36`)
+**plan:w4-tue-1** (хеш текста `ac857e36`)
 
 > A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the sending side closes it, once, after the last send.
 
-**plan:w3-tue-2** (хеш текста `4e0b0ad6`)
+**plan:w4-tue-2** (хеш текста `4e0b0ad6`)
 
 > A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a Wait Group and then closes results, so the consumer's range loop ends. Workers and the producer select on ctx dot Done at every send and receive, so cancelling ctx releases all of them; a consumer that stops early must cancel.
 
-**plan:w3-tue-3** (хеш текста `4db397bc`)
+**plan:w4-tue-3** (хеш текста `4db397bc`)
 
 > The pipeline has three stages, generator, square and sink, and stops through a context. Generator and square each own their output and close it when they return. Every send sits in a select with ctx dot Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
 
-**plan:w3-wed-1** (хеш текста `08c18dd8`)
+**plan:w4-wed-1** (хеш текста `08c18dd8`)
 
 > In Go, select lets one goroutine wait on several channel operations at once. If several cases are ready, it picks one pseudo-randomly, so there is no priority between them. A default case makes the select non-blocking. Checking ctx dot Err before the select doesn't give cancellation priority either, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen.
 
-**plan:w3-wed-2** (хеш текста `3883f7f8`)
+**plan:w4-wed-2** (хеш текста `3883f7f8`)
 
 > Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A Wait Group tracks the forwarders, and one more goroutine closes the output after all of them return. Each forwarder selects on ctx dot Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order.
 

@@ -490,14 +490,14 @@ function renderPracticeTrack(view, id, track) {
 }
 
 /* --- Справочная страница практикума (data/guides.js) --- */
-// Дерево раскладки go-prep: учебные пакеты недель 1–2 и задачи практикума по неделям.
+// Дерево раскладки go-prep: учебные пакеты недель 1 и 3 и задачи практикума по неделям.
 function practiceGuideTree() {
   const byWeek = {};
   const add = (week, line) => (byWeek[week] = byWeek[week] || []).push(line);
   add(1, "hello/         ← go run");
   add(1, "calc/          ← первый тест");
-  add(2, "asm/           ← ассемблер");
-  add(2, "cmd/sumdemo/   ← objdump");
+  add(3, "asm/           ← ассемблер");
+  add(3, "cmd/sumdemo/   ← objdump");
   PRACTICE.forEach(task => add(task.week, `${task.files.solution.name.replace(/\.go$/, "")}/`.padEnd(15) + `← ${task.code}`));
   const lines = ["go-prep/", "├── go.mod", "├── .gitignore   ← bin/", "├── .github/", "│   └── workflows/ci.yml"];
   const weeks = Object.keys(byWeek).map(Number).sort((a, b) => a - b);

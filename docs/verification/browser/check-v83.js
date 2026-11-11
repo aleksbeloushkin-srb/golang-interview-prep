@@ -98,7 +98,7 @@ const { chromium } = require("playwright");
     ok(`${w}: start button counts due and new`, /^▶ Занятие до 10 карточек: к повторению 2, новых на неделе \d+$/.test(label), label);
     await p.click("#view-cards [data-review-start]"); await p.waitForTimeout(300);
     const s1 = await p.evaluate(() => ({ filter: state.filter, ids: getFilteredCards().map(c => c.id), shown: state.shownCard, focus: document.activeElement.id }));
-    ok(`${w}: session starts with the most overdue, then week 1 cards`, s1.filter === "session" && s1.ids[0] === "c3" && s1.ids[1] === "c1" && s1.ids.length <= 10 && s1.ids.includes("c40") && s1.shown === "c3" && s1.focus === "card-q-en", JSON.stringify(s1));
+    ok(`${w}: session starts with the most overdue, then week 1 cards`, s1.filter === "session" && s1.ids[0] === "c3" && s1.ids[1] === "c1" && s1.ids.length <= 10 && s1.ids.includes("c34") && s1.shown === "c3" && s1.focus === "card-q-en", JSON.stringify(s1));
     await p.evaluate(() => { state.revealed = true; gradeCard("self"); }); await p.waitForTimeout(200);
     ok(`${w}: graded card leaves the session`, await p.evaluate(() => state.shownCard === "c1" && !getFilteredCards().some(c => c.id === "c3")));
     await p.reload(); await p.waitForTimeout(400);

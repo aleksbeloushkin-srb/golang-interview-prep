@@ -1,4 +1,4 @@
-// Package httperr is the reference solution for practice task W5-2: domain
+// Package httperr is the reference solution for practice task W6-2: domain
 // errors become HTTP responses in one place, without leaking internals.
 package httperr
 

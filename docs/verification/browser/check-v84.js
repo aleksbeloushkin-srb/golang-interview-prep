@@ -1,5 +1,5 @@
 // v84: справка «Свой репозиторий go-prep» (#/practice/go-prep): разделы, раскладка, файлы, тренировки, таблица
-// команд, ссылки; переход на раздел; ссылки из плана (w1-mon-2, w2-thu-1/2/5); «Как запустить» в задачах — go-prep и
+// команд, ссылки; переход на раздел; ссылки из плана (w1-mon-2, w3-thu-1/2/5); «Как запустить» в задачах — go-prep и
 // запасной отдельный модуль.
 const { chromium } = require("playwright");
 (async () => {
@@ -27,7 +27,7 @@ const { chromium } = require("playwright");
     }));
     ok(`${w}: guide title, tab title, focus`, g.title === "Свой репозиторий go-prep: раскладка, команды, CI" && g.doc.endsWith("— Практикум") && g.focus === "practice-title", JSON.stringify([g.title, g.doc, g.focus]));
     ok(`${w}: seven sections with toc`, g.sections.join() === "guide-setup,guide-layout,guide-drill1,guide-ci,guide-asm,guide-ref,guide-env" && g.toc.join() === "#/practice/go-prep/setup,#/practice/go-prep/layout,#/practice/go-prep/drill1,#/practice/go-prep/ci,#/practice/go-prep/asm,#/practice/go-prep/ref,#/practice/go-prep/env", g.toc.join());
-    ok(`${w}: layout tree lists practice packages by week`, /└── week9\//.test(g.tree) && /tee\/\s+← W9-1/.test(g.tree) && /money\/\s+← W1-1/.test(g.tree) && /hello\/\s+← go run/.test(g.tree) && /workerpool\/\s+← W3-1/.test(g.tree), g.tree.split("\n").slice(0, 8).join(" | "));
+    ok(`${w}: layout tree lists practice packages by week`, /└── week10\//.test(g.tree) && /tee\/\s+← W10-1/.test(g.tree) && /money\/\s+← W1-1/.test(g.tree) && /hello\/\s+← go run/.test(g.tree) && /workerpool\/\s+← W4-1/.test(g.tree), g.tree.split("\n").slice(0, 8).join(" | "));
     ok(`${w}: files, drills, table, links, checks`, g.files === 7 && g.steps.join() === "8,8" && g.rows === 21 && g.links.length === 14 && g.links.every(([https, t]) => https && t === "_blank") && g.checks === 3 && g.answersHidden, JSON.stringify(g));
     if (w === 1280) {
       const [dl] = await Promise.all([p.waitForEvent("download"), p.click("#guide-ci button:has-text('Скачать ci.yml')")]);
@@ -47,14 +47,14 @@ const { chromium } = require("playwright");
     ok(`${w}: p-money runs in go-prep`, run.main.startsWith("cd go-prep\nmkdir -p week1/money && cd week1/money\n# положи сюда money.go") && /go test -race -count=1 \.\/\.\.\.$/.test(run.main) && run.link, run.main);
     ok(`${w}: standalone module is the folded fallback`, run.closed && run.alone.startsWith("mkdir money && cd money\ngo mod init example.com/money"), run.alone);
     await p.goto(`${base}#/practice/p-transfers`); await p.waitForSelector("#practice-title");
-    ok(`${w}: later weeks use their week folder`, /mkdir -p week6\/transfers && cd week6\/transfers/.test(await p.textContent('pre[aria-label="Команды для запуска"]')));
+    ok(`${w}: later weeks use their week folder`, /mkdir -p week7\/transfers && cd week7\/transfers/.test(await p.textContent('pre[aria-label="Команды для запуска"]')));
 
     // План: ссылки на справку и новая задача тренировки.
     await p.goto(`${base}#/plan/w1/mon`); await p.waitForSelector("#plan-week-title");
     ok(`${w}: w1-mon-2 links the guide`, !!(await p.$('a[href="#/practice/go-prep"]')) && /go-prep/.test(await p.textContent('label[for="plan-task-w1-mon-2"], #plan-task-w1-mon-2 + *').catch(() => "go-prep")));
-    await p.goto(`${base}#/plan/w2/thu`); await p.waitForSelector("#plan-week-title");
-    const thu = await p.evaluate(() => ({ asm: !!document.querySelector('a[href="#/practice/go-prep/asm"]'), ci: !!document.querySelector('a[href="#/practice/go-prep/ci"]'), task: !!document.getElementById("plan-task-w2-thu-5"), head: [...document.querySelectorAll("h3")].map(h => h.textContent).find(t => /^Чт ·/.test(t)) }));
-    ok(`${w}: w2 Thursday has the drill, CI link and 120 min`, thu.asm && thu.ci && thu.task && / 120 мин/.test(thu.head || ""), JSON.stringify(thu));
+    await p.goto(`${base}#/plan/w3/thu`); await p.waitForSelector("#plan-week-title");
+    const thu = await p.evaluate(() => ({ asm: !!document.querySelector('a[href="#/practice/go-prep/asm"]'), ci: !!document.querySelector('a[href="#/practice/go-prep/ci"]'), task: !!document.getElementById("plan-task-w3-thu-5"), head: [...document.querySelectorAll("h3")].map(h => h.textContent).find(t => /^Чт ·/.test(t)) }));
+    ok(`${w}: w3 Thursday has the drill, CI link and 120 min`, thu.asm && thu.ci && thu.task && / 120 мин/.test(thu.head || ""), JSON.stringify(thu));
     ok(`${w}: plan no overflow`, (await overflow()) <= 0);
     await ctx.close();
   }

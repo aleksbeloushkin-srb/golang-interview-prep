@@ -5,8 +5,8 @@ const GUIDES = {
   "go-prep": {
     title: "Свой репозиторий go-prep: раскладка, команды, CI",
     intro: [
-      "Весь код практикума живёт в одном модуле `go-prep`: каждая задача — свой пакет `weekN/<задача>`, рядом — учебные пакеты недель 1–2. Так неделя прогоняется одной командой (`go test -race ./week3/...`), свои тесты лежат рядом с тестами практикума, а CI проверяет всё на каждый push.",
-      "Проект недель 5–8 (ledger) — отдельный репозиторий: его раскладку задаёт неделя 5. Сайт твой репозиторий не видит: «Проверить на сервере» проверяет код, вставленный на странице задачи."
+      "Весь код практикума живёт в одном модуле `go-prep`: каждая задача — свой пакет `weekN/<задача>`, рядом — учебные пакеты недель 1 и 3. Так неделя прогоняется одной командой (`go test -race ./week4/...`), свои тесты лежат рядом с тестами практикума, а CI проверяет всё на каждый push.",
+      "Проект недель 6–9 (ledger) — отдельный репозиторий: его раскладку задаёт неделя 6. Сайт твой репозиторий не видит: «Проверить на сервере» проверяет код, вставленный на странице задачи."
     ],
     sections: [
       {
@@ -32,7 +32,7 @@ const GUIDES = {
         title: "2. Раскладка: по пакету на задачу",
         paragraphs: [
           "Задачу практикума кладёшь в её папку и запускаешь там же; файлы заготовки и тестов — со страницы задачи, имя пакета в них уже совпадает с папкой. Зависимость (`go get`) добавляется в общий go.mod один раз.",
-          "Свои тесты — рядом с тестами практикума, в том же пакете (неделя 2: «Покрыть тестами W1-2 и W2-2»).",
+          "Свои тесты — рядом с тестами практикума, в том же пакете (неделя 3: «Покрыть тестами W1-2 и W3-2»).",
           "В командах ниже: перед первым `go test` положи в папку money.go и money_test.go со страницы задачи. `./week1/...` — вся неделя, `./...` — весь go-prep, то же делает CI."
         ],
         tree: true,
@@ -59,7 +59,7 @@ const GUIDES = {
       },
       {
         id: "ci",
-        title: "4. CI на GitHub Actions (неделя 2, четверг)",
+        title: "4. CI на GitHub Actions (неделя 3, четверг)",
         paragraphs: [
           "Положи файл в `.github/workflows/ci.yml` и запушь на GitHub: на каждый push и pull request проверка запускается на той версии Go, что записана в go.mod. Результат — зелёная или красная отметка у коммита.",
           "Версии действий — как в их README на ноябрь 2026. Если линтер пишет, что собран более старой версией Go, чем в go.mod, закрепи более новую `version` или временно убери шаг линтера."
@@ -71,25 +71,25 @@ const GUIDES = {
       },
       {
         id: "asm",
-        title: "5. Тренировка недели 2: сборка с ассемблером и без",
+        title: "5. Тренировка недели 3: сборка с ассемблером и без",
         paragraphs: [
-          "Пакет `week2/asm` и программа `week2/cmd/sumdemo` — файлы ниже. Ассемблер показан для amd64 и arm64 (Mac на Apple Silicon); сборка под чужую архитектуру работает с любого компьютера: `GOARCH=arm64` или `GOARCH=amd64` перед командой.",
+          "Пакет `week3/asm` и программа `week3/cmd/sumdemo` — файлы ниже. Ассемблер показан для amd64 и arm64 (Mac на Apple Silicon); сборка под чужую архитектуру работает с любого компьютера: `GOARCH=arm64` или `GOARCH=amd64` перед командой.",
           "Флаги компилятора идут через `-gcflags`: без `all=` — только пакетам из командной строки, с `all=` — всем, включая зависимости."
         ],
         files: [
           { name: "asm.go", code: "// Package asm — функции, на которых смотрят ассемблер, встраивание и escape analysis.\npackage asm\n\n// Add складывает два числа: маленькая функция, компилятор её встраивает.\nfunc Add(a, b int) int {\n\treturn a + b\n}\n\n// Sum складывает элементы слайса в цикле.\nfunc Sum(xs []int) int {\n\ttotal := 0\n\tfor _, x := range xs {\n\t\ttotal += x\n\t}\n\treturn total\n}\n\n// NewCounter возвращает указатель на локальную переменную: она уходит в кучу.\nfunc NewCounter() *int {\n\tn := 0\n\treturn &n\n}\n" },
           { name: "asm_test.go", code: "package asm\n\nimport \"testing\"\n\nfunc TestSum(t *testing.T) {\n\tif got := Sum([]int{1, 2, 3}); got != 6 {\n\t\tt.Fatalf(\"Sum = %d, want 6\", got)\n\t}\n\tif got := Add(2, 3); got != 5 {\n\t\tt.Fatalf(\"Add = %d, want 5\", got)\n\t}\n}\n\nfunc BenchmarkSum(b *testing.B) {\n\txs := make([]int, 1000)\n\tfor i := range xs {\n\t\txs[i] = i\n\t}\n\tfor b.Loop() {\n\t\tSum(xs)\n\t}\n}\n" },
-          { name: "main.go", code: "// Command sumdemo вызывает asm.Add и asm.Sum: на нём смотрят objdump и встраивание.\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\n\t\"github.com/<ник>/go-prep/week2/asm\"\n)\n\nfunc main() {\n\tn := len(os.Args)\n\tfmt.Println(asm.Add(n, 40), asm.Sum([]int{n, 2, 3}))\n}\n" }
+          { name: "main.go", code: "// Command sumdemo вызывает asm.Add и asm.Sum: на нём смотрят objdump и встраивание.\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\n\t\"github.com/<ник>/go-prep/week3/asm\"\n)\n\nfunc main() {\n\tn := len(os.Args)\n\tfmt.Println(asm.Add(n, 40), asm.Sum([]int{n, 2, 3}))\n}\n" }
         ],
         steps: [
-          { cmd: "go build -gcflags=-S ./week2/asm 2>&1 | grep -A3 'asm.Add STEXT'", expect: "amd64: ADDQ BX, AX и RET; arm64: ADD R1, R0, R0 и RET (R30). В заголовке TEXT — NOSPLIT|NOFRAME|ABIInternal.", q: "Где лежат a, b и результат?", a: "В регистрах по внутреннему ABI Go: на amd64 a — AX, b — BX, результат — AX; на arm64 — R0, R1 и R0. Кадр стека не нужен — отсюда NOFRAME (c6 — какие регистры рантайм восстанавливает при переключении горутин)." },
-          { cmd: "go build -gcflags='-S -N -l' ./week2/asm 2>&1 | grep -A16 'asm.Add STEXT'", expect: "Пролог PUSHQ BP / MOVQ SP, BP, аргументы сохраняются в кадр (MOVQ AX, a+24(SP)), то же ADDQ BX, AX, результат тоже записывается в кадр, затем эпилог.", q: "Что делают -N и -l и кто так собирает?", a: "-N отключает оптимизации, -l — встраивание: каждая переменная живёт в кадре, и отладчик может её показать. Так собирают для Delve: -gcflags=all='-N -l'." },
-          { cmd: "go build -gcflags=-m ./week2/asm", expect: "can inline Add, can inline Sum, can inline NewCounter, xs does not escape, moved to heap: n", q: "Почему n попала в кучу, а xs — нет?", a: "Указатель на n возвращается и переживает функцию — escape analysis переносит n в кучу. Sum только читает xs и не сохраняет её — слайс не убегает (c24)." },
-          { cmd: "go build -gcflags=-m ./week2/cmd/sumdemo", expect: "inlining call to asm.Add, inlining call to asm.Sum", q: "Где решается встраивание — в пакете asm или в main?", a: "При компиляции вызывающего пакета: компилятор main подставляет тело Add в место вызова." },
-          { cmd: "go build -o bin/sumdemo ./week2/cmd/sumdemo && go tool objdump -s 'asm\\.Add$' bin/sumdemo", expect: "Пусто.", q: "Почему Add нет в бинарнике?", a: "Все вызовы встроены, отдельная функция никому не нужна, и линкер её выбросил." },
-          { cmd: "go build -gcflags=-l -o bin/sumdemo ./week2/cmd/sumdemo && go tool objdump -s 'asm\\.Add$' bin/sumdemo", expect: "TEXT …/week2/asm.Add(SB) с ADDQ BX, AX и RET; в main.main — CALL …/asm.Add(SB).", q: "-l без all= действует только на main — почему Add всё равно не встроилась?", a: "Встраивание решает компилятор вызывающего пакета, а это main: ему и запретили. all= нужен, когда флаг должен дойти до всех пакетов — например, -N -l для отладчика." },
-          { cmd: "cd week2/asm && GOSSAFUNC=Add go build && cd ../..", expect: "dumped SSA for Add,1 to ./ssa.html — открой файл в браузере.", q: "Что в ssa.html?", a: "Функция на каждом проходе компилятора: от исходника через SSA до машинных инструкций; последний столбец — тот же ассемблер, что дал -S." },
-          { cmd: "go test -bench=. -benchmem -run='^$' ./week2/asm", expect: "BenchmarkSum-8  …  ns/op  0 B/op  0 allocs/op (число и суффикс — твои).", q: "Зачем -run='^$'?", a: "Шаблон, которому не подходит ни одно имя: обычные тесты не запускаются, работают только бенчмарки. b.Loop — с Go 1.24." }
+          { cmd: "go build -gcflags=-S ./week3/asm 2>&1 | grep -A3 'asm.Add STEXT'", expect: "amd64: ADDQ BX, AX и RET; arm64: ADD R1, R0, R0 и RET (R30). В заголовке TEXT — NOSPLIT|NOFRAME|ABIInternal.", q: "Где лежат a, b и результат?", a: "В регистрах по внутреннему ABI Go: на amd64 a — AX, b — BX, результат — AX; на arm64 — R0, R1 и R0. Кадр стека не нужен — отсюда NOFRAME (c6 — какие регистры рантайм восстанавливает при переключении горутин)." },
+          { cmd: "go build -gcflags='-S -N -l' ./week3/asm 2>&1 | grep -A16 'asm.Add STEXT'", expect: "Пролог PUSHQ BP / MOVQ SP, BP, аргументы сохраняются в кадр (MOVQ AX, a+24(SP)), то же ADDQ BX, AX, результат тоже записывается в кадр, затем эпилог.", q: "Что делают -N и -l и кто так собирает?", a: "-N отключает оптимизации, -l — встраивание: каждая переменная живёт в кадре, и отладчик может её показать. Так собирают для Delve: -gcflags=all='-N -l'." },
+          { cmd: "go build -gcflags=-m ./week3/asm", expect: "can inline Add, can inline Sum, can inline NewCounter, xs does not escape, moved to heap: n", q: "Почему n попала в кучу, а xs — нет?", a: "Указатель на n возвращается и переживает функцию — escape analysis переносит n в кучу. Sum только читает xs и не сохраняет её — слайс не убегает (c24)." },
+          { cmd: "go build -gcflags=-m ./week3/cmd/sumdemo", expect: "inlining call to asm.Add, inlining call to asm.Sum", q: "Где решается встраивание — в пакете asm или в main?", a: "При компиляции вызывающего пакета: компилятор main подставляет тело Add в место вызова." },
+          { cmd: "go build -o bin/sumdemo ./week3/cmd/sumdemo && go tool objdump -s 'asm\\.Add$' bin/sumdemo", expect: "Пусто.", q: "Почему Add нет в бинарнике?", a: "Все вызовы встроены, отдельная функция никому не нужна, и линкер её выбросил." },
+          { cmd: "go build -gcflags=-l -o bin/sumdemo ./week3/cmd/sumdemo && go tool objdump -s 'asm\\.Add$' bin/sumdemo", expect: "TEXT …/week3/asm.Add(SB) с ADDQ BX, AX и RET; в main.main — CALL …/asm.Add(SB).", q: "-l без all= действует только на main — почему Add всё равно не встроилась?", a: "Встраивание решает компилятор вызывающего пакета, а это main: ему и запретили. all= нужен, когда флаг должен дойти до всех пакетов — например, -N -l для отладчика." },
+          { cmd: "cd week3/asm && GOSSAFUNC=Add go build && cd ../..", expect: "dumped SSA for Add,1 to ./ssa.html — открой файл в браузере.", q: "Что в ssa.html?", a: "Функция на каждом проходе компилятора: от исходника через SSA до машинных инструкций; последний столбец — тот же ассемблер, что дал -S." },
+          { cmd: "go test -bench=. -benchmem -run='^$' ./week3/asm", expect: "BenchmarkSum-8  …  ns/op  0 B/op  0 allocs/op (число и суффикс — твои).", q: "Зачем -run='^$'?", a: "Шаблон, которому не подходит ни одно имя: обычные тесты не запускаются, работают только бенчмарки. b.Loop — с Go 1.24." }
         ],
         check: "Готово, когда без подсказки: где Add держит аргументы на amd64 и arm64; что делают -N и -l и когда они нужны; почему встроенной функции может не быть в бинарнике; чем -gcflags отличается от -gcflags=all=."
       },
@@ -105,7 +105,7 @@ const GUIDES = {
           { cmd: "go vet ./...", what: "найти подозрительный, но компилируемый код" },
           { cmd: "go test ./...", what: "тесты; -v — подробно, -run <regexp> — выбрать, -count=1 — без кэша, -race — детектор гонок, -cover — покрытие" },
           { cmd: "go test -bench=. -benchmem -run='^$'", what: "только бенчмарки, с аллокациями" },
-          { cmd: "go test -cpuprofile cpu.out · go tool pprof -top cpu.out", what: "снять CPU-профиль бенчмарка и посмотреть горячие функции (неделя 4, W4-6)" },
+          { cmd: "go test -cpuprofile cpu.out · go tool pprof -top cpu.out", what: "снять CPU-профиль бенчмарка и посмотреть горячие функции (неделя 5, W5-6)" },
           { cmd: "go build -gcflags=-S | -m | '-N -l'", what: "ассемблер · решения о встраивании и куче · без оптимизаций и встраивания" },
           { cmd: "go tool objdump -s <regexp> <бинарник>", what: "дизассемблировать функции из готового бинарника" },
           { cmd: "GOSSAFUNC=<функция> go build", what: "ssa.html — функция на каждом проходе компилятора" },

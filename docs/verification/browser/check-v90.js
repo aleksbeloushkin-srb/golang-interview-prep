@@ -130,6 +130,8 @@ const restoreWrites = () => { Storage.prototype.setItem = window.__realSetItem; 
       };
       await grade("c33", "self");
       const freshBefore = await p.evaluate(() => reviewCounts().fresh);
+      // New cards of the current week (week 1) among the three graded below: c34 (c35 moved to week 2 in v91).
+      const weekGraded = await p.evaluate(() => { const ids = new Set(PLAN.weeks[0].days.flatMap(d => d.tasks).flatMap(t => t.links || [])); return ["c34", "c35", "c36"].filter(id => ids.has(id)).length; });
       await p.evaluate(failWrites);
       await grade("c34", "self");
       await grade("c35", "anchors");
@@ -148,7 +150,7 @@ const restoreWrites = () => { Storage.prototype.setItem = window.__realSetItem; 
       }));
       ok(`${w}: cards — three unsaved grades kept with statuses`, JSON.stringify(cards.progress) === JSON.stringify({ c33: "mastered", c34: "mastered", c35: "review", c36: "review" }), JSON.stringify(cards.progress));
       ok(`${w}: cards — three unsaved attempts kept`, cards.attempts.c34 === "2026-11-10:self" && cards.attempts.c35 === "2026-11-10:anchors" && cards.attempts.c36 === "2026-11-10:none", JSON.stringify(cards.attempts));
-      ok(`${w}: cards — counters see them`, cards.bar.startsWith(`ответил сам на последней проверке — 2 из ${cards.total}`) && /к повторению: 0$/.test(cards.bar) && cards.button.includes(`новых на неделе ${freshBefore - 2}`), `${cards.bar} | ${cards.button} | fresh before ${freshBefore}`);
+      ok(`${w}: cards — counters see them`, cards.bar.startsWith(`ответил сам на последней проверке — 2 из ${cards.total}`) && /к повторению: 0$/.test(cards.bar) && cards.button.includes(`новых на неделе ${freshBefore - weekGraded}`), `${cards.bar} | ${cards.button} | fresh before ${freshBefore}, graded of the week ${weekGraded}`);
       ok(`${w}: cards — status and schedule of the unsaved grade`, cards.pill === "На повторении · 10.11: не ответил · следующая проверка 11.11", cards.pill);
       ok(`${w}: cards — review filter has the unsaved marks`, (await p.evaluate(() => { setFilter("review"); const ids = getFilteredCards().map(c => c.id).join(); setFilter("all"); return ids; })) === "c35,c36");
       ok(`${w}: cards — notice tells what happens`, /не дал сохранить отметки карточек/.test(cards.notice) && /каждые 5 секунд/.test(cards.notice), cards.notice);

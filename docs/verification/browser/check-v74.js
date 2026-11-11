@@ -5,7 +5,7 @@ const { chromium } = require("playwright");
   for (const w of [1280, 390]) {
     const p = await (await b.newContext({ viewport: { width: w, height: 900 } })).newPage();
     p.on("pageerror", e => errors.push(e.message)); p.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
-    await p.goto("http://127.0.0.1:8765/#/plan/w3/thu"); await p.waitForTimeout(500);
+    await p.goto("http://127.0.0.1:8765/#/plan/w4/thu"); await p.waitForTimeout(500);
     const hrefs = await p.evaluate(() => [...document.querySelectorAll("a")].map(a => a.getAttribute("href")).filter(Boolean));
     for (const h of ["#/cards/c55", "#/cards/c56", "#/simulators/sim11", "#/simulators/sim12", "#/quiz/q44", "#/quiz/q46", "#/quiz/q47"]) ok(`${w}: plan w3 thu links ${h}`, hrefs.some(x => x.startsWith(h)), "");
     for (const id of ["c55", "c56", "c15"]) {

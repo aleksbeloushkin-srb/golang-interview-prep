@@ -1,4 +1,4 @@
-// Package accountsapi: practice task W5-1. Replace the TODO with your solution.
+// Package accountsapi: practice task W6-1. Replace the TODO with your solution.
 package accountsapi
 
 import "net/http"

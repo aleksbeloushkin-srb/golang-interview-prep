@@ -1,4 +1,4 @@
-// Package escape: practice task W4-5. Run go build -gcflags=-m . and
+// Package escape: practice task W5-5. Run go build -gcflags=-m . and
 // go test -run Allocations -v, explain every line of the -m output, then change
 // SumFirst and AppendID so that they stop allocating. Keep their results.
 package escape

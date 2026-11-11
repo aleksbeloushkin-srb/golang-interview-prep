@@ -57,14 +57,14 @@ const SPEECH_FIXES = {
     ['var n int gives you 0. You get empty string for strings,', 'var n int gives you zero. You get the empty string for strings,'],
     ['Not safe: m[k] equals v on a nil map panics', 'Not safe: assigning to a nil map, m of k equals v, panics']
   ],
-  'plan:w1-sat-2': [
+  'plan:w2-sat-1': [
     ['var n int is 0, var s string is empty string, var ok bool is false', 'var n int is zero, var s string is the empty string, var ok bool is false'],
     ['but m[k] equals v panics', 'but assigning to it, m of k equals v, panics']
   ],
   // Неделя 3 и книга (v74).
   'card:c12:short': [['go dot uber dot org/goleak fails the test', "Uber's go-leak library fails the test"], ['the goroutineleak profile', 'the goroutine-leak profile']],
   // Неделя 3 по подходу (v76).
-  'plan:w3-sat-1': [['with a Wait Group or errgroup', 'with a Wait Group or an err group']],
+  'plan:w4-sat-1': [['with a Wait Group or errgroup', 'with a Wait Group or an err group']],
   // Пилотная выборка (c2, c7, c28, c29, c47).
   'card:c18:jvm': [['or a N-I-O Selector', 'or an N-I-O Selector']],
   'card:c20:short': [['atomic dot Compare And Swap Int64, address of x, old, new, which returns false', 'atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false']],
@@ -81,13 +81,13 @@ const SPEECH_FIXES = {
   'card:c43:short': [['import example dot com/shop/ledger names a package', 'import example dot com slash shop slash ledger names a package'], ['one directory of .go files', 'one directory of dot-go files'], ['A package under internal/ can be imported', 'A package under an internal directory can be imported']],
   'card:c43:jvm': [['internal/ is a boundary', 'An internal directory is a boundary']],
   'card:c44:jvm': [['J Unit 5 @Parameterized Test', 'J Unit 5 Parameterized Test'], ['like @After Each registered', 'like After Each registered'], ['t dot Fatalf to stop', 't dot Fatal-f to stop']],
-  'plan:w2-mon-1': [['So s[1:3] copies no elements', 'So slicing s from one to three copies no elements'], ['s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:];', 'a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows;']],
-  'plan:w2-mon-2': [['limit the capacity with a[:len, a:len, a,] so append must allocate', 'limit the capacity with a full slice expression so append must allocate'], ['the whole 100 megabytes array', 'the whole 100-megabyte array']],
-  'plan:w2-tue-1': [['so m[k].f equals 1 does not compile', 'so assigning to a field, m of k dot f, does not compile']],
-  'plan:w2-tue-3': [['len, héllo, is 6, not 5', 'the length of héllo is 6, not 5'], ['len, s, counts bytes and s[i] returns a byte', 'len of s counts bytes and s of i returns a byte']],
-  'plan:w2-tue-4': [['append, s[:i], s[i+1:]..., shifts elements', 'appending the tail after i to the part before i shifts elements']],
-  'plan:w2-wed-1': [['a map of T to a struct literal with Add', 'a map from T to an empty struct with Add']],
-  'plan:w2-thu-1': [['such as module example dot com/shop', 'such as module example dot com slash shop'], ['Code under internal/ can be imported', 'Code in an internal directory can be imported'], ['cmd/ for binaries and internal/ for private code', 'cmd for binaries and internal for private code']],
+  'plan:w3-mon-1': [['So s[1:3] copies no elements', 'So slicing s from one to three copies no elements'], ['s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:];', 'a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows;']],
+  'plan:w3-mon-2': [['limit the capacity with a[:len, a:len, a,] so append must allocate', 'limit the capacity with a full slice expression so append must allocate'], ['the whole 100 megabytes array', 'the whole 100-megabyte array']],
+  'plan:w2-thu-1': [['so m[k].f equals 1 does not compile', 'so assigning to a field, m of k dot f, does not compile']],
+  'plan:w3-tue-3': [['len, héllo, is 6, not 5', 'the length of héllo is 6, not 5'], ['len, s, counts bytes and s[i] returns a byte', 'len of s counts bytes and s of i returns a byte']],
+  'plan:w3-tue-4': [['append, s[:i], s[i+1:]..., shifts elements', 'appending the tail after i to the part before i shifts elements']],
+  'plan:w3-wed-1': [['a map of T to a struct literal with Add', 'a map from T to an empty struct with Add']],
+  'plan:w3-thu-1': [['such as module example dot com/shop', 'such as module example dot com slash shop'], ['Code under internal/ can be imported', 'Code in an internal directory can be imported'], ['cmd/ for binaries and internal/ for private code', 'cmd for binaries and internal for private code']],
   'practice:p-removeslice:talk': [['Removing with append, s[:i], s[i+1:]..., is cheap', 'Removing with append of the part before i and the tail after it is cheap']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [
@@ -184,14 +184,16 @@ function main() {
   for (const item of items) {
     const speech = speechFor(item.key, item.text);
     const entry = { hash: textHash(item.text) };
+    const old = manifest.items[item.key];
     for (const voice of Object.keys(VOICES)) {
       const file = fileFor(item.key, voice, speech);
-      entry[voice] = file;
-      if (!existsSync(join(root, file))) jobs.push({ text: speech, voice: VOICES[voice].id, speed: VOICES[voice].speed, lang: VOICES[voice].lang, out: join(root, file) });
+      // A renamed key (v91: plan task IDs) keeps its recording: the same voice and speech hash under the old name.
+      const kept = old?.[voice] && old[voice].endsWith(file.slice(file.lastIndexOf(`-${voice}-`))) && existsSync(join(root, old[voice])) ? old[voice] : null;
+      entry[voice] = kept || file;
+      if (!kept && !existsSync(join(root, file))) jobs.push({ text: speech, voice: VOICES[voice].id, speed: VOICES[voice].speed, lang: VOICES[voice].lang, out: join(root, file) });
     }
     if (dry) console.log(`${item.key}\n  ${speech}\n`);
     // Текст или настройки изменились — прежний файл этого ответа больше не нужен.
-    const old = manifest.items[item.key];
     if (!dry && old) for (const voice of Object.keys(VOICES)) if (old[voice] && old[voice] !== entry[voice] && existsSync(join(root, old[voice]))) rmSync(join(root, old[voice]));
     if (!dry) manifest.items[item.key] = entry;
   }

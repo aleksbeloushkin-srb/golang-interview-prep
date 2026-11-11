@@ -1,4 +1,4 @@
-// Package transfers: practice task W6-1. Replace each TODO with your solution.
+// Package transfers: practice task W7-1. Replace each TODO with your solution.
 package transfers
 
 import (

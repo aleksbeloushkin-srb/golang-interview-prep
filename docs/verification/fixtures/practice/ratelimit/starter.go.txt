@@ -1,4 +1,4 @@
-// Package ratelimit: practice task W4-2. A token bucket rate limiter.
+// Package ratelimit: practice task W5-2. A token bucket rate limiter.
 // Replace each TODO with your solution.
 package ratelimit
 

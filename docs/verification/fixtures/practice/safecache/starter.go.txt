@@ -1,4 +1,4 @@
-// Package safecache: practice task W3-5. Replace each TODO with your solution.
+// Package safecache: practice task W4-5. Replace each TODO with your solution.
 package safecache
 
 import "sync"

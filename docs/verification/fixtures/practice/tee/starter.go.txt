@@ -1,4 +1,4 @@
-// Package tee: practice task W9-1. Replace each TODO with your solution.
+// Package tee: practice task W10-1. Replace each TODO with your solution.
 package tee
 
 import "context"

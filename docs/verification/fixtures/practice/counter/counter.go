@@ -1,4 +1,4 @@
-// Package counter is the reference solution for practice task W3-4:
+// Package counter is the reference solution for practice task W4-4:
 // one counter, three ways to make it safe for concurrent use.
 package counter
 

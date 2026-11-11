@@ -1,4 +1,4 @@
-// Package httperr: practice task W5-2. Replace each TODO with your solution.
+// Package httperr: practice task W6-2. Replace each TODO with your solution.
 package httperr
 
 import (
