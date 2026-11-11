@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { mergeProgressSnapshots, attemptDayResults } = require('../js/progress-merge.js');
+const { mergeProgressSnapshots, attemptDayResults, attemptStatus } = require('../js/progress-merge.js');
 const J = JSON.stringify;
 const P = (snap, key) => JSON.parse(snap[key]);
 
@@ -237,4 +237,18 @@ test('merge limit: long histories (21+ attempts in the union) — the same list 
     }
   }
   assert.ok(cut > 100, `the cap was hit ${cut} times`);
+});
+
+test('status from history: the last day decides — «сам» is mastered, a worse answer that day is review, no history is null', () => {
+  assert.equal(attemptStatus([{ d: '2026-11-11', r: 'none' }, { d: '2026-11-11', r: 'self' }]), 'review');
+  assert.equal(attemptStatus([{ d: '2026-11-11', r: 'self' }, { d: '2026-11-11', r: 'anchors' }]), 'review');
+  assert.equal(attemptStatus([{ d: '2026-11-10', r: 'none' }, { d: '2026-11-11', r: 'self' }]), 'mastered');
+  assert.equal(attemptStatus([{ d: '2026-11-11', r: 'self' }, { d: '2026-11-10', r: 'none' }]), 'mastered');
+  assert.equal(attemptStatus([]), null);
+  assert.equal(attemptStatus(undefined), null);
+  assert.equal(attemptStatus([{ d: 'bad', r: 'self' }]), null);
+  // Слияние берёт тот же итог: одно устройство с промахом и «сам» в один день даёт «на повторении».
+  const local = { go_prep_progress_v2: J({ c1: 'mastered' }), go_prep_attempts_v1: J({ c1: [{ d: '2026-11-11', r: 'none' }, { d: '2026-11-11', r: 'self' }] }) };
+  const server = { go_prep_progress_v2: J({ c1: 'review' }), go_prep_attempts_v1: J({ c1: [] }) };
+  assert.equal(P(mergeProgressSnapshots(local, server), 'go_prep_progress_v2').c1, 'review');
 });

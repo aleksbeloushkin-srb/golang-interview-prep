@@ -41,6 +41,12 @@ function cardSchedule(cardId, attempts) {
   return { last, rating, streak, due: reviewAddDays(last, wait) };
 }
 
+// Статус карточки — итог последнего учебного дня истории (attemptStatus, как у расписания и слияния устройств);
+// без истории — сохранённая отметка прежнего формата. Подпись, счётчик и подборка «На повторение» берут его отсюда.
+function cardStatus(cardId, attempts) {
+  return attemptStatus((attempts || loadAttempts())[cardId]) || state.progress[cardId] || "unseen";
+}
+
 // Дата проверки карточки: по истории; у отметки старого формата без истории — сегодня; у новой — null.
 function cardDue(card, attempts, today) {
   const s = cardSchedule(card.id, attempts);
@@ -164,8 +170,7 @@ function reviewCounts() {
   const today = reviewToday();
   let self = 0;
   for (const card of CARDS) {
-    const s = cardSchedule(card.id, attempts);
-    if (s ? s.rating === "self" : state.progress[card.id] === "mastered") self++;
+    if (cardStatus(card.id, attempts) === "mastered") self++;
   }
   return { self, due: reviewDueCards(attempts, today).length, fresh: reviewWeekCards(attempts).length };
 }
@@ -185,7 +190,7 @@ function updateReviewButton() {
 
 // Строка статуса карточки: как ответил в последний раз и когда следующая проверка.
 function reviewStatusText(card) {
-  const st = state.progress[card.id] || "unseen";
+  const st = cardStatus(card.id);
   if (st === "unseen") return "Новая";
   const today = reviewToday();
   const s = cardSchedule(card.id);

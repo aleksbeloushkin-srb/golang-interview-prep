@@ -109,27 +109,43 @@ function practiceInlineCode(text) {
   return text.split("`").map((part, i) => (i % 2 ? practiceEl("code", { text: part }) : part)).filter(part => part !== "");
 }
 
-// Решённые на сервере задачи: { "p-money": { passedAt } } в localStorage (уходит в синхронизацию).
+// Решённые на сервере задачи: { "p-money": { passedAt } } в localStorage (уходит в синхронизацию). Не записалось —
+// отметка держится в памяти поверх свежего снимка и записывается повтором (pending-store.js).
 const PRACTICE_SOLVED_KEY = "go_prep_practice_v1";
 const PRACTICE_DRAFT_PREFIX = "go_prep_practice_draft_"; // sessionStorage: переживает переход на вход
+const PRACTICE_SOLVED = "Задача отмечена как решённая.";
+const PRACTICE_UNSAVED = `Задача решена, но браузер не дал сохранить отметку: пока она есть только на этой странице. Сайт пробует записать её каждые ${PENDING_RETRY_MS / 1000} секунд — не закрывай и не перезагружай страницу, пока здесь не появится «${PRACTICE_SOLVED}».`;
 
-function practiceSolved() {
+function practiceReadSolved() {
   try {
     const v = JSON.parse(localStorage.getItem(PRACTICE_SOLVED_KEY) || "{}");
-    return v && typeof v === "object" ? v : {};
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
   } catch {
     return {};
   }
 }
 
+const practiceSolvedStore = pendingStore(PRACTICE_SOLVED_KEY, practiceReadSolved, practiceSolvedRetry);
+
+function practiceSolved() {
+  return practiceSolvedStore.read();
+}
+
+// true — записано; false — отметка ждёт в памяти, запись повторится сама.
 function practiceMarkSolved(taskId) {
-  try {
-    const all = practiceSolved();
+  practiceSolvedStore.change(all => {
     all[taskId] = { passedAt: new Date().toISOString() };
-    localStorage.setItem(PRACTICE_SOLVED_KEY, JSON.stringify(all));
-  } catch {
-    // Без хранилища отметка не сохранится; результат проверки всё равно показан.
-  }
+  });
+  return !practiceSolvedStore.pending;
+}
+
+// Повтор записи по таймеру pending-store.js; удалось — сообщение на странице задачи меняется на обычное.
+function practiceSolvedRetry() {
+  if (!practiceSolvedStore.write(practiceSolvedStore.read())) return;
+  document.querySelectorAll("[data-solved-pending]").forEach(node => {
+    delete node.dataset.solvedPending;
+    node.textContent = PRACTICE_SOLVED;
+  });
 }
 
 function practiceDraft(taskId, value) {
@@ -170,6 +186,9 @@ function practiceRenderResult(box, res) {
 let practiceCheckRefresh = null;
 document.addEventListener("auth-changed", () => practiceCheckRefresh && practiceCheckRefresh());
 
+// Раннер после простоя просыпается (холодный старт) и первый запрос получает 503: один повтор через 20 секунд.
+const PRACTICE_WAKE_RETRY_MS = 20000;
+
 // «Проверить на сервере»: код уходит в раннер (go test -race в AWS), ответ — по тестам.
 function practiceServerCheck(task) {
   const id = `practice-solution-${task.id}`;
@@ -182,7 +201,44 @@ function practiceServerCheck(task) {
   const label = () => (typeof authIsSignedIn === "function" && authIsSignedIn() ? "Проверить на сервере" : "Войти и проверить");
   button.textContent = label();
   practiceCheckRefresh = () => (button.textContent = label());
-  button.addEventListener("click", async () => {
+  // Одна проверка; afterWake — уже повтор после 503, второго автоматического не будет. Пока ждём повтора,
+  // кнопка доступна: нажатие проверяет сразу и отменяет отложенный повтор.
+  let wakeTimer = null;
+  const check = async afterWake => {
+    clearTimeout(wakeTimer);
+    wakeTimer = null;
+    if (!button.isConnected) return; // страницу задачи уже закрыли
+    button.disabled = true;
+    delete status.dataset.solvedPending;
+    status.textContent = "Проверяю: go test -race на сервере, обычно 3–10 секунд…";
+    try {
+      const resp = await apiFetch("/runs", { method: "POST", body: JSON.stringify({ taskId: task.id, code: area.value }) });
+      if (resp.status === 503 && !afterWake) {
+        status.textContent = `Сервер проверки просыпается, повторяю через ${PRACTICE_WAKE_RETRY_MS / 1000} с.`;
+        wakeTimer = setTimeout(() => check(true), PRACTICE_WAKE_RETRY_MS);
+        return;
+      }
+      if (resp.status === 429) throw new Error("слишком часто, подожди несколько секунд");
+      if (resp.status === 503) throw new Error("сервер проверки так и не проснулся; подожди минуту и нажми «Проверить на сервере» ещё раз");
+      if (resp.status >= 500) throw new Error(`сервер ответил ${resp.status}; если это первая проверка за долгое время, повтори — раннер просыпается`);
+      const body = await resp.json();
+      if (!resp.ok) throw new Error(body.error || `ошибка ${resp.status}`);
+      practiceRenderResult(result, body);
+      status.textContent = "";
+      if (body.passed) {
+        const saved = practiceMarkSolved(task.id);
+        status.textContent = saved ? PRACTICE_SOLVED : PRACTICE_UNSAVED;
+        if (saved) delete status.dataset.solvedPending;
+        else status.dataset.solvedPending = "1";
+      }
+    } catch (e) {
+      status.textContent = e instanceof AuthRequiredError ? "Сессия истекла — нажми «Войти и проверить»." : `Не получилось проверить: ${e.message}.`;
+      button.textContent = label();
+    } finally {
+      button.disabled = false;
+    }
+  };
+  button.addEventListener("click", () => {
     if (typeof apiFetch !== "function") return;
     practiceDraft(task.id, area.value);
     if (!authIsSignedIn()) {
@@ -194,26 +250,7 @@ function practiceServerCheck(task) {
       area.focus();
       return;
     }
-    button.disabled = true;
-    status.textContent = "Проверяю: go test -race на сервере, обычно 3–10 секунд…";
-    try {
-      const resp = await apiFetch("/runs", { method: "POST", body: JSON.stringify({ taskId: task.id, code: area.value }) });
-      if (resp.status === 429) throw new Error("слишком часто, подожди несколько секунд");
-      if (resp.status >= 500) throw new Error(`сервер ответил ${resp.status}; если это первая проверка за долгое время, повтори — раннер просыпается`);
-      const body = await resp.json();
-      if (!resp.ok) throw new Error(body.error || `ошибка ${resp.status}`);
-      practiceRenderResult(result, body);
-      status.textContent = "";
-      if (body.passed) {
-        practiceMarkSolved(task.id);
-        status.textContent = "Задача отмечена как решённая.";
-      }
-    } catch (e) {
-      status.textContent = e instanceof AuthRequiredError ? "Сессия истекла — нажми «Войти и проверить»." : `Не получилось проверить: ${e.message}.`;
-      button.textContent = label();
-    } finally {
-      button.disabled = false;
-    }
+    check(false);
   });
   return practiceSection("Проверить на сервере", [
     practiceEl("label", { for: id, text: `Твоё решение — весь файл ${task.files.solution.name}` }),

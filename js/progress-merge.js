@@ -25,6 +25,14 @@ function attemptDayResults(list) {
   return [...byDay.keys()].sort().map(day => ({ day, rating: byDay.get(day) }));
 }
 
+// Статус карточки по истории — итог последнего дня: «сам» — «ответил сам», иначе «на повторении»; без истории — null.
+// Один источник для отметки после оценки (app.js), подписи и подборок (review-queue.js) и слияния устройств.
+function attemptStatus(list) {
+  const days = attemptDayResults(list);
+  if (!days.length) return null;
+  return days[days.length - 1].rating === "self" ? "mastered" : "review";
+}
+
 function mergeParse(text) {
   try {
     const v = JSON.parse(text);
@@ -64,11 +72,11 @@ function lastAttemptDay(attempts, cardId) {
   return list.reduce((max, a) => (a && typeof a.d === "string" && a.d > max ? a.d : max), "");
 }
 
-// Статус карточки, который на устройствах разный: «сам» за последний день объединённой истории — «ответил сам»,
-// иначе «на повторении». Без истории — прежнее правило: статус стороны с более новой попыткой, при равенстве — «на повторении».
+// Статус карточки, который на устройствах разный: итог последнего дня объединённой истории (attemptStatus).
+// Без истории — прежнее правило: статус стороны с более новой попыткой, при равенстве — «на повторении».
 function mergeCardStatus(id, local, server, attemptsL, attemptsS) {
-  const days = attemptDayResults(mergeLists(attemptsL[id], attemptsS[id], x => (x && x.d) || "", MERGE_ATTEMPTS_KEEP));
-  if (days.length) return days[days.length - 1].rating === "self" ? "mastered" : "review";
+  const status = attemptStatus(mergeLists(attemptsL[id], attemptsS[id], x => (x && x.d) || "", MERGE_ATTEMPTS_KEEP));
+  if (status) return status;
   const dl = lastAttemptDay(attemptsL, id), ds = lastAttemptDay(attemptsS, id);
   return dl > ds ? local : ds > dl ? server : "review";
 }
@@ -122,4 +130,4 @@ function mergeProgressSnapshots(local, server) {
   return out;
 }
 
-if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists, attemptDayResults };
+if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists, attemptDayResults, attemptStatus };

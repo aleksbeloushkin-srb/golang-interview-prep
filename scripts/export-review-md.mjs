@@ -38,13 +38,16 @@ for (const f of ['data/cards.js', 'data/simulators.js', 'data/quiz.js', 'data/pl
 const { CARDS, SIMULATORS, CHEATSHEET_ROWS, QUIZ_QUESTIONS, PLAN, PRACTICE } = ctx;
 const version = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/app\.js\?v=(\d+)/) || [])[1] || '?';
 
-// Cheat sheet cells are HTML; turn the few tags used there into Markdown.
-const md = s => String(s ?? '')
+// Only cheat sheet cells are HTML on the site; turn the few tags used there into Markdown. Every other field is
+// shown as plain text, so it goes out as is: `cmd/<binary>/main.go` and `invalid <field>: <reason>` stay whole.
+const htmlMd = s => String(s ?? '')
   .replace(/<code>(.*?)<\/code>/g, '`$1`').replace(/<strong>(.*?)<\/strong>/g, '**$1**').replace(/<[^>]+>/g, '')
   .replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
-const cell = s => md(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const plain = s => String(s ?? '');
+const cell = s => plain(s).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+const htmlCell = s => cell(htmlMd(s));
 const fence = (code, lang = 'go') => code ? `\n\`\`\`${lang}\n${code}\n\`\`\`\n` : '';
-const list = (title, items) => items && items.length ? `\n**${title}**\n${items.map(x => `- ${md(x)}`).join('\n')}\n` : '';
+const list = (title, items) => items && items.length ? `\n**${title}**\n${items.map(x => `- ${plain(x)}`).join('\n')}\n` : '';
 const sources = srcs => srcs && srcs.length ? `\n**Sources:** ${srcs.map(s => `[${s.title}](${s.url})`).join(' · ')}\n` : '';
 
 const out = [];
@@ -101,12 +104,12 @@ if (want('sims')) {
       out.push(`${st.desc}${st.descEN ? `\n\n*EN:* ${st.descEN}` : ''}\n`);
       const panels = Array.isArray(st.board) ? st.board : st.board ? [st.board] : [];
       for (const p of panels) {
-        if (p.caption) out.push(`*${md(p.caption)}*`);
+        if (p.caption) out.push(`*${plain(p.caption)}*`);
         for (const lane of p.lanes || []) {
           const slots = (lane.slots || []).map(s => `${s.label}: ${(s.items || []).map(it => typeof it === 'string' ? it : `${it.g}${it.flag ? ` (${it.flag})` : ''}`).join(', ') || 'пусто'}`).join(' | ');
-          out.push(`- **${md(lane.title)}**${lane.state ? ` [${md(lane.state)}]` : ''}: ${md(slots)}${lane.note ? ` — ${md(lane.note)}` : ''}`);
+          out.push(`- **${plain(lane.title)}**${lane.state ? ` [${plain(lane.state)}]` : ''}: ${plain(slots)}${lane.note ? ` — ${plain(lane.note)}` : ''}`);
         }
-        if (p.list) out.push(`\n**${md(p.list.title || 'Что изменилось')}**${p.list.ordered ? ' (по порядку)' : ''}\n${p.list.items.map((x, j) => `${p.list.ordered ? `${j + 1}.` : '-'} ${md(x)}`).join('\n')}`);
+        if (p.list) out.push(`\n**${plain(p.list.title || 'Что изменилось')}**${p.list.ordered ? ' (по порядку)' : ''}\n${p.list.items.map((x, j) => `${p.list.ordered ? `${j + 1}.` : '-'} ${plain(x)}`).join('\n')}`);
       }
       if (st.check) out.push(`\n**Проверь себя (EN):** ${st.check.promptEN} → ${st.check.answerEN}`);
       out.push('');
@@ -118,7 +121,7 @@ if (want('sims')) {
 
 if (want('cheatsheet')) {
   out.push(`## Шпаргалка\n\n| Тема | Как работает | Маркеры и границы | Карточка | Диаграмма |\n|---|---|---|---|---|`);
-  for (const r of CHEATSHEET_ROWS) if (!only || only.has(r.cardId)) out.push(`| ${cell(r.topic)} | ${cell(r.how)} | ${cell(r.markers)} | ${r.cardId} | ${r.simId || '—'} |`);
+  for (const r of CHEATSHEET_ROWS) if (!only || only.has(r.cardId)) out.push(`| ${htmlCell(r.topic)} | ${htmlCell(r.how)} | ${htmlCell(r.markers)} | ${r.cardId} | ${r.simId || '—'} |`);
   out.push('');
 }
 
