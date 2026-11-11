@@ -951,7 +951,7 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .account { grid-area: account; justify-self: end; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .account-signin { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 14px 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
 .account-signin:hover { border-color: var(--accent); background: rgba(56, 189, 248, 0.14); }
-.account-signin:focus-visible, .account-signout:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.account-signin:focus-visible, .account-signout:focus-visible, .account-retry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .account-icon { width: 16px; height: 16px; flex: 0 0 auto; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .account-chip { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 4px 4px 4px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
 .account-avatar { display: inline-grid; place-items: center; width: 28px; height: 28px; flex: 0 0 auto; border-radius: 50%; background: var(--accent); color: #090d16; font-weight: 800; font-size: 0.85rem; }
@@ -965,6 +965,10 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .account-status[data-kind="warn"] { color: #fca5a5; }
 .account-signout { min-height: 28px; padding: 4px 12px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 .account-signout:hover { color: var(--text); background: var(--surface-hover); }
+.account-retry { display: inline-flex; align-items: center; gap: 4px; min-height: 28px; padding: 4px 10px; border: 1px solid #f87171; border-radius: 999px; background: transparent; color: #fca5a5; font: inherit; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.account-retry:hover { color: var(--text); background: var(--surface-hover); }
+.account-retry[hidden] { display: none; }
+.account-chip-retry .account-email { display: none; } /* место для «Повторить»; почта вернётся, когда сверка удастся */
 @media (prefers-reduced-motion: no-preference) {
   .account-status[data-kind="busy"] .account-dot { animation: account-pulse 1s ease-in-out infinite alternate; }
 }
@@ -973,6 +977,9 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
   .account-signin { min-height: 32px; padding: 4px 12px 4px 10px; font-size: 0.8rem; }
   .account-email, .account-status-label, .account-signin-full { display: none; }
   .account-chip { gap: 6px; }
+  /* «Повторить» значком на месте аватара: чип не шире обычного и не наезжает на название */
+  .account-retry { min-width: 32px; justify-content: center; padding: 4px 8px; }
+  .account-retry-text, .account-chip-retry .account-avatar { display: none; }
 }
 @media (min-width: 641px) {
   .account-signin-short { display: none; }

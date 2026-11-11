@@ -1,5 +1,6 @@
 const PROGRESS_KEY = "go_prep_progress_v2";
 let storageMessage = "";
+const STORAGE_UNSAVED = `Браузер не дал сохранить отметки карточек: пока они есть только на этой странице. Сайт пробует записать их каждые ${PENDING_RETRY_MS / 1000} секунд и уберёт это сообщение, когда получится. До этого не закрывай и не перезагружай страницу — несохранённые отметки пропадут.`;
 
 // Только известные карточки и два статуса; всё прочее в сохранённом объекте отбрасывается.
 function progressFrom(saved) {
@@ -16,13 +17,20 @@ function readStoredProgress() {
   return saved;
 }
 
-function loadProgress() {
+function readProgressSnapshot() {
   try {
     return progressFrom(readStoredProgress());
   } catch {
     storageMessage = "Не удалось прочитать сохранённый прогресс. Можно заниматься, но проверь сохранение перед закрытием страницы.";
     return {};
   }
+}
+
+// Отметки карточек: свежий снимок хранилища и поверх него несохранённые правки этой страницы (pending-store.js).
+const progressStore = pendingStore(PROGRESS_KEY, readProgressSnapshot, flushProgress);
+
+function loadProgress() {
+  return progressStore.read();
 }
 
 function showStorageMessage() {
@@ -194,24 +202,31 @@ function diagramCardsHtml(sim) {
 }
 
 /* --- СОХРАНЕНИЕ ПРОГРЕССА --- */
-// changedId — изменённая карточка: она пишется поверх свежего снимка из хранилища, поэтому отметки,
-// сделанные в другой вкладке, не стираются, а эта вкладка их подхватывает. Без changedId (сброс) — весь объект.
+// Отметка карточки changedId пишется поверх свежего снимка из хранилища: отметки другой вкладки не стираются,
+// а эта вкладка их подхватывает. Не записалось — отметка остаётся правкой в памяти до удачной записи.
 function saveProgress(changedId) {
-  try {
-    if (changedId) {
-      let stored = {};
-      try { stored = readStoredProgress(); } catch { /* испорченный снимок: пишем свой */ }
-      const value = state.progress[changedId];
-      state.progress = progressFrom({ ...stored, [changedId]: value });
-      if (!value) delete state.progress[changedId];
-    }
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(state.progress));
-    storageMessage = "";
-  } catch {
-    storageMessage = "Прогресс обновлён только на этой странице: браузер не разрешил сохранение. Не закрывай её, если хочешь сохранить текущие отметки.";
-  }
+  const value = state.progress[changedId];
+  state.progress = progressStore.change(progress => {
+    if (value) progress[changedId] = value;
+    else delete progress[changedId];
+  });
+  showProgressSaved();
+}
+
+// Сообщение — по факту: висит, пока в памяти есть несохранённые отметки или попытки.
+function showProgressSaved() {
+  storageMessage = progressStore.pending || attemptsStore.pending ? STORAGE_UNSAVED : "";
   showStorageMessage();
   updateProgressBar();
+}
+
+// Повтор записи несохранённого — по таймеру pending-store.js и когда другая вкладка изменила хранилище.
+function flushProgress() {
+  state.progress = progressStore.read();
+  if (progressStore.pending) progressStore.write(state.progress);
+  if (attemptsStore.pending) attemptsStore.write(attemptsStore.read());
+  showProgressSaved();
+  renderShownCardStatus();
 }
 
 function updateProgressBar() {
@@ -226,16 +241,33 @@ function updateProgressBar() {
   if (typeof updateReviewButton === "function") updateReviewButton();
 }
 
+// Начать карточки с нуля: отметки, история попыток (по ней считается расписание) и текущее занятие очищаются
+// вместе, иначе статус «Новая» спорит со счётчиками и очередью повторения. Отметки плана не трогаются.
 function resetProgress() {
   if (typeof siteCanEdit === "function" && !siteCanEdit()) {
     siteNeedSignIn("Чтобы сбрасывать отметки");
     return;
   }
-  if (!window.confirm("Удалить все сохранённые отметки карточек? Это действие нельзя отменить.")) return;
-  state.progress = {};
+  if (!window.confirm("Начать карточки с нуля? Удалятся отметки всех карточек, история ответов (по ней считается дата следующей проверки) и текущее занятие — в этом браузере и, если ты вошёл, на сервере. Отметки плана останутся. Отменить это нельзя.")) return;
+  progressStore.forget();
+  attemptsStore.forget();
+  try {
+    [PROGRESS_KEY, ATTEMPTS_KEY, SESSION_KEY].forEach(key => localStorage.removeItem(key));
+  } catch {
+    // Хранилище не дало удалить: сброс остаётся правкой в памяти и запишется при повторе.
+    const clear = saved => Object.keys(saved).forEach(id => delete saved[id]);
+    progressStore.change(clear);
+    attemptsStore.change(clear);
+  }
+  state.progress = loadProgress();
+  state.session = null;
+  if (state.filter === "session") {
+    state.filter = "all";
+    saveCardView();
+  }
   state.index = 0;
   state.revealed = false;
-  saveProgress();
+  showProgressSaved();
   renderCard();
 }
 
@@ -471,13 +503,20 @@ function markCard(status) {
 const ATTEMPTS_KEY = "go_prep_attempts_v1";
 const ATTEMPT_LABELS = { self: "сам", anchors: "с опорой", none: "не ответил" };
 
-function loadAttempts() {
+function readAttemptsSnapshot() {
   try {
     const saved = JSON.parse(localStorage.getItem(ATTEMPTS_KEY) || "{}");
     return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
   } catch {
     return {};
   }
+}
+
+// История попыток: снимок хранилища и несохранённые попытки этой страницы — по ней же считаются расписание и счётчики.
+const attemptsStore = pendingStore(ATTEMPTS_KEY, readAttemptsSnapshot, flushProgress);
+
+function loadAttempts() {
+  return attemptsStore.read();
 }
 
 function lastAttempt(cardId) {
@@ -488,18 +527,15 @@ function lastAttempt(cardId) {
   return `${d}.${m}: ${ATTEMPT_LABELS[a.r]}`;
 }
 
+// Не записалось — попытка остаётся в памяти до удачной записи; сообщение покажет saveProgress.
 function recordAttempt(cardId, result) {
-  const all = loadAttempts();
   const now = new Date();
   const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const list = (Array.isArray(all[cardId]) ? all[cardId] : []).filter(a => a && ATTEMPT_LABELS[a.r]);
-  list.push({ d: day, r: result });
-  all[cardId] = list.slice(-20); // хватит, чтобы видеть динамику, и запись не растёт без конца
-  try {
-    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(all));
-  } catch {
-    // Без хранилища отметка в прогрессе всё равно сохраняется на странице (saveProgress сообщит об этом).
-  }
+  attemptsStore.change(all => {
+    const list = (Array.isArray(all[cardId]) ? all[cardId] : []).filter(a => a && ATTEMPT_LABELS[a.r]);
+    list.push({ d: day, r: result });
+    all[cardId] = list.slice(-20); // хватит, чтобы видеть динамику, и запись не растёт без конца
+  });
 }
 
 // «Сам» — ответил сам (дата следующей проверки — review-queue.js); «с опорой» и «не ответил» — на повторение. Отметка прежнего формата не меняется.
@@ -549,17 +585,22 @@ function renderCardStatus(card) {
   pill.textContent = (st === "mastered" ? "Ответил сам ✓" : st === "review" ? "На повторении" : "Новая") + (last ? ` · ${last}` : "");
 }
 
-// Другая вкладка изменила отметки: обновить счётчик и статус на экране, не перестраивая подборку.
+function renderShownCardStatus() {
+  const card = state.shownCard && CARDS.find(c => c.id === state.shownCard);
+  if (card) renderCardStatus(card);
+}
+
+// Другая вкладка изменила отметки или попытки: обновить счётчик и статус на экране, не перестраивая подборку.
+// Есть несохранённое — заодно повторить запись: место в хранилище могло освободиться.
 window.addEventListener("storage", e => {
-  if (e.storageArea !== localStorage) return;
-  if (e.key === PROGRESS_KEY || e.key === null) {
-    state.progress = loadProgress();
-    updateProgressBar();
+  if (e.storageArea !== localStorage || ![PROGRESS_KEY, ATTEMPTS_KEY, null].includes(e.key)) return;
+  if (progressStore.pending || attemptsStore.pending) {
+    flushProgress();
+    return;
   }
-  if ([PROGRESS_KEY, ATTEMPTS_KEY, null].includes(e.key) && state.shownCard) {
-    const card = CARDS.find(c => c.id === state.shownCard);
-    if (card) renderCardStatus(card);
-  }
+  state.progress = loadProgress();
+  updateProgressBar();
+  renderShownCardStatus();
 });
 
 /* Подборка карточек (модуль, уровень, поиск) — в sessionStorage: переживает перезагрузку вкладки,

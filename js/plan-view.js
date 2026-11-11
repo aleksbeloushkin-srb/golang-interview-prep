@@ -72,36 +72,47 @@ function planLoad() {
   }
 }
 
-// Перед точечным изменением (отметка задачи, дата старта) взять свежий снимок из хранилища:
-// так изменение из другой вкладки не затрётся устаревшей копией этой.
-function planRefresh() {
-  try {
-    if (localStorage.getItem(PLAN_STORAGE_KEY)) planState.saved = planLoad();
-  } catch { /* хранилище недоступно — работаем с тем, что на странице */ }
+// Отметки плана: свежий снимок хранилища (так изменение из другой вкладки не затрётся устаревшей копией этой)
+// и поверх него несохранённые правки этой страницы (pending-store.js).
+const planStore = pendingStore(PLAN_STORAGE_KEY, planLoad, planRetry);
+const PLAN_UNSAVED = `Браузер не дал сохранить отметки плана: пока они есть только на этой странице. Сайт пробует записать их каждые ${PENDING_RETRY_MS / 1000} секунд и уберёт это сообщение, когда получится. До этого не закрывай и не перезагружай страницу — несохранённые отметки пропадут.`;
+
+// Отметка задачи, дата старта, импорт или сброс: правка поверх свежего снимка и запись; не записалась — ждёт в памяти.
+function planChange(edit) {
+  planState.saved = planStore.change(edit);
+  planState.storageMessage = planStore.pending ? PLAN_UNSAVED : "";
+}
+
+// Повтор записи несохранённого — по таймеру pending-store.js и когда другая вкладка изменила хранилище.
+function planRetry() {
+  const before = planState.saved.start;
+  planState.saved = planStore.read();
+  planStore.write(planState.saved);
+  planState.storageMessage = planStore.pending ? PLAN_UNSAVED : "";
+  planShowSaved(before);
 }
 
 // Другая вкладка изменила отметки плана: обновить галочки и счётчики; при новой дате старта — перерисовать.
 window.addEventListener("storage", e => {
   if (e.storageArea !== localStorage || (e.key !== PLAN_STORAGE_KEY && e.key !== null) || !planState.saved) return;
+  if (planStore.pending) {
+    planRetry();
+    return;
+  }
   const before = planState.saved.start;
-  planState.saved = planLoad();
+  planState.saved = planStore.read();
+  planShowSaved(before);
+});
+
+// Галочки, счётчики и сообщение — по planState.saved; дата старта изменилась — неделя перерисовывается.
+function planShowSaved(startBefore) {
   const view = document.getElementById("view-plan");
   if (!view || view.classList.contains("hidden")) return;
-  if (planState.saved.start !== before) { planRerender(); return; }
+  if (planState.saved.start !== startBefore) { planRerender(); return; }
   view.querySelectorAll('input[type="checkbox"][id^="plan-task-"]').forEach(box => {
     box.checked = Boolean(planState.saved.done[box.id.slice("plan-task-".length)]);
   });
-  const week = PLAN.weeks.find(w => view.querySelector(`#plan-task-${CSS.escape(w.days[0].tasks[0].id)}`));
-  if (week) planUpdateCounters(week);
-});
-
-function planSave() {
-  try {
-    localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(planState.saved));
-    planState.storageMessage = "";
-  } catch {
-    planState.storageMessage = "Браузер не разрешил сохранение: отметки плана останутся только на этой открытой странице.";
-  }
+  planUpdateCounters(PLAN.weeks.find(w => view.querySelector(`#plan-task-${CSS.escape(w.days[0].tasks[0].id)}`)));
 }
 
 // Номер текущей недели (1…13) и ключ дня; null, если программа ещё не началась.
@@ -256,10 +267,11 @@ function planTaskItem(task, week) {
       siteNeedSignIn("Чтобы отмечать задачи плана");
       return;
     }
-    planRefresh();
-    if (checkbox.checked) planState.saved.done[task.id] = true;
-    else delete planState.saved.done[task.id];
-    planSave();
+    const checked = checkbox.checked;
+    planChange(saved => {
+      if (checked) saved.done[task.id] = true;
+      else delete saved.done[task.id];
+    });
     planUpdateCounters(week);
   });
 
@@ -491,13 +503,12 @@ function planSetStart(iso, reason) {
     return;
   }
   planState.startNeedsSignIn = false;
-  planRefresh();
+  planState.saved = planStore.read();
   const previous = planState.saved.start;
   if (iso === previous) {
     planState.startNote = `${reason} Дата старта уже ${planFullDate(iso)}.`;
   } else {
-    planState.saved.start = iso;
-    planSave();
+    planChange(saved => { saved.start = iso; });
     planState.startNote = `${reason} Неделя 1 теперь с ${planFullDate(iso)} (было ${planFullDate(previous)}). Отметки задач не изменились.`;
   }
   planRerender();
@@ -621,8 +632,11 @@ function planControls() {
       const message = `Заменить отметки плана? Сейчас отмечено задач: ${Object.keys(planState.saved.done).length}, после импорта: ${Object.keys(done).length}.`
         + (skipped ? ` Пропущено записей, которых нет в этой версии плана: ${skipped}.` : "") + revisionNote;
       if (!window.confirm(message)) return;
-      planState.saved = { schema: 1, start: planIsValidDate(parsed.start) ? planMondayOf(parsed.start) : planState.saved.start, done };
-      planSave();
+      const start = planIsValidDate(parsed.start) ? planMondayOf(parsed.start) : planState.saved.start;
+      planChange(saved => {
+        saved.start = start;
+        saved.done = { ...done };
+      });
       planRerender();
     } catch {
       window.alert("Не удалось прочитать файл: нужен JSON, сохранённый кнопкой «Скачать отметки».");
@@ -638,8 +652,7 @@ function planControls() {
       return;
     }
     if (!window.confirm("Удалить все отметки плана? Отметки карточек не затрагиваются.")) return;
-    planState.saved.done = {};
-    planSave();
+    planChange(saved => { saved.done = {}; });
     planRerender();
   });
 

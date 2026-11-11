@@ -26,26 +26,17 @@ function reviewShort(iso) {
   return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 }
 
-// Расписание считается по учебным дням: за день засчитывается худшая оценка. Поэтому повторные «сам»
-// в тот же день не удлиняют интервал, промах в тот же день его сокращает, а порядок попыток внутри дня
-// (в том числе после слияния двух устройств) на расписание не влияет.
-const RATING_RANK = { none: 0, anchors: 1, self: 2 };
+// Расписание считается по учебным дням: за день засчитывается худшая оценка (attemptDayResults в progress-merge.js —
+// тот же итог дня берёт слияние устройств для статуса). Поэтому повторные «сам» в тот же день не удлиняют интервал,
+// промах в тот же день его сокращает, а порядок попыток внутри дня (в том числе после слияния) на расписание не влияет.
 
 // { last, rating, streak, due } по истории карточки или null, если попыток нет; rating — итог последнего дня.
 function cardSchedule(cardId, attempts) {
-  const raw = (attempts || loadAttempts())[cardId];
-  const list = (Array.isArray(raw) ? raw : []).filter(a => a && ATTEMPT_LABELS[a.r] && /^\d{4}-\d{2}-\d{2}$/.test(a.d));
-  if (!list.length) return null;
-  const dayRating = new Map();
-  for (const a of list) {
-    const r = dayRating.get(a.d);
-    if (r === undefined || RATING_RANK[a.r] < RATING_RANK[r]) dayRating.set(a.d, a.r);
-  }
-  const days = [...dayRating.keys()].sort();
-  const last = days[days.length - 1];
-  const rating = dayRating.get(last);
+  const days = attemptDayResults((attempts || loadAttempts())[cardId]);
+  if (!days.length) return null;
+  const { day: last, rating } = days[days.length - 1];
   let streak = 0;
-  for (let i = days.length - 1; i >= 0 && dayRating.get(days[i]) === "self"; i--) streak++;
+  for (let i = days.length - 1; i >= 0 && days[i].rating === "self"; i--) streak++;
   const wait = rating === "self" ? REVIEW_SELF_DAYS[Math.min(streak, REVIEW_SELF_DAYS.length) - 1] : REVIEW_DAYS[rating];
   return { last, rating, streak, due: reviewAddDays(last, wait) };
 }

@@ -2,12 +2,28 @@
 // Вход и выход — снимки localStorage: { "go_prep_…": "<строка JSON>" }. Правила по ключам:
 //   попытки карточек и проговора — объединение без повторов, по дате, с тем же лимитом длины;
 //   отметки плана и решённые задачи практикума — объединение (снятая на одном устройстве отметка вернётся);
-//   статус карточки при расхождении — с того устройства, где последняя попытка новее; при равенстве — «на повторении»;
+//   статус карточки при расхождении — итог последнего дня объединённой истории (как у расписания, attemptDayResults);
+//   без истории — с того устройства, где последняя попытка новее, при равенстве — «на повторении»;
 //   прочие ключи (настройки) — этого браузера; ключ только на одной стороне — берётся как есть.
 // Нечитаемое значение одной стороны уступает читаемому другой.
 
 const MERGE_ATTEMPTS_KEEP = 20; // как recordAttempt в app.js
 const MERGE_TALK_KEEP = 5;      // как TALK_KEEP в talk-trainer.js
+
+// Итог учебного дня по истории попыток карточки: за день засчитывается худшая оценка. Общий для расписания
+// (review-queue.js, cardSchedule) и слияния устройств, поэтому порядок попыток внутри дня и сторона слияния
+// не меняют ни дату проверки, ни статус. Возвращает [{ day, rating }] по возрастанию дня; кривые записи пропускаются.
+const RATING_RANK = { none: 0, anchors: 1, self: 2 };
+
+function attemptDayResults(list) {
+  const byDay = new Map();
+  for (const a of Array.isArray(list) ? list : []) {
+    if (!a || typeof a.d !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(a.d) || !Object.prototype.hasOwnProperty.call(RATING_RANK, a.r)) continue;
+    const r = byDay.get(a.d);
+    if (r === undefined || RATING_RANK[a.r] < RATING_RANK[r]) byDay.set(a.d, a.r);
+  }
+  return [...byDay.keys()].sort().map(day => ({ day, rating: byDay.get(day) }));
+}
 
 function mergeParse(text) {
   try {
@@ -42,6 +58,15 @@ function lastAttemptDay(attempts, cardId) {
   return list.reduce((max, a) => (a && typeof a.d === "string" && a.d > max ? a.d : max), "");
 }
 
+// Статус карточки, который на устройствах разный: «сам» за последний день объединённой истории — «ответил сам»,
+// иначе «на повторении». Без истории — прежнее правило: статус стороны с более новой попыткой, при равенстве — «на повторении».
+function mergeCardStatus(id, local, server, attemptsL, attemptsS) {
+  const days = attemptDayResults(mergeLists(attemptsL[id], attemptsS[id], x => (x && x.d) || "", MERGE_ATTEMPTS_KEEP));
+  if (days.length) return days[days.length - 1].rating === "self" ? "mastered" : "review";
+  const dl = lastAttemptDay(attemptsL, id), ds = lastAttemptDay(attemptsS, id);
+  return dl > ds ? local : ds > dl ? server : "review";
+}
+
 function mergeProgressSnapshots(local, server) {
   local = local || {};
   server = server || {};
@@ -66,8 +91,7 @@ function mergeProgressSnapshots(local, server) {
       merged = { ...b, ...a };
       for (const id of Object.keys(a)) {
         if (!(id in b) || a[id] === b[id]) continue;
-        const dl = lastAttemptDay(attemptsL, id), ds = lastAttemptDay(attemptsS, id);
-        merged[id] = dl > ds ? a[id] : ds > dl ? b[id] : "review";
+        merged[id] = mergeCardStatus(id, a[id], b[id], attemptsL, attemptsS);
       }
     } else if (key === "go_prep_plan_v1") {
       merged = { ...a, done: { ...(b.done || {}), ...(a.done || {}) } };
@@ -92,4 +116,4 @@ function mergeProgressSnapshots(local, server) {
   return out;
 }
 
-if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists };
+if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists, attemptDayResults };

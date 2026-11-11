@@ -17,13 +17,17 @@ const SYNC_PREFIX = "go_prep_";
 // Голос и текущее занятие — настройки этого браузера, на другие устройства не переносятся.
 const SYNC_EXCLUDE = new Set([AUTH_PENDING_KEY, AUTH_RESUME_KEY, AUTH_HINT_KEY, AUTH_TRIED_KEY, "go_prep_tts_voice_v1", "go_prep_session_v1"]);
 const SYNC_INTERVAL_MS = 5000;
+// Повтор начальной сверки после сбоя: 5 с, 15 с, минута, дальше раз в 5 минут.
+const SYNC_RETRY_MS = [5000, 15000, 60000, 300000];
 
+// phase: "start" — нужна начальная сверка (серверная версия не прочитана или устарела), отправлять нельзя;
+// "busy" — идёт запрос к серверу, вторую сверку не начинать; "ready" — сверено, изменения уходят по таймеру.
 const authState = {
   accessToken: null,
   refreshToken: null,
   expiresAt: 0,
   email: "",
-  sync: { version: 0, last: null, ready: false, status: "", kind: "" }
+  sync: { version: 0, last: null, phase: "start", failures: 0, retryTimer: null, status: "", kind: "", retry: false }
 };
 
 class AuthRequiredError extends Error {}
@@ -234,9 +238,14 @@ async function syncPush(snapshot, version) {
   return { conflict: false };
 }
 
+// Начальная сверка: сначала прочитать серверную версию, только потом что-то отправлять. Одна за раз.
 async function syncStart() {
-  authState.sync.ready = false;
-  authSetStatus("Сверяю прогресс с сервером…", "busy");
+  const sync = authState.sync;
+  if (sync.phase === "busy") return;
+  clearTimeout(sync.retryTimer);
+  sync.retryTimer = null;
+  sync.phase = "busy";
+  authSetStatus("Сверяю прогресс с сервером…", "busy", sync.failures > 0);
   const local = syncSnapshot() || {};
   let server;
   try {
@@ -244,18 +253,17 @@ async function syncStart() {
     if (!resp.ok) throw new Error(`загрузка: ${resp.status}`);
     server = await resp.json();
   } catch (e) {
-    authSetStatus(`Прогресс не сверен: ${e.message}`, "warn");
+    syncFailed(`Прогресс не сверен: ${e.message}.`, e);
     return;
   }
   if (!server.progress) {
     await syncPushReport(local, 0, "Прогресс этого браузера сохранён на сервере.");
     return;
   }
-  authState.sync.version = server.version;
+  sync.version = server.version;
   if (syncSame(local, server.progress)) {
-    authState.sync.last = local;
-    authState.sync.ready = true;
-    authSetStatus("Прогресс совпадает с сервером.", "ok");
+    sync.last = local;
+    syncReady("Прогресс совпадает с сервером.");
     return;
   }
   // Новое устройство: своих отметок нет — спрашивать нечего, берём серверные.
@@ -263,7 +271,30 @@ async function syncStart() {
     syncTakeServer(server);
     return;
   }
+  sync.phase = "start"; // ждём выбора пользователя
   syncAskWhich(server);
+}
+
+function syncReady(text) {
+  authState.sync.phase = "ready";
+  authState.sync.failures = 0;
+  authSetStatus(text, "ok");
+}
+
+// Сверка не удалась: снова «нужна сверка», повтор с растущей задержкой и кнопка «Повторить» у статуса.
+// Без входа повторять нечем — после входа страница всё равно начнёт сверку заново.
+function syncFailed(text, error) {
+  const sync = authState.sync;
+  sync.phase = "start";
+  if (error instanceof AuthRequiredError || !authIsSignedIn()) {
+    authSetStatus(`${text} Войди снова.`, "warn");
+    return;
+  }
+  const delay = SYNC_RETRY_MS[Math.min(sync.failures, SYNC_RETRY_MS.length - 1)];
+  sync.failures++;
+  clearTimeout(sync.retryTimer);
+  sync.retryTimer = setTimeout(syncStart, delay);
+  authSetStatus(`${text} Повторю через ${delay < 60000 ? `${delay / 1000} с` : `${delay / 60000} мин`}.`, "warn", true);
 }
 
 // Записать серверный прогресс в этот браузер и перезагрузить страницу: так его подхватят все разделы.
@@ -273,35 +304,42 @@ function syncTakeServer(server) {
     Object.entries(server.progress).forEach(([k, v]) => localStorage.setItem(k, v));
     if (!syncSame(syncSnapshot(), server.progress)) throw new Error("не записалось");
   } catch {
-    authSetStatus("Не удалось записать прогресс в этот браузер.", "warn");
+    syncFailed("Не удалось записать прогресс в этот браузер.");
     return;
   }
   authSession(AUTH_RESUME_KEY, "1"); // после перезагрузки вход восстановится сам
   window.location.reload();
 }
 
+// Отправка в ходе начальной сверки — только с версией, прочитанной с сервера.
 async function syncPushReport(snapshot, version, done) {
+  authState.sync.phase = "busy";
   try {
     const r = await syncPush(snapshot, version);
     if (r.conflict) {
+      authState.sync.phase = "start";
       await syncStart();
       return;
     }
-    authState.sync.ready = true;
-    authSetStatus(done, "ok");
+    syncReady(done);
   } catch (e) {
-    authSetStatus(`Не сохранилось: ${e.message}`, "warn");
+    syncFailed(`Не сохранилось: ${e.message}.`, e);
   }
 }
 
 // Объединить прогресс этого браузера и сервера (js/progress-merge.js), записать сюда и на сервер, перезагрузить.
 async function syncMerge(server) {
+  authState.sync.phase = "busy";
   const merged = mergeProgressSnapshots(syncSnapshot() || {}, server.progress);
   try {
     const r = await syncPush(merged, server.version);
-    if (r.conflict) { await syncStart(); return; }
+    if (r.conflict) {
+      authState.sync.phase = "start";
+      await syncStart();
+      return;
+    }
   } catch (e) {
-    authSetStatus(`Не объединилось: ${e.message}`, "warn");
+    syncFailed(`Не объединилось: ${e.message}.`, e);
     return;
   }
   syncTakeServer({ progress: merged });
@@ -315,7 +353,7 @@ function syncAskWhich(server) {
   const buttons = [];
   if (typeof mergeProgressSnapshots === "function") buttons.push(authButton("Объединить (рекомендуется)", () => { panel.classList.add("hidden"); syncMerge(server); }));
   buttons.push(
-    authButton("Взять с сервера — заменит этот браузер", () => syncTakeServer(server)),
+    authButton("Взять с сервера — заменит этот браузер", () => { panel.classList.add("hidden"); syncTakeServer(server); }),
     authButton("Оставить этот браузер — заменит сервер", async () => {
       panel.classList.add("hidden");
       await syncPushReport(syncSnapshot() || {}, server.version, "Прогресс этого браузера сохранён на сервере.");
@@ -330,15 +368,17 @@ function syncAskWhich(server) {
   authSetStatus("Выбери, какой прогресс оставить.", "warn");
 }
 
-// Раз в несколько секунд и при уходе со страницы — отправить изменения.
+// Раз в несколько секунд и при уходе со страницы — отправить изменения. Только после начальной сверки.
 async function syncTick() {
-  if (!authState.sync.ready || !authIsSignedIn()) return;
+  const sync = authState.sync;
+  if (sync.phase !== "ready" || !authIsSignedIn()) return;
   const now = syncSnapshot();
-  if (!now || syncSame(now, authState.sync.last)) return;
-  authState.sync.ready = false;
+  if (!now || syncSame(now, sync.last)) return;
+  sync.phase = "busy";
   try {
-    const r = await syncPush(now, authState.sync.version);
+    const r = await syncPush(now, sync.version);
     if (r.conflict) {
+      sync.phase = "start";
       await syncStart();
       return;
     }
@@ -346,7 +386,7 @@ async function syncTick() {
   } catch (e) {
     authSetStatus(`Не сохранилось: ${e.message}. Повторю позже.`, "warn");
   }
-  authState.sync.ready = true;
+  sync.phase = "ready";
 }
 
 // --- Шапка: «Войти через Google» или почта и «Выйти», строка состояния.
@@ -369,12 +409,13 @@ function authButton(text, onClick) {
 }
 
 // kind: ok | busy | warn. В шапке — точка и короткая подпись, полный текст — во всплывающей
-// подсказке и в role="status" для читалки.
+// подсказке и в role="status" для читалки. retry — показать «Повторить» (сверка не удалась).
 const AUTH_STATUS_LABEL = { ok: "сохранено", busy: "синхронизация…", warn: "не сохранено" };
 
-function authSetStatus(text, kind = "ok") {
+function authSetStatus(text, kind = "ok", retry = false) {
   authState.sync.status = text;
   authState.sync.kind = kind;
+  authState.sync.retry = retry;
   const s = document.getElementById("account-status");
   if (!s) return;
   s.hidden = false;
@@ -382,6 +423,12 @@ function authSetStatus(text, kind = "ok") {
   s.title = text;
   s.querySelector(".account-status-label").textContent = AUTH_STATUS_LABEL[kind] || "";
   s.querySelector(".visually-hidden").textContent = text;
+  const button = document.getElementById("account-retry");
+  if (!button) return;
+  // Кнопка пропадает, когда сверка удалась: фокус с неё — на соседнюю «Выйти», а не в начало страницы.
+  if (!retry && document.activeElement === button) document.querySelector("#account .account-signout")?.focus();
+  button.hidden = !retry;
+  button.closest(".account-chip")?.classList.toggle("account-chip-retry", retry); // на телефоне вместо аватара
 }
 
 // Простая иконка «войти»: стрелка в дверной проём (своя, не логотип).
@@ -411,10 +458,17 @@ function authRender() {
     const email = authState.email || "Вы вошли";
     const out = authEl("button", { type: "button", className: "account-signout", text: "Выйти" });
     out.addEventListener("click", authSignOut);
+    const retry = authEl("button", { type: "button", id: "account-retry", className: "account-retry", "aria-label": "Повторить сверку прогресса" }, [
+      authEl("span", { className: "account-retry-icon", "aria-hidden": "true", text: "↻" }),
+      authEl("span", { className: "account-retry-text", text: "Повторить" })
+    ]);
+    retry.hidden = true;
+    retry.addEventListener("click", () => syncStart());
     box.replaceChildren(authEl("div", { className: "account-chip" }, [
       authEl("span", { className: "account-avatar", "aria-hidden": "true", text: email.charAt(0).toUpperCase() }),
       authEl("span", { className: "account-email", title: email, text: email }),
       status,
+      retry,
       out
     ]));
   } else {
@@ -422,7 +476,7 @@ function authRender() {
     signIn.addEventListener("click", () => authSignIn());
     box.replaceChildren(signIn, status);
   }
-  if (authState.sync.status) authSetStatus(authState.sync.status, authState.sync.kind);
+  if (authState.sync.status) authSetStatus(authState.sync.status, authState.sync.kind, authState.sync.retry);
   else status.hidden = true;
   document.documentElement.dataset.auth = authIsSignedIn() ? "in" : "out";
   if (authIsSignedIn()) document.getElementById("signin-notice")?.classList.add("hidden");

@@ -464,7 +464,7 @@ function trackPairs(title, rows, className) {
 }
 
 function renderPracticeTrack(view, id, track) {
-  const done = typeof planLoad === "function" ? planLoad().done : {};
+  const done = typeof planStore !== "undefined" ? planStore.read().done : {}; // с несохранёнными отметками этой страницы
   const steps = track.blocks.flatMap(block => block.steps);
   const inPlan = steps.filter(step => trackPlanTasks(step.id, done).length);
   const marked = inPlan.filter(step => trackPlanTasks(step.id, done).some(item => item.done));
