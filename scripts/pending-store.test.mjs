@@ -31,7 +31,7 @@ function setup(initial) {
   const read = () => JSON.parse(data.get(KEY) || '{"done":{}}');
   const store = ctx.pendingStore(KEY, read, () => { env.retries++; store.write(store.read()); });
   const fire = () => { const all = [...timers.entries()]; timers.clear(); all.forEach(([, t]) => t.fn()); };
-  return { store, data, timers, env, fire, stored: () => JSON.parse(data.get(KEY) || 'null') };
+  return { store, data, timers, env, fire, ctx, stored: () => JSON.parse(data.get(KEY) || 'null') };
 }
 
 const tick = (id, on) => saved => { if (on) saved.done[id] = true; else delete saved.done[id]; };
@@ -103,4 +103,21 @@ test('forget drops unsaved edits and the pending retry', () => {
   assert.equal(t.store.pending, false);
   assert.equal(t.timers.size, 0);
   assert.deepEqual(t.store.read(), { done: { m2: true } });
+});
+
+// Синхронизация (auth.js) берёт несохранённое всех хранилищ и снимает правки, когда записала итог сама.
+test('unsaved edits of every store are visible as one snapshot; forgetting a key drops only its edits', () => {
+  const t = setup({ done: { m2: true } });
+  assert.deepEqual(JSON.parse(JSON.stringify(t.ctx.pendingSnapshot())), {});
+  t.env.full = true;
+  t.store.change(tick('m1', true));
+  const snapshot = t.ctx.pendingSnapshot();
+  assert.deepEqual(Object.keys(snapshot), [KEY]);
+  assert.deepEqual(JSON.parse(snapshot[KEY]), { done: { m2: true, m1: true } });
+  t.ctx.pendingForget('go_prep_other_v1'); // ключ без хранилища — ничего не делает
+  assert.equal(t.store.pending, true);
+  t.ctx.pendingForget(KEY);
+  assert.equal(t.store.pending, false);
+  assert.equal(t.timers.size, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(t.ctx.pendingSnapshot())), {});
 });

@@ -92,7 +92,8 @@ function planRetry() {
   planShowSaved(before);
 }
 
-// Другая вкладка изменила отметки плана: обновить галочки и счётчики; при новой дате старта — перерисовать.
+// Другая вкладка или синхронизация (auth.js) изменила отметки плана: обновить галочки и счётчики; при новой дате
+// старта — перерисовать. Синхронизация могла записать и несохранённые правки — тогда сообщение о них уходит.
 window.addEventListener("storage", e => {
   if (e.storageArea !== localStorage || (e.key !== PLAN_STORAGE_KEY && e.key !== null) || !planState.saved) return;
   if (planStore.pending) {
@@ -100,6 +101,7 @@ window.addEventListener("storage", e => {
     return;
   }
   const before = planState.saved.start;
+  if (planState.storageMessage === PLAN_UNSAVED) planState.storageMessage = "";
   planState.saved = planStore.read();
   planShowSaved(before);
 });

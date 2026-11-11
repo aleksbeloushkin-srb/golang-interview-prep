@@ -184,3 +184,57 @@ test('day results: worst rating of each day, sorted by day, broken records skipp
   ]), [{ day: '2026-11-08', rating: 'anchors' }, { day: '2026-11-09', rating: 'none' }]);
   assert.deepEqual(attemptDayResults(undefined), []);
 });
+
+// Обрезка истории до 20 после слияния: порядок внутри дня не зависит от стороны, худшая оценка дня — последней.
+test('merge limit: one «не ответил» and twenty «сам» on one day — same status, history and date in both directions', () => {
+  const none = snap({ c33: 'review' }, { c33: [{ d: '2026-11-09', r: 'none' }] });
+  const selfs = snap({ c33: 'mastered' }, { c33: Array.from({ length: 20 }, () => ({ d: '2026-11-09', r: 'self' })) });
+  const ab = merged(none, selfs), ba = merged(selfs, none);
+  for (const m of [ab, ba]) {
+    assert.equal(m.attempts.c33.length, 20);
+    assert.equal(m.progress.c33, 'review');
+    assert.deepEqual([sched(m.attempts.c33).rating, sched(m.attempts.c33).due], ['none', '2026-11-10']);
+  }
+  assert.deepEqual(ba.attempts.c33, ab.attempts.c33);
+  assert.deepEqual(ab.attempts.c33.at(-1), { d: '2026-11-09', r: 'none' });
+  for (const again of [merged(ab.out, none), merged(selfs, ab.out), merged(ba.out, ab.out)]) {
+    assert.deepEqual(again.attempts.c33, ab.attempts.c33);
+    assert.equal(again.progress.c33, 'review');
+  }
+});
+
+test('merge limit: long histories (21+ attempts in the union) — the same list in both directions, repeated merges converge', () => {
+  let seed = 11;
+  const rand = n => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % n; };
+  const ratings = ['none', 'anchors', 'self'];
+  const side = () => {
+    const progress = {}, attempts = {};
+    for (const id of ['c1', 'c2']) {
+      // Последние 20, как у recordAttempt; несколько дней с повторами, чтобы граница обрезки попадала внутрь дня.
+      const list = Array.from({ length: 10 + rand(11) }, () => ({ d: `2026-11-0${1 + rand(4)}`, r: ratings[rand(3)] }))
+        .sort((x, y) => (x.d < y.d ? -1 : x.d > y.d ? 1 : 0));
+      attempts[id] = list;
+      progress[id] = list[list.length - 1].r === 'self' ? 'mastered' : 'review';
+    }
+    return snap(progress, attempts);
+  };
+  let cut = 0;
+  for (let round = 0; round < 200; round++) {
+    const a = side(), b = side();
+    const ab = merged(a, b), ba = merged(b, a);
+    assert.deepEqual(ba.progress, ab.progress, `round ${round}`);
+    for (const id of ['c1', 'c2']) {
+      if (JSON.parse(a.go_prep_attempts_v1)[id].length + JSON.parse(b.go_prep_attempts_v1)[id].length > 20) cut++;
+      assert.deepEqual(ba.attempts[id], ab.attempts[id], `${id} round ${round}`);
+      assert.deepEqual(sched(ba.attempts[id]), sched(ab.attempts[id]));
+      if (ab.progress[id] !== undefined && JSON.parse(a.go_prep_progress_v2)[id] !== JSON.parse(b.go_prep_progress_v2)[id]) {
+        assert.equal(ab.progress[id], statusOf(ab.attempts[id]), `${id} round ${round}`);
+      }
+    }
+    for (const again of [merged(ab.out, a), merged(b, ab.out), merged(ab.out, ba.out)]) {
+      assert.deepEqual(again.progress, ab.progress);
+      for (const id of ['c1', 'c2']) assert.deepEqual(again.attempts[id], ab.attempts[id], `${id} round ${round} again`);
+    }
+  }
+  assert.ok(cut > 100, `the cap was hit ${cut} times`);
+});

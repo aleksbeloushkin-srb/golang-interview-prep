@@ -76,7 +76,12 @@ function reviewWeekCards(attempts) {
 }
 
 /* --- Занятие: до 10 карточек — сначала просроченные, затем новые с текущей недели --- */
+// Занятие, которое сброс не смог удалить (хранилище не дало): не показывается, пока удаление не удастся
+// (повторяет app.js, forgetSavedSession) или пока поверх не запишется новое занятие.
+let reviewStaleSession = false;
+
 function reviewLoadSession() {
+  if (reviewStaleSession) return null;
   try {
     const s = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
     if (!s || !Array.isArray(s.ids) || !Array.isArray(s.done)) return null;
@@ -91,7 +96,19 @@ function reviewLoadSession() {
 function reviewSaveSession(session) {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    reviewStaleSession = false;
   } catch { /* занятие останется только на этой странице */ }
+}
+
+// Удалить сохранённое занятие; false — хранилище не дало, старое занятие скрыто до удачного повтора.
+function reviewForgetSession() {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    reviewStaleSession = false;
+  } catch {
+    reviewStaleSession = true;
+  }
+  return !reviewStaleSession;
 }
 
 function reviewSessionLeft(session) {
