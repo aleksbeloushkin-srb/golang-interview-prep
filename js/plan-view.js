@@ -13,6 +13,7 @@ const planState = {
   startNeedsSignIn: false,
   datesOpen: false, // блок дат свёрнут: на первом экране — задача дня
   renderedDay: "",
+  shown: null, // план на экране; false — открыт другой раздел, null — страница только открылась
   drafts: {} // черновики ответов predict: живут до перезагрузки страницы, не сохраняются
 };
 
@@ -777,19 +778,28 @@ function planRerender() {
   renderPlan(route.weekId, null);
 }
 
+// Фокус — только при переходе: вход в план из другого раздела — на заголовок недели, как у остальных разделов
+// (app.js, focusRouteHeading); ссылка на день — на заголовок дня; другая неделя — на её заголовок с прокруткой к нему.
+// Галочки и перерисовки (planRerender) сюда не попадают и фокус не трогают; при открытии страницы — только ссылка на день.
 function handlePlanRoute() {
   const route = planRouteFromHash();
-  if (!route) return;
+  if (!route) {
+    planState.shown = false;
+    return;
+  }
   const { weekId, dayKey } = route;
+  const entering = planState.shown === false;
+  planState.shown = true;
   const previousWeek = document.getElementById("plan-week-title");
   const switchingWeek = previousWeek && weekId && !previousWeek.textContent.startsWith(`Неделя ${PLAN.weeks.findIndex(w => w.id === weekId) + 1}.`);
   planState.startNote = ""; // сообщение о смене даты показывается один раз, до перехода
   renderPlan(weekId, dayKey);
   document.title = `План ${PLAN.weeks.length} недель — Go Interview Prep`;
-  if (switchingWeek && !dayKey) {
-    const heading = document.getElementById("plan-week-title");
-    if (heading) heading.focus({ preventScroll: false });
-  }
+  const day = dayKey && document.querySelector(`#view-plan .plan-day[id$="-${dayKey}"] > h3`);
+  const heading = day || ((entering || switchingWeek) && document.getElementById("plan-week-title"));
+  if (!heading) return;
+  if (day) day.setAttribute("tabindex", "-1"); // прокрутку к дню делает renderPlan
+  heading.focus({ preventScroll: Boolean(day) || !switchingWeek });
 }
 
 // Если вкладка была открыта через полночь, при возврате пересчитать «Сегодня» и подсветку дня.

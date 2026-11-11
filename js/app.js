@@ -298,7 +298,7 @@ function getFilteredCards() {
   const attempts = state.filter === "review" ? loadAttempts() : null;
   const today = attempts ? reviewToday() : "";
   return CARDS.filter(c => {
-    if (state.filter === "review" && state.progress[c.id] !== "review" && !(typeof cardIsDue === "function" && cardIsDue(c, attempts, today))) return false;
+    if (state.filter === "review" && shownCardStatus(c.id, attempts) !== "review" && !(typeof cardIsDue === "function" && cardIsDue(c, attempts, today))) return false;
     if (state.filter === "practice" && !c.practice) return false;
     if (!["all", "review", "practice", "session"].includes(state.filter) && c.mod !== state.filter) return false;
     if (state.level !== "all" && (c.level || "senior") !== state.level) return false;
@@ -570,8 +570,10 @@ function gradeCard(result) {
   }
   const list = getFilteredCards();
   if (!list.length || !state.revealed) return;
-  recordAttempt(list[state.index].id, result);
-  markCard(result === "self" ? "mastered" : "review");
+  const id = list[state.index].id;
+  recordAttempt(id, result);
+  // Отметка — итог дня по истории, как у расписания: «не ответил», а потом «сам» в тот же день — всё ещё на повторении.
+  markCard(attemptStatus(loadAttempts()[id]) || (result === "self" ? "mastered" : "review"));
 }
 
 // Без входа отметки не сохраняются: сказать об этом до нажатия, а не после.
@@ -594,8 +596,13 @@ document.addEventListener("auth-changed", () => {
   renderGradeSignIn();
 });
 
+// Статус для показа: итог последнего дня истории (review-queue.js); без неё — сохранённая отметка.
+function shownCardStatus(id, attempts) {
+  return typeof cardStatus === "function" ? cardStatus(id, attempts) : state.progress[id] || "unseen";
+}
+
 function renderCardStatus(card) {
-  const st = state.progress[card.id] || "unseen";
+  const st = shownCardStatus(card.id);
   const pill = document.getElementById("card-status");
   pill.className = "status-pill " + (st === "mastered" ? "status-mastered" : st === "review" ? "status-review" : "status-unseen");
   if (typeof reviewStatusText === "function") { pill.textContent = reviewStatusText(card); return; }

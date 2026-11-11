@@ -719,6 +719,9 @@ pre.code-block { max-width: 100%; overflow-wrap: normal; }
 .plan-week h2:focus { outline: none; }
 .plan-week > p { margin-bottom: 8px; }
 .plan-day { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--border); }
+/* Ссылка на день: его заголовок не уходит под закреплённую шапку (на телефоне шапка не закреплена). */
+.plan-day { scroll-margin-top: 130px; }
+@media (max-width: 640px) { .plan-day { scroll-margin-top: 12px; } }
 .plan-day.is-today h3 { color: var(--amber); }
 .plan-day h3, .plan-block h3 { font-size: 1.05rem; margin-bottom: 8px; }
 .plan-tasks { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }

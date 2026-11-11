@@ -1,6 +1,7 @@
 // Тренажёр проговора задачи: шаги PLAN.talkSteps (Clarify → Approach → Complexity → Edge cases)
 // с таймером на шаг и на всю задачу, эталоном из PLAN.talks и самооценкой.
-// Результаты — в localStorage под go_prep_talk_v1 (синхронизируется вместе с прочим прогрессом go_prep_*).
+// Результаты — в localStorage под go_prep_talk_v1 (синхронизируется вместе с прочим прогрессом go_prep_*);
+// не записалось — результат держится в памяти и записывается повтором (pending-store.js).
 
 const TALK_STORAGE_KEY = "go_prep_talk_v1";
 const TALK_KEEP = 5; // сколько последних попыток хранить на задачу
@@ -11,6 +12,9 @@ const TALK_RATES = [
   { id: "partial", label: "Частично" },
   { id: "missed", label: "Не вспомнил" }
 ];
+
+const TALK_SAVED = "Результат сохранён: он виден рядом с кнопкой тренажёра.";
+const TALK_UNSAVED = `Браузер не дал сохранить результат: пока он есть только на этой странице. Сайт пробует записать его каждые ${PENDING_RETRY_MS / 1000} секунд — не закрывай и не перезагружай страницу, пока здесь не появится «Результат сохранён».`;
 
 const talkState = {
   dialog: null,
@@ -38,7 +42,8 @@ function talkHasTrainer(key) {
 }
 
 /* --- Хранилище: необязательное и недоверенное --- */
-function talkLoadAll() {
+// Сохранённые результаты: только известные задачи и целые записи, по TALK_KEEP последних.
+function talkReadStored() {
   try {
     const raw = localStorage.getItem(TALK_STORAGE_KEY);
     if (!raw) return {};
@@ -61,14 +66,28 @@ function talkLoadAll() {
   }
 }
 
+// Снимок хранилища и поверх него результаты, которые браузер ещё не дал записать.
+const talkStore = pendingStore(TALK_STORAGE_KEY, () => ({ schema: 1, results: talkReadStored() }), talkRetry);
+
+function talkLoadAll() {
+  return talkStore.read().results;
+}
+
+// true — записано; false — результат ждёт в памяти, запись повторится сама.
 function talkSaveAttempt(key, attempt) {
-  const all = talkLoadAll();
-  all[key] = [...(all[key] || []), attempt].slice(-TALK_KEEP);
-  try {
-    localStorage.setItem(TALK_STORAGE_KEY, JSON.stringify({ schema: 1, results: all }));
-    return true;
-  } catch {
-    return false;
+  talkStore.change(saved => {
+    saved.results[key] = [...(saved.results[key] || []), attempt].slice(-TALK_KEEP);
+  });
+  return !talkStore.pending;
+}
+
+// Повтор записи по таймеру pending-store.js; удалось — итог в открытом окне говорит, что результат сохранён.
+function talkRetry() {
+  if (!talkStore.write(talkStore.read())) return;
+  const note = document.getElementById("talk-save-note");
+  if (note && note.dataset.pending) {
+    delete note.dataset.pending;
+    note.textContent = TALK_SAVED;
   }
 }
 
@@ -253,12 +272,12 @@ function talkFinish() {
     ]);
   });
   let saveNote;
-  if (saved) saveNote = planEl("p", { className: "muted-text", text: "Результат сохранён: он виден рядом с кнопкой тренажёра." });
+  if (saved) saveNote = planEl("p", { id: "talk-save-note", className: "muted-text", text: TALK_SAVED });
   else if (!canSave) {
     const signIn = planEl("button", { type: "button", className: "btn btn-sm", text: "Войти, чтобы сохранять" });
     signIn.addEventListener("click", () => { talkState.dialog.close(); siteNeedSignIn("Чтобы сохранять тренировки проговора"); });
     saveNote = planEl("p", { className: "muted-text" }, ["Без входа результат не сохраняется. ", signIn]);
-  } else saveNote = planEl("p", { className: "muted-text", text: "Браузер не дал сохранить результат: он останется только в этом окне." });
+  } else saveNote = planEl("p", { id: "talk-save-note", className: "muted-text", role: "status", "data-pending": "1", text: TALK_UNSAVED });
 
   const again = planEl("button", { type: "button", className: "btn btn-primary", text: "Ещё раз" });
   again.addEventListener("click", () => talkOpen(key, talkState.opener));

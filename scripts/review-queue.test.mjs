@@ -50,3 +50,43 @@ test('a new session written over the stale one ends the wait: it is shown, no re
   assert.deepEqual(JSON.parse(JSON.stringify(t.ctx.reviewLoadSession())), fresh);
   assert.equal(vm.runInContext('reviewStaleSession', t.ctx), false);
 });
+
+// Статус на карточке и в подборке «На повторение» — итог последнего учебного дня истории, как у расписания и слияния.
+const merge = fs.readFileSync(new URL('../js/progress-merge.js', import.meta.url), 'utf8');
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const short = s => `${s.slice(8, 10)}.${s.slice(5, 7)}`;
+
+function setupStatus(progress, attempts) {
+  const ctx = {
+    localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    CARDS: [{ id: 'c33' }, { id: 'c34' }, { id: 'c35' }],
+    ATTEMPT_LABELS: { self: 'сам', anchors: 'с опорой', none: 'не ответил' },
+    state: { progress },
+    loadAttempts: () => JSON.parse(JSON.stringify(attempts))
+  };
+  vm.createContext(ctx);
+  vm.runInContext(merge, ctx);
+  vm.runInContext(source, ctx);
+  return ctx;
+}
+
+test('«не ответил», then «сам» on the same day: the card is under review, as its schedule says', () => {
+  const now = new Date();
+  const today = iso(now);
+  const tomorrow = iso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  // gradeCard before v93 stored «mastered» after the second answer.
+  const ctx = setupStatus({ c33: 'mastered' }, { c33: [{ d: today, r: 'none' }, { d: today, r: 'self' }] });
+  assert.equal(ctx.reviewStatusText({ id: 'c33' }), `На повторении · ${short(today)}: не ответил · следующая проверка ${short(tomorrow)}`);
+  assert.equal(ctx.cardStatus('c33'), 'review');
+  assert.equal(ctx.reviewCounts().self, 0);
+});
+
+test('status follows the last day, not the stored mark; a mark without history keeps the old rule', () => {
+  const ctx = setupStatus({ c33: 'review', c35: 'mastered' }, { c33: [{ d: '2026-11-09', r: 'none' }, { d: '2026-11-10', r: 'self' }] });
+  assert.equal(ctx.reviewStatusText({ id: 'c33' }), 'Ответил сам ✓ · 10.11: сам · следующая проверка 14.11');
+  assert.equal(ctx.cardStatus('c33'), 'mastered');
+  assert.equal(ctx.cardStatus('c34'), 'unseen');
+  assert.equal(ctx.cardStatus('c35'), 'mastered');
+  assert.equal(ctx.reviewStatusText({ id: 'c34' }), 'Новая');
+  assert.match(ctx.reviewStatusText({ id: 'c35' }), /^Ответил сам ✓ · пора повторить$/);
+});
