@@ -72,6 +72,7 @@ const PRACTICE = [
     "titleEN": "Account with a sentinel error",
     "goalRU": "Счёт с Deposit, Withdraw и Transfer: методы меняют состояние, а нехватка средств — sentinel-ошибка, которую errors.Is находит через две обёртки.",
     "contractRU": [
+      "Тип Account с экспортированным полем ID string: тесты создают счёт как &Account{ID: \"A\"}. Баланс в минорных единицах (int64) — в неэкспортированном поле с любым именем, читается методом Balance() int64. Методы Deposit(amount int64) error и Withdraw(amount int64) error, функция Transfer(from, to *Account, amount int64) error, переменная ErrInsufficientFunds.",
       "Deposit и Withdraw с суммой 0 или меньше возвращают ошибку и не меняют баланс.",
       "Withdraw больше баланса возвращает ошибку, обёрнутую через %w вокруг ErrInsufficientFunds; текст начинается с «withdraw <сумма> from <ID счёта>», например «withdraw 500 from A (balance 100): insufficient funds»; баланс не меняется.",
       "Ошибка не равна самой ErrInsufficientFunds: у неё есть контекст, но errors.Is её находит.",
@@ -80,6 +81,7 @@ const PRACTICE = [
       "Методы меняют счёт, поэтому ресивер — указатель."
     ],
     "contractEN": [
+      "Type Account has an exported field ID string: the tests create an account as &Account{ID: \"A\"}. The balance in minor units (int64) lives in an unexported field with any name and is read with Balance() int64. Methods Deposit(amount int64) error and Withdraw(amount int64) error, function Transfer(from, to *Account, amount int64) error, variable ErrInsufficientFunds.",
       "Deposit and Withdraw with an amount of 0 or less return an error and leave the balance unchanged.",
       "Withdrawing more than the balance returns an error that wraps ErrInsufficientFunds with %w; the message starts with \"withdraw <amount> from <account ID>\", for example \"withdraw 500 from A (balance 100): insufficient funds\"; the balance does not change.",
       "The error is not ErrInsufficientFunds itself: it carries context, yet errors.Is finds it.",

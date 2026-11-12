@@ -1,6 +1,6 @@
 # Приёмка озвучки на слух — недели 1–4
 
-Сгенерировано из `data/audio.js` (148 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
+Сгенерировано из `data/audio.js` (150 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
 Как проверять каждую запись (Michael и Heart отдельно):
 
@@ -249,6 +249,8 @@
 | [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 45.6 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 28.4 |  |  |  |  |  |  |  |
+| [plan:w1-sat-10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 47.5 |  |  |  |  |  |  |  |
+| [plan:w1-sat-10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 49.1 |  |  |  |  |  |  |  |
 | [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 27.4 |  |  |  |  |  |  |  |
 | [plan:w1-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 27.5 |  |  |  |  |  |  |  |
 | [plan:w2-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Michael | 25.3 |  |  |  |  |  |  |  |
@@ -257,6 +259,8 @@
 | [plan:w2-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/mon) | Heart | 26.4 |  |  |  |  |  |  |  |
 | [plan:w2-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Michael | 38.6 |  |  |  |  |  |  |  |
 | [plan:w2-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 40.0 |  |  |  |  |  |  |  |
+| [plan:w2-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Michael | 55.2 |  |  |  |  |  |  |  |
+| [plan:w2-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/sat) | Heart | 56.3 |  |  |  |  |  |  |  |
 | [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Michael | 42.9 |  |  |  |  |  |  |  |
 | [plan:w2-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/thu) | Heart | 44.2 |  |  |  |  |  |  |  |
 | [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 21.7 |  |  |  |  |  |  |  |
@@ -786,6 +790,10 @@
 
 > It comes down to method sets: var underscore Notifier equals a Service literal fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; address of a Service literal works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value.
 
+**plan:w1-sat-10** (хеш текста `5a4bdd85`)
+
+> Zero values: 0 for int, empty string for string, and nil for pointer to T, slice of T, map of K to V, chan T and error. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync dot Mutex; then I keep all methods of the type on pointers. If Notify has a pointer receiver, the method set of Service does not include it, so var underscore Notifier equals a Service literal fails to compile, while address of a Service literal works. A nil pointer to My Err returned as error is not nil, because the interface stores the type pointer to My Err; it is nil only when both type and value are nil.
+
 **plan:w1-wed-1** (хеш текста `90c56110`)
 
 > A type switch branches on the dynamic type stored in an interface: switch v colon-equals x dot type runs the first case whose type matches it; in a case listing exactly one type, v already has that type, otherwise v keeps the type of x. Stringer is the F-M-T interface with a String method that returns a string; F-M-T uses it for percent v and percent s, which is how a type controls its printed form.
@@ -801,6 +809,10 @@
 **plan:w2-sat-1** (хеш текста `6bff937d`)
 
 > Every declared variable starts at its zero value: var n int is zero, var s string is the empty string, var ok bool is false, and a pointer, slice, map, channel, func or interface declared without a value is nil; struct fields are zeroed too. A nil slice works with len, append and range. Reading a nil map returns the zero value, but assigning to it, m of k equals v, panics. Sending to or receiving from a nil channel blocks forever. Map keys must be comparable, so slices, maps and functions cannot be keys.
+
+**plan:w2-sat-4** (хеш текста `54c4a8f8`)
+
+> Zero values: 0 for int, empty string for string, and nil for pointer to T, slice of T, map of K to V, chan T and error. errors dot Is checks whether the chain contains a specific value, such as a sentinel; errors dot As finds the first error of a given type and lets me read its fields. I use a pointer receiver when the method changes the receiver, or when the struct is large or must not be copied, for example because it holds a sync dot Mutex; then I keep all methods of the type on pointers. A nil pointer to My Err returned as error is not nil, because the interface stores the type pointer to My Err; it is nil only when both type and value are nil. Deferred calls run last in, first out when the function returns, and their arguments are evaluated when the defer statement runs.
 
 **plan:w2-thu-1** (хеш текста `3a44b4c6`)
 

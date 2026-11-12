@@ -6,10 +6,10 @@ const { chromium } = require("playwright");
 const base = "http://127.0.0.1:8765/";
 const out = process.argv[2];
 
-// Days and task IDs by the layout approved on 11.11 (V91-TASK).
+// Days and task IDs by the layout approved on 11.11 (V91-TASK); v94 adds w1-sat-11 (tests) before w1-sat-8.
 const LAYOUT = {
   w1: [["Пн", ["w1-mon-1", "w1-mon-2", "w1-mon-3"]], ["Вт", ["w1-tue-1", "w1-tue-2", "w1-tue-3"]], ["Ср", ["w1-wed-1", "w1-wed-2"]], ["Чт", ["w1-wed-3"]],
-    ["Сб", ["w1-sat-1", "w1-sat-8", "w1-sat-9", "w1-sat-4", "w1-sat-5", "w1-sat-10"]]],
+    ["Сб", ["w1-sat-1", "w1-sat-11", "w1-sat-8", "w1-sat-9", "w1-sat-4", "w1-sat-5", "w1-sat-10"]]],
   w2: [["Пн", ["w2-mon-1", "w2-mon-2"]], ["Вт", ["w2-tue-1", "w2-tue-2", "w2-tue-3"]], ["Ср", ["w2-wed-1", "w2-wed-2", "w2-wed-3", "w2-wed-4"]], ["Чт", ["w2-thu-1"]],
     ["Сб", ["w2-sat-1", "w2-sat-2", "w2-sat-3", "w2-sat-4", "w2-sat-5"]]]
 };
@@ -51,7 +51,7 @@ const LAYOUT = {
     }), old);
     ok(`${w}: Mon, Tue and Account marks kept from the old record`, marks.checked.join() === old.join(), marks.checked.join());
     ok(`${w}: Account (w1-wed-3) sits on Thursday`, marks.accountDay === "plan-w1-thu", marks.accountDay);
-    ok(`${w}: week 1 chip counts 7 of 15`, marks.chip === "7/15", marks.chip);
+    ok(`${w}: week 1 chip counts 7 of 16`, marks.chip === "7/16", marks.chip);
 
     // A new mark on Monday survives a reload.
     await p.uncheck("#plan-task-w1-mon-1"); await p.check("#plan-task-w1-mon-1");

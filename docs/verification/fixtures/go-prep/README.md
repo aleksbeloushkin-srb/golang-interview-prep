@@ -1,5 +1,5 @@
 # Фикстура: учебный модуль go-prep
 
-Код со страницы практикума «Свой репозиторий go-prep» (`data/guides.js`, `#/practice/go-prep`): `week1/hello`, `week1/calc` — неделя 1; `week3/asm`, `week3/cmd/sumdemo` — тренировка с ассемблером (неделя 3; до v91 — неделя 2, `week2/`); `ci.yml` — файл CI (в репозитории пользователя он лежит в `.github/workflows/`). Путь модуля здесь `github.com/you/go-prep`, на странице — `github.com/<ник>/go-prep`; совпадение файлов проверяет `scripts/check-content.test.mjs`.
+Код со страницы практикума «Свой репозиторий go-prep» (`data/guides.js`, `#/practice/go-prep`): `week1/hello`, `week1/calc` — неделя 1; `week3/asm`, `week3/cmd/sumdemo` — тренировка с ассемблером (неделя 3; до v91 — неделя 2, `week2/`); `ci.yml` — файл CI (в репозитории пользователя он лежит в `.github/workflows/`). С v94 в `week1/calc` — образцы справки «Тесты в Go» (`#/practice/go-testing`): `div.go`, `clamp.go` и их тесты, `example_test.go`, `bench_test.go`, `fuzz_test.go`. Путь модуля здесь `github.com/you/go-prep`, на странице — `github.com/<ник>/go-prep`; совпадение файлов проверяет `scripts/check-content.test.mjs`.
 
 Проверка: `go vet ./... && go test -race -count=1 ./...` на Go 1.24.7 и последней; выводы тренировки (ассемблер amd64 и arm64, `-m`, `objdump`, `GOSSAFUNC`) сверены 6 ноября 2026 на 1.24.7 и 1.27.3.

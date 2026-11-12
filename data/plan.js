@@ -56,7 +56,7 @@ const PLAN = {
       id: "w1",
       title: "Идиомы Go I: типы, методы, интерфейсы",
       goal: "Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, методах и интерфейсах.",
-      done: "Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок.",
+      done: "Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны; свой TestWithdraw ловит мутанта с >= в Withdraw. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок.",
       days: [
         {
           label: "Пн", minutes: 90, tasks: [
@@ -86,7 +86,8 @@ const PLAN = {
         {
           label: "Сб", minutes: 240, tasks: [
             { id: "w1-sat-1", text: "W1-3 Method sets: почему значение T не реализует интерфейс с pointer-методом", links: ["c34", "q28"], talk: "w1-3" },
-            { id: "w1-sat-8", text: "Повторение — вариация Money (≈30 мин): Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение; тест на обе ветки рядом с тестами W1-1", links: ["p-money"] },
+            { id: "w1-sat-11", text: "Тесты в Go (≈40 мин): справка «Тесты в Go», разделы 1–3 — table-driven тест на двух образцах, подтесты и -run, хелпер; затем тренировка «сломай и поймай» на своём W1-2: два мутанта тесты ловят, третий нет — допиши TestWithdraw таблицей. Разделы 4–5 (методы testing.T; Example, Benchmark, Fuzz) — по желанию", links: ["g-go-testing", "g-go-testing-drill", "p-account", "c44"] },
+            { id: "w1-sat-8", text: "Повторение — вариация Money (≈30 мин): Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение; тест на обе ветки рядом с тестами W1-1", links: ["p-money", "g-go-testing-table"] },
             { id: "w1-sat-9", text: "Вариация typed nil (≈15 мин): своя ошибка *NotFoundError с методом Error на указателе; функция объявляет var e *NotFoundError и возвращает её как error — до запуска сказать, что даст err == nil, затем исправить возврат", links: ["c33", "q2"] },
             { id: "w1-sat-4", text: "Прочитать по ролям диалог Two Sum, затем решить LC 1 и повторить диалог своими словами", lc: 1, talk: "lc1" },
             { id: "w1-sat-5", text: "Повторный проговор LC 49 без подсказок — тренажёр «Проговорить с таймером» у задачи понедельника; почему массив [26]int годится в ключ map", links: ["g-go-types"] },
@@ -203,7 +204,7 @@ const PLAN = {
         {
           label: "Чт", minutes: 120, tasks: [
             { id: "w3-thu-1", text: "Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–3 — пакетами в своём go-prep", links: ["c43", "g-go-prep"] },
-            { id: "w3-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35", "g-go-prep-ci"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
+            { id: "w3-thu-2", text: "Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы", links: ["c44", "q35", "g-go-prep-ci", "g-go-testing"], refs: [{ t: "package testing", u: "https://pkg.go.dev/testing" }, { t: "Learn Go with Tests", u: "https://quii.gitbook.io/learn-go-with-tests" }] },
             { id: "w3-thu-3", text: "Покрыть тестами W1-2 и W3-2 — в go-prep, рядом с тестами практикума", links: ["p-account", "p-generics"] },
             { id: "w3-thu-4", text: "Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению", talk: "p1-p10" },
             { id: "w3-thu-5", text: "Тренировка (≈30 мин): сборка с ассемблером и без — -gcflags=-S, '-N -l', -m, go tool objdump, GOSSAFUNC, бенчмарк с -benchmem", links: ["g-go-prep-asm", "c6", "c24"] }
@@ -1163,6 +1164,7 @@ const PLAN = {
     "w1-wed-2": { accept: "c33 и c34: ответ вслух по-английски до раскрытия, затем сверка; практика карточек выполнена. q2 (nil-указатель внутри error) и q28 (T и *T: какое присваивание интерфейсу скомпилируется) — ответ до вариантов." },
     "w1-wed-3": { accept: "Тесты W1-2 зелёные: успешный перевод, нехватка средств через две обёртки, после ошибки балансы прежние. Без подсказки: почему ресивер — указатель и почему err == ErrInsufficientFunds перестаёт работать после %w, а errors.Is — нет; проговор W1-2 — вслух по шагам. Изменённое условие — в среду недели 2: ErrAccountClosed." },
     "w1-sat-1": { accept: "Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация." },
+    "w1-sat-11": { accept: "Мутанты 1 и 2 объяснены своими словами: какой тест упал и почему; TestWithdraw — таблица с t.Run, падает на мутанте 3 и проходит на верном решении под -race. По-английски одной фразой: что такое table-driven тест." },
     "w1-sat-8": { accept: "Add складывает суммы одной валюты, а при разных валютах возвращает ошибку и нулевую Money без сложения; table-driven тест на обе ветки и на отрицательную сумму проходит под -race. По-английски одной фразой: почему ошибка, а не молчаливое сложение." },
     "w1-sat-9": { accept: "До запуска сказано, что err == nil даёт false, и объяснено по-английски через «динамический тип и значение»: в интерфейсе тип *NotFoundError и nil-указатель. После исправления — return nil литералом — err == nil даёт true." },
     "w1-sat-4": { accept: "LC 1 решён без подсказки; диалог Two Sum повторён своими словами за 5 минут без текста; follow-up про отсортированный массив отвечен." },

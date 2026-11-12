@@ -537,6 +537,11 @@ const AUDIO = {
       "michael": "audio/en/plan-w1-sat-1-michael-47c58bdc.mp3",
       "heart": "audio/en/plan-w1-sat-1-heart-00021212.mp3"
     },
+    "plan:w1-sat-10": {
+      "hash": "5a4bdd85",
+      "michael": "audio/en/plan-w1-sat-10-michael-70b82a3f.mp3",
+      "heart": "audio/en/plan-w1-sat-10-heart-5abe252d.mp3"
+    },
     "plan:w1-tue-1": {
       "hash": "38f74df7",
       "michael": "audio/en/plan-w1-tue-1-michael-2fb45a59.mp3",
@@ -571,6 +576,11 @@ const AUDIO = {
       "hash": "6bff937d",
       "michael": "audio/en/plan-w1-sat-2-michael-524640a8.mp3",
       "heart": "audio/en/plan-w1-sat-2-heart-6e71ce22.mp3"
+    },
+    "plan:w2-sat-4": {
+      "hash": "54c4a8f8",
+      "michael": "audio/en/plan-w2-sat-4-michael-a7c2c9b8.mp3",
+      "heart": "audio/en/plan-w2-sat-4-heart-6882573a.mp3"
     },
     "plan:w2-thu-1": {
       "hash": "3a44b4c6",
