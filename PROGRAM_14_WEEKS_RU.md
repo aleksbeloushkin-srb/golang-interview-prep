@@ -24,7 +24,7 @@
 
 | Нед. | Даты | Тема | Готово, когда |
 | --- | --- | --- | --- |
-| 1 | 09.11–15.11 | Идиомы Go I: типы, методы, интерфейсы | Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок. |
+| 1 | 09.11–15.11 | Идиомы Go I: типы, методы, интерфейсы | Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны; свой TestWithdraw ловит мутанта с >= в Withdraw. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок. |
 | 2 | 16.11–22.11 | Идиомы Go I: ошибки, defer и panic, повторение | W2-1…W2-3 лежат в go-prep, и go test -race ./week2/... проходит; вариации среды сделаны; решены LC 347 и LC 238, LC 1 повторена без текста. Самопроверка недели проговорена вслух по-английски без подсказок; рассказ о себе, версия 0, записан. |
 | 3 | 23.11–29.11 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены; CI в go-prep зелёный, тренировка с ассемблером пройдена. |
 | 4 | 30.11–06.12 | Конкурентность I: горутины, каналы, select, sync | W4-1…W4-5 работают под go test -race (в go-prep: ./week4/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
@@ -52,7 +52,7 @@
 
 **Цель:** Писать простой Go без подглядывания и объяснять по-английски, чем Go отличается от Kotlin в типах, методах и интерфейсах.
 
-**Готово, когда:** Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок.
+**Готово, когда:** Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны; свой TestWithdraw ловит мутанта с >= в Withdraw. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок.
 
 ### Пн · 90 мин
 
@@ -87,7 +87,9 @@
 
 - [ ] W1-3 Method sets: почему значение T не реализует интерфейс с pointer-методом — [C34](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c34), [Q28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28), проговор: «W1-3. Method sets»
   - Готово, когда: Без подсказки: почему var _ Notifier = Service{} не компилируется, а &Service{} — да; правило по спецификации и его мотивация.
-- [ ] Повторение — вариация Money (≈30 мин): Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение; тест на обе ветки рядом с тестами W1-1 — [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money)
+- [ ] Тесты в Go (≈40 мин): справка «Тесты в Go», разделы 1–3 — table-driven тест на двух образцах, подтесты и -run, хелпер; затем тренировка «сломай и поймай» на своём W1-2: два мутанта тесты ловят, третий нет — допиши TestWithdraw таблицей. Разделы 4–5 (методы testing.T; Example, Benchmark, Fuzz) — по желанию — [Справка: Тесты в Go: table-driven, подтесты, тренировка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing), [Справка: Тесты в Go: тренировка «сломай и поймай» на W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/drill), [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [C44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44)
+  - Готово, когда: Мутанты 1 и 2 объяснены своими словами: какой тест упал и почему; TestWithdraw — таблица с t.Run, падает на мутанте 3 и проходит на верном решении под -race. По-английски одной фразой: что такое table-driven тест.
+- [ ] Повторение — вариация Money (≈30 мин): Add(other Money) (Money, error) — при разных валютах ошибка, а не сложение; тест на обе ветки рядом с тестами W1-1 — [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), [Справка: Тесты в Go: table-driven тест — образец](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/table)
   - Готово, когда: Add складывает суммы одной валюты, а при разных валютах возвращает ошибку и нулевую Money без сложения; table-driven тест на обе ветки и на отрицательную сумму проходит под -race. По-английски одной фразой: почему ошибка, а не молчаливое сложение.
 - [ ] Вариация typed nil (≈15 мин): своя ошибка *NotFoundError с методом Error на указателе; функция объявляет var e *NotFoundError и возвращает её как error — до запуска сказать, что даст err == nil, затем исправить возврат — [C33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33), [Q2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2)
   - Готово, когда: До запуска сказано, что err == nil даёт false, и объяснено по-английски через «динамический тип и значение»: в интерфейсе тип *NotFoundError и nil-указатель. После исправления — return nil литералом — err == nil даёт true.
@@ -127,6 +129,10 @@
 - [Q28 Pointer-метод, интерфейс и элемент map](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q28)
 - [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
 - [Q29 %v вместо %w](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q29)
+- [Справка: Тесты в Go: table-driven, подтесты, тренировка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing)
+- [Справка: Тесты в Go: тренировка «сломай и поймай» на W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/drill)
+- [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44)
+- [Справка: Тесты в Go: table-driven тест — образец](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/table)
 
 ## Неделя 2. Идиомы Go I: ошибки, defer и panic, повторение (16.11–22.11)
 
@@ -252,7 +258,7 @@
 
 - [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–3 — пакетами в своём go-prep — [C43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43), [Справка: Свой репозиторий go-prep: раскладка, команды, CI](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep)
   - Готово, когда: c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–3 лежат в week1/, week2/ и week3/, go test ./... из корня проходит.
-- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35), [Справка: go-prep: CI на GitHub Actions](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/ci), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
+- [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35), [Справка: go-prep: CI на GitHub Actions](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/ci), [Справка: Тесты в Go: table-driven, подтесты, тренировка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
   - Готово, когда: Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup. CI в go-prep зелёный; намеренно сломанный тест делает его красным.
 - [ ] Покрыть тестами W1-2 и W3-2 — в go-prep, рядом с тестами практикума — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W3-2, W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
   - Готово, когда: Тесты W1-2 и W3-2 покрывают ошибки и граничные случаи, а не только успешный путь; go test -cover ./week1/account ./week3/generics показывает покрытие.
@@ -310,6 +316,7 @@
 - [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44)
 - [Q35 Параллельные подтесты и defer](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35)
 - [Справка: go-prep: CI на GitHub Actions](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/ci)
+- [Справка: Тесты в Go: table-driven, подтесты, тренировка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing)
 - [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
 - [Справка: go-prep: тренировка — сборка с ассемблером и без](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/asm)
 - [C6 What must the runtime restore to resume a goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6) *(Deep Dive)*

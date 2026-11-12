@@ -275,6 +275,7 @@ function renderPracticeIndex(view) {
       practiceEl("h2", { id: "practice-title", tabindex: "-1", text: "Практикум: пишешь код — тесты проверяют" }),
       practiceEl("p", { className: "muted-text", text: "Код пишется у себя в редакторе, в своём модуле go-prep: каждая задача — пакет weekN/<задача>. Скачай заготовку и тесты, запусти go test -race — или вставь решение на странице задачи и проверь на сервере. Порядок: своя попытка → подсказки → эталон и ответ на английском. ✅ — задача прошла проверку на сервере; отметка «сделано» — в плане, у задачи дня." }),
       typeof GUIDES !== "undefined" ? practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: "#/practice/go-prep", text: "Свой репозиторий go-prep: раскладка, команды, CI, тренировка с ассемблером →" })]) : null,
+      typeof GUIDES !== "undefined" && GUIDES["go-testing"] ? practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: "#/practice/go-testing", text: "Тесты в Go: table-driven, подтесты, тренировка «сломай и поймай» →" })]) : null,
       ...(typeof TRACKS !== "undefined" ? Object.entries(TRACKS) : []).map(([id, track]) =>
         practiceEl("p", {}, [practiceEl("a", { className: "btn btn-sm", href: `#/practice/${id}`, text: `${track.title} — все каты подряд →` })]))
     ]),

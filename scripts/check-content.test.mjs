@@ -101,6 +101,19 @@ test('guide files are the go-prep fixture, byte for byte (module path <ник> �
   ]) assert.equal(file(section, name), fixture(path), path);
 });
 
+test('the testing guide files are fixtures, byte for byte (module path <ник> → you)', () => {
+  const sections = guides.guides['go-testing'].sections;
+  const file = (section, name) => sections.find(s => s.id === section).files.find(f => f.name === name).code.replaceAll('<ник>', 'you');
+  const fixture = path => readFileSync(new URL('../docs/verification/' + path, import.meta.url), 'utf8');
+  const calc = 'fixtures/go-prep/week1/calc/';
+  for (const [section, name, path] of [
+    ['table', 'div.go', calc + 'div.go'], ['table', 'div_test.go', calc + 'div_test.go'],
+    ['subtests', 'clamp.go', calc + 'clamp.go'], ['subtests', 'clamp_test.go', calc + 'clamp_test.go'],
+    ['kinds', 'example_test.go', calc + 'example_test.go'], ['kinds', 'bench_test.go', calc + 'bench_test.go'], ['kinds', 'fuzz_test.go', calc + 'fuzz_test.go'],
+    ['withdraw', 'withdraw_test.go', 'v94/drill/withdraw_test.go']
+  ]) assert.equal(file(section, name), fixture(path), path);
+});
+
 const guideFailures = [
   ['link to an unknown section', g => { g.links['g-go-prep-asm'].section = 'nope'; }, /guide link g-go-prep-asm/],
   ['step without an answer', g => { g.guides['go-prep'].sections.find(s => s.steps).steps[0].a = ''; }, /step needs cmd, expect, q, a/],
