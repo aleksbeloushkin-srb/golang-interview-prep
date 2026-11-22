@@ -83,13 +83,19 @@ function talkSaveAttempt(key, attempt) {
 
 // Повтор записи по таймеру pending-store.js; удалось — итог в открытом окне говорит, что результат сохранён.
 function talkRetry() {
-  if (!talkStore.write(talkStore.read())) return;
+  if (talkStore.write(talkStore.read())) talkNoteSaved();
+}
+
+function talkNoteSaved() {
   const note = document.getElementById("talk-save-note");
-  if (note && note.dataset.pending) {
+  if (note && note.dataset.pending && !talkStore.pending) {
     delete note.dataset.pending;
     note.textContent = TALK_SAVED;
   }
 }
+
+// Результат записала синхронизация («Объединить», сверка) и сняла повтор: её событие storage обновляет итог.
+window.addEventListener("storage", talkNoteSaved);
 
 function talkLastAttempt(key) {
   const list = talkLoadAll()[key];

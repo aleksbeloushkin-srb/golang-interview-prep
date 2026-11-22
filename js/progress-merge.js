@@ -67,6 +67,23 @@ function mergeLists(a, b, dateOf, keep) {
     .map(x => x.item).slice(-keep);
 }
 
+// История попыток карточки не длиннее keep. Порядок — как у mergeLists (внутри дня худшая оценка последней). Лишнее
+// снимается сначала у дней, где попыток несколько, — у дня остаётся худшая, то есть его итог; только потом уходят
+// старые дни целиком. Поэтому частые ответы одного дня не стирают его итог и не вытесняют прежние учебные дни.
+// Один источник для записи попытки (app.js, recordAttempt) и слияния устройств.
+function keepAttempts(list, keep) {
+  const out = mergeLists(list, [], x => (x && x.d) || "", Infinity);
+  const day = a => (a && a.d) || "";
+  const perDay = new Map();
+  out.forEach(a => perDay.set(day(a), (perDay.get(day(a)) || 0) + 1));
+  while (out.length > keep) {
+    const i = Math.max(0, out.findIndex(a => perDay.get(day(a)) > 1));
+    perDay.set(day(out[i]), perDay.get(day(out[i])) - 1);
+    out.splice(i, 1);
+  }
+  return out;
+}
+
 function lastAttemptDay(attempts, cardId) {
   const list = attempts && Array.isArray(attempts[cardId]) ? attempts[cardId] : [];
   return list.reduce((max, a) => (a && typeof a.d === "string" && a.d > max ? a.d : max), "");
@@ -75,7 +92,7 @@ function lastAttemptDay(attempts, cardId) {
 // Статус карточки, который на устройствах разный: итог последнего дня объединённой истории (attemptStatus).
 // Без истории — прежнее правило: статус стороны с более новой попыткой, при равенстве — «на повторении».
 function mergeCardStatus(id, local, server, attemptsL, attemptsS) {
-  const status = attemptStatus(mergeLists(attemptsL[id], attemptsS[id], x => (x && x.d) || "", MERGE_ATTEMPTS_KEEP));
+  const status = attemptStatus(keepAttempts(mergeLists(attemptsL[id], attemptsS[id], x => (x && x.d) || "", Infinity), MERGE_ATTEMPTS_KEEP));
   if (status) return status;
   const dl = lastAttemptDay(attemptsL, id), ds = lastAttemptDay(attemptsS, id);
   return dl > ds ? local : ds > dl ? server : "review";
@@ -100,7 +117,7 @@ function mergeProgressSnapshots(local, server) {
     let merged;
     if (key === "go_prep_attempts_v1") {
       merged = {};
-      for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) merged[id] = mergeLists(a[id], b[id], x => (x && x.d) || "", MERGE_ATTEMPTS_KEEP);
+      for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) merged[id] = keepAttempts(mergeLists(a[id], b[id], x => (x && x.d) || "", Infinity), MERGE_ATTEMPTS_KEEP);
     } else if (key === "go_prep_progress_v2") {
       merged = { ...b, ...a };
       for (const id of Object.keys(a)) {
@@ -130,4 +147,4 @@ function mergeProgressSnapshots(local, server) {
   return out;
 }
 
-if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists, attemptDayResults, attemptStatus };
+if (typeof module !== "undefined") module.exports = { mergeProgressSnapshots, mergeLists, keepAttempts, attemptDayResults, attemptStatus };
