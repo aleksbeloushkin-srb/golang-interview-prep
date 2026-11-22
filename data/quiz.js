@@ -2019,5 +2019,99 @@ func WriteReport(path string, payload []byte) (err error) {
       "c71",
       "c48"
     ]
+  },
+  // =========================================================================
+  // НЕДЕЛЯ 3: БИТЫ (Q56 - Q58)
+  // =========================================================================
+  {
+    "id": "q56",
+    "title": "Задача 56: uint8 и переполнение",
+    "ru": "Что напечатает программа?",
+    "en": "What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar stock uint8 = 200\n\tstock += 100\n\tfmt.Println(stock)\n}",
+    "options": [
+      "300",
+      "44",
+      "255 — значение упирается в максимум",
+      "panic: integer overflow",
+      "Ошибка компиляции: 300 не помещается в uint8",
+      "0"
+    ],
+    "correct": 1,
+    "explanationRU": "Сложение целых во время работы идёт по модулю 2^8 для uint8: 300 − 256 = 44. Go не паникует на переполнении и не «упирает» значение в 255. Компилятор проверяет только константы: var stock uint8 = 300 не скомпилируется («overflows»), а stock += 100 — уже вычисление над переменной. Если переполнение — ошибка, берут тип шире или проверяют границу до сложения: if n > math.MaxUint8-stock { … }.",
+    "speechEN": "Arithmetic on a uint8 wraps around modulo two hundred fifty-six, so two hundred plus one hundred is forty-four. Go does not panic on overflow and does not stop at two hundred fifty-five; only constants are checked at compile time.",
+    "correctedCode": "package main\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"math\"\n)\n\nfunc add(stock, n uint8) (uint8, error) {\n\tif n > math.MaxUint8-stock {\n\t\treturn stock, errors.New(\"stock overflow\")\n\t}\n\treturn stock + n, nil\n}\n\nfunc main() {\n\tfmt.Println(add(200, 100)) // 200 stock overflow\n}",
+    "versionNote": "Поведение не менялось; проверено на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Go specification: integer overflow",
+        "url": "https://go.dev/ref/spec#Integer_overflow"
+      },
+      {
+        "title": "Go specification: constant expressions",
+        "url": "https://go.dev/ref/spec#Constant_expressions"
+      }
+    ],
+    "cardIds": [
+      "c73"
+    ]
+  },
+  {
+    "id": "q57",
+    "title": "Задача 57: сдвиг и деление отрицательного числа",
+    "ru": "Что напечатает программа?",
+    "en": "What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := -7\n\tfmt.Println(x>>1, x/2)\n}",
+    "options": [
+      "-3 -3",
+      "-4 -3",
+      "-4 -4",
+      "9223372036854775804 -3 — сдвиг логический",
+      "-3 -4",
+      "Ошибка компиляции: сдвиг знакового числа"
+    ],
+    "correct": 1,
+    "explanationRU": "У знакового числа >> арифметический: слева приходят копии знакового бита, и результат — деление на 2 с округлением вниз: −3,5 → −4. Деление / в Go отбрасывает дробь к нулю: −3,5 → −3. Логического сдвига >>> из Java в Go нет; нужен — приводят к беззнаковому типу: uint(x) >> 1.",
+    "speechEN": "A right shift of a signed number copies the sign bit and rounds down, so minus seven shifted by one is minus four, while division truncates toward zero and gives minus three.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tx := -7\n\tfmt.Println(x>>1, x/2)          // -4 -3\n\tfmt.Println(uint8(int8(x)) >> 1) // 124: logical shift of the same byte 1111_1001\n}",
+    "versionNote": "Поведение не менялось; проверено на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Go specification: arithmetic operators (shifts, integer division)",
+        "url": "https://go.dev/ref/spec#Arithmetic_operators"
+      }
+    ],
+    "cardIds": [
+      "c73"
+    ]
+  },
+  {
+    "id": "q58",
+    "title": "Задача 58: поле из знакового байта — по маске и без",
+    "ru": "Что напечатает программа?",
+    "en": "What does the program print?",
+    "code": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar b int8 = -74 // 1011_0110\n\tfmt.Println(b>>4, (b>>4)&0x0F)\n}",
+    "options": [
+      "11 11",
+      "-5 11",
+      "-5 -5",
+      "251 11",
+      "11 -5",
+      "Ошибка компиляции: 0x0F не помещается в int8"
+    ],
+    "correct": 1,
+    "explanationRU": "b >> 4 у знакового — арифметический сдвиг: слева четыре копии знакового бита, 1111_1011 = −5. Маска 0x0F после сдвига оставляет только младшие четыре бита — поле 1011 = 11. Маска после сдвига нужна, когда поле вырезают из знакового значения: без неё знак «размножается». Другой путь — привести к беззнаковому: uint8(b) >> 4 = 11.",
+    "speechEN": "A signed right shift drags copies of the sign bit in from the left, so minus seventy-four shifted by four is minus five; masking with 0x0F keeps only the field, which is eleven.",
+    "correctedCode": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tvar b int8 = -74 // 1011_0110\n\tfmt.Println((b>>4)&0x0F, uint8(b)>>4) // 11 11\n}",
+    "versionNote": "Поведение не менялось; проверено на Go 1.24.7 и 1.27.3.",
+    "sources": [
+      {
+        "title": "Go specification: arithmetic operators (shifts)",
+        "url": "https://go.dev/ref/spec#Arithmetic_operators"
+      }
+    ],
+    "cardIds": [
+      "c73"
+    ]
   }
 ];

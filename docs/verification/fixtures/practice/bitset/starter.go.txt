@@ -1,0 +1,44 @@
+// Package bitset: practice task W3-2. Replace each TODO with your solution.
+package bitset
+
+// Set is a set of non-negative integers, one bit per number: i is bit i&63 of word i>>6.
+// The zero value is an empty set, ready to use.
+type Set struct {
+	words []uint64
+}
+
+// Add puts i into the set; a negative i panics, like an index out of range.
+func (s *Set) Add(i int) {
+	// TODO
+	panic("TODO")
+}
+
+// Has reports whether i is in the set; a negative i or one beyond the last word is simply absent.
+func (s *Set) Has(i int) bool {
+	// TODO
+	panic("TODO")
+}
+
+// Remove takes i out of the set; an absent, negative or too large i is left alone, without a panic.
+func (s *Set) Remove(i int) {
+	// TODO
+	panic("TODO")
+}
+
+// Len returns the number of elements.
+func (s *Set) Len() int {
+	// TODO
+	panic("TODO")
+}
+
+// Union adds every element of t to s; t does not change.
+func (s *Set) Union(t *Set) {
+	// TODO
+	panic("TODO")
+}
+
+// Elems returns the elements in ascending order.
+func (s *Set) Elems() []int {
+	// TODO
+	panic("TODO")
+}

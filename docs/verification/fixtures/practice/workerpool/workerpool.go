@@ -1,4 +1,4 @@
-// Package workerpool is the reference solution for practice task W4-1.
+// Package workerpool is the reference solution for practice task W5-1.
 package workerpool
 
 import (

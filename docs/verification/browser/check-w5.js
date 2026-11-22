@@ -29,7 +29,7 @@ const base = "http://127.0.0.1:8765/";
       ok(`${w}: sim10 step ${k + 1}`, r.ov <= 0 && r.title, JSON.stringify(r));
     }
     ok(`${w}: sim10 chip in quick jump`, await p.isVisible('a[href="#/simulators/sim10"].chip'));
-    for (const [day, hrefs] of [["w6/tue", ["#/practice/p-accountsapi", "#/practice/p-httperr", "#/cards/c45", "#/simulators/sim10", "#/quiz/q36", "#/quiz/q39"]], ["w6/wed", ["#/cards/c47"]], ["w6/thu", ["#/cards/c48", "#/quiz/q38"]]]) {
+    for (const [day, hrefs] of [["w7/tue", ["#/practice/p-accountsapi", "#/practice/p-httperr", "#/cards/c45", "#/simulators/sim10", "#/quiz/q36", "#/quiz/q39"]], ["w7/wed", ["#/cards/c47"]], ["w7/thu", ["#/cards/c48", "#/quiz/q38"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(h => ({ missing: h.filter(x => !document.querySelector(`a[href="${x}"]`)), gaps: document.querySelectorAll(".plan-gap").length }), hrefs);
       ok(`${w}: plan ${day} links and no gaps`, !r.missing.length && r.gaps === 0, JSON.stringify(r));

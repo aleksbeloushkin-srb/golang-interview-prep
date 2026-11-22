@@ -1,4 +1,4 @@
-// Раздел #/plan: программа на 14 недель с отметками выполнения.
+// Раздел #/plan: программа на 15 недель с отметками выполнения.
 // Данные — data/plan.js (PLAN). Прогресс хранится отдельно от карточек
 // под ключом go_prep_plan_v1 и не влияет на go_prep_progress_v2.
 
@@ -738,7 +738,7 @@ function renderPlan(weekId, dayKey) {
       planEl("p", { className: "muted-text", text: `Бюджет ~${planWeekHours(week)} — ориентир, а не обещание. Не укладываешься — переноси в резерв (${["Пт", "Вс"].filter(label => !week.days.some(day => day.label === label)).join("/")}); сначала обязательные задачи, «по желанию» — если осталось время.` }),
       planTalkRules(),
       ...days,
-      week.id === "w3" ? planPredictBlock() : null, // «Что выведет код» — неделя slice и map
+      week.id === "w4" ? planPredictBlock() : null, // «Что выведет код» — неделя slice и map
       leetcodeList,
       planListBlock("Проговорить по-английски", week.english, "en"),
       planListBlock("Самопроверка недели", week.selfCheck),

@@ -28,6 +28,38 @@ export const VOICES = {
 // Точечные правки произношения, когда общих правил не хватает: [было в тексте для речи, стало].
 // Каждая правка меняет только чтение, не смысл: сверяется с экранным текстом при ревью.
 const SPEECH_FIXES = {
+  'card:c73:short': [
+    ["Go works on each bit position: & keeps common bits, | merges them, ^ keeps the differing ones, and &^, A-N-D N-O-T, clears the bits of the right operand.", "Go works on each bit position: and keeps common bits, or merges them, x-or keeps the differing ones, and the and-not operator clears the bits of the right operand."],
+    ["A mask picks positions: x | 1<<k sets bit k, x &^, 1<<k, clears it, x&, 1<<k, not equal to 0 tests it.", "A mask picks positions: x or one shifted left by k sets bit k, x and-not that mask clears it, and x and the mask, not equal to zero, tests it."],
+    ["so minus 7 >> 1 is minus 4", "so minus seven shifted right by one is minus four"]
+  ],
+  'card:c73:jvm': [
+    ["Java writes N-O-T as ~x and has no A-N-D N-O-T: a & ~b.", "Java writes not as a tilde before x and has no and-not: it writes a and tilde b."],
+    ["Java's >> is arithmetic like Go's on signed types, and >>> is a logical shift; Go has no >>>, you convert", "Java's right shift is arithmetic like Go's on signed types, and the triple right shift is a logical shift; Go has no triple shift, you convert"],
+    ["In Java, x & 1 equals 0 does not compile without parentheses; in Go it means, x & 1, equals 0.", "In Java, x and 1 equals 0 does not compile without parentheses; in Go it means x and 1, compared with 0."]
+  ],
+  'plan:w3-mon-4': [
+    ["the byte 1011_0110 reads as", "the byte 1 0 1 1, 0 1 1 0 reads as"],
+    ["A-N-D keeps common bits, O-R merges them, X-O-R keeps differing bits, and Go's A-N-D N-O-T clears", "And keeps common bits, or merges them, x-or keeps differing bits, and Go's and-not clears"]
+  ],
+  'plan:w3-tue-6': [
+    ["O-R sets a bit, A-N-D N-O-T clears it, X-O-R toggles it, and A-N-D tests it", "or sets a bit, and-not clears it, x-or toggles it, and an and tests it"]
+  ],
+  'plan:w3-sat-14': [
+    ["a &^ b clears in a the bits set in b; it equals a & ^b, while a ^ b would also set", "a and-not b clears in a the bits set in b; it equals a and the inverse of b, while a x-or b would also set"],
+    ["when n &, n-1, is zero", "when n and n minus one is zero"],
+    ["mask with 0x0F", "mask with hex zero F"]
+  ],
+  'practice:p-perm:talk': [
+    ["and 1 << iota gives these values", "and one shifted left by iota gives these values"],
+    ["A set of rights is a bitwise O-R.", "A set of rights is a bitwise or."],
+    ["Has checks p & q equals q", "Has checks that p and q equals q"],
+    ["Remove uses A-N-D N-O-T, p &^ q, which clears", "Remove uses and-not, which clears"],
+    ["X-O-R would add", "x-or would add"]
+  ],
+  'practice:p-bitset:talk': [
+    ["sets the bit with O-R; Remove clears it with A-N-D N-O-T", "sets the bit with or; Remove clears it with and-not"]
+  ],
   'card:c65:short': [
     ['p dot Charge, 1000, works and means p dot Account dot Charge, 1000', 'p dot Charge of 1000 works and means p dot Account dot Charge of 1000'],
     ['so its call a dot Fee still reaches', 'so its call to Fee on the receiver still reaches']
@@ -64,7 +96,7 @@ const SPEECH_FIXES = {
   // Неделя 3 и книга (v74).
   'card:c12:short': [['go dot uber dot org/goleak fails the test', "Uber's go-leak library fails the test"], ['the goroutineleak profile', 'the goroutine-leak profile']],
   // Неделя 3 по подходу (v76).
-  'plan:w4-sat-1': [['with a Wait Group or errgroup', 'with a Wait Group or an err group']],
+  'plan:w5-sat-1': [['with a Wait Group or errgroup', 'with a Wait Group or an err group']],
   // Пилотная выборка (c2, c7, c28, c29, c47).
   'card:c18:jvm': [['or a N-I-O Selector', 'or an N-I-O Selector']],
   'card:c20:short': [['atomic dot Compare And Swap Int64, address of x, old, new, which returns false', 'atomic dot Compare And Swap Int64, called with the address of x, old and new, which returns false']],
@@ -81,13 +113,13 @@ const SPEECH_FIXES = {
   'card:c43:short': [['import example dot com/shop/ledger names a package', 'import example dot com slash shop slash ledger names a package'], ['one directory of .go files', 'one directory of dot-go files'], ['A package under internal/ can be imported', 'A package under an internal directory can be imported']],
   'card:c43:jvm': [['internal/ is a boundary', 'An internal directory is a boundary']],
   'card:c44:jvm': [['J Unit 5 @Parameterized Test', 'J Unit 5 Parameterized Test'], ['like @After Each registered', 'like After Each registered'], ['t dot Fatalf to stop', 't dot Fatal-f to stop']],
-  'plan:w3-mon-1': [['So s[1:3] copies no elements', 'So slicing s from one to three copies no elements'], ['s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:];', 'a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows;']],
-  'plan:w3-mon-2': [['limit the capacity with a[:len, a:len, a,] so append must allocate', 'limit the capacity with a full slice expression so append must allocate'], ['the whole 100 megabytes array', 'the whole 100-megabyte array']],
+  'plan:w4-mon-1': [['So s[1:3] copies no elements', 'So slicing s from one to three copies no elements'], ['s[a:b:c] limits capacity to c-a; s[a:b:b] leaves no spare capacity, so appending to it must copy into a new array and cannot overwrite s[b:];', 'a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows;']],
+  'plan:w4-mon-2': [['limit the capacity with a[:len, a:len, a,] so append must allocate', 'limit the capacity with a full slice expression so append must allocate'], ['the whole 100 megabytes array', 'the whole 100-megabyte array']],
   'plan:w2-thu-1': [['so m[k].f equals 1 does not compile', 'so assigning to a field, m of k dot f, does not compile']],
-  'plan:w3-tue-3': [['len, héllo, is 6, not 5', 'the length of héllo is 6, not 5'], ['len, s, counts bytes and s[i] returns a byte', 'len of s counts bytes and s of i returns a byte']],
-  'plan:w3-tue-4': [['append, s[:i], s[i+1:]..., shifts elements', 'appending the tail after i to the part before i shifts elements']],
-  'plan:w3-wed-1': [['a map of T to a struct literal with Add', 'a map from T to an empty struct with Add']],
-  'plan:w3-thu-1': [['such as module example dot com/shop', 'such as module example dot com slash shop'], ['Code under internal/ can be imported', 'Code in an internal directory can be imported'], ['cmd/ for binaries and internal/ for private code', 'cmd for binaries and internal for private code']],
+  'plan:w4-tue-3': [['len, héllo, is 6, not 5', 'the length of héllo is 6, not 5'], ['len, s, counts bytes and s[i] returns a byte', 'len of s counts bytes and s of i returns a byte']],
+  'plan:w4-tue-4': [['append, s[:i], s[i+1:]..., shifts elements', 'appending the tail after i to the part before i shifts elements']],
+  'plan:w4-wed-1': [['a map of T to a struct literal with Add', 'a map from T to an empty struct with Add']],
+  'plan:w4-thu-1': [['such as module example dot com/shop', 'such as module example dot com slash shop'], ['Code under internal/ can be imported', 'Code in an internal directory can be imported'], ['cmd/ for binaries and internal/ for private code', 'cmd for binaries and internal for private code']],
   'practice:p-removeslice:talk': [['Removing with append, s[:i], s[i+1:]..., is cheap', 'Removing with append of the part before i and the tail after it is cheap']],
   // Деньги: сумма — словами, вывод String() — как его печатают.
   'plan:w1-tue-3': [

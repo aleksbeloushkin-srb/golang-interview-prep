@@ -1,0 +1,53 @@
+// Package perm: practice task W3-1. Replace each TODO with your solution.
+package perm
+
+import "errors"
+
+// Perm is a set of access rights, one bit per right, as in chmod: r = 4, w = 2, x = 1.
+type Perm uint8
+
+const (
+	Exec  Perm = 1 << iota // 001
+	Write                  // 010
+	Read                   // 100
+)
+
+// ErrBadPerm is wrapped by Parse when the text is not three characters of the form "rwx" with '-' for a missing right.
+var ErrBadPerm = errors.New("bad permission string")
+
+// Has reports whether p has every right in q.
+func (p Perm) Has(q Perm) bool {
+	// TODO
+	panic("TODO")
+}
+
+// Add returns p with the rights of q.
+func (p Perm) Add(q Perm) Perm {
+	// TODO
+	panic("TODO")
+}
+
+// Remove returns p without the rights of q; a right that p does not have stays absent.
+func (p Perm) Remove(q Perm) Perm {
+	// TODO
+	panic("TODO")
+}
+
+// Toggle returns p with the rights of q flipped.
+func (p Perm) Toggle(q Perm) Perm {
+	// TODO
+	panic("TODO")
+}
+
+// String prints the rights as "rwx" with '-' for a missing one: Read|Exec → "r-x". Other bits are not printed.
+func (p Perm) String() string {
+	// TODO
+	panic("TODO")
+}
+
+// Parse reads the text String prints: "r-x" → Read|Exec. Any other text — an error that wraps ErrBadPerm
+// and quotes the input as %q does.
+func Parse(s string) (Perm, error) {
+	// TODO
+	panic("TODO")
+}

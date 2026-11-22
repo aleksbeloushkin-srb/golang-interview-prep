@@ -1,4 +1,4 @@
-// Builds PROGRAM_14_WEEKS_RU.md — the program as one Markdown file — from data/plan.js and the materials it links to.
+// Builds PROGRAM_15_WEEKS_RU.md — the program as one Markdown file — from data/plan.js and the materials it links to.
 //   node scripts/program-md.mjs            # writes the file
 //   node scripts/program-md.mjs --stdout   # prints it
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -6,7 +6,7 @@ import { createContext, runInContext } from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const OUT = 'PROGRAM_14_WEEKS_RU.md';
+const OUT = 'PROGRAM_15_WEEKS_RU.md';
 const SITE = 'https://aleksbeloushkin-srb.github.io/golang-interview-prep/';
 const context = createContext({});
 for (const file of ['data/cards.js', 'data/quiz.js', 'data/simulators.js', 'data/plan.js', 'data/practice.js', 'data/guides.js', 'data/tracks.js']) {

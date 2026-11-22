@@ -1,4 +1,4 @@
-# Программа подготовки к интервью Senior Go: 14 недель
+# Программа подготовки к интервью Senior Go: 15 недель
 
 <!-- GitHub Pages (Jekyll/Liquid) не должен разбирать фигурные скобки в Go-коде этого файла. --> <!-- {% raw %} -->
 
@@ -10,15 +10,15 @@
 
 «Готово, когда» — самостоятельная попытка до ответа и перенос на изменённое условие; у каты — критерий из трека; «На сайте пока нет» — упражнение, которое ещё предстоит добавить. Задачи LeetCode без своего критерия: Решено самостоятельно за 30 минут вслух по 4 шагам; названа сложность; подсказка открыта только после попытки; follow-up или изменённое условие объяснено словами.
 
-Этот файл сгенерирован `node scripts/program-md.mjs` из `data/plan.js` — источника данных раздела [«План 14 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`, затем пересобрать файл. Ревизия программы: 2026-11-11.
+Этот файл сгенерирован `node scripts/program-md.mjs` из `data/plan.js` — источника данных раздела [«План 15 недель»](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan) на сайте. Правки вносить в `data/plan.js`, затем пересобрать файл. Ревизия программы: 2026-11-22.
 
 ## Фазы
 
 | Фаза | Недели |
 | --- | --- |
-| Go: язык и конкурентность | 1, 2, 3, 4, 5 |
-| Проект-портфолио: ledger-сервис | 6, 7, 8, 9 |
-| Собеседования и рынок | 10, 11, 12, 13, 14 |
+| Go: язык и конкурентность | 1, 2, 3, 4, 5, 6 |
+| Проект-портфолио: ledger-сервис | 7, 8, 9, 10 |
+| Собеседования и рынок | 11, 12, 13, 14, 15 |
 
 ## Обзор
 
@@ -26,18 +26,19 @@
 | --- | --- | --- | --- |
 | 1 | 09.11–15.11 | Идиомы Go I: типы, методы, интерфейсы | Решены LC 49 и LC 1 (на leetcode.com, на Go). W1-1 и W1-2 лежат в go-prep, и go test -race ./week1/... проходит; W1-3 объяснён вслух; вариации Money и typed nil сделаны; свой TestWithdraw ловит мутанта с >= в Withdraw. Самопроверка по типам и интерфейсам проговорена вслух по-английски без подсказок. |
 | 2 | 16.11–22.11 | Идиомы Go I: ошибки, defer и panic, повторение | W2-1…W2-3 лежат в go-prep, и go test -race ./week2/... проходит; вариации среды сделаны; решены LC 347 и LC 238, LC 1 повторена без текста. Самопроверка недели проговорена вслух по-английски без подсказок; рассказ о себе, версия 0, записан. |
-| 3 | 23.11–29.11 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены; CI в go-prep зелёный, тренировка с ассемблером пройдена. |
-| 4 | 30.11–06.12 | Конкурентность I: горутины, каналы, select, sync | W4-1…W4-5 работают под go test -race (в go-prep: ./week4/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
-| 5 | 07.12–13.12 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week5/... в go-prep зелёный. |
-| 6 | 14.12–20.12 | Проект I: каркас ledger-сервиса | Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском; каты К2.5 и К2.7 решены на время, тесты зелёные. |
-| 7 | 21.12–27.12 | Проект II: транзакции, идемпотентность, outbox → Kafka | Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат; каты К3.1 и К3.2 решены на время, тесты зелёные. |
-| 8 | 28.12–03.01 | Проект III: gRPC, тесты, бенчмарки | Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов; каты К3.5 и К3.8 решены на время, тесты зелёные. |
-| 9 | 04.01–10.01 | Проект IV: production-readiness, CV | Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском; каты К3.6 и К3.9 решены на время, тесты зелёные. |
-| 10 | 11.01–17.01 | Take-home, code review, первая волна откликов | Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1. |
-| 11 | 18.01–24.01 | System Design I | 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников. |
-| 12 | 25.01–31.01 | System Design II: event-driven и предметные дизайны | Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов. |
-| 13 | 01.02–07.02 | Behavioral, легенда, CV | Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании. |
-| 14 | 08.02–14.02 | Моки и пик откликов | 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал. |
+| 3 | 23.11–29.11 | Биты и закрепление недель 1–2 | W3-1…W3-3 решены на сервере; LC 191, 231, 136, 268 и 338 — на Go; вариация Account с валютой и ParseMoney лежат в go-prep с тестами; оба разбора пройдены, ошибки названы до ответа. Самопроверка недели проговорена вслух по-английски без подсказок. |
+| 4 | 30.11–06.12 | Идиомы Go II: slice, map, строки, generics, тесты | 10 задач «что выведет код» из плана и q1 решены с объяснением; CLI txsum покрыт тестами; LC 3, 15, 739 проговорены; CI в go-prep зелёный, тренировка с ассемблером пройдена. |
+| 5 | 07.12–13.12 | Конкурентность I: горутины, каналы, select, sync | W5-1…W5-5 работают под go test -race (в go-prep: ./week5/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение. |
+| 6 | 14.12–20.12 | Конкурентность II и минимум рантайма | 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week6/... в go-prep зелёный. |
+| 7 | 21.12–27.12 | Проект I: каркас ledger-сервиса | Создание счёта и перевод работают через curl на docker compose up; есть ADR-001 на английском; каты К2.5 и К2.7 решены на время, тесты зелёные. |
+| 8 | 28.12–03.01 | Проект II: транзакции, идемпотентность, outbox → Kafka | Тест: 100 параллельных переводов, сумма балансов неизменна, -race чистый; повтор с тем же idempotency key возвращает исходный результат; каты К3.1 и К3.2 решены на время, тесты зелёные. |
+| 9 | 04.01–10.01 | Проект III: gRPC, тесты, бенчмарки | Интеграционные тесты на testcontainers зелёные в CI; есть один бенчмарк с объяснением результатов; каты К3.5 и К3.8 решены на время, тесты зелёные. |
+| 10 | 11.01–17.01 | Проект IV: production-readiness, CV | Публичный репозиторий; README объясняет архитектуру и компромиссы; пройден виртуальный Craft Deep-Dive по проекту на английском; каты К3.6 и К3.9 решены на время, тесты зелёные. |
+| 11 | 18.01–24.01 | Take-home, code review, первая волна откликов | Второе портфолио-репо (API-клиент) с тестами и README; чек-лист ревьюера; 3 разобранных чужих PR; 5–10 откликов волны 1. |
+| 12 | 25.01–31.01 | System Design I | 3 дизайна проговорены и записаны; вторая волна откликов отправлена до праздников. |
+| 13 | 01.02–07.02 | System Design II: event-driven и предметные дизайны | Ещё 3 дизайна проговорены; на вопрос про exactly-once есть точный ответ без мифов. |
+| 14 | 08.02–14.02 | Behavioral, легенда, CV | Истории записаны и проговорены; финальные CV и LinkedIn; список вопросов к компании. |
+| 15 | 15.02–21.02 | Моки и пик откликов | 3 мока пройдены; назначены реальные собеседования; после каждого интервью вопросы занесены в журнал. |
 
 ## Как проговаривать задачи по-английски
 
@@ -223,7 +224,103 @@
 - [Q34 Встраивание и неоднозначный метод](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q34)
 - [Q52 «Переопределённый» метод и встраивание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q52)
 
-## Неделя 3. Идиомы Go II: slice, map, строки, generics, тесты (23.11–29.11)
+## Неделя 3. Биты и закрепление недель 1–2 (23.11–29.11)
+
+**Цель:** Читать и менять биты без подсказки — операторы, сдвиги, маски, с результатом в битах до запуска — и закрепить недели 1–2 на Money, Account и двух разборах.
+
+**Готово, когда:** W3-1…W3-3 решены на сервере; LC 191, 231, 136, 268 и 338 — на Go; вариация Account с валютой и ParseMoney лежат в go-prep с тестами; оба разбора пройдены, ошибки названы до ответа. Самопроверка недели проговорена вслух по-английски без подсказок.
+
+### Пн · 90 мин
+
+- [ ] Биты, часть 1: справка «Биты в Go», разделы 1–3 — как читать биты, переполнение и отрицательные числа, операторы & | ^ &^; у каждой строки сначала назови биты результата, потом сверь — [Справка: Биты в Go: операторы, сдвиги, маски](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits), [C73](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73)
+  - Готово, когда: Без подсказки: сколько стоит бит k; 1011_0110 прочитано как 182 и как −74; почему переполнение переменной не паникует; что делает &^ — с битами результата для a = 1100_1010 и b = 1010_0110.
+- [ ] Quiz q56 и q57 — ответ до вариантов: переполнение uint8, сдвиг и деление отрицательного числа — [Q56](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q56), [Q57](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q57)
+  - Готово, когда: q56 и q57 — ответ до вариантов; объяснено, почему сдвиг вправо округляет вниз, а деление — к нулю.
+- [ ] LeetCode 191. Number of 1 Bits + проговор: два решения — x & (x-1) и bits.OnesCount32 — [LC 191. Number of 1 Bits](https://leetcode.com/problems/number-of-1-bits/), проговор: «LC 191. Number of 1 Bits»
+  - Готово, когда: Два решения — через x & (x-1) и через bits.OnesCount32 — со сложностью: O(число единиц) и O(1); проговор по 4 шагам за 5 минут.
+
+### Вт · 90 мин
+
+- [ ] Биты, часть 2: справка, разделы 4–5 — сдвиги без маски и по маске: проверить, поставить, снять, переключить бит, вырезать и записать поле; результат каждой строки — до сверки — [Справка: Биты в Go: сдвиги без маски](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/shifts), [Справка: Биты в Go: маски и сдвиг по маске](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/masks)
+  - Готово, когда: Все строки разделов 4–5 предсказаны до сверки; объяснено, почему int8(-74) >> 4 даёт −5, а с маской 0x0F — 11.
+- [ ] Битовые операции (≈20 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия — [SIM9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
+  - Готово, когда: Шаги диаграммы 9 с вопросом — ответ вслух до раскрытия; объяснено, почему x&1 == 0 в Go не требует скобок.
+- [ ] W3-1 Флаги прав Perm: 1 << iota, Has, Add, Remove через &^, Toggle, String и Parse «rwx». Проговор — [W3-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-perm), проговор: «W3-1. Permission flags»
+  - Готово, когда: Тесты W3-1 на сервере зелёные; без подсказки: почему Has — это p&q == q, а не != 0, и почему Remove — &^, а не ^. Проговор W3-1 — вслух по шагам.
+- [ ] LeetCode 231. Power of Two (≈10 мин): n > 0 && n&(n-1) == 0 — почему это работает, на 64 и 96 в битах — [LC 231. Power of Two](https://leetcode.com/problems/power-of-two/)
+  - Готово, когда: n > 0 && n&(n-1) == 0 объяснено на 64 и 96 в битах.
+
+### Ср · 90 мин
+
+- [ ] Биты, часть 3: справка, разделы 6–7 — x&(x-1), x&-x, XOR и math/bits; вывод примеров из раздела «Код и тренировка» — до запуска — [Справка: Биты в Go: приёмы и math/bits](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/tricks)
+  - Готово, когда: x&(x-1), x&-x и сокращение пар через XOR объяснены на 1011_0110; вывод Example_tricks и Example_mathBits назван до запуска.
+- [ ] W3-2 Битовое множество на []uint64: Add, Has, Remove, Len через bits.OnesCount64, Union и Elems по возрастанию. Проговор — [W3-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-bitset), проговор: «W3-2. Bit set»
+  - Готово, когда: Тесты W3-2 на сервере зелёные; без подсказки: почему слово — i>>6, а бит — i&63, и как Elems обходит биты через TrailingZeros64 и w &= w-1. Проговор W3-2.
+- [ ] LeetCode 136. Single Number и 268. Missing Number — оба через XOR + проговор 136 — [LC 136. Single Number](https://leetcode.com/problems/single-number/), проговор: «LC 136. Single Number»
+  - Готово, когда: LC 136 и 268 решены через XOR за O(n) времени и O(1) памяти; объяснено, почему пары сокращаются.
+
+### Чт · 90 мин
+
+- [ ] W3-3 Money.Allocate: раздел суммы на n частей без потери цента — вариация W1-1 на закрепление. Проговор — [W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-allocate), [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), проговор: «W3-3. Money.Allocate»
+  - Готово, когда: Тесты W3-3 на сервере зелёные, включая отрицательные суммы и math.MaxInt64; по-английски одной фразой: почему не float64 и куда уходит остаток.
+- [ ] Вариация Account на зачёт (≈40 мин): счёт хранит Money с валютой (W1-1 + W1-2); Deposit, Withdraw и Transfer в другой валюте — ErrCurrencyMismatch через %w; table-driven тест: валюта совпала, не совпала, не хватает средств — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), [Справка: Тесты в Go: table-driven тест — образец](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/table)
+  - Готово, когда: Тест: операции одной валюты проходят; для другой errors.Is(err, ErrCurrencyMismatch) истинно, а errors.Is(err, ErrInsufficientFunds) — ложно; после отказа балансы прежние; go test -race проходит.
+
+### Сб · 240 мин
+
+- [ ] Разбор 1 (≈45 мин): чужой код с шестью ошибками недель 1–2 — причины назвать до ответа, исправить, тесты зелёные — [Справка: Разбор 1: чужой код с шестью ошибками](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/week3-reviews/code)
+  - Готово, когда: Шесть причин названы до ответа; после шести правок go test ./week3/review зелёный; седьмое замечание — float64 для денег — названо.
+- [ ] Разбор 2 (≈30 мин): эталон W1-2 и альтернативы — по каждому решению «так, потому что… — иначе, если…» — [Справка: Разбор 2: эталон W1-2 и альтернативы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/week3-reviews/reference), [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
+  - Готово, когда: По каждой из семи строк — своя фраза «так, потому что… — иначе, если…»; одна проговорена по-английски.
+- [ ] Базовая задача (≈40 мин): ParseMoney("12.50 EUR") → Money; ошибка-тип *ParseError с полями Input и Reason, вызывающий достаёт её через errors.As; table-driven тест: целые, центы, JPY без дробной части, отрицательные, мусор — [W1-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money), [C33](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33), [Справка: Тесты в Go: table-driven тест — образец](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/table)
+  - Готово, когда: ParseMoney разбирает «12.50 EUR», «5 JPY», «-0.05 EUR»; на «12.5.0 EUR», «12.50», «abc EUR», а также «12.5 EUR» и «12.505 EUR» (цифр после точки столько, сколько у валюты, — W1-1) возвращает *ParseError, который достаёт errors.As; table-driven тест проходит под -race.
+- [ ] LeetCode 338. Counting Bits + проговор: dp[i] = dp[i>>1] + i&1 — почему так — [LC 338. Counting Bits](https://leetcode.com/problems/counting-bits/), проговор: «LC 338. Counting Bits»
+  - Готово, когда: dp[i] = dp[i>>1] + (i & 1) объяснено: сдвиг убирает младший бит, i&1 — это он сам; O(n).
+- [ ] Дополнительно: LeetCode 371. Sum of Two Integers — сложение через XOR и перенос *(по желанию)* — [LC 371. Sum of Two Integers](https://leetcode.com/problems/sum-of-two-integers/)
+- [ ] Карточка c73 — «Коротко по-английски» вслух; quiz q58 — поле из знакового байта по маске и без — [C73](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73), [Q58](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q58)
+  - Готово, когда: c73 — короткий ответ вслух за минуту; q58 — до вариантов.
+- [ ] Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы
+  - Готово, когда: Все вопросы обоих блоков — ответ по-английски без подсказки, до минуты на вопрос; ошибочные отмечены для повтора.
+
+**LeetCode недели:** [191. Number of 1 Bits](https://leetcode.com/problems/number-of-1-bits/) (Bit manipulation), [231. Power of Two](https://leetcode.com/problems/power-of-two/) (Bit manipulation), [136. Single Number](https://leetcode.com/problems/single-number/) (Bit manipulation), [268. Missing Number](https://leetcode.com/problems/missing-number/) (Bit manipulation), [338. Counting Bits](https://leetcode.com/problems/counting-bits/) (DP + bits)
+
+**Проговорить по-английски:**
+
+- *What does the AND NOT operator do in Go?*
+- *How do you test, set and clear a bit with a mask?*
+- *How do signed and unsigned right shifts differ in Go?*
+- *Why does x & (x-1) clear the lowest set bit?*
+
+**Самопроверка:**
+
+- Чем a &^ b отличается от a & ^b и от a ^ b?
+- Что напечатает -7 >> 1 и почему не -3?
+- Как одним выражением проверить, что n — степень двойки?
+- Как вырезать биты 4–7 из uint16 и почему у знакового числа маска нужна после сдвига?
+- Почему u += 100 для u := uint8(200) даёт 44, а var b uint8 = 300 не компилируется?
+
+**Материал сайта:**
+
+- [Справка: Биты в Go: операторы, сдвиги, маски](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits)
+- [C73 How do bitwise operators and shifts work in Go, and what do &^ and a signed right shift do?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73)
+- [Q56 uint8 и переполнение](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q56)
+- [Q57 сдвиг и деление отрицательного числа](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q57)
+- [Справка: Биты в Go: сдвиги без маски](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/shifts)
+- [Справка: Биты в Go: маски и сдвиг по маске](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/masks)
+- [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
+- [Практикум W3-1 Флаги прав: Perm на битах](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-perm)
+- [Справка: Биты в Go: приёмы и math/bits](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-bits/tricks)
+- [Практикум W3-2 Битовое множество на []uint64](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-bitset)
+- [Практикум W3-3 Money.Allocate: раздел без потери цента](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-allocate)
+- [Практикум W1-1 Money: сумма в минорных единицах](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-money)
+- [Практикум W1-2 Account: pointer receiver и sentinel-ошибка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account)
+- [Справка: Тесты в Go: table-driven тест — образец](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing/table)
+- [Справка: Разбор 1: чужой код с шестью ошибками](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/week3-reviews/code)
+- [Справка: Разбор 2: эталон W1-2 и альтернативы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/week3-reviews/reference)
+- [C33 What does an interface value contain, and why can a typed nil make an interface non-nil?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c33)
+- [Q58 поле из знакового байта — по маске и без](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q58)
+
+## Неделя 4. Идиомы Go II: slice, map, строки, generics, тесты (30.11–06.12)
 
 **Цель:** Уверенно отвечать на «что выведет код» про slice и map, писать table-driven тесты и простой generic-код, объясняя всё вслух.
 
@@ -242,26 +339,25 @@
 - [ ] По желанию: SwissTable в Go 1.24+ — достаточно уметь сказать одну фразу, что изменилось *(по желанию)* — [C30](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c30), [C31](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31), [SIM7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim7)
 - [ ] Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures — [C41](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41), [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings), [100go.co](https://100go.co/)
   - Готово, когда: P8 решена до сверки; c41 — ответ до раскрытия; по-английски: что возвращают len(s), s[i] и range по строке.
-- [ ] W3-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — [W3-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice), проговор: «W3-1. Remove»
+- [ ] W4-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать) — [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice), проговор: «W4-1. Remove»
   - Готово, когда: Тест показывает порчу исходного slice наивной версией и независимость версии с копией; объяснено поведение slices.Delete с Go 1.22.
-- [ ] Битовые операции (≈30 мин): диаграмма 9 — &, |, ^, &^, сдвиги, маски степени двойки, приоритет & и ==; ответы вслух до раскрытия *(по желанию)* — [SIM9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
 
 ### Ср · 90 мин
 
-- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса) — [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), [W3-2, W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
+- [ ] Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса) — [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), [W4-2, W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics)
   - Готово, когда: Свой Set[T comparable] компилируется; объяснено, почему ключ map должен быть сравнимым.
-- [ ] W3-2 Map/Filter/Reduce и Set[T comparable]; W3-3 та же функция через интерфейс — сравнить — [W3-2, W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), проговор: «W3-3. Generics vs interfaces»
+- [ ] W4-2 Map/Filter/Reduce и Set[T comparable]; W4-3 та же функция через интерфейс — сравнить — [W4-2, W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics), [C42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42), проговор: «W4-3. Generics vs interfaces»
   - Готово, когда: Map/Filter/Reduce с тестами; абзац «generic или интерфейс» с одним контрпримером; практика c42 выполнена.
 - [ ] LeetCode 15. 3Sum + проговор — [LC 15. 3Sum](https://leetcode.com/problems/3sum/), проговор: «LC 15. 3Sum»
 
 ### Чт · 120 мин
 
-- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–3 — пакетами в своём go-prep — [C43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43), [Справка: Свой репозиторий go-prep: раскладка, команды, CI](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep)
-  - Готово, когда: c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–3 лежат в week1/, week2/ и week3/, go test ./... из корня проходит.
+- [ ] Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–4 — пакетами в своём go-prep — [C43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43), [Справка: Свой репозиторий go-prep: раскладка, команды, CI](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep)
+  - Готово, когда: c43: ответ до раскрытия; объяснено, что даёт internal/ и чем пакет отличается от модуля; раскладка cmd/internal — вариант, не стандарт. В go-prep задачи недель 1–4 лежат в week1/, week2/, week3/ и week4/, go test ./... из корня проходит.
 - [ ] Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы — [C44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44), [Q35](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q35), [Справка: go-prep: CI на GitHub Actions](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/ci), [Справка: Тесты в Go: table-driven, подтесты, тренировка](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-testing), [package testing](https://pkg.go.dev/testing), [Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests)
   - Готово, когда: Table-driven тест с t.Run и t.Helper; один параллельный тест на изолированных данных; go test -race проходит; q35 (t.Parallel и defer) — до вариантов, исправление через t.Cleanup. CI в go-prep зелёный; намеренно сломанный тест делает его красным.
-- [ ] Покрыть тестами W1-2 и W3-2 — в go-prep, рядом с тестами практикума — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W3-2, W3-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
-  - Готово, когда: Тесты W1-2 и W3-2 покрывают ошибки и граничные случаи, а не только успешный путь; go test -cover ./week1/account ./week3/generics показывает покрытие.
+- [ ] Тесты на новых случаях: W1-2 — закрытый счёт и валюта из недель 2–3 (тренировку недели 1 не повторять) и W4-2 — в go-prep, рядом с тестами практикума — [W1-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account), [W4-2, W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
+  - Готово, когда: Тесты W1-2 и W4-2 покрывают ошибки и граничные случаи, а не только успешный путь: у W1-2 — закрытый счёт и чужая валюта таблицей; go test -cover ./week1/account ./week4/generics показывает покрытие.
 - [ ] Проговор «что выведет код» P1–P5: по одной английской фразе-объяснению — проговор: ««Что выведет код»: как объяснять»
   - Готово, когда: P1–P5: вывод назван до сверки, объяснение — одна фраза по-английски.
 - [ ] Тренировка (≈30 мин): сборка с ассемблером и без — -gcflags=-S, '-N -l', -m, go tool objdump, GOSSAFUNC, бенчмарк с -benchmem — [Справка: go-prep: тренировка — сборка с ассемблером и без](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep/asm), [C6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6), [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
@@ -272,7 +368,7 @@
 - [ ] «Что выведет код»: P1–P10 из плана и замыкание в цикле — сначала ответ, потом сверка — [Q1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1)
   - Готово, когда: 10 задач и q1: вывод до сверки; для P9 объяснена зависимость от версии языка в go.mod.
 - [ ] Дополнительно: задачи из банков вопросов собеседований (вторичный материал, ответы сверять с документацией) *(по желанию)* — [39 вопросов (Нияз)](https://t.me/niyaz_golang/758), [ТОП-12 Ozon](https://t.me/niyaz_golang/672)
-- [ ] W3-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — [W3-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum), проговор: «W3-4. txsum CLI»
+- [ ] W4-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера — [W4-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum), проговор: «W4-4. txsum CLI»
   - Готово, когда: Тесты: валидная строка, пропущенная колонка, нечисловая сумма, неизвестная валюта; ненулевой код выхода при ошибочных строках.
 - [ ] LeetCode 739. Daily Temperatures + проговор (записать) — [LC 739. Daily Temperatures](https://leetcode.com/problems/daily-temperatures/), проговор: «LC 739. Daily Temperatures»
 - [ ] Дополнительно: LC 56 Merge Intervals и LC 146 LRU Cache *(по желанию)* — [LC 146. LRU Cache](https://leetcode.com/problems/lru-cache/), проговор: «LC 146. LRU Cache»
@@ -307,10 +403,9 @@
 - [C31 How do Swiss Tables find a key and grow a Go map?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c31) *(Deep Dive)*
 - [SIM7 Диаграмма 7: map — бакеты, поиск в Swiss Tables и память](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim7)
 - [C41 What do len, indexing and range return for a Go string, and when do you need []rune?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c41)
-- [Практикум W3-1 Remove: на месте и с копией](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice)
-- [SIM9 Диаграмма 9: битовые операции — маски, флаги и SWAR в рантайме](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim9)
+- [Практикум W4-1 Remove: на месте и с копией](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice)
 - [C42 When do you choose generics, and when an interface?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c42)
-- [Практикум W3-2, W3-3 Generics: Map, Filter, Reduce, Set и Max против интерфейса](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
+- [Практикум W4-2, W4-3 Generics: Map, Filter, Reduce, Set и Max против интерфейса](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics)
 - [C43 What is the difference between a module and a package, and what does an internal directory enforce?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c43)
 - [Справка: Свой репозиторий go-prep: раскладка, команды, CI](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/go-prep)
 - [C44 How do you write a table-driven test, and what do t.Run, t.Helper, t.Parallel and t.Cleanup change?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c44)
@@ -322,7 +417,7 @@
 - [C6 What must the runtime restore to resume a goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6) *(Deep Dive)*
 - [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 - [Q1 Три функции после завершения цикла](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q1)
-- [Практикум W3-4 CLI txsum: суммы из CSV](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum)
+- [Практикум W4-4 CLI txsum: суммы из CSV](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-txsum)
 - [Q2 Nil-указатель внутри error](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q2)
 - [Q3 Return до завершения defer](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q3)
 - [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5)
@@ -331,11 +426,11 @@
 
 - В quiz «Сначала свой ответ» и в «Что выведет код» ответ пишется своими словами и автоматически не сверяется.
 
-## Неделя 4. Конкурентность I: горутины, каналы, select, sync (30.11–06.12)
+## Неделя 5. Конкурентность I: горутины, каналы, select, sync (07.12–13.12)
 
 **Цель:** Писать worker pool, pipeline и fan-in без гонок и утечек и объяснять по-английски, кто владеет горутиной и кто закрывает канал.
 
-**Готово, когда:** W4-1…W4-5 работают под go test -race (в go-prep: ./week4/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.
+**Готово, когда:** W5-1…W5-5 работают под go test -race (в go-prep: ./week5/...); на каждый ответ «кто закрывает канал и как горутина завершится» есть одно предложение.
 
 ### Пн · 90 мин
 
@@ -349,16 +444,16 @@
 
 - [ ] Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения — [C13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c13), [C14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14), [SIM3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim3), [Q45](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q45)
   - Готово, когда: Таблица nil/open/closed для отправки, приёма и close — по памяти; шаги sim3 предсказаны до переключения.
-- [ ] W4-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), проговор: «W4-1. Worker pool»
+- [ ] W5-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор — [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), проговор: «W5-1. Worker pool»
   - Готово, когда: Тесты: не больше N одновременных задач, все результаты получены, отмена в середине завершает всех воркеров, медленный потребитель не ведёт к неограниченной памяти; -race чистый.
-- [ ] W4-2 Pipeline generator → square → sink с остановкой через context — [W4-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63)
+- [ ] W5-2 Pipeline generator → square → sink с остановкой через context — [W5-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63)
   - Готово, когда: Тест: отмена или ранний выход потребителя останавливает все стадии; зависших горутин нет.
 
 ### Ср · 90 мин
 
 - [ ] select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов — [C18](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18), [Q22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
   - Готово, когда: c18 и q22: ответ до вариантов; объяснено, почему проверка ctx перед select не даёт строгого приоритета отмены.
-- [ ] W4-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода — [W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
+- [ ] W5-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода — [W5-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
   - Готово, когда: Выход закрывается после закрытия всех входов; отмена прерывает работу; тест на пустой набор входов.
 - [ ] Code review без вариантов: на вкладке quiz включить «Сначала свой ответ», записать баг и исправление, потом открыть варианты и разбор — [Q12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [Q21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
   - Готово, когда: q12, q15, q21 в режиме «Сначала свой ответ» (вкладка quiz): дефект и исправление записаны до вариантов и совпали с разбором по причине.
@@ -368,18 +463,18 @@
 
 - [ ] sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух — [C15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15), [C20](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c20), [C21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c21), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [C56](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c56), [SIM12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim12), [SIM5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim5), [SIM8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim8)
   - Готово, когда: c15, c20, c21, c22, c56: ответы до раскрытия; объяснено, почему atomic не защищает составной инвариант и почему Wait вызывают в цикле.
-- [ ] W4-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W4-5 SafeCache на map + RWMutex — [W4-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W4-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache), проговор: «W4-4. Mutex vs atomic vs channel»
+- [ ] W5-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W5-5 SafeCache на map + RWMutex — [W5-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W5-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache), проговор: «W5-4. Mutex vs atomic vs channel»
   - Готово, когда: Счётчик тремя способами даёт один результат под -race; SafeCache не отдаёт наружу ссылку на защищённые данные; вывод бенчмарка без «всегда быстрее».
 - [ ] Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for — [Q7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8), [Q13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14), [C55](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c55), [SIM11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim11), [Q44](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q44), [Q46](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q46), [Q47](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q47)
   - Готово, когда: q7, q8, q13, q14, q44, q46, q47: дефект до вариантов; исправленный код объяснён. c55: ответ до раскрытия, названы четыре условия Коффмана и какое ломает порядок блокировок.
 
 ### Сб · 240 мин
 
-- [ ] Прогнать W4-1…W4-5 в go-prep: go test -race ./week4/...; для каждой горутины записать владельца и путь завершения — [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [W4-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline), [W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin), [W4-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W4-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
-  - Готово, когда: Для каждой горутины W4-1…W4-5 записаны владелец и условие завершения; все тесты под -race проходят.
+- [ ] Прогнать W5-1…W5-5 в go-prep: go test -race ./week5/...; для каждой горутины записать владельца и путь завершения — [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [W5-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline), [W5-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin), [W5-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter), [W5-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
+  - Готово, когда: Для каждой горутины W5-1…W5-5 записаны владелец и условие завершения; все тесты под -race проходят.
 - [ ] Дополнительно: 100 Go Mistakes — Concurrency Foundations *(по желанию)* — [100go.co](https://100go.co/)
 - [ ] LeetCode 150. Evaluate Reverse Polish Notation + проговор — [LC 150. Evaluate Reverse Polish Notation](https://leetcode.com/problems/evaluate-reverse-polish-notation/)
-- [ ] Проговор worker pool и «channel vs mutex» по-английски, записать — проговор: «W4-1. Worker pool»
+- [ ] Проговор worker pool и «channel vs mutex» по-английски, записать — проговор: «W5-1. Worker pool»
   - Готово, когда: Запись 3–5 минут: worker pool по 4 шагам и выбор mutex или channel на примере.
 - [ ] Самопроверка недели вслух
   - Готово, когда: Вопросы самопроверки — по-английски без подсказки.
@@ -410,14 +505,14 @@
 - [C14 How do nil, open, and closed channels behave?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c14)
 - [SIM3 Диаграмма 3: Канал — ожидание, буфер и close](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim3)
 - [Q45 большой буфер и закон Литтла](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q45)
-- [Практикум W4-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
+- [Практикум W5-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
 - [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
 - [Q15 Собрать результаты параллельных вычислений](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15)
 - [C63 Which channel patterns do you actually use in a Go service, and who closes each channel?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63)
-- [Практикум W4-2 Pipeline с остановкой по context](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline)
+- [Практикум W5-2 Pipeline с остановкой по context](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline)
 - [C18 How does select choose a case, and can cancellation take priority?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c18)
 - [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
-- [Практикум W4-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
+- [Практикум W5-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
 - [Q12 Общий append или отдельные индексы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12)
 - [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
 - [C15 Channels or a mutex — who owns the data, and what must happen together?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c15)
@@ -428,8 +523,8 @@
 - [SIM12 Диаграмма 12: Канал, мьютекс или одна горутина — дерево решения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim12)
 - [SIM5 Диаграмма 5: CAS — сравнить и заменить одним действием](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim5)
 - [SIM8 Диаграмма 8: sync.Mutex — быстрый путь, ожидание и режим голодания](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim8)
-- [Практикум W4-4 Счётчик тремя способами](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter)
-- [Практикум W4-5 SafeCache: инвариант под RWMutex](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
+- [Практикум W5-4 Счётчик тремя способами](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter)
+- [Практикум W5-5 SafeCache: инвариант под RWMutex](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-safecache)
 - [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7)
 - [Q8 Повторный Lock и цикл ожидания](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8)
 - [Q13 Чтения защищены, но проверка устарела](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13)
@@ -440,17 +535,17 @@
 - [Q46 Signal вместо Broadcast](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q46)
 - [Q47 if вместо for вокруг Wait](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q47)
 
-## Неделя 5. Конкурентность II и минимум рантайма (07.12–13.12)
+## Неделя 6. Конкурентность II и минимум рантайма (14.12–20.12)
 
 **Цель:** Писать за 20–30 минут отменяемые конкурентные решения (errgroup, rate limit, graceful shutdown) и на базовом уровне объяснять GMP, GC и escape analysis.
 
-**Готово, когда:** 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week5/... в go-prep зелёный.
+**Готово, когда:** 6 эталонных решений пишутся за 20–30 мин; найдена утечка горутины через pprof; пройдены контрольный квиз и виртуальный live coding («финальный босс» с тестом на утечки); go test -race ./week6/... в go-prep зелёный.
 
 ### Пн · 90 мин
 
 - [ ] context: отмена, таймауты, WithoutCancel; передача ctx в I/O — [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [Q9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10), [C72](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72), [package context](https://pkg.go.dev/context)
   - Готово, когда: c22, q9, q10: ответ до раскрытия; объяснено, что отмена контекста не останавливает код, который ctx не проверяет.
-- [ ] W5-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных — [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch), [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup), проговор: «W5-1. ParallelFetch with errgroup»
+- [ ] W6-1 ParallelFetch: errgroup.WithContext + SetLimit, первая ошибка отменяет остальных — [W6-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch), [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [errgroup](https://pkg.go.dev/golang.org/x/sync/errgroup), проговор: «W6-1. ParallelFetch with errgroup»
   - Готово, когда: Тесты: первая ошибка отменяет остальные; SetLimit соблюдается; к возврату все запущенные операции завершены; контекст группы не используется после Wait.
 - [ ] LeetCode 200. Number of Islands + проговор — [LC 200. Number of Islands](https://leetcode.com/problems/number-of-islands/)
 
@@ -458,16 +553,16 @@
 
 - [ ] select-паттерны и ловушки: errgroup после Wait, eager evaluation, time.After в цикле — [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17), [Q11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11)
   - Готово, когда: q16, q17, q11: ответ до вариантов; для q11 названо, что изменилось в Go 1.23 и почему важна версия в go.mod.
-- [ ] W5-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор — [W5-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit), [x/time/rate](https://pkg.go.dev/golang.org/x/time/rate), проговор: «W5-2. Rate limiter»
+- [ ] W6-2 Rate limiter token bucket; сравнить с golang.org/x/time/rate. Проговор — [W6-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit), [x/time/rate](https://pkg.go.dev/golang.org/x/time/rate), проговор: «W6-2. Rate limiter»
   - Готово, когда: Тесты: отказ сверх лимита, burst, восстановление после паузы; отличие от x/time/rate описано.
 
 ### Ср · 90 мин
 
-- [ ] Утечки горутин: как найти и предотвратить — [W5-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
+- [ ] Утечки горутин: как найти и предотвратить — [W6-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
   - Готово, когда: c12: ответ и практика без подсказки. Изменённое условие: утечка при уходе потребителя.
-- [ ] W5-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров — [W5-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown), [signal.NotifyContext](https://pkg.go.dev/os/signal#NotifyContext), проговор: «W5-3. Graceful shutdown»
+- [ ] W6-3 Graceful shutdown HTTP-сервера: signal.NotifyContext, Shutdown с таймаутом, дренаж фоновых воркеров — [W6-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [http.Server.Shutdown](https://pkg.go.dev/net/http#Server.Shutdown), [signal.NotifyContext](https://pkg.go.dev/os/signal#NotifyContext), проговор: «W6-3. Graceful shutdown»
   - Готово, когда: Тест: новые запросы не принимаются, работа в полёте завершается, зависимости закрываются после воркеров; таймаут соблюдается.
-- [ ] W5-4 Написать утечку намеренно и найти её goroutine-профилем pprof — [W5-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
+- [ ] W6-4 Написать утечку намеренно и найти её goroutine-профилем pprof — [W6-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
   - Готово, когда: Утечка воспроизведена и найдена в goroutine-профиле; исправление подтверждено тестом завершения своих горутин, а не числом NumGoroutine.
 - [ ] LeetCode 102. Binary Tree Level Order Traversal + проговор — [LC 102. Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/)
 
@@ -475,22 +570,22 @@
 
 - [ ] Минимум рантайма для интервью: GMP и GOMAXPROCS, вытеснение, netpoller — короткие ответы; диаграмма 2 до шага 10 «ответ за минуту» — [C7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2), [C8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c8), [C10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c10)
   - Готово, когда: c7, c8, c10: ответ по-английски за 30 секунд без деталей реализации; шаги sim2 предсказаны до переключения; ответ за минуту по шагу 10 — вслух, без подсказки, в его порядке; пять частых вопросов шага 11 — ответ до раскрытия.
-- [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [W5-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape), [C23](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
+- [ ] Память: стек vs куча, escape analysis, GC на высоком уровне, GOGC/GOMEMLIMIT — [W6-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape), [C23](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23), [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24), [C26](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26), [C27](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c27), [SIM6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim6), [A Guide to the Go Garbage Collector](https://go.dev/doc/gc-guide)
   - Готово, когда: c23, c24, c26, c27: ответы до раскрытия; объяснено, почему GOMEMLIMIT не гарантирует отсутствие OOM.
-- [ ] W5-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода — [W5-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
+- [ ] W6-5 Escape analysis: go build -gcflags=-m для трёх функций, объяснить каждую строку вывода — [W6-5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
   - Готово, когда: Для трёх функций объяснена каждая строка вывода -gcflags=-m; одна функция изменена так, чтобы переменная осталась на стеке, и это проверено повторно.
 - [ ] По желанию, Deep Dive: стек и регистры, work stealing, runnext, устройство каналов и selectgo, аллокатор, write barrier, weak/unique, итераторы *(по желанию)* — [C3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c3), [C4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c4), [C5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c5), [C6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c6), [C9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c9), [C11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c11), [C16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c16), [C17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c17), [C19](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c19), [C25](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c25), [C28](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c28), [C36](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c36), [C37](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c37), [SIM1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim1), [SIM4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim4)
 
 ### Сб · 240 мин
 
-- [ ] W5-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list — [W5-6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile), [Go Diagnostics](https://go.dev/doc/diagnostics)
+- [ ] W6-6 Бенчмарк + CPU-профиль на txsum: go test -bench, pprof top/list — [W6-6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile), [Go Diagnostics](https://go.dev/doc/diagnostics)
   - Готово, когда: Профиль снят; гипотеза проверена изменением и повторным бенчмарком; вывод без обещаний конкретной скорости.
 - [ ] Новое в 1.25+: container-aware GOMAXPROCS, testing/synctest — одна фраза на каждое — [C38](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
   - Готово, когда: c38: по одной фразе про GOMAXPROCS в контейнерах (Linux, Go 1.25) и про synctest, с версиями.
 - [ ] LeetCode 98. Validate Binary Search Tree + проговор — [LC 98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/)
 - [ ] Контрольная точка: квиз по конкурентности в режиме «сначала ответ без вариантов» — [Q5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5), [Q7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7), [Q8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q8), [Q9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9), [Q10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10), [Q11](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11), [Q12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q12), [Q13](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q13), [Q14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q14), [Q15](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q15), [Q16](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16), [Q17](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17), [Q21](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21), [Q22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
   - Готово, когда: Все 14 задач: ответ до вариантов; результат первой попытки записан; ошибки — в повтор.
-- [ ] Виртуальный live coding (Claude как интервьюер): «финальный босс» — processParallel(in, out, 5) за 5 с с тестом на утечки; проговор по-английски, разбор. В воскресный резерв — каты блоков 1–2 трека (К1.2, К2.2, К2.4 обязательно) — [К2.6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-6), [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [Блок 1. Микропаттерны](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k1), [Блок 2. select, context, утечки](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2)
+- [ ] Виртуальный live coding (Claude как интервьюер): «финальный босс» — processParallel(in, out, 5) за 5 с с тестом на утечки; проговор по-английски, разбор. В воскресный резерв — каты блоков 1–2 трека (К1.2, К2.2, К2.4 обязательно) — [К2.6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-6), [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool), [Блок 1. Микропаттерны](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k1), [Блок 2. select, context, утечки](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2)
   - Готово, когда: «Финальный босс» решён вслух за 40 минут, тест на утечки зелёный (что это значит — в шаге К2.6); получен разбор; три слабых места записаны.
 
 **LeetCode недели:** [200. Number of Islands](https://leetcode.com/problems/number-of-islands/) (Grid DFS/BFS), [102. Binary Tree Level Order Traversal](https://leetcode.com/problems/binary-tree-level-order-traversal/) (BFS), [98. Validate Binary Search Tree](https://leetcode.com/problems/validate-binary-search-tree/) (Tree DFS)
@@ -517,20 +612,20 @@
 - [Q9 Результат после отмены запроса](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q9)
 - [Q10 Время жизни запроса и фоновой работы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q10)
 - [C72 What do you put into a context.Context in a Go service, and what do you keep out of it?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72)
-- [Практикум W5-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
+- [Практикум W6-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
 - [Q16 Контекст errgroup после успешного Wait](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q16)
 - [C63 Which channel patterns do you actually use in a Go service, and who closes each channel?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63)
 - [Q17 Заполненный канал и сигнал остановки](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q17)
 - [Q11 Ожидание следующего сообщения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q11)
-- [Практикум W5-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
-- [Практикум W5-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
+- [Практикум W6-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
+- [Практикум W6-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
 - [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
-- [Практикум W5-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
+- [Практикум W6-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
 - [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7)
 - [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2)
 - [C8 How does Go preempt a CPU-bound goroutine?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c8)
 - [C10 How do network polling, blocking syscalls and cgo affect G, M and P?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c10)
-- [Практикум W5-5 Escape analysis: прочитать -gcflags=-m и убрать аллокации](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
+- [Практикум W6-5 Escape analysis: прочитать -gcflags=-m и убрать аллокации](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-escape)
 - [C23 How do stack and heap allocation differ, and how do you compare their cost?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c23)
 - [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 - [C26 How does Go's GC decide what to keep, and what happens during a collection?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c26)
@@ -551,7 +646,7 @@
 - [C37 How do push iterators differ from iter.Pull, and when must you call stop?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c37) *(Deep Dive)*
 - [SIM1 Диаграмма 1: Кто выполняется, где стек, откуда продолжить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim1)
 - [SIM4 Диаграмма 4: select — от компилятора до пробуждения](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim4)
-- [Практикум W5-6 Бенчмарк и профиль: txsum под pprof](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile)
+- [Практикум W6-6 Бенчмарк и профиль: txsum под pprof](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-profile)
 - [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
 - [Q5 Recover в другой горутине](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q5)
 - [Q7 Копия WaitGroup и чужой счётчик](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q7)
@@ -563,16 +658,16 @@
 - [Q21 Срез после передачи через канал](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q21)
 - [Q22 Чтение с запасной веткой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q22)
 - [Ката К2.6 · «Финальный босс»: processParallel(in, out, 5) за 5 с](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-6)
-- [Практикум W4-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
+- [Практикум W5-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
 - [Трек: Блок 1. Микропаттерны](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k1)
 - [Трек: Блок 2. select, context, утечки](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2)
 
 **Чего пока нет на сайте:**
 
-- Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 4–5.
+- Deep Dive-карточки не помечены как «не обязательно для EU-интервью» — легко потратить на них время недель 5–6.
 - Нет задачи на чтение trace-вывода (go tool trace); профиль pprof разбирается в «Бенчмарк и профиль» и «Утечка горутин».
 
-## Неделя 6. Проект I: каркас ledger-сервиса (14.12–20.12)
+## Неделя 7. Проект I: каркас ledger-сервиса (21.12–27.12)
 
 **Цель:** Сервис счетов и переводов работает end-to-end: REST, PostgreSQL через pgx, миграции, структурные логи, Docker Compose.
 
@@ -588,9 +683,9 @@
 
 ### Вт · 90 мин
 
-- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2) — [W6-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi), [C45](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c45), [SIM10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim10), [Q36](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q36), [Q37](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q37), [C60](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60), [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
+- [ ] HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2) — [W7-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi), [C45](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c45), [SIM10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim10), [Q36](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q36), [Q37](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q37), [C60](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60), [Routing enhancements (Go 1.22)](https://go.dev/blog/routing-enhancements), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
   - Готово, когда: Три маршрута работают; тесты через httptest на успешный ответ, 404 и 405. c45 и диаграмма 10 — ответ до раскрытия; q36 и q37 — до вариантов.
-- [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W2-1) — [W6-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr), [C46](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c46), [Q39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q39)
+- [ ] Валидация входа и ошибки → HTTP-коды через errors.As (из W2-1) — [W7-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr), [C46](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c46), [Q39](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q39)
   - Готово, когда: Ошибка валидации → 400 с полем; нехватка средств → выбранный код с записанным обоснованием; неизвестная ошибка → 500 без деталей наружу; тест на каждый случай. c46 — ответ до раскрытия; q39 — до вариантов.
 
 ### Ср · 90 мин
@@ -618,9 +713,9 @@
   - Готово, когда: Сценарий end-to-end и тесты отказов: нехватка средств, несуществующий счёт, повтор запроса; сумма балансов сходится.
 - [ ] Проговор по-английски: «Walk me through your project structure and why» — [C57](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57), проговор: «Рассказ о структуре проекта»
   - Готово, когда: Запись 3 минуты по-английски: структура, одно решение и его цена, что бы изменил.
-- [ ] Ката К2.5 (20 мин): обёртка с таймаутом — три версии, утечку находит тест — [К2.5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-5), [W6-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-timeout)
+- [ ] Ката К2.5 (20 мин): обёртка с таймаутом — три версии, утечку находит тест — [К2.5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-5), [W7-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-timeout)
   - Готово, когда: три версии: `close(done)` и `time.After` перестают ждать, но работу не прерывают; небуферизованный канал результата — горутина висит навсегда; `ctx` и буфер 1 — без утечек
-- [ ] Ката К2.7 (20 мин): одна утечка — три детектора: goleak, профиль goroutineleak, synctest — [К2.7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-7), [W5-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
+- [ ] Ката К2.7 (20 мин): одна утечка — три детектора: goleak, профиль goroutineleak, synctest — [К2.7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-7), [W6-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
   - Готово, когда: одна и та же утечка поймана `goleak.VerifyNone`, профилем `goroutineleak` и `synctest`; названо, чего каждый не видит: goleak — только горутины, живые в конце теста, и ложно ловит ещё спящие; `goroutineleak` — не видит горутин на канале, достижимом из глобальной переменной; `synctest` — только горутины своего пузыря и только на операциях, которые он считает «прочной» блокировкой (не мьютекс и не ввод-вывод)
 
 **LeetCode недели:** [230. Kth Smallest Element in a BST](https://leetcode.com/problems/kth-smallest-element-in-a-bst/) (Tree DFS), [236. Lowest Common Ancestor of a Binary Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-tree/) (Tree DFS), [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/) (Heap)
@@ -641,13 +736,13 @@
 
 - [C57 How do you lay out a Go service, and which way should dependencies point?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c57)
 - [C58 How do you wire dependencies in a Go service: by hand, with Wire, or with Fx?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c58)
-- [Практикум W6-1 HTTP API счетов на стандартном ServeMux](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi)
+- [Практикум W7-1 HTTP API счетов на стандартном ServeMux](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-accountsapi)
 - [C45 What happens to a request inside net/http, and which deadlines should a Go HTTP server set?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c45)
 - [SIM10 Диаграмма 10: HTTP-запрос в net/http — горутина, контекст, shutdown](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim10)
 - [Q36 http.Error без return](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q36)
 - [Q37 Маршруты Go 1.22 и 405](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q37)
 - [C60 How do you build a REST API in Go: hand-written routes or OpenAPI-first code generation, and what goes into middleware?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c60)
-- [Практикум W6-2 Ошибки домена → HTTP-коды](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr)
+- [Практикум W7-2 Ошибки домена → HTTP-коды](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-httperr)
 - [C46 How do you turn domain errors into HTTP status codes without leaking internals?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c46)
 - [Q39 errors.As с целью-значением](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q39)
 - [C64 Which libraries make up a typical Go backend service, and why those?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c64)
@@ -658,15 +753,15 @@
 - [Q38 Пароль в структурном логе](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q38)
 - [C71 Where do you redact sensitive data in a Go service's logs, so that a new field or a new route cannot leak it?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c71)
 - [Ката К2.5 · Обёртка с таймаутом: три версии](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-5)
-- [Практикум W6-3 Обёртка с таймаутом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-timeout)
+- [Практикум W7-3 Обёртка с таймаутом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-timeout)
 - [Ката К2.7 · Одна утечка — три детектора](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k2-7)
-- [Практикум W5-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
+- [Практикум W6-4 Утечка горутин: написать, найти профилем, исправить](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-leak)
 
 **Чего пока нет на сайте:**
 
 - Нет шаблона ADR и примеров «как рассказать про проект» по-английски.
 
-## Неделя 7. Проект II: транзакции, идемпотентность, outbox → Kafka (21.12–27.12)
+## Неделя 8. Проект II: транзакции, идемпотентность, outbox → Kafka (28.12–03.01)
 
 **Цель:** Повтор перевода безопасен, события доходят до Kafka через outbox, инвариант суммы балансов держится под конкурентной нагрузкой.
 
@@ -674,28 +769,28 @@
 
 ### Пн · 90 мин
 
-- [ ] Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока — [C49](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c49), [C50](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c50), [W7-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers), [C67](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67), [PostgreSQL: Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
-  - Готово, когда: Перевод — одна транзакция: обе строки блокируются SELECT … FOR UPDATE по возрастанию ID, баланс проверяется под блокировкой, 40001 и 40P01 повторяются с BEGIN. c49 и c50 — ответ до раскрытия; W7-1 проходит go test -race.
+- [ ] Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока — [C49](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c49), [C50](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c50), [W8-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers), [C67](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67), [PostgreSQL: Transaction Isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
+  - Готово, когда: Перевод — одна транзакция: обе строки блокируются SELECT … FOR UPDATE по возрастанию ID, баланс проверяется под блокировкой, 40001 и 40P01 повторяются с BEGIN. c49 и c50 — ответ до раскрытия; W8-1 проходит go test -race.
 - [ ] LeetCode 973. K Closest Points to Origin + проговор — [LC 973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/)
 
 ### Вт · 90 мин
 
-- [ ] Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка — [C51](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c51), [W7-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency), [C68](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68), проговор: «Идемпотентность платежей»
-  - Готово, когда: Таблица idempotency_keys: ключ с UNIQUE, отпечаток запроса, сохранённые статус и тело; повтор возвращает сохранённый ответ, другой payload с тем же ключом — 422. c51 — ответ до раскрытия; W7-2 проходит go test -race.
-- [ ] Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить» — [Q40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q40), [W7-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency), [C2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2)
+- [ ] Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка — [C51](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c51), [W8-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency), [C68](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68), проговор: «Идемпотентность платежей»
+  - Готово, когда: Таблица idempotency_keys: ключ с UNIQUE, отпечаток запроса, сохранённые статус и тело; повтор возвращает сохранённый ответ, другой payload с тем же ключом — 422. c51 — ответ до раскрытия; W8-2 проходит go test -race.
+- [ ] Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить» — [Q40](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q40), [W8-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency), [C2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2)
   - Готово, когда: Тест: два одинаковых запроса одновременно — один перевод. Ключ занимается INSERT … ON CONFLICT DO NOTHING в транзакции перевода; объяснено, почему -race молчит при «проверить, потом вставить». q40 — до вариантов.
 
 ### Ср · 90 мин
 
-- [ ] Transactional outbox: запись события в той же транзакции, что и перевод — [C52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52), [Q42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q42), [W7-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [C66](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference), проговор: «Transactional outbox»
+- [ ] Transactional outbox: запись события в той же транзакции, что и перевод — [C52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52), [Q42](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q42), [W8-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [C66](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference), проговор: «Transactional outbox»
   - Готово, когда: Событие пишется в outbox в той же транзакции, что и перевод; при откате нет ни перевода, ни события. c52 — ответ до раскрытия; q42 — до вариантов.
-- [ ] Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи — [W7-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [C52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [C66](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
-  - Готово, когда: Relay — одна горутина с владельцем: останавливается по ctx, после ошибки повторяет то же событие, отправленным помечает только после подтверждения; при остановке сервиса её дожидаются. W7-3 проходит go test -race.
+- [ ] Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи — [W8-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [C52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52), [C12](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12), [C22](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [C66](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
+  - Готово, когда: Relay — одна горутина с владельцем: останавливается по ctx, после ошибки повторяет то же событие, отправленным помечает только после подтверждения; при остановке сервиса её дожидаются. W8-3 проходит go test -race.
 - [ ] LeetCode 621. Task Scheduler + проговор — [LC 621. Task Scheduler](https://leetcode.com/problems/task-scheduler/)
 
 ### Чт · 90 мин
 
-- [ ] Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу — [C53](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c53), [Q43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q43), [W7-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [Apache Kafka documentation](https://kafka.apache.org/documentation/)
+- [ ] Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу — [C53](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c53), [Q43](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q43), [W8-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox), [Apache Kafka documentation](https://kafka.apache.org/documentation/)
   - Готово, когда: Потребитель фиксирует offset после обработки; ID события и результат — в одной транзакции; дубликат не меняет данные (тест); ключ сообщения — ID счёта. c53 — ответ до раскрытия; q43 — до вариантов.
 - [ ] Docker Compose: добавить Kafka
   - Готово, когда: docker compose up поднимает Kafka и сервис; relay публикует событие перевода, потребитель его читает.
@@ -706,15 +801,15 @@
 
 ### Сб · 240 мин
 
-- [ ] Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race — [W7-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers), [Q41](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q41), [C50](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c50)
+- [ ] Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race — [W8-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers), [Q41](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q41), [C50](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c50)
   - Готово, когда: 100 параллельных переводов: сумма балансов неизменна, отрицательных балансов нет, -race чистый, встречные переводы не дают дедлока. q41 — до вариантов.
 - [ ] Проговор: «How do you avoid double spending?» и «Why outbox instead of publishing after commit?» — [C51](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c51), [C52](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52), проговор: «Transactional outbox»
   - Готово, когда: Две записи по 2 минуты по-английски: идемпотентность (ключ, отпечаток, атомарный захват) и outbox (двойная запись, at-least-once, дедупликация).
 - [ ] Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1 — [C54](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c54), [PostgreSQL: Indexes](https://www.postgresql.org/docs/current/indexes.html), [PostgreSQL: Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)
   - Готово, когда: Для запроса истории счёта — EXPLAIN ANALYZE до и после составного индекса (account_id, created_at); найден и убран N+1. c54 — ответ до раскрытия.
-- [ ] Ката К3.1 (10 мин): fan-in на время — Merge(ctx, ins...) с чистого листа — [К3.1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-1), [W4-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
+- [ ] Ката К3.1 (10 мин): fan-in на время — Merge(ctx, ins...) с чистого листа — [К3.1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-1), [W5-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
   - Готово, когда: `Merge(ctx, ins...)` с чистого листа за 10 минут; пустой список закрывает выход сразу; отмена завершает все горутины
-- [ ] Ката К3.2 (25 мин): fan-out по ключу — как партиции Kafka этой недели — [К3.2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-2), [W7-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanout)
+- [ ] Ката К3.2 (25 мин): fan-out по ключу — как партиции Kafka этой недели — [К3.2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-2), [W8-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanout)
   - Готово, когда: значения с одним ключом всегда идут в один выход и в порядке поступления (как партиции Kafka); медленный получатель тормозит всех — или отбрасывается, по выбору. Термин: у Балуна fan-out — маршрутизация в один из N каналов, у skill issue и Cox-Buday — N стадий читают один вход; на собеседовании уточни, о каком смысле речь
 
 **LeetCode недели:** [973. K Closest Points to Origin](https://leetcode.com/problems/k-closest-points-to-origin/) (Heap), [621. Task Scheduler](https://leetcode.com/problems/task-scheduler/) (Greedy / heap), [435. Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/) (Greedy intervals)
@@ -736,16 +831,16 @@
 
 - [C49 What do PostgreSQL isolation levels guarantee, and which one do you use for a transfer?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c49)
 - [C50 How do you transfer money between two accounts safely under concurrency, without deadlocks?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c50)
-- [Практикум W7-1 Параллельные переводы: порядок блокировок и инвариант](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers)
+- [Практикум W8-1 Параллельные переводы: порядок блокировок и инвариант](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-transfers)
 - [C67 How do you run one transaction across several repositories in Go, and what breaks with a connection pooler and advisory locks?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c67)
 - [C51 How do you make a payment API idempotent?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c51)
-- [Практикум W7-2 Идемпотентный перевод: ключ, отпечаток и сохранённый ответ](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency)
+- [Практикум W8-2 Идемпотентный перевод: ключ, отпечаток и сохранённый ответ](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-idempotency)
 - [C68 A call to a payment provider timed out. Did the payment fail, and how do you make such a call safe to repeat?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c68)
 - [Q40 проверить ключ, потом списать](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q40)
 - [C2 Can a program have a race condition without a data race?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c2)
 - [C52 What is a transactional outbox, and why not publish to Kafka right after commit?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c52)
 - [Q42 публикация после commit](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q42)
-- [Практикум W7-3 Outbox и relay: at-least-once и идемпотентный потребитель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox)
+- [Практикум W8-3 Outbox и relay: at-least-once и идемпотентный потребитель](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-outbox)
 - [C66 How do you build a task queue on PostgreSQL for a Go service, and when do you move to Kafka?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c66)
 - [C12 How would you find and prevent a goroutine leak?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c12)
 - [C22 WaitGroup, Once and Context — which one waits, publishes initialization or requests cancellation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c22)
@@ -755,16 +850,16 @@
 - [Q41 встречные переводы](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q41)
 - [C54 How do you find and fix a slow query: indexes, EXPLAIN ANALYZE and N+1?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c54)
 - [Ката К3.1 · Fan-in на время](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-1)
-- [Практикум W4-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
+- [Практикум W5-3 Fan-in: слияние каналов](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin)
 - [Ката К3.2 · Fan-out по ключу](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-2)
-- [Практикум W7-4 Fan-out по ключу](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanout)
+- [Практикум W8-4 Fan-out по ключу](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanout)
 
 **Чего пока нет на сайте:**
 
-- Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W7-3.
+- Нет диаграммы «перевод → outbox → Kafka → потребитель»: путь события пока только в карточках c52, c53 и задаче W8-3.
 - Практикум недели работает в памяти; PostgreSQL и Kafka в Docker Compose проверяются только в своём проекте.
 
-## Неделя 8. Проект III: gRPC, тесты, бенчмарки (28.12–03.01)
+## Неделя 9. Проект III: gRPC, тесты, бенчмарки (04.01–10.01)
 
 **Цель:** У сервиса есть gRPC API, интеграционные тесты на настоящих PostgreSQL и Kafka, бенчмарк горячего пути.
 
@@ -799,9 +894,9 @@
 
 - [ ] Бенчмарк горячего пути + allocs/op; если есть аллокации — escape analysis — [C24](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 - [ ] Покрытие: где тестов нет намеренно и почему (записать в README)
-- [ ] Ката К3.5 (30 мин): ограничение работы в полёте — задача W4-1 пулом, семафором и errgroup.SetLimit — [К3.5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-5), [W4-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
-  - Готово, когда: одна задача W4-1 в трёх формах — классический пул; семафор на `chan struct{}` со слотом до `go`; `errgroup.SetLimit` — и все три проходят тесты W4-1. Названа позиция Mills: работу ограничивают семафором, а не пулом простаивающих воркеров (сегодня то же даёт `errgroup.SetLimit`); стадия, которая живёт до закрытия входа, — нормальна
-- [ ] Ката К3.8 (25 мин): errgroup на каналах и sync.Once; сравнить с x/sync/errgroup — [К3.8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-8), [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
+- [ ] Ката К3.5 (30 мин): ограничение работы в полёте — задача W5-1 пулом, семафором и errgroup.SetLimit — [К3.5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-5), [W5-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
+  - Готово, когда: одна задача W5-1 в трёх формах — классический пул; семафор на `chan struct{}` со слотом до `go`; `errgroup.SetLimit` — и все три проходят тесты W5-1. Названа позиция Mills: работу ограничивают семафором, а не пулом простаивающих воркеров (сегодня то же даёт `errgroup.SetLimit`); стадия, которая живёт до закрытия входа, — нормальна
+- [ ] Ката К3.8 (25 мин): errgroup на каналах и sync.Once; сравнить с x/sync/errgroup — [К3.8](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-8), [W6-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
   - Готово, когда: свой `Group` на каналах и `sync.Once`: `Go`, `Wait`, первая ошибка, отмена остальных через `ctx`; сравнить с `x/sync/errgroup`
 
 **LeetCode недели:** [133. Clone Graph](https://leetcode.com/problems/clone-graph/) (Graph DFS/BFS), [207. Course Schedule](https://leetcode.com/problems/course-schedule/) (Topological sort), [994. Rotting Oranges](https://leetcode.com/problems/rotting-oranges/) (Multi-source BFS)
@@ -825,15 +920,15 @@
 - [C38 What do container-aware GOMAXPROCS, synctest and FlightRecorder actually guarantee?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c38)
 - [C24 How does escape analysis choose storage, and how do you verify a particular allocation?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c24)
 - [Ката К3.5 · Ограничение работы в полёте: пул, семафор, SetLimit](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-5)
-- [Практикум W4-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
+- [Практикум W5-1 Worker pool с отменой](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-workerpool)
 - [Ката К3.8 · Errgroup на каналах](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-8)
-- [Практикум W5-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
+- [Практикум W6-1 ParallelFetch: errgroup с лимитом](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-parallelfetch)
 
 **Чего пока нет на сайте:**
 
 - Нет разобранного интеграционного теста на testcontainers-go: в c64 библиотека только названа.
 
-## Неделя 9. Проект IV: production-readiness, CV (04.01–10.01)
+## Неделя 10. Проект IV: production-readiness, CV (11.01–17.01)
 
 **Цель:** Репозиторий можно показать работодателю: наблюдаемость, CI, README с решениями; есть черновик CV на английском.
 
@@ -846,7 +941,7 @@
 
 ### Вт · 90 мин
 
-- [ ] Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W5-3) — [C59](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [C61](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
+- [ ] Graceful shutdown всего сервиса: HTTP, gRPC, relay-воркер, consumer (из W6-3) — [C59](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59), [C63](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c63), [C61](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c61), [Pinkponies Bank: платёжный сервис (GitHub)](https://github.com/aleksbeloushkin-srb/go-payments-reference)
 - [ ] GitHub Actions: lint, test -race, build Docker-образа
 
 ### Ср · 90 мин
@@ -870,9 +965,9 @@
 - [ ] Виртуальный Craft Deep-Dive (Claude как интервьюер): 30 минут вопросов по проекту на английском; среди них — два о каналах в эталонном коде: К4.1 и К4.2 — [К4.1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k4-1), [К4.2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k4-2), проговор: «Craft Deep-Dive по проекту»
 - [ ] Записать 3 вопроса, на которых запнулся, и дописать ответы в README/заметки
 - [ ] Kubernetes-минимум для Go-сервиса (≈60 мин): Deployment и Service; liveness/readiness на /healthz и /readyz; requests/limits и как лимит CPU задаёт GOMAXPROCS (Go 1.25+); SIGTERM → graceful shutdown в terminationGracePeriodSeconds — [C7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7), [SIM2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2), [C59](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c59), [Kubernetes: Pod lifecycle и завершение](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/), [Kubernetes: liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/), [Kubernetes: requests и limits](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
-- [ ] Ката К3.6 (25 мин): остановка — done-канал и Shutdown, повторный вызов безопасен — [К3.6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-6), [W5-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
+- [ ] Ката К3.6 (25 мин): остановка — done-канал и Shutdown, повторный вызов безопасен — [К3.6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-6), [W6-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
   - Готово, когда: `Shutdown` отменяет и дожидается; повторный вызов безопасен (`sync.Once`)
-- [ ] Ката К3.9 (25 мин): rate limiter — leaky bucket против token bucket — [К3.9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-9), [W5-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
+- [ ] Ката К3.9 (25 мин): rate limiter — leaky bucket против token bucket — [К3.9](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-9), [W6-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
   - Готово, когда: leaky и token bucket на каналах; отказ против ожидания; сказано, что лимитер на каналах работает только в одном процессе
 
 **LeetCode недели:** [210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/) (Topological sort), [684. Redundant Connection](https://leetcode.com/problems/redundant-connection/) (Union-find), [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) (Dijkstra)
@@ -902,15 +997,15 @@
 - [C7 How do G, M and P relate to GOMAXPROCS?](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c7)
 - [SIM2 Диаграмма 2: Очереди, вытеснение, перехват работы и ожидание](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators/sim2)
 - [Ката К3.6 · Остановка: done-канал и Shutdown](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-6)
-- [Практикум W5-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
+- [Практикум W6-3 Graceful shutdown: HTTP, воркеры, зависимость](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-shutdown)
 - [Ката К3.9 · Rate limiter: leaky bucket против token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-9)
-- [Практикум W5-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
+- [Практикум W6-2 Rate limiter: token bucket](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-ratelimit)
 
 **Чего пока нет на сайте:**
 
 - Нет тренажёра Craft Deep-Dive: вопросы интервьюера по собственному проекту с follow-up.
 
-## Неделя 10. Take-home, code review, первая волна откликов (11.01–17.01)
+## Неделя 11. Take-home, code review, первая волна откликов (18.01–24.01)
 
 **Цель:** Сделать take-home в формате EU-компаний и уверенно ревьюить чужой Go-код за 40 минут.
 
@@ -938,7 +1033,7 @@
 ### Сб · 240 мин
 
 - [ ] Take-home, финал (≈150 мин): самоаудит по чек-листу, доработка
-- [ ] Ещё 1 чужой PR в формате 40 минут — код с каналами из трека: tee с копией внутри цикла и «быстрый» tee (К3.3), or-done без select (К3.7), «решение без утечек» финального босса (К2.6) — [К3.3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-3), [К3.7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-7), [W10-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-tee)
+- [ ] Ещё 1 чужой PR в формате 40 минут — код с каналами из трека: tee с копией внутри цикла и «быстрый» tee (К3.3), or-done без select (К3.7), «решение без утечек» финального босса (К2.6) — [К3.3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-3), [К3.7](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-7), [W11-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-tee)
 - [ ] Отклики волны 1 (≈30 мин): Luxoft, ZeptoLab и похожие — 5–10
 - [ ] Дополнительно: LeetCode 322. Coin Change + проговор (или перенести в резерв) *(по желанию)* — [LC 322. Coin Change](https://leetcode.com/problems/coin-change/)
 - [ ] Таблица воронки (≈15 мин): отклик → ответ → скрининг → техинтервью → оффер; раз в неделю смотреть, где теряешься: мало ответов — менять CV и позиционирование, а не только число откликов
@@ -966,13 +1061,13 @@
 - [Q20 Результат записи отчёта](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz/q20)
 - [Ката К3.3 · Tee](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-3)
 - [Ката К3.7 · Or-done: разбор чужого кода](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k3-7)
-- [Практикум W10-1 Tee и or-done](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-tee)
+- [Практикум W11-1 Tee и or-done](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-tee)
 
 **Чего пока нет на сайте:**
 
 - Нет режима code review целого PR со списком эталонных замечаний: пока есть quiz «Сначала свой ответ» и фрагменты чужого кода с закрытым разбором в треке «Каналы и context».
 
-## Неделя 11. System Design I (18.01–24.01)
+## Неделя 12. System Design I (25.01–31.01)
 
 **Цель:** По шаблону за 40 минут вести дизайн вслух на английском и в каждом дизайне объяснять, почему Go.
 
@@ -1031,7 +1126,7 @@
 - На сайте нет раздела System Design: шаблон, разобранные дизайны, вопросы интервьюера.
 - Нет связки «механизм Go → архитектурное решение» (например, горутины и netpoller → почему Go для I/O-bound сервиса).
 
-## Неделя 12. System Design II: event-driven и предметные дизайны (25.01–31.01)
+## Неделя 13. System Design II: event-driven и предметные дизайны (01.02–07.02)
 
 **Цель:** Уверенно вести дизайн event-driven систем и предметные задачи целевых компаний.
 
@@ -1084,7 +1179,7 @@
 
 - Нет материалов по предметным дизайнам целевых компаний.
 
-## Неделя 13. Behavioral, легенда, CV (01.02–07.02)
+## Неделя 14. Behavioral, легенда, CV (08.02–14.02)
 
 **Цель:** 8 STAR-историй и рассказ о себе звучат естественно по-английски; CV и LinkedIn готовы.
 
@@ -1113,7 +1208,7 @@
 
 - [ ] Прогон всех историй вслух с записью, сократить каждую до 2 минут
 - [ ] Прогон на время, часть 1: каты К2.5 и К2.6 вслух, по 20–30 мин; остальные восемь — в воскресный резерв до мока 1 — [К5](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/track-channels/k5-1)
-  - Готово, когда: К2.5, К2.6, К3.1, К3.2, К3.3, К3.4, К3.5, К3.6, К3.8, К3.9 — по 20–30 минут (К3.1 — 10), вслух по-английски, без подсказок; две первые — в субботу недели 13, остальные — в воскресный резерв до мока 1
+  - Готово, когда: К2.5, К2.6, К3.1, К3.2, К3.3, К3.4, К3.5, К3.6, К3.8, К3.9 — по 20–30 минут (К3.1 — 10), вслух по-английски, без подсказок; две первые — в субботу недели 14, остальные — в воскресный резерв до мока 1
 
 **LeetCode недели:** [981. Time Based Key-Value Store](https://leetcode.com/problems/time-based-key-value-store/) (Map + binary search)
 
@@ -1138,7 +1233,7 @@
 
 - Нет банка behavioral-вопросов с шаблоном STAR и тренировкой ответа вслух.
 
-## Неделя 14. Моки и пик откликов (08.02–14.02)
+## Неделя 15. Моки и пик откликов (15.02–21.02)
 
 **Цель:** Пройти полный цикл интервью в тренировочном режиме и выйти на реальные собеседования.
 
@@ -1235,6 +1330,30 @@
 - **Edge cases & tests:** One zero; two zeros, where every result is zero; negative numbers.
 - **Follow-up:** What if division were allowed? — Dividing the total product works only without zeros: with one zero only that index is non-zero, with two zeros everything is zero, so prefix and suffix products stay simpler.
 
+### LC 191. Number of 1 Bits
+
+- **Clarify:** Is n a positive int up to 2^31 − 1, as in the current problem, or any uint32? Is the function called many times?
+- **Approach:** x & (x-1) clears the lowest set bit, so I count how many times I can do it before x becomes zero — one step per set bit. In production Go I would call bits.OnesCount32, which the compiler turns into a machine instruction where the CPU has one.
+- **Complexity:** O(k) for k set bits, at most 32; bits.OnesCount32 is O(1).
+- **Edge cases & tests:** n = 1 gives 1 and 2^31 − 1 gives 31; for a general uint32, 0 gives 0 and 0xFFFFFFFF gives 32.
+- **Follow-up:** What if it is called millions of times? — bits.OnesCount32, or a 256-entry table indexed by each byte.
+
+### LC 136. Single Number
+
+- **Clarify:** Does every other number appear exactly twice? Must the extra memory be O(1)?
+- **Approach:** I XOR all the numbers: a ^ a is zero, a ^ 0 is a, and the order does not matter, so the pairs cancel and the single number remains.
+- **Complexity:** O(n) time, O(1) memory.
+- **Edge cases & tests:** One element; negative numbers work the same way, because XOR works on bits.
+- **Follow-up:** LC 268 Missing Number? — XOR the indices 0..n with the values; everything pairs up except the missing number.
+
+### LC 338. Counting Bits
+
+- **Clarify:** Return the count for every i from 0 to n — can I do it in one pass?
+- **Approach:** i >> 1 drops the lowest bit and i & 1 is that bit, so dp[i] = dp[i >> 1] + (i & 1), computed from small numbers to large ones.
+- **Complexity:** O(n) time and O(n) memory for the answer.
+- **Edge cases & tests:** n = 0 gives [0]; every power of two has exactly one set bit.
+- **Follow-up:** Another recurrence? — dp[i] = dp[i & (i-1)] + 1: clearing the lowest set bit removes exactly one.
+
 ### LC 3. Longest Substring Without Repeating Characters
 
 - **Clarify:** Is the input ASCII, or should I handle Unicode runes? In Go that matters because indexing a string works on bytes.
@@ -1293,16 +1412,40 @@
 - **Edge cases & tests:** b equal to zero, a normal division like 7 / 2, and a panic two calls deeper, which recover still catches in the same goroutine.
 - **Follow-up:** Would you use recover like this in production? — In Go panic is for programmer bugs, not control flow. I'd normally check for zero up front; recover belongs at boundaries like HTTP middleware, so one bad request doesn't crash the server.
 
-### W3-1. Remove
+### W3-1. Permission flags
+
+- **Clarify:** Are the values fixed as in chmod — read 4, write 2, execute 1? Should String ignore bits beyond the three rights?
+- **Approach:** Each right is one bit, declared with 1 << iota, and a set of rights is a bitwise OR. Has checks p & q == q, so every right of q must be there. Remove uses AND NOT, Toggle uses XOR, and String and Parse walk one fixed order: r, w, x.
+- **Complexity:** Has, Add, Remove and Toggle are O(1), one bitwise instruction each; String and Parse handle three characters, also constant time.
+- **Edge cases & tests:** Has(0) is true; removing an absent right keeps it absent; Parse rejects a wrong length, a letter in the wrong position and any other character, and wraps ErrBadPerm with the input.
+- **Follow-up:** How would you print 0755 like chmod? — Three groups of three bits: owner shifted by six, group by three, other as is, each printed as one octal digit.
+
+### W3-2. Bit set
+
+- **Clarify:** Are the numbers non-negative and is the upper bound unknown? Must the zero value be usable?
+- **Approach:** Number i lives in word i >> 6 at bit i & 63. Add grows the slice and sets the bit with OR, Remove clears it with AND NOT, Has tests it and returns false beyond the slice. Len sums OnesCount64, and Elems takes TrailingZeros64 and clears the lowest bit with w &= w - 1.
+- **Complexity:** Has and Remove are O(1); Add is O(1) when the word exists and otherwise grows the slice to i/64 words; Len, Union and Elems are O(number of words); memory is one bit per number up to the largest one.
+- **Edge cases & tests:** Numbers 63, 64 and 127 on word boundaries; Has far beyond the slice; removing an absent number; Union with a longer set; a negative number panics in Add.
+- **Follow-up:** When is map[int]struct{} better? — When the numbers are sparse and large, like IDs up to a billion: a bit set would need a bit for every possible number.
+
+### W3-3. Money.Allocate
+
+- **Clarify:** Should the extra cents go to the first parts? What about a negative amount and n of zero?
+- **Approach:** I split in integer minor units: q and r from division and remainder. Go truncates toward zero, so r has the sign of the amount. Every part gets q, and the first |r| parts get one more unit with the sign of the amount.
+- **Complexity:** O(n) time and memory for n parts.
+- **Edge cases & tests:** Fewer cents than parts gives zeros at the end; negative amounts; math.MaxInt64; n of zero or below returns an error that wraps ErrBadParts.
+- **Follow-up:** How do you split by ratios like 70/30? — Each share is the amount times its weight divided by the total, in integers — with a 128-bit product, bits.Mul64, when amounts are large; the leftover units go out one by one so the sum stays exact.
+
+### W4-1. Remove
 
 - **Approach:** The order-preserving version is append(s[:i], s[i+1:]...). The catch is that it writes into the same backing array, so the caller's original slice changes too. The fast version swaps in the last element: O(1), but it loses the order.
 - **Edge cases & tests:** slices.Delete also modifies the shared backing array, and since Go 1.22 it zeroes the vacated tail elements. If the caller still needs the original, I make an independent copy first, for example with slices.Clone.
 
-### W3-3. Generics vs interfaces
+### W4-3. Generics vs interfaces
 
 - **Approach:** I use generics when the logic is identical for every type, like Map or a Set. I use an interface when each type behaves differently. Rule of thumb: write the concrete version first and generalize when a second use case appears.
 
-### W3-4. txsum CLI
+### W4-4. txsum CLI
 
 - **Approach:** I read the CSV with encoding/csv, parse each row into a transaction and aggregate balances in a map keyed by account and currency, using int64 minor units. Bad rows don't stop the run: I collect them with line numbers and report at the end, with a non-zero exit code if any failed.
 - **Edge cases & tests:** Table-driven test for the row parser: valid row, missing column, non-numeric amount, unknown currency.
@@ -1316,30 +1459,30 @@
 - P6 typed nil — the interface holds the type *E with a nil value, so the interface itself isn't nil.
 - P9 loop variable — since Go 1.22 a variable declared by the loop (:=) is new in each iteration; before 1.22, or with for i = range over an existing variable, all closures share one.
 
-### W4-1. Worker pool
+### W5-1. Worker pool
 
 - **Clarify:** How many workers? Do results need to keep the input order? What happens if one job fails?
 - **Approach:** I start N workers that range over a jobs channel and send to a results channel. The producer closes jobs after the last send; a separate goroutine waits on a WaitGroup for all workers and then closes results, so the consumer's range loop ends. Every goroutine has an owner and a clear exit: the channel closing or ctx.Done().
 - **Complexity:** Concurrency is bounded by N, so memory and connections stay predictable under load.
 - **Edge cases & tests:** Zero jobs; cancellation in the middle; a slow consumer — that's backpressure, the workers block on send instead of buffering unboundedly.
 
-### W4-4. Mutex vs atomic vs channel
+### W5-4. Mutex vs atomic vs channel
 
 - **Approach:** For a single counter an atomic operation is usually the simplest fit; whether it is faster depends on contention, so I'd compare with a benchmark rather than assume. A mutex is right when the invariant spans several fields. A channel fits when I'm transferring ownership of data or coordinating work, not just protecting a variable.
 - **Edge cases & tests:** An atomic protects one value; it doesn't make a check-then-act sequence on two values safe.
 
-### W5-1. ParallelFetch with errgroup
+### W6-1. ParallelFetch with errgroup
 
 - **Clarify:** Should one failure cancel the rest? Is there a limit on concurrent requests?
 - **Approach:** errgroup.WithContext gives me a context that is cancelled on the first error. SetLimit bounds concurrency. Each fetch uses the group's context, so the other requests stop early. Wait returns the first error.
 - **Edge cases & tests:** The derived context is cancelled after Wait returns, so it must not be used for work after Wait.
 
-### W5-2. Rate limiter
+### W6-2. Rate limiter
 
 - **Approach:** For a single instance, a token bucket: tokens refill at a fixed rate up to a burst size; a request takes a token or is rejected or waits. In Go I'd use golang.org/x/time/rate rather than hand-roll it. Across many instances the state must be shared — for example Redis with an atomic script — or each instance gets a share of the global limit.
 - **Edge cases & tests:** Burst behaviour; clock skew between instances; what the client sees on rejection — 429 with Retry-After.
 
-### W5-3. Graceful shutdown
+### W6-3. Graceful shutdown
 
 - **Approach:** signal.NotifyContext gives me a context cancelled on SIGTERM. I stop accepting new requests with server.Shutdown and a timeout, cancel background workers through their context, and wait for them with a WaitGroup or errgroup before closing the database pool.
 - **Edge cases & tests:** Shutdown order matters: stop intake first, drain in-flight work, then close dependencies. Kubernetes gives a grace period, so the timeout must fit inside it.
@@ -1390,7 +1533,7 @@
 
 - **Approach:** I've built payment systems on the JVM for years. I'm moving to Go because I value its simplicity and explicitness — errors as values, a small language, fast builds — and its concurrency model fits I/O-heavy backend services. Many fintech and platform teams in Europe build in Go, and I've been practicing on a ledger service with the same problems I solve at work.
 
-## Образцы ответов на английском (недели 1, 2, 3, 4, 6, 7)
+## Образцы ответов на английском (недели 1, 2, 3, 4, 5, 7, 8)
 
 Открывать после своей попытки вслух. *Remember* — одна строка для запоминания; ниже — короткий ответ для интервью. Сверять смысл, а не заучивать дословно.
 
@@ -1534,7 +1677,37 @@ Zero values: 0 for int, "" for string, and nil for *T, []T, map[K]V, chan T and 
 
 </details>
 
-**w3-mon-1** (неделя 3) — Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]
+**w3-mon-4** (неделя 3) — Биты, часть 1: справка «Биты в Go», разделы 1–3 — как читать биты, переполнение и отрицательные числа, операторы & | ^ &^; у каждой строки сначала назови биты результата, потом сверь
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Bits from the right; two's complement; variables wrap; &^ clears.
+
+An integer is a row of bits numbered from the right, and bit k is worth two to the power k. Negative numbers use two's complement: minus x is x with every bit flipped, plus one, so minus one has every bit set, and the byte 1011_0110 reads as 182 unsigned and minus 74 signed. Arithmetic on variables wraps around instead of panicking: a uint8 holding 200 plus 100 is 44. AND keeps common bits, OR merges them, XOR keeps differing bits, and Go's AND NOT clears the bits of the right operand.
+
+</details>
+
+**w3-tue-6** (неделя 3) — Биты, часть 2: справка, разделы 4–5 — сдвиги без маски и по маске: проверить, поставить, снять, переключить бит, вырезать и записать поле; результат каждой строки — до сверки
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* Left shift multiplies; signed right shift copies the sign; shift then mask cuts a field.
+
+A left shift moves bits up and multiplies by two per step until bits fall off the top. A right shift divides by two and rounds down: an unsigned value gets zeros from the left, a signed one gets copies of the sign bit, so minus seven shifted right by one is minus four. A mask selects positions: OR sets a bit, AND NOT clears it, XOR toggles it, and AND tests it. To cut a field from a signed value I shift and then mask, because the shift alone drags the sign bits along.
+
+</details>
+
+**w3-sat-14** (неделя 3) — Самопроверка недели вслух по-английски: блоки «Самопроверка недели» и «Проговорить по-английски» внизу страницы
+
+<details><summary>Model answer (EN)</summary>
+
+*Remember:* &^ clears; signed >> rounds down; n&(n-1) == 0; shift then mask; constants are checked, variables wrap.
+
+a &^ b clears in a the bits set in b; it equals a & ^b, while a ^ b would also set the bits a did not have. Minus seven shifted right by one is minus four, because a signed right shift copies the sign bit and rounds down, while division truncates toward zero. A positive n is a power of two when n & (n-1) is zero. To cut bits four to seven, I shift right by four and mask with 0x0F; for a signed value the mask removes the copied sign bits. A variable wraps: 200 plus 100 in a uint8 is 44, but the constant 300 does not fit a uint8, so the compiler rejects it.
+
+</details>
+
+**w4-mon-1** (неделя 4) — Slice изнутри: header (ptr, len, cap), рост при append, общий backing array, copy, s[a:b:c]
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1544,7 +1717,7 @@ A slice is only a view onto an underlying array: a descriptor with a pointer, a 
 
 </details>
 
-**w3-mon-2** (неделя 3) — Ловушки aliasing и удержания памяти — сначала ответ без вариантов
+**w4-mon-2** (неделя 4) — Ловушки aliasing и удержания памяти — сначала ответ без вариантов
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1554,7 +1727,7 @@ Both traps come from slices sharing one array. The first is aliasing: two append
 
 </details>
 
-**w3-tue-3** (неделя 3) — Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures
+**w4-tue-3** (неделя 4) — Строки: string vs []byte vs []rune, UTF-8, strings.Builder. Дополнительно: 100 Go Mistakes — Data Types, Strings, Control Structures
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1564,7 +1737,7 @@ Strings are bytes, not characters: len("héllo") is 6, not 5, because a string i
 
 </details>
 
-**w3-tue-4** (неделя 3) — W3-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)
+**w4-tue-4** (неделя 4) — W4-1 Remove(s, i) в двух версиях + тест, показывающий порчу исходного slice. Проговор (записать)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1574,7 +1747,7 @@ Removing in place changes the caller's data: append(s[:i], s[i+1:]...) shifts el
 
 </details>
 
-**w3-wed-1** (неделя 3) — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)
+**w4-wed-1** (неделя 4) — Generics: type parameters, any, comparable, constraints с ~, cmp.Ordered; в Go 1.27 — generic-методы (у метода свои параметры типа; у методов интерфейса — нет, и generic-метод не может реализовать метод интерфейса)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1584,7 +1757,7 @@ Generics let one type work for many element types: a generic Set[T comparable] i
 
 </details>
 
-**w3-wed-2** (неделя 3) — W3-2 Map/Filter/Reduce и Set[T comparable]; W3-3 та же функция через интерфейс — сравнить
+**w4-wed-2** (неделя 4) — W4-2 Map/Filter/Reduce и Set[T comparable]; W4-3 та же функция через интерфейс — сравнить
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1594,7 +1767,7 @@ Generics and interfaces both let code work with many types, but differently. I u
 
 </details>
 
-**w3-thu-1** (неделя 3) — Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–3 — пакетами в своём go-prep
+**w4-thu-1** (неделя 4) — Модули, пакеты, internal/, раскладка cmd/ + internal/; задачи недель 1–4 — пакетами в своём go-prep
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1604,7 +1777,7 @@ A module is the unit of versioning and a package the unit of compilation: go.mod
 
 </details>
 
-**w3-thu-2** (неделя 3) — Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы
+**w4-thu-2** (неделя 4) — Тесты: table-driven, t.Run, t.Helper, t.Parallel, go test -cover, golangci-lint; в go-prep — CI на GitHub Actions: vet, test -race, golangci-lint. Learn Go with Tests: 2–3 главы
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1614,7 +1787,7 @@ A table-driven test is the usual Go way to check many inputs with one test funct
 
 </details>
 
-**w3-sat-2** (неделя 3) — W3-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера
+**w4-sat-2** (неделя 4) — W4-4 CLI txsum: CSV account,amount,currency → балансы; ошибки строк собирать; table-driven тесты парсера
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1624,7 +1797,7 @@ txsum is a small CLI that totals transactions from a CSV file: it reads the line
 
 </details>
 
-**w4-mon-1** (неделя 4) — Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition
+**w5-mon-1** (неделя 5) — Горутины, WaitGroup; горутина vs поток ОС; data race vs race condition
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1634,7 +1807,7 @@ In Go, concurrent work runs in goroutines, which the Go runtime schedules onto a
 
 </details>
 
-**w4-tue-1** (неделя 4) — Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения
+**w5-tue-1** (неделя 5) — Каналы: буфер что меняет и чего не меняет (закон Литтла); nil/open/closed; диаграмма передачи значения
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1644,7 +1817,7 @@ A channel behaves differently depending on its state: nil, open or closed. A gor
 
 </details>
 
-**w4-tue-2** (неделя 4) — W4-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор
+**w5-tue-2** (неделя 5) — W5-1 Worker pool: N воркеров, канал задач, канал результатов, отправитель закрывает канал после всех отправок. Проговор
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1654,7 +1827,7 @@ A worker pool keeps concurrency bounded: N workers read jobs from one channel an
 
 </details>
 
-**w4-tue-3** (неделя 4) — W4-2 Pipeline generator → square → sink с остановкой через context
+**w5-tue-3** (неделя 5) — W5-2 Pipeline generator → square → sink с остановкой через context
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1664,7 +1837,7 @@ The pipeline has three stages, generator, square and sink, and stops through a c
 
 </details>
 
-**w4-wed-1** (неделя 4) — select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов
+**w5-wed-1** (неделя 5) — select: выбор ветки, default, отмена — только Base-уровень; задача с запасной веткой — сначала ответ без вариантов
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1674,7 +1847,7 @@ In Go, select lets one goroutine wait on several channel operations at once. If 
 
 </details>
 
-**w4-wed-2** (неделя 4) — W4-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода
+**w5-wed-2** (неделя 5) — W5-3 Fan-in merge нескольких каналов с WaitGroup и закрытием выхода
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1684,7 +1857,7 @@ Fan-in merges several channels into one: one goroutine per input forwards its va
 
 </details>
 
-**w4-thu-1** (неделя 4) — sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух
+**w5-thu-1** (неделя 5) — sync: Mutex, RWMutex, Once, WaitGroup, Cond, atomic; channel vs mutex — дерево решения (диаграмма 12); CAS — диаграммы 5 (CAS) и 8 (Mutex) с ответами вслух
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1694,7 +1867,7 @@ The sync packages cover shared memory, and the choice depends on how much state 
 
 </details>
 
-**w4-mon-2** (неделя 4) — Go blog: Pipelines and cancellation
+**w5-mon-2** (неделя 5) — Go blog: Pipelines and cancellation
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1704,7 +1877,7 @@ A pipeline is a chain of stages connected by channels, such as gen → square �
 
 </details>
 
-**w4-thu-3** (неделя 4) — Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for
+**w5-thu-3** (неделя 5) — Ловушки sync: копия WaitGroup, повторный Lock, double-checked locking, указатель из защищённой map; deadlock, livelock и starvation (диаграмма 11); Cond: Signal вместо Broadcast, if вместо for
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1714,7 +1887,7 @@ Most sync bugs come from a few traps, and each has a simple fix. Calling Done on
 
 </details>
 
-**w4-sat-1** (неделя 4) — Прогнать W4-1…W4-5 в go-prep: go test -race ./week4/...; для каждой горутины записать владельца и путь завершения
+**w5-sat-1** (неделя 5) — Прогнать W5-1…W5-5 в go-prep: go test -race ./week5/...; для каждой горутины записать владельца и путь завершения
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1724,7 +1897,7 @@ Before I call concurrent code done, I check every goroutine's lifecycle. For eac
 
 </details>
 
-**w4-sat-4** (неделя 4) — Проговор worker pool и «channel vs mutex» по-английски, записать
+**w5-sat-4** (неделя 5) — Проговор worker pool и «channel vs mutex» по-английски, записать
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1734,7 +1907,7 @@ Channels and mutexes solve different problems, so I choose by who owns the data.
 
 </details>
 
-**w4-thu-2** (неделя 4) — W4-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W4-5 SafeCache на map + RWMutex
+**w5-thu-2** (неделя 5) — W5-4 Счётчик тремя способами (Mutex, atomic, канал) + бенчмарк. W5-5 SafeCache на map + RWMutex
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1744,7 +1917,7 @@ A counter and a cache both hold shared state, but the cache adds an aliasing tra
 
 </details>
 
-**w6-tue-1** (неделя 6) — HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)
+**w7-tue-1** (неделя 7) — HTTP на net/http с шаблонами маршрутов Go 1.22+: POST /accounts, POST /transfers, GET /accounts/{id}; JSON — в Go 1.27 encoding/json работает поверх json/v2 (строже к невалидному UTF-8 и повторяющимся именам в v2)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1754,7 +1927,7 @@ net/http serves each connection in its own goroutine and runs the handler there;
 
 </details>
 
-**w6-tue-2** (неделя 6) — Валидация входа и ошибки → HTTP-коды через errors.As (из W2-1)
+**w7-tue-2** (неделя 7) — Валидация входа и ошибки → HTTP-коды через errors.As (из W2-1)
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1764,7 +1937,7 @@ The domain returns sentinel and typed errors and doesn't import net/http. One fu
 
 </details>
 
-**w6-wed-2** (неделя 6) — Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений
+**w7-wed-2** (неделя 7) — Управление ресурсами SQL: defer Rollback, rows.Close, rows.Err, пул соединений
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1774,7 +1947,7 @@ The domain returns sentinel and typed errors and doesn't import net/http. One fu
 
 </details>
 
-**w6-thu-1** (неделя 6) — log/slog в JSON, request id в контексте; конфиг из переменных окружения
+**w7-thu-1** (неделя 7) — log/slog в JSON, request id в контексте; конфиг из переменных окружения
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1784,7 +1957,7 @@ I create one slog logger with a JSON handler at startup, and a middleware adds r
 
 </details>
 
-**w7-mon-1** (неделя 7) — Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока
+**w8-mon-1** (неделя 8) — Уровни изоляции PostgreSQL; перевод в одной транзакции: SELECT … FOR UPDATE в стабильном порядке ID против дедлока
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1794,7 +1967,7 @@ PostgreSQL defaults to Read Committed, where each statement sees its own snapsho
 
 </details>
 
-**w7-tue-1** (неделя 7) — Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка
+**w8-tue-1** (неделя 8) — Идемпотентность: таблица ключей с UNIQUE и сохранённым ответом; другой payload с тем же ключом → ошибка
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1804,7 +1977,7 @@ A client may retry a payment, so it sends an Idempotency-Key that makes the retr
 
 </details>
 
-**w7-tue-2** (неделя 7) — Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»
+**w8-tue-2** (неделя 8) — Гонка двух одинаковых запросов: атомарная вставка ключа, а не «проверить, потом вставить»
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1814,7 +1987,7 @@ Check-then-insert fails under concurrency: both requests check, find nothing and
 
 </details>
 
-**w7-wed-1** (неделя 7) — Transactional outbox: запись события в той же транзакции, что и перевод
+**w8-wed-1** (неделя 8) — Transactional outbox: запись события в той же транзакции, что и перевод
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1824,7 +1997,7 @@ Publishing after commit is a dual write: if the process dies between the commit 
 
 </details>
 
-**w7-wed-2** (неделя 7) — Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи
+**w8-wed-2** (неделя 8) — Relay-воркер публикует в Kafka (at-least-once): владелец горутины, остановка, ретраи
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1834,7 +2007,7 @@ The relay moves events from the outbox table to Kafka; it is one goroutine start
 
 </details>
 
-**w7-thu-1** (неделя 7) — Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу
+**w8-thu-1** (неделя 8) — Consumer с идемпотентной обработкой; consumer groups, партиции, порядок по ключу
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1844,7 +2017,7 @@ My consumer is at-least-once: it commits the offset only after the effect is com
 
 </details>
 
-**w7-sat-1** (неделя 7) — Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race
+**w8-sat-1** (неделя 8) — Конкурентный тест: 100 параллельных переводов, инвариант суммы, go test -race
 
 <details><summary>Model answer (EN)</summary>
 
@@ -1854,7 +2027,7 @@ Each account has its own lock, and a transfer takes both locks in ascending ID o
 
 </details>
 
-**w7-sat-4** (неделя 7) — Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1
+**w8-sat-4** (неделя 8) — Индексы PostgreSQL (≈45 мин): B-tree и составной индекс, EXPLAIN ANALYZE на запросе истории переводов счёта; найти и убрать N+1
 
 <details><summary>Model answer (EN)</summary>
 

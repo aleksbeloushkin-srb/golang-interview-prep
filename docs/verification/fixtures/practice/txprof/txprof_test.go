@@ -120,7 +120,7 @@ func TestSumBenchInput(t *testing.T) {
 	}
 }
 
-// The goal of W4-6: at most one allocation per valid line (the line's text),
+// The goal of the task: at most one allocation per valid line (the line's text),
 // plus a small constant for the scanner and the map.
 func TestAllocsPerLine(t *testing.T) {
 	const lines = 1000

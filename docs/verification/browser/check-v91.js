@@ -38,10 +38,10 @@ const LAYOUT = {
       status: document.querySelector(".plan-calendar-status").textContent,
       overall: document.getElementById("plan-overall").textContent
     }));
-    ok(`${w}: 14 week chips w1…w14`, top.chips.join() === Array.from({ length: 14 }, (_, i) => `#/plan/w${i + 1}`).join(), top.chips.length);
-    ok(`${w}: calendar offers 14 weeks`, top.options.length === 14 && top.options[13].startsWith("14. "), top.options.length);
+    ok(`${w}: 15 week chips w1…w15`, top.chips.join() === Array.from({ length: 15 }, (_, i) => `#/plan/w${i + 1}`).join(), top.chips.length);
+    ok(`${w}: calendar offers 15 weeks`, top.options.length === 15 && top.options[14].startsWith("15. "), top.options.length);
     ok(`${w}: today is week 1, Wednesday`, top.title.startsWith("Неделя 1. Идиомы Go I: типы, методы, интерфейсы") && /неделя 1, Ср: 90 мин/.test(top.today) && /сейчас неделя 1/.test(top.status), `${top.title} | ${top.today.trim()}`);
-    ok(`${w}: tab title says 14 weeks`, top.docTitle === "План 14 недель — Go Interview Prep", top.docTitle);
+    ok(`${w}: tab title says 15 weeks`, top.docTitle === "План 15 недель — Go Interview Prep", top.docTitle);
 
     // Old marks: all kept on their tasks; Account (w1-wed-3) is on Thursday now; a mark of a renamed ID is not shown.
     const marks = await p.evaluate(ids => ({
@@ -105,17 +105,17 @@ const LAYOUT = {
     ok(`${w}: W2-1 has the Is/As model answer and its own talk`, /Wrap with %w; Is compares, As extracts\./.test(w2.validation) && /W2-1\. ValidationError/.test(w2.talk), w2.talk);
     ok(`${w}: LC 347 and 238 are required in week 2`, w2.lc.join() === "false,false", w2.lc.join());
     ok(`${w}: no predict block in week 2`, w2.predict === 0);
-    await p.goto(`${base}#/plan/w3`); await p.waitForSelector("#plan-week-title");
+    await p.goto(`${base}#/plan/w4`); await p.waitForSelector("#plan-week-title");
     ok(`${w}: predict block in week 3 (slice and map)`, await p.locator(".plan-predict").count() === 10);
 
     // Every route #/plan/wN shows «Неделя N.» and its dates.
     const titles = [];
-    for (let n = 1; n <= 14; n++) {
+    for (let n = 1; n <= 15; n++) {
       await p.goto(`${base}#/plan/w${n}`); await p.waitForTimeout(80);
       titles.push(await p.evaluate(() => document.getElementById("plan-week-title").textContent));
     }
-    ok(`${w}: routes w1…w14 match «Неделя N»`, titles.every((t, i) => t.startsWith(`Неделя ${i + 1}. `)), titles.map(t => t.slice(0, 10)).join("|"));
-    ok(`${w}: week 14 is the mocks, 08.02–14.02`, titles[13].includes("Моки и пик откликов") && await p.evaluate(() => /08\.02–14\.02/.test(document.querySelector(".plan-week > p.muted-text").textContent)));
+    ok(`${w}: routes w1…w15 match «Неделя N»`, titles.every((t, i) => t.startsWith(`Неделя ${i + 1}. `)), titles.map(t => t.slice(0, 10)).join("|"));
+    ok(`${w}: week 15 is the mocks, 15.02–21.02`, titles[14].includes("Моки и пик откликов") && await p.evaluate(() => /15\.02–21\.02/.test(document.querySelector(".plan-week > p.muted-text").textContent)));
 
     // Practice: criteria labelled by the new day; codes and the go-prep tree follow the weeks.
     await p.goto(`${base}#/practice/p-validation`); await p.waitForSelector("#practice-title");
@@ -125,13 +125,13 @@ const LAYOUT = {
     ok(`${w}: W1-2 Account leads to Thursday of week 1`, await p.evaluate(() => [...document.querySelectorAll('#view-practice a[href^="#/plan/"]')].some(a => a.getAttribute("href") === "#/plan/w1/thu" && /W1 · Чт · w1-wed-3/.test(a.textContent))));
     await p.goto(`${base}#/practice/go-prep/layout`); await p.waitForSelector("#practice-title");
     const tree = await p.evaluate(() => [...document.querySelectorAll("#view-practice pre")].map(pre => pre.textContent).find(t => t.startsWith("go-prep/")) || "");
-    ok(`${w}: go-prep tree: week2 holds validation and deferpanic, week3 the assembler drill`, /week2\/\n│   ├── validation\/\s+← W2-1\n│   └── deferpanic\/\s+← W2-2, W2-3/.test(tree) && /week3\/\n│   ├── asm\//.test(tree) && /└── week10\//.test(tree), tree.split("\n").slice(5, 14).join(" | "));
+    ok(`${w}: go-prep tree: week2 holds validation and deferpanic, week4 the assembler drill`, /week2\/\n│   ├── validation\/\s+← W2-1\n│   └── deferpanic\/\s+← W2-2, W2-3/.test(tree) && /week4\/\n│   ├── asm\//.test(tree) && /└── week11\//.test(tree), tree.split("\n").slice(5, 14).join(" | "));
 
     // The track leads to the right days.
     await p.goto(`${base}#/practice/track-channels`); await p.waitForSelector("#practice-title");
     const when = await p.evaluate(() => Object.fromEntries(["k2-5", "k2-6", "k3-3", "k5-1", "k1-2"].map(id => [id, [...document.querySelectorAll(`#track-${id} .track-when a`)].map(a => a.getAttribute("href")).join() || document.querySelector(`#track-${id} .track-when`)?.textContent.trim()])));
-    ok(`${w}: track katas link their plan days`, when["k2-5"] === "#/plan/w6/sat" && when["k2-6"] === "#/plan/w5/sat" && when["k3-3"] === "#/plan/w10/sat" && when["k5-1"] === "#/plan/w13/sat", JSON.stringify(when));
-    ok(`${w}: reserve katas name week 5`, /резерв недели 5/.test(when["k1-2"]), when["k1-2"]);
+    ok(`${w}: track katas link their plan days`, when["k2-5"] === "#/plan/w7/sat" && when["k2-6"] === "#/plan/w6/sat" && when["k3-3"] === "#/plan/w11/sat" && when["k5-1"] === "#/plan/w14/sat", JSON.stringify(when));
+    ok(`${w}: reserve katas name week 5`, /резерв недели 6/.test(when["k1-2"]), when["k1-2"]);
     ok(`${w}: no horizontal overflow on the track`, await p.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 0));
     await ctx.close();
   }
@@ -143,9 +143,9 @@ const LAYOUT = {
   await p.clock.setFixedTime(new Date("2026-11-16T09:00:00+01:00"));
   await p.goto(base + "#/plan"); await p.waitForSelector("#plan-week-title");
   ok("Mon 16.11 is week 2, Monday", /неделя 2, Пн/.test(await p.textContent("#plan-today")) && (await p.textContent("#plan-week-title")).startsWith("Неделя 2."), (await p.textContent("#plan-today")).trim());
-  await p.clock.setFixedTime(new Date("2027-02-20T09:00:00+01:00"));
+  await p.clock.setFixedTime(new Date("2027-02-27T09:00:00+01:00"));
   await p.reload(); await p.waitForSelector("#plan-week-title");
-  ok("after week 14 the plan says 14 weeks are behind", /^14 недель позади/.test(await p.textContent("#plan-today")) && /14 недель позади/.test(await p.textContent(".plan-calendar-status")), (await p.textContent("#plan-today")).trim());
+  ok("after week 15 the plan says 15 weeks are behind", /^15 недель позади/.test(await p.textContent("#plan-today")) && /15 недель позади/.test(await p.textContent(".plan-calendar-status")), (await p.textContent("#plan-today")).trim());
   await ctx.close();
 
   ok("no console errors", errors.length === 0, errors.join(" | "));

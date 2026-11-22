@@ -47,8 +47,8 @@ const base = "http://127.0.0.1:8765/";
     ok(`${w}: testing task links the guide, the drill, W1-2 and c44`, ["#/practice/go-testing", "#/practice/go-testing/drill", "#/practice/p-account", "#/cards/c44"].every(h => sat.tests.includes(h)), JSON.stringify(sat.tests));
     ok(`${w}: Money variation links the table sample`, sat.money.includes("#/practice/go-testing/table"), JSON.stringify(sat.money));
 
-    await p.goto(base + "#/plan/w3/thu"); await p.waitForTimeout(300);
-    ok(`${w}: week 3 Thursday links the guide`, await p.evaluate(() => [...(document.getElementById("plan-task-w3-thu-2")?.closest("li.plan-task")?.querySelectorAll("a") || [])].some(a => a.getAttribute("href") === "#/practice/go-testing")));
+    await p.goto(base + "#/plan/w4/thu"); await p.waitForTimeout(300);
+    ok(`${w}: week 3 Thursday links the guide`, await p.evaluate(() => [...(document.getElementById("plan-task-w4-thu-2")?.closest("li.plan-task")?.querySelectorAll("a") || [])].some(a => a.getAttribute("href") === "#/practice/go-testing")));
 
     await p.goto(base + "#/practice/p-account"); await p.waitForSelector("#practice-title");
     const contract = await p.evaluate(() => [...document.querySelectorAll(".practice-contract")].map(ul => ul.querySelector("li")?.textContent || ""));
