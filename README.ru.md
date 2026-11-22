@@ -6,7 +6,7 @@
 [![Cards](https://img.shields.io/badge/cards-73-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Diagrams](https://img.shields.io/badge/diagrams-12-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
 [![Quiz](https://img.shields.io/badge/quiz-58-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
-[![Practice](https://img.shields.io/badge/practice_tasks-26-ef4444?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)
+[![Practice](https://img.shields.io/badge/practice_tasks-29-ef4444?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)
 [![No build](https://img.shields.io/badge/build_step-none-22c55e?style=flat-square)](#локальный-запуск)
 
 Сайт для подготовки к собеседованиям на Go-бэкенд: рантайм, конкурентность, идиомы, устройство сервиса и задачи с тестами. Чистые HTML, CSS и JavaScript, без сборки и внешних зависимостей.
