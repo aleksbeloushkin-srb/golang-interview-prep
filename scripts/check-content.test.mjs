@@ -96,9 +96,18 @@ test('guide files are the go-prep fixture, byte for byte (module path <ник> �
   const fixture = path => readFileSync(new URL('../docs/verification/fixtures/go-prep/' + path, import.meta.url), 'utf8');
   for (const [section, name, path] of [
     ['setup', 'main.go', 'week1/hello/main.go'], ['setup', 'calc.go', 'week1/calc/calc.go'], ['setup', 'calc_test.go', 'week1/calc/calc_test.go'],
-    ['asm', 'asm.go', 'week3/asm/asm.go'], ['asm', 'asm_test.go', 'week3/asm/asm_test.go'], ['asm', 'main.go', 'week3/cmd/sumdemo/main.go'],
+    ['asm', 'asm.go', 'week4/asm/asm.go'], ['asm', 'asm_test.go', 'week4/asm/asm_test.go'], ['asm', 'main.go', 'week4/cmd/sumdemo/main.go'],
     ['ci', 'ci.yml', 'ci.yml']
   ]) assert.equal(file(section, name), fixture(path), path);
+});
+
+test('the week 3 guides show their fixtures, byte for byte (module path <ник> → you)', () => {
+  const file = (guide, section, name) => guides.guides[guide].sections.find(s => s.id === section).files.find(f => f.name === name).code.replaceAll('<ник>', 'you');
+  const fixture = path => readFileSync(new URL('../docs/verification/fixtures/' + path, import.meta.url), 'utf8');
+  for (const [guide, section, name, path] of [
+    ['go-bits', 'code', 'bitops.go', 'go-prep/week3/bitops/bitops.go'], ['go-bits', 'code', 'example_test.go', 'go-prep/week3/bitops/example_test.go'],
+    ['week3-reviews', 'code', 'review.go', 'review-week3/review/review.go'], ['week3-reviews', 'code', 'review_test.go', 'review-week3/review/review_test.go']
+  ]) assert.equal(file(guide, section, name), fixture(path), path);
 });
 
 test('the testing guide files are fixtures, byte for byte (module path <ник> → you)', () => {

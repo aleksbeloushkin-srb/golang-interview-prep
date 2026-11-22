@@ -1,6 +1,6 @@
-# Приёмка озвучки на слух — недели 1–4
+# Приёмка озвучки на слух — недели 1–5
 
-Сгенерировано из `data/audio.js` (150 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
+Сгенерировано из `data/audio.js` (158 текстов × 2 голоса). Записи проверены только машинно: файлы есть, декодируются, хеш совпадает с текущим текстом. **На слух ни одна запись ещё не принята.**
 
 Как проверять каждую запись (Michael и Heart отдельно):
 
@@ -77,20 +77,20 @@
 | [plan:w1-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/tue) | Heart | 45.0 | 12.50 EUR, 1250, −0.05 EUR |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Michael | 50.0 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
 | [plan:w1-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/wed) | Heart | 51.5 | `*Service`, `(&v).Notify()`, `map[K]*Service` |  |  |  |  |  |  |
-| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 43.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
-| [plan:w3-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 45.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
-| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
-| [plan:w3-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
-| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 27.3 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w3-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 28.3 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
-| [plan:w3-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 33.7 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
-| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 39.1 | `gen → square → print` → «then» |  |  |  |  |  |  |
-| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 39.7 | `gen → square → print` → «then» |  |  |  |  |  |  |
-| [plan:w4-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Michael | 29.4 | `go test -race`, errgroup |  |  |  |  |  |  |
-| [plan:w4-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Heart | 29.3 | `go test -race`, errgroup |  |  |  |  |  |  |
-| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 29.7 | `-race` → «dash race» |  |  |  |  |  |  |
-| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 30.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 43.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 45.0 | `s[1:3]`, `s[a:b:c]` |  |  |  |  |  |  |
+| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 29.5 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w4-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 30.3 | `a[:len(a):len(a)]`, 100 MiB |  |  |  |  |  |  |
+| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 27.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w4-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 28.3 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 32.8 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 33.7 | `len("héllo")`, `utf8.RuneCountInString` |  |  |  |  |  |  |
+| [plan:w5-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/mon) | Michael | 39.1 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w5-mon-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/mon) | Heart | 39.7 | `gen → square → print` → «then» |  |  |  |  |  |  |
+| [plan:w5-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/sat) | Michael | 29.4 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w5-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/sat) | Heart | 29.3 | `go test -race`, errgroup |  |  |  |  |  |  |
+| [plan:w5-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Michael | 29.7 | `-race` → «dash race» |  |  |  |  |  |  |
+| [plan:w5-thu-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Heart | 30.3 | `-race` → «dash race» |  |  |  |  |  |  |
 | [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Michael | 39.0 | I/O |  |  |  |  |  |  |
 | [practice:p-counter:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-counter) | Heart | 40.7 | I/O |  |  |  |  |  |  |
 | [practice:p-deferpanic:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-deferpanic) | Michael | 29.8 | «same goroutine», 3, 2, 1 |  |  |  |  |  |  |
@@ -247,6 +247,10 @@
 | [card:c72:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 37.9 |  |  |  |  |  |  |  |
 | [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Michael | 44.1 |  |  |  |  |  |  |  |
 | [card:c72:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c72) | Heart | 45.6 |  |  |  |  |  |  |  |
+| [card:c73:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73) | Michael | 38.6 |  |  |  |  |  |  |  |
+| [card:c73:jvm](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73) | Heart | 39.5 |  |  |  |  |  |  |  |
+| [card:c73:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73) | Michael | 39.9 |  |  |  |  |  |  |  |
+| [card:c73:short](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards/c73) | Heart | 40.5 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 27.4 |  |  |  |  |  |  |  |
 | [plan:w1-sat-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Heart | 28.4 |  |  |  |  |  |  |  |
 | [plan:w1-sat-10](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w1/sat) | Michael | 47.5 |  |  |  |  |  |  |  |
@@ -267,40 +271,52 @@
 | [plan:w2-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 22.0 |  |  |  |  |  |  |  |
 | [plan:w2-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Michael | 29.7 |  |  |  |  |  |  |  |
 | [plan:w2-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w2/tue) | Heart | 30.8 |  |  |  |  |  |  |  |
-| [plan:w3-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 27.8 |  |  |  |  |  |  |  |
-| [plan:w3-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
-| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
-| [plan:w3-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
-| [plan:w3-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 25.6 |  |  |  |  |  |  |  |
-| [plan:w3-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 26.6 |  |  |  |  |  |  |  |
-| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 20.6 |  |  |  |  |  |  |  |
-| [plan:w3-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 21.3 |  |  |  |  |  |  |  |
-| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Michael | 26.3 |  |  |  |  |  |  |  |
-| [plan:w3-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
-| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Michael | 38.5 |  |  |  |  |  |  |  |
-| [plan:w4-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/mon) | Heart | 39.7 |  |  |  |  |  |  |  |
-| [plan:w4-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Michael | 25.6 |  |  |  |  |  |  |  |
-| [plan:w4-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Heart | 26.2 |  |  |  |  |  |  |  |
-| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 40.2 |  |  |  |  |  |  |  |
-| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 41.7 |  |  |  |  |  |  |  |
-| [plan:w4-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 38.6 |  |  |  |  |  |  |  |
-| [plan:w4-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 39.3 |  |  |  |  |  |  |  |
-| [plan:w4-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 40.8 |  |  |  |  |  |  |  |
-| [plan:w4-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 42.0 |  |  |  |  |  |  |  |
-| [plan:w4-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 28.7 |  |  |  |  |  |  |  |
-| [plan:w4-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 29.9 |  |  |  |  |  |  |  |
-| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 25.5 |  |  |  |  |  |  |  |
-| [plan:w4-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 26.5 |  |  |  |  |  |  |  |
-| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 29.0 |  |  |  |  |  |  |  |
-| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 30.1 |  |  |  |  |  |  |  |
-| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 34.4 |  |  |  |  |  |  |  |
-| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 35.3 |  |  |  |  |  |  |  |
+| [plan:w3-mon-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Michael | 40.3 |  |  |  |  |  |  |  |
+| [plan:w3-mon-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/mon) | Heart | 41.6 |  |  |  |  |  |  |  |
+| [plan:w3-sat-14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Michael | 44.6 |  |  |  |  |  |  |  |
+| [plan:w3-sat-14](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/sat) | Heart | 45.8 |  |  |  |  |  |  |  |
+| [plan:w3-tue-6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Michael | 34.3 |  |  |  |  |  |  |  |
+| [plan:w3-tue-6](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w3/tue) | Heart | 35.4 |  |  |  |  |  |  |  |
+| [plan:w4-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Michael | 27.8 |  |  |  |  |  |  |  |
+| [plan:w4-sat-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/sat) | Heart | 28.9 |  |  |  |  |  |  |  |
+| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Michael | 28.3 |  |  |  |  |  |  |  |
+| [plan:w4-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/thu) | Heart | 29.2 |  |  |  |  |  |  |  |
+| [plan:w4-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Michael | 25.6 |  |  |  |  |  |  |  |
+| [plan:w4-tue-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/tue) | Heart | 26.6 |  |  |  |  |  |  |  |
+| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 20.6 |  |  |  |  |  |  |  |
+| [plan:w4-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 21.3 |  |  |  |  |  |  |  |
+| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Michael | 26.3 |  |  |  |  |  |  |  |
+| [plan:w4-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w4/wed) | Heart | 27.7 |  |  |  |  |  |  |  |
+| [plan:w5-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/mon) | Michael | 38.5 |  |  |  |  |  |  |  |
+| [plan:w5-mon-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/mon) | Heart | 39.7 |  |  |  |  |  |  |  |
+| [plan:w5-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/sat) | Michael | 25.6 |  |  |  |  |  |  |  |
+| [plan:w5-sat-4](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/sat) | Heart | 26.2 |  |  |  |  |  |  |  |
+| [plan:w5-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Michael | 40.2 |  |  |  |  |  |  |  |
+| [plan:w5-thu-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Heart | 41.7 |  |  |  |  |  |  |  |
+| [plan:w5-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Michael | 38.6 |  |  |  |  |  |  |  |
+| [plan:w5-thu-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/thu) | Heart | 39.3 |  |  |  |  |  |  |  |
+| [plan:w5-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Michael | 40.8 |  |  |  |  |  |  |  |
+| [plan:w5-tue-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Heart | 42.0 |  |  |  |  |  |  |  |
+| [plan:w5-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Michael | 28.7 |  |  |  |  |  |  |  |
+| [plan:w5-tue-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Heart | 29.9 |  |  |  |  |  |  |  |
+| [plan:w5-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Michael | 25.5 |  |  |  |  |  |  |  |
+| [plan:w5-tue-3](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/tue) | Heart | 26.5 |  |  |  |  |  |  |  |
+| [plan:w5-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/wed) | Michael | 29.0 |  |  |  |  |  |  |  |
+| [plan:w5-wed-1](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/wed) | Heart | 30.1 |  |  |  |  |  |  |  |
+| [plan:w5-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/wed) | Michael | 34.4 |  |  |  |  |  |  |  |
+| [plan:w5-wed-2](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/plan/w5/wed) | Heart | 35.3 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Michael | 33.2 |  |  |  |  |  |  |  |
 | [practice:p-account:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-account) | Heart | 34.3 |  |  |  |  |  |  |  |
+| [practice:p-allocate:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-allocate) | Michael | 33.0 |  |  |  |  |  |  |  |
+| [practice:p-allocate:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-allocate) | Heart | 33.7 |  |  |  |  |  |  |  |
+| [practice:p-bitset:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-bitset) | Michael | 38.0 |  |  |  |  |  |  |  |
+| [practice:p-bitset:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-bitset) | Heart | 38.9 |  |  |  |  |  |  |  |
 | [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Michael | 29.2 |  |  |  |  |  |  |  |
 | [practice:p-fanin:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-fanin) | Heart | 29.4 |  |  |  |  |  |  |  |
 | [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Michael | 39.4 |  |  |  |  |  |  |  |
 | [practice:p-generics:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-generics) | Heart | 40.3 |  |  |  |  |  |  |  |
+| [practice:p-perm:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-perm) | Michael | 38.1 |  |  |  |  |  |  |  |
+| [practice:p-perm:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-perm) | Heart | 38.4 |  |  |  |  |  |  |  |
 | [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Michael | 43.9 |  |  |  |  |  |  |  |
 | [practice:p-pipeline:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-pipeline) | Heart | 45.3 |  |  |  |  |  |  |  |
 | [practice:p-removeslice:talk](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice/p-removeslice) | Michael | 35.3 |  |  |  |  |  |  |  |
@@ -446,31 +462,31 @@
 
 > A typed nil inside an interface is not really nil: returning a nil pointer to My Err as error gives the caller a non-nil error, because an interface value holds a dynamic type and a value and is nil only when both are nil. Service's method set has only its value-receiver methods; the method set of pointer to Service has both. So if Notify has a pointer receiver, pointer to Service implements the interface and Service does not. Calling v dot Notify on a Service variable is only shorthand for taking the address of v, then calling Notify; an element of map of K to Service or a function result of type Service cannot be called that way, while an element of map of K to pointer to Service or a result of type pointer to Service can.
 
-**plan:w3-mon-1** (хеш текста `fa451292`)
+**plan:w4-mon-1** (хеш текста `fa451292`)
 
 > A slice is only a view onto an underlying array: a descriptor with a pointer, a length and a capacity. So slicing s from one to three copies no elements, and because re-slicing shares the array, a write through one slice is visible through the other. append writes in place when the resulting length fits in the capacity and otherwise allocates a new array and copies. a full slice expression, s of a, b, c, limits capacity to c minus a; with c equal to b there is no spare capacity, so appending must copy into a new array and cannot overwrite what follows; copy or slices dot Clone gives an independent slice.
 
-**plan:w3-mon-2** (хеш текста `4bad243c`)
+**plan:w4-mon-2** (хеш текста `4bad243c`)
 
 > Both traps come from slices sharing one array. The first is aliasing: two appends to the same slice with spare capacity write into the same slot, so the second overwrites the first; limit the capacity with a full slice expression so append must allocate, or copy. The second is retention: a 16-byte slice keeps the whole 100-megabyte array reachable, and only a copy, such as bytes dot Clone or make plus copy, lets the array be collected.
 
-**plan:w3-thu-2** (хеш текста `63012adb`)
+**plan:w4-thu-2** (хеш текста `63012adb`)
 
 > A table-driven test is the usual Go way to check many inputs with one test function: it lists named cases and runs each in t dot Run, so a failure shows the case name and one case can be run with -run. t dot Helper marks a helper so failures point to the caller's line. t dot Parallel runs a test alongside others, so I use it only when cases don't share mutable data. C-I runs go test dash race.
 
-**plan:w3-tue-3** (хеш текста `eda6ef4e`)
+**plan:w4-tue-3** (хеш текста `eda6ef4e`)
 
 > Strings are bytes, not characters: the length of héllo is 6, not 5, because a string is an immutable sequence of bytes, usually U-T-F-8, and é takes two of them. len of s counts bytes and s of i returns a byte, not a character. range over a string decodes runes and gives the byte offset of each. To count runes, code points, I use utf8 dot Rune Count In String, and I convert to slice of rune only when I really need to index by code point.
 
-**plan:w4-mon-2** (хеш текста `22a1fb09`)
+**plan:w5-mon-2** (хеш текста `22a1fb09`)
 
 > A pipeline is a chain of stages connected by channels, such as gen, then square, then print. The first stage only sends, the last only receives, and each middle stage is a goroutine that receives from upstream, processes the value and sends it downstream. A stage closes its output when it has sent everything, so the next stage's range loop ends. If the consumer stops early, upstream stages would block forever on their sends, so every send sits in a select with done or ctx dot Done; closing done or cancelling ctx frees them all.
 
-**plan:w4-sat-1** (хеш текста `1d2d8d76`)
+**plan:w5-sat-1** (хеш текста `1d2d8d76`)
 
 > Before I call concurrent code done, I check every goroutine's lifecycle. For each one I name its owner and its exit path. It returns when its input channel is closed, when ctx is cancelled, or when its single task is done, and someone waits for it with a Wait Group or an err group. If I can't name the exit path, the goroutine can leak. go test dash race finds data races only in the paths the tests run; it does not find deadlocks or logic errors.
 
-**plan:w4-thu-2** (хеш текста `04d5573b`)
+**plan:w5-thu-2** (хеш текста `04d5573b`)
 
 > A counter and a cache both hold shared state, but the cache adds an aliasing trap. A counter built with a Mutex, with atomic dot Int64 or with one owner goroutine gives the same result under dash race. So I choose by clarity and measured contention, not by a general rule. A cache guarded by an RW Mutex must not return its internal map or slices, because callers would then change shared data outside the lock; it returns copies instead.
 
@@ -786,6 +802,14 @@
 
 > In a Go service every request carries a context dot Context, and it should carry only two things. The first is the request's lifetime: cancellation and a deadline, so work can stop when nobody needs the answer. The handler passes ctx as the first argument to every I-O call and gives each outbound call its own context dot With Timeout. The second is request-scoped data for logs and tracing, such as the request I-D. Dependencies and optional parameters stay out: they go in constructors and signatures. Work after the response runs on context dot Without Cancel: values stay, cancellation goes, and you add your own timeout.
 
+**card:c73:jvm** (хеш текста `6156ddf3`)
+
+> Java writes not as a tilde before x and has no and-not: it writes a and tilde b. Java's right shift is arithmetic like Go's on signed types, and the triple right shift is a logical shift; Go has no triple shift, you convert to an unsigned type instead. Java has no unsigned byte, short, int or long — byte is minus 128 to 127 — while Go has uint8 to uint64. In Java, x and 1 equals 0 does not compile without parentheses; in Go it means x and 1, compared with 0.
+
+**card:c73:short** (хеш текста `0866c07b`)
+
+> Bitwise operators let you pack flags and small fields into one integer and test them cheaply. Go works on each bit position: and keeps common bits, or merges them, x-or keeps the differing ones, and the and-not operator clears the bits of the right operand. A mask picks positions: x or one shifted left by k sets bit k, x and-not that mask clears it, and x and the mask, not equal to zero, tests it. A left shift multiplies by two; a signed right shift copies the sign bit, so minus seven shifted right by one is minus four. Overflow wraps silently.
+
 **plan:w1-sat-1** (хеш текста `125e4582`)
 
 > It comes down to method sets: var underscore Notifier equals a Service literal fails to compile when Notify has a pointer receiver, because the method set of Service does not include it; address of a Service literal works. The rule comes from the spec. The usual motivation: an interface stores a copy, and that copy is not addressable, so a pointer method would have nothing to point to and could not modify the caller's value.
@@ -826,65 +850,85 @@
 
 > A panic unwinds the stack and runs deferred calls, and recover stops it only when it is called directly by a deferred function in the goroutine that is panicking. Safe Div defers a function that recovers and turns the panic into an error by assigning to the named err result. A panic in another goroutine is not caught here and crashes the program unless that goroutine recovers it. For expected failures I return errors; panic is for programmer errors.
 
-**plan:w3-sat-2** (хеш текста `24d403dd`)
+**plan:w3-mon-4** (хеш текста `f77f5ecd`)
+
+> An integer is a row of bits numbered from the right, and bit k is worth two to the power k. Negative numbers use two's complement: minus x is x with every bit flipped, plus one, so minus one has every bit set, and the byte 1 0 1 1, 0 1 1 0 reads as 182 unsigned and minus 74 signed. Arithmetic on variables wraps around instead of panicking: a uint8 holding 200 plus 100 is 44. And keeps common bits, or merges them, x-or keeps differing bits, and Go's and-not clears the bits of the right operand.
+
+**plan:w3-sat-14** (хеш текста `d0fa204d`)
+
+> a and-not b clears in a the bits set in b; it equals a and the inverse of b, while a x-or b would also set the bits a did not have. Minus seven shifted right by one is minus four, because a signed right shift copies the sign bit and rounds down, while division truncates toward zero. A positive n is a power of two when n and n minus one is zero. To cut bits four to seven, I shift right by four and mask with hex zero F; for a signed value the mask removes the copied sign bits. A variable wraps: 200 plus 100 in a uint8 is 44, but the constant 300 does not fit a uint8, so the compiler rejects it.
+
+**plan:w3-tue-6** (хеш текста `25a44525`)
+
+> A left shift moves bits up and multiplies by two per step until bits fall off the top. A right shift divides by two and rounds down: an unsigned value gets zeros from the left, a signed one gets copies of the sign bit, so minus seven shifted right by one is minus four. A mask selects positions: or sets a bit, and-not clears it, x-or toggles it, and an and tests it. To cut a field from a signed value I shift and then mask, because the shift alone drags the sign bits along.
+
+**plan:w4-sat-2** (хеш текста `24d403dd`)
 
 > txsum is a small C-L-I that totals transactions from a C-S-V file: it reads the lines, validates every field and sums amounts per account and currency in minor units. Invalid lines are reported with their line numbers instead of stopping at the first one, and the program exits with a non-zero code if any line failed. Tests cover a valid line, a missing column, a non-numeric amount and an unknown currency.
 
-**plan:w3-thu-1** (хеш текста `6f28e549`)
+**plan:w4-thu-1** (хеш текста `6f28e549`)
 
 > A module is the unit of versioning and a package the unit of compilation: go dot mod declares the module path, such as module example dot com slash shop, and a package is one directory compiled together. Code in an internal directory can be imported only by packages in the tree rooted at the parent of that internal directory. cmd for binaries and internal for private code is a common layout, not a language rule.
 
-**plan:w3-tue-4** (хеш текста `4fe73252`)
+**plan:w4-tue-4** (хеш текста `4fe73252`)
 
 > Removing in place changes the caller's data: appending the tail after i to the part before i shifts elements inside the shared array, so the caller's slice sees the change. slices dot Delete also modifies the array and, since Go one 22, zeroes the elements after the new length. If the caller's data must stay intact, I copy first with slices dot Clone or build a new slice.
 
-**plan:w3-wed-1** (хеш текста `44ead2fc`)
+**plan:w4-wed-1** (хеш текста `44ead2fc`)
 
 > Generics let one type work for many element types: a generic Set[T comparable] is a map from T to an empty struct with Add, Has and Len. The comparable constraint is required because only comparable types can be map keys. The empty struct value takes no space, so the map stores only keys.
 
-**plan:w3-wed-2** (хеш текста `09e54783`)
+**plan:w4-wed-2** (хеш текста `09e54783`)
 
 > Generics and interfaces both let code work with many types, but differently. I use generics when the algorithm is the same for many types and the caller needs the concrete type back, as in Map, Filter or Reduce. I use an interface when behaviour differs per type and callers depend on methods, for example different storage backends. I don't add type parameters just to avoid writing a small function twice.
 
-**plan:w4-mon-1** (хеш текста `4a1de081`)
+**plan:w5-mon-1** (хеш текста `4a1de081`)
 
 > In Go, concurrent work runs in goroutines, which the Go runtime schedules onto a few O-S threads. go f starts one with a small growable stack, so a program can run many; a Wait Group lets the caller wait for them. Running them together can cause two different bugs. A data race is unsynchronized access to the same memory from two goroutines, at least one writing; the race detector reports it when a run hits it. A race condition is a timing-dependent logic bug, possible without a data race: a check and an update in two separate critical sections.
 
-**plan:w4-sat-4** (хеш текста `4b3c0a24`)
+**plan:w5-sat-4** (хеш текста `4b3c0a24`)
 
 > Channels and mutexes solve different problems, so I choose by who owns the data. I use a channel when work or data moves between goroutines and ownership passes with the value, as in a worker pool. I use a mutex when several goroutines read and update the same state in place, such as a cache or a counter. Either way the goal is clear ownership; I measure before claiming either is faster.
 
-**plan:w4-thu-1** (хеш текста `e770fc82`)
+**plan:w5-thu-1** (хеш текста `e770fc82`)
 
 > The sync packages cover shared memory, and the choice depends on how much state must stay consistent. An atomic makes one operation on one variable indivisible, such as atomic dot Add Int64 on a counter, and one balance can also use a Compare And Swap loop. But a transfer between two accounts touches two balances: with two separate atomic adds, another goroutine can see the money missing in between. That invariant needs a lock around the whole check and update. With Cond, a goroutine calls Wait in a for loop, because the condition may no longer hold when Wait returns.
 
-**plan:w4-thu-3** (хеш текста `df7f3896`)
+**plan:w5-thu-3** (хеш текста `df7f3896`)
 
 > Most sync bugs come from a few traps, and each has a simple fix. Calling Done on a copy of a Wait Group leaves the original counter unchanged, so Wait blocks; pass a pointer, or use wg dot Go in Go one 25 or later. A goroutine that locks a Mutex it already holds deadlocks, because Go mutexes are not reentrant. A check under R Lock is stale after R Unlock, so check-then-insert must recheck under Lock. A pointer returned from a protected map lets callers change the value after unlock, so I copy the value while holding the lock.
 
-**plan:w4-tue-1** (хеш текста `ac857e36`)
+**plan:w5-tue-1** (хеш текста `ac857e36`)
 
 > A channel behaves differently depending on its state: nil, open or closed. A goroutine that sends to or receives from a nil channel blocks forever. On an open unbuffered channel, a sender waits for a receiver; with a buffer, it waits only when the buffer is full. A buffer only absorbs bursts: if receivers are slower on average, it fills up anyway. Sending on a closed channel panics; receiving drains the buffered values, then returns the zero value with ok false. Closing a nil or closed channel panics, so the sending side closes it, once, after the last send.
 
-**plan:w4-tue-2** (хеш текста `4e0b0ad6`)
+**plan:w5-tue-2** (хеш текста `4e0b0ad6`)
 
 > A worker pool keeps concurrency bounded: N workers read jobs from one channel and write results to another. The producer closes jobs after the last send. A separate goroutine waits for all workers with a Wait Group and then closes results, so the consumer's range loop ends. Workers and the producer select on ctx dot Done at every send and receive, so cancelling ctx releases all of them; a consumer that stops early must cancel.
 
-**plan:w4-tue-3** (хеш текста `4db397bc`)
+**plan:w5-tue-3** (хеш текста `4db397bc`)
 
 > The pipeline has three stages, generator, square and sink, and stops through a context. Generator and square each own their output and close it when they return. Every send sits in a select with ctx dot Done, so if the consumer stops early and cancels, all stages return and no goroutine stays blocked. A test cancels in the middle and checks that every stage has exited.
 
-**plan:w4-wed-1** (хеш текста `08c18dd8`)
+**plan:w5-wed-1** (хеш текста `08c18dd8`)
 
 > In Go, select lets one goroutine wait on several channel operations at once. If several cases are ready, it picks one pseudo-randomly, so there is no priority between them. A default case makes the select non-blocking. Checking ctx dot Err before the select doesn't give cancellation priority either, because once inside, a ready data case can still win. The channel operands and send values are evaluated once, before a case is chosen.
 
-**plan:w4-wed-2** (хеш текста `3883f7f8`)
+**plan:w5-wed-2** (хеш текста `3883f7f8`)
 
 > Fan-in merges several channels into one: one goroutine per input forwards its values to a shared output. A Wait Group tracks the forwarders, and one more goroutine closes the output after all of them return. Each forwarder selects on ctx dot Done, so cancellation stops everything, and with no inputs the output closes immediately. Fan-out is the other half: I run several copies of a stage only when it is slow and the order of its results does not matter, because merging loses the order.
 
 **practice:p-account:talk** (хеш текста `b14fd304`)
 
 > Deposit and Withdraw change the account, so they have pointer receivers; with value receivers they would change a copy. Insufficient funds is a sentinel error, because callers only need to branch on that condition. I wrap it with percent w and add the amount and the account, so the message is useful and errors dot Is still finds the cause. Transfer wraps once more, and a test checks that errors dot Is works through both levels and that a failed operation leaves the balances unchanged.
+
+**practice:p-allocate:talk** (хеш текста `eaf40c11`)
+
+> Splitting money must not lose or invent a cent, so I work in integer minor units. I take the quotient and the remainder of the amount divided by n; Go truncates toward zero, so the remainder has the sign of the amount. Every part gets the quotient, and the first parts get one extra unit each, with the sign of the amount, until the remainder is used up. A test loops over many amounts and part counts and checks the invariant: the parts add up exactly and differ by at most one.
+
+**practice:p-bitset:talk** (хеш текста `46794107`)
+
+> A bit set stores number i as one bit: word i shifted right by six, bit i and sixty-three. Add grows the slice when needed and sets the bit with or; Remove clears it with and-not, so removing an absent number does nothing. Has is a mask test and returns false beyond the slice instead of panicking. Len sums bits dot Ones Count64 over the words, and Elems walks each word with Trailing Zeros64 and clears the lowest bit with w and w minus one. It costs one bit per possible number instead of a map entry per element.
 
 **practice:p-fanin:talk** (хеш текста `a8be1fb9`)
 
@@ -893,6 +937,10 @@
 **practice:p-generics:talk** (хеш текста `d0a2c487`)
 
 > The task compares generic helpers with an interface. Map, Filter, Reduce and Max are the same algorithm for many types, so type parameters fit: the compiler checks the types and the caller gets its own type back, for example Max of Celsius values returns a Celsius. Set needs a comparable constraint because its elements are map keys. Best is the interface version: the slice holds different types, and each type decides what its score is, chosen at run time. Same algorithm over types means generics; different behaviour behind one method means an interface.
+
+**practice:p-perm:talk** (хеш текста `fab2f15f`)
+
+> Rights are bits in one byte, as in chmod: read is 4, write is 2, execute is 1, and one shifted left by iota gives these values without typing them. A set of rights is a bitwise or. Has checks that p and q equals q, so every right of q must be present, not just one. Remove uses and-not, which clears those bits and keeps the rest; x-or would add a right that was missing. String walks a fixed order, r, w, x, and Parse reads the same three positions back and wraps Err Bad Perm with the input when a character is wrong.
 
 **practice:p-pipeline:talk** (хеш текста `5ca52fb6`)
 

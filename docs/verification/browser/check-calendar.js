@@ -24,12 +24,12 @@ const { chromium } = require("playwright");
   ok("dates open on click", await p.evaluate(() => document.getElementById("plan-dates").open));
   ok("reset label names the date", await p.locator("text=Сбросить на 09.11").count() === 1);
   ok("default: week 3 on Wed 25.11", (await status()).includes("09.11.2026") && (await status()).includes("сейчас неделя 3"), await status());
-  await p.check("#plan-task-w3-mon-1");
+  await p.check("#plan-task-w3-mon-4");
 
   await p.click("text=Я начал на этой неделе"); await p.waitForTimeout(150);
   let s = await saved();
   ok("«Я начал» sets Monday of this week", s.start === "2026-11-23", s.start);
-  ok("marks kept after start change", s.done["w3-mon-1"] === true);
+  ok("marks kept after start change", s.done["w3-mon-4"] === true);
   ok("status shows week 1", (await status()).includes("сейчас неделя 1"));
   ok("today banner follows: week 1, Ср", (await p.textContent("#plan-today")).includes("неделя 1, Ср"), (await p.textContent("#plan-today")).trim());
   const note = await p.textContent("#plan-start-note");
@@ -87,8 +87,9 @@ const { chromium } = require("playwright");
   const m = await p.textContent(".plan-task:has(#plan-task-w2-mon-2) .plan-model");
   ok("w2-mon-2 answer opens and is English", m.includes("Remember: Wrap with %w; Is compares, As extracts.") && m.includes("errors.As finds"), m.slice(0, 60));
   ok("lang=en on answer", await p.locator('.plan-task:has(#plan-task-w2-mon-2) .plan-model p[lang="en"]').count() === 2);
-  await p.goto(base + "#/plan/w5"); await p.waitForTimeout(150);
-  ok("week 5 has no model answers yet", await p.locator(".plan-model").count() === 0);
+  // v96: the old week 5 is week 6 now; the week numbers above come from the clock, not from the content.
+  await p.goto(base + "#/plan/w6"); await p.waitForTimeout(150);
+  ok("week 6 has no model answers yet", await p.locator(".plan-model").count() === 0);
 
   // Overflow with calendar and open answers.
   for (const [width, zoom] of [[320, 1], [320, 2], [390, 2], [430, 1], [1440, 1]]) {

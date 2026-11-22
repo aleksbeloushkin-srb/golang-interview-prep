@@ -32,7 +32,7 @@ const shots = process.argv[2];
     if (shots) await p.locator("#view-wiki .wiki-project").screenshot({ path: `${shots}/v85-wiki-${w}.png` });
     await p.$eval('#view-wiki .wiki-project details:nth-of-type(2) a[href="#/cards/c53"]', a => a.click()); await p.waitForTimeout(400);
     ok(`${w}: card link opens C53`, await p.evaluate(() => location.hash === "#/cards/c53" && /C53/.test(document.getElementById("card-counter").textContent)));
-    for (const [day, want] of [["w11/wed", [PAY, BANK]], ["w11/thu", [BANK]], ["w12/mon", [BANK]], ["w6/mon", [PAY]]]) {
+    for (const [day, want] of [["w12/wed", [PAY, BANK]], ["w12/thu", [BANK]], ["w13/mon", [BANK]], ["w7/mon", [PAY]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const t = await p.evaluate(want => ({
         missing: want.filter(u => !document.querySelector(`a[href="${u}"]`)),

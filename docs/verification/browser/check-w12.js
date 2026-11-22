@@ -15,7 +15,7 @@ const base = "http://127.0.0.1:8765/";
     await p.goto(base + "#/cards"); await p.waitForTimeout(400);
     await p.evaluate(() => setFilter('m6')); await p.waitForTimeout(200);
     const m6 = await p.evaluate(() => ({ module: document.getElementById("card-module").textContent, chip: document.querySelector('[data-filter="m6"]').textContent, count: CARDS.filter(c => c.mod === "m6").length }));
-    ok(`${w}: m6 filter shows module 6`, m6.module.startsWith("6.") && m6.chip.includes(`(${m6.count})`) && m6.count === 7, JSON.stringify(m6)); // c65 joined m6 in v80
+    ok(`${w}: m6 filter shows module 6`, m6.module.startsWith("6.") && m6.chip.includes(`(${m6.count})`) && m6.count === 8, JSON.stringify(m6)); // c65 joined m6 in v80, c73 in v96
     for (const id of ["c39", "c40", "c41", "c42", "c43", "c44"]) {
       await p.goto(base + "#/cards/" + id); await p.waitForTimeout(200);
       const r = await p.evaluate(id => {
@@ -30,7 +30,7 @@ const base = "http://127.0.0.1:8765/";
     // Quiz: tab count and each new task, answer reveal for one.
     await p.goto(base + "#/quiz"); await p.waitForTimeout(300);
     const tab = await p.textContent('[data-route="quiz"]');
-    ok(`${w}: quiz tab count`, /\b55$/.test(tab.trim()), tab);
+    ok(`${w}: quiz tab count`, /\b58$/.test(tab.trim()), tab);
     for (const id of ["q28", "q29", "q30", "q31", "q32", "q33", "q34", "q35"]) {
       await p.goto(base + "#/quiz/" + id); await p.waitForTimeout(250);
       const r = await p.evaluate(id => {
@@ -47,7 +47,7 @@ const base = "http://127.0.0.1:8765/";
     ok(`${w}: q35 answer reveals the corrected example`, reveal);
 
     // Plan: weeks 1–3 link the new content and no longer list gaps (v91: week 1 is stretched over two).
-    for (const [day, hrefs] of [["w1/tue", ["#/practice/p-money"]], ["w1/thu", ["#/practice/p-account", "#/quiz/q28", "#/quiz/q29", "#/cards/c39"]], ["w2/mon", ["#/practice/p-validation", "#/quiz/q30"]], ["w2/tue", ["#/practice/p-deferpanic", "#/quiz/q31", "#/quiz/q32"]], ["w2/sat", ["#/cards/c40", "#/quiz/q33", "#/quiz/q34"]], ["w3/tue", ["#/practice/p-removeslice", "#/cards/c41"]], ["w3/wed", ["#/practice/p-generics", "#/cards/c42"]], ["w3/thu", ["#/cards/c43", "#/cards/c44", "#/quiz/q35"]], ["w3/sat", ["#/practice/p-txsum"]]]) {
+    for (const [day, hrefs] of [["w1/tue", ["#/practice/p-money"]], ["w1/thu", ["#/practice/p-account", "#/quiz/q28", "#/quiz/q29", "#/cards/c39"]], ["w2/mon", ["#/practice/p-validation", "#/quiz/q30"]], ["w2/tue", ["#/practice/p-deferpanic", "#/quiz/q31", "#/quiz/q32"]], ["w2/sat", ["#/cards/c40", "#/quiz/q33", "#/quiz/q34"]], ["w4/tue", ["#/practice/p-removeslice", "#/cards/c41"]], ["w4/wed", ["#/practice/p-generics", "#/cards/c42"]], ["w4/thu", ["#/cards/c43", "#/cards/c44", "#/quiz/q35"]], ["w4/sat", ["#/practice/p-txsum"]]]) {
       await p.goto(base + "#/plan/" + day); await p.waitForTimeout(250);
       const r = await p.evaluate(hrefs => ({ missing: hrefs.filter(h => !document.querySelector(`a[href="${h}"]`)), gaps: document.querySelectorAll(".plan-gap").length, overflow: document.documentElement.scrollWidth - window.innerWidth }), hrefs);
       ok(`${w}: plan ${day} links new content`, r.missing.length === 0, r.missing.join(","));

@@ -1,7 +1,7 @@
-// Package txprof is the reference solution for practice task W5-6: the W3-4
+// Package txprof is the reference solution for practice task W6-6: the W4-4
 // txsum code after profiling. The profile showed strings.Split allocating a
 // []string for every line; three strings.Cut calls find the same fields
-// without allocating. Everything else is unchanged, and the W3-4 tests pass.
+// without allocating. Everything else is unchanged, and the W4-4 tests pass.
 package txprof
 
 import (

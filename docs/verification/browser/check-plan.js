@@ -18,16 +18,17 @@ const { chromium } = require("playwright");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(`[${width}] no page overflow`, overflow <= 0, `overflow=${overflow}`);
     if (width === 1440) {
-      await page.check("#plan-task-w3-mon-1");
+      await page.check("#plan-task-w3-mon-4");
       await page.reload(); await page.waitForSelector("#plan-week-title");
-      ok("checkbox persists after reload", await page.isChecked("#plan-task-w3-mon-1"));
-      ok("week chip counter", (await page.textContent('[data-plan-week="w3"] .plan-chip-count')) === "1/17");
+      ok("checkbox persists after reload", await page.isChecked("#plan-task-w3-mon-4"));
+      ok("week chip counter", (await page.textContent('[data-plan-week="w3"] .plan-chip-count')) === "1/18");
       await page.click('[data-plan-week="w2"]'); await page.waitForTimeout(150);
       ok("navigate to week 2", (await page.textContent("#plan-week-title")).startsWith("Неделя 2."));
       ok("focus moved to heading", await page.evaluate(() => document.activeElement && document.activeElement.id === "plan-week-title"));
       ok("week 2 has no predict block", (await page.locator(".plan-predict").count()) === 0);
-      await page.goto(base + "#/plan/w3"); await page.waitForTimeout(150);
-      ok("week 3 predict block", (await page.locator(".plan-predict").count()) === 10);
+      // v96: slice and map with «Что выведет код» are week 4; the clock-based current week stays week 3.
+      await page.goto(base + "#/plan/w4"); await page.waitForTimeout(150);
+      ok("week 4 predict block", (await page.locator(".plan-predict").count()) === 10);
       await page.goto(base + "#/plan/w1/sat"); await page.waitForTimeout(200);
       ok("deep link week1 sat", (await page.textContent("#plan-week-title")).startsWith("Неделя 1."));
       await page.click('a[href="#/cards/c34"] >> nth=0'); await page.waitForTimeout(200);

@@ -1,4 +1,4 @@
-// Package fanin is the reference solution for practice task W4-3.
+// Package fanin is the reference solution for practice task W5-3.
 package fanin
 
 import (

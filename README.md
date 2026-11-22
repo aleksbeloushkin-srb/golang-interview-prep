@@ -3,9 +3,9 @@ English | [Русский](README.ru.md)
 # Go Interview Prep
 
 [![Go](https://img.shields.io/badge/examples_tested_on_Go-1.24.7_%7C_1.27.3-00ADD8?style=flat-square&logo=go)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/)
-[![Cards](https://img.shields.io/badge/cards-72-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
+[![Cards](https://img.shields.io/badge/cards-73-38bdf8?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/cards)
 [![Diagrams](https://img.shields.io/badge/diagrams-12-a855f7?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/simulators)
-[![Quiz](https://img.shields.io/badge/quiz-55-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
+[![Quiz](https://img.shields.io/badge/quiz-58-f59e0b?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/quiz)
 [![Practice](https://img.shields.io/badge/practice_tasks-26-ef4444?style=flat-square)](https://aleksbeloushkin-srb.github.io/golang-interview-prep/#/practice)
 [![No build](https://img.shields.io/badge/build_step-none-22c55e?style=flat-square)](#run-locally)
 
@@ -21,17 +21,17 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 
 | Section | Route | What it does |
 |---|---|---|
-| Plan | `#/plan` | 14 weeks, 197 tasks by day, each linked to its material |
-| Cards | `#/cards` | 72 questions in 10 modules, answered from memory, with a review schedule |
+| Plan | `#/plan` | 15 weeks, 216 tasks by day, each linked to its material |
+| Cards | `#/cards` | 73 questions in 10 modules, answered from memory, with a review schedule |
 | Diagrams | `#/simulators` | 12 step-by-step diagrams, 95 steps |
-| Quiz | `#/quiz` | 55 code traps: what it prints, where the bug is, how to fix it |
-| Practice | `#/practice` | 26 coding tasks with tests, the `go-prep` repository guide, a guide on comparable types and map keys, the "Channels and context" track |
+| Quiz | `#/quiz` | 58 code traps: what it prints, where the bug is, how to fix it |
+| Practice | `#/practice` | 29 coding tasks with tests, guides — the `go-prep` repository, comparable types and map keys, tests in Go, bits in Go, the week 3 code reviews — and the "Channels and context" track |
 | Knowledge base | `#/wiki` | all card topics on one page and two reference projects |
 | Cheat sheet | `#/cheatsheet` | 22 rows: how each mechanism works and the numbers worth naming |
 
 ### Plan
 
-- Weeks 1–5: the language and concurrency. Weeks 6–9: a practice project, a ledger service. Weeks 10–14: interview formats — take-home and code review, system design, behavioral, mock interviews.
+- Weeks 1–6: the language and concurrency, with week 3 on bit operations and a review of weeks 1–2. Weeks 7–10: a practice project, a ledger service. Weeks 11–15: interview formats — take-home and code review, system design, behavioral, mock interviews.
 - The calendar starts on your own date (the Monday of week 1) and can be shifted by a week; it highlights today and what is left for the day.
 - Tasks are checked off with a counter per week. Many have a "Done when" criterion; LeetCode problems have a hint to open after your attempt; some tasks have a model answer in English. Plan marks can be exported and imported as JSON.
 - Talk-through trainer: Clarify → Approach → Complexity → Edge cases, a timer per step, a model answer, a self-rating and your weak steps.
@@ -41,7 +41,7 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 - 28 Base, 35 Senior and 9 Deep Dive cards. Filters: module, level, search, "To review", "With practice".
 - Recall first: say the first sentence out loud and answer in your own words; if stuck, open the anchors (`H`); then compare and rate yourself: "didn't answer", "with anchors" or "on my own".
 - The rating sets the next review: tomorrow, in 2 days, or in 4, 8, 16 and then 30 days for answers on your own in a row. "Continue session" takes up to 10 cards: overdue first, then unchecked cards of the current plan week.
-- A card has a short English answer, "If asked about Java and Kotlin" (70 cards), how it works in English with a Russian translation, where it matters in practice, code, a version note with sources, an exercise, and links to its diagram and quiz questions.
+- A card has a short English answer, "If asked about Java and Kotlin" (71 cards), how it works in English with a Russian translation, where it matters in practice, code, a version note with sources, an exercise, and links to its diagram and quiz questions.
 - Keys: `H` anchors, `Space` answer, `←`/`→` navigate, `L` listen, `1` on my own, `2` with anchors, `3` didn't answer.
 
 | # | Module | Topics | Cards |
@@ -51,7 +51,7 @@ On a desktop the sections are header tabs; on a phone, Plan, Cards and Diagrams 
 | 3 | Channels, Select & Sync | channel states, channel or mutex, `hchan` and `sudog`, `selectgo`, CAS, `sync.Mutex`, WaitGroup, Once, Context, deadlock, `sync.Cond` | 12 |
 | 4 | Memory, Allocator & GC | stack vs heap, escape analysis, `mcache`/`mcentral`/`mheap`, tri-color GC, `GOGC`, `GOMEMLIMIT`, write barrier | 6 |
 | 5 | Maps, Interfaces & Go 1.25+ | slices and strings, Swiss Tables, interfaces and typed nil, method sets, `defer`, `weak`, `unique`, iterators, `synctest`, `FlightRecorder` | 10 |
-| 6 | Go Idioms | errors and `errors.Is`/`As`/`Join`, zero values, strings and runes, generics, modules, table-driven tests, embedding | 7 |
+| 6 | Go Idioms | errors and `errors.Is`/`As`/`Join`, zero values, strings and runes, generics, modules, table-driven tests, embedding, bit operations | 8 |
 | 7 | Go Service: HTTP, Errors, SQL, Logs | `net/http` and server timeouts, domain errors as HTTP codes, `database/sql`, `log/slog` | 4 |
 | 8 | Data Consistency | isolation levels, transfers without deadlocks, idempotent payments, outbox, Kafka consumers, slow queries | 6 |
 | 9 | Go Service Architecture | layout, dependency injection, shutdown, REST and OpenAPI, gRPC, long polling, channel patterns, library stack | 8 |
@@ -63,11 +63,11 @@ Stacks and registers, the GMP scheduler, channels, `select`, CAS, the allocator 
 
 ### Quiz
 
-A snippet, four to six options, an explanation in Russian, an answer to say in English, corrected code for 40 questions, and links to the cards. "Answer first" mode hides the options until you have written your own answer.
+A snippet, four to six options, an explanation in Russian, an answer to say in English, corrected code for 43 questions, and links to the cards. "Answer first" mode hides the options until you have written your own answer.
 
 ### Practice
 
-- 26 tasks for weeks 1–7 and 10: money and errors, `defer`, generics, a CSV tool, worker pool, pipeline, fan-in and fan-out, errgroup, token bucket, graceful shutdown, a goroutine leak, escape analysis, pprof, an HTTP API, a timeout wrapper, parallel transfers, idempotency, outbox, tee and or-done.
+- 29 tasks for weeks 1–8 and 11: money and errors, `defer`, permission flags and a bit set, splitting money without losing a cent, generics, a CSV tool, worker pool, pipeline, fan-in and fan-out, errgroup, token bucket, graceful shutdown, a goroutine leak, escape analysis, pprof, an HTTP API, a timeout wrapper, parallel transfers, idempotency, outbox, tee and or-done.
 - Each has a contract in English and Russian, a starter, tests for `go test -race`, hints one at a time, a reference solution, a one-minute English explanation, common mistakes and variations; 15 also have "3 checks before you submit".
 - "Check on server" runs your pasted solution against the same tests with `-race` on Go 1.27.3, without network access; it needs sign-in.
 - Reference solutions and tests are in `docs/verification/fixtures/practice/`; the tests were checked against deliberately broken solutions.
@@ -83,7 +83,7 @@ All 72 card topics on one page, and two reference projects with a reading order 
 
 ### Audio
 
-148 English recordings (Kokoro TTS, voices Michael and a slower Heart): short answers and Java comparisons for 52 cards, plan model answers for weeks 1–4, and explanations for 12 practice tasks. The "Listen" button appears only if the recording matches the current text.
+158 English recordings (Kokoro TTS, voices Michael and a slower Heart): short answers and Java comparisons for 53 cards, plan model answers for weeks 1–5, and explanations for 15 practice tasks. The "Listen" button appears only if the recording matches the current text.
 
 ## Sign-in and progress
 

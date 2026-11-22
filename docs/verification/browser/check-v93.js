@@ -103,7 +103,7 @@ const short = s => `${s.slice(8, 10)}.${s.slice(5, 7)}`;
       await p.focus(tab); await p.keyboard.press("Enter");
       await p.waitForFunction(() => !document.getElementById("view-plan").classList.contains("hidden"));
       ok(`${w}: Enter on «План» moves focus to the week heading`, await active(p) === "plan-week-title", await active(p));
-      ok(`${w}: the heading is the plan's, title says so`, /^Неделя 1\./.test(await p.textContent("#plan-week-title")) && /^План 14 недель/.test(await p.title()));
+      ok(`${w}: the heading is the plan's, title says so`, /^Неделя 1\./.test(await p.textContent("#plan-week-title")) && /^План 15 недель/.test(await p.title()));
       // Галочка с клавиатуры: фокус остаётся на ней.
       await p.evaluate(() => localStorage.removeItem("go_prep_plan_v1"));
       await p.focus("#plan-task-w1-wed-1"); await p.keyboard.press("Space");
@@ -287,14 +287,15 @@ const short = s => `${s.slice(8, 10)}.${s.slice(5, 7)}`;
           return head ? [...head.parentElement.querySelectorAll("li")].map(li => li.textContent) : [];
         });
       };
-      const stale = { w3: /не вводится/, w6: /pgx/, w8: /c38 про synctest|Нет материалов по тестированию на Go/, w10: /только выбор варианта|^Нет режима code review: показать фрагмент/, w12: /event-driven архитектуре/ };
+      const stale = { w4: /не вводится/, w7: /pgx/, w9: /c38 про synctest|Нет материалов по тестированию на Go/, w11: /только выбор варианта|^Нет режима code review: показать фрагмент/, w13: /event-driven архитектуре/ };
       for (const [week, re] of Object.entries(stale)) {
         const list = await gaps(week);
         ok(`${week}: no outdated gap`, list.length > 0 && !list.some(g => re.test(g)), JSON.stringify(list));
       }
-      ok("w5: the trace gap is still listed", (await gaps("w5")).some(g => /go tool trace/.test(g)));
-      ok("w14: the interview journal gap is still listed", (await gaps("w14")).some(g => /журнала реальных интервью/.test(g)));
-      ok("w4: no gaps block", (await gaps("w4")).length === 0);
+      ok("w6: the trace gap is still listed", (await gaps("w6")).some(g => /go tool trace/.test(g)));
+      ok("w15: the interview journal gap is still listed", (await gaps("w15")).some(g => /журнала реальных интервью/.test(g)));
+      ok("w5: no gaps block", (await gaps("w5")).length === 0);
+      ok("w3: no gaps block", (await gaps("w3")).length === 0);
     });
   }
 

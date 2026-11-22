@@ -1,0 +1,21 @@
+// Package allocate: practice task W3-3. Replace the TODO with your solution.
+package allocate
+
+import "errors"
+
+// Money is an amount in minor units plus an ISO currency code, as in W1-1.
+type Money struct {
+	Minor    int64
+	Currency string
+}
+
+// ErrBadParts is wrapped by Allocate when n is not positive.
+var ErrBadParts = errors.New("number of parts must be positive")
+
+// Allocate splits m into n parts that add up to m exactly. Parts differ by at most one minor unit, and the first
+// parts get the extra units: 10.00 EUR into 3 → 3.34, 3.33, 3.33. A negative amount splits the same way with its sign.
+// n ≤ 0 — nil and an error that wraps ErrBadParts; its text says "into N parts" with that n.
+func (m Money) Allocate(n int) ([]Money, error) {
+	// TODO
+	panic("TODO")
+}
