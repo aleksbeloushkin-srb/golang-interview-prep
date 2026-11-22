@@ -905,7 +905,7 @@ pre.practice-code:focus-visible { outline: 2px solid var(--accent); outline-offs
 .practice-guide-commands { margin: 8px 0 0; }
 .practice-guide-commands dt { margin-top: 12px; }
 .practice-guide-commands dt code { white-space: pre-wrap; overflow-wrap: anywhere; }
-.practice-guide-commands dd { margin: 2px 0 0 16px; color: var(--muted); }
+.practice-guide-commands dd { margin: 2px 0 0 16px; color: var(--muted); overflow-wrap: anywhere; }
 .practice-guide-check { margin-top: 12px; padding: 8px 12px; border-left: 3px solid var(--green); background: var(--surface); border-radius: 6px; }
 .practice-guide-links { padding-left: 20px; }
 /* Трек (data/tracks.js): шаги-каты блока, отметка из плана, чужой код для разбора */
