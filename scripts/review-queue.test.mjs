@@ -56,8 +56,11 @@ const merge = fs.readFileSync(new URL('../js/progress-merge.js', import.meta.url
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const short = s => `${s.slice(8, 10)}.${s.slice(5, 7)}`;
 
-function setupStatus(progress, attempts) {
+// now — «сегодня» для review-queue.js (YYYY-MM-DD): даты повтора и «пора повторить» не зависят от дня прогона.
+function setupStatus(progress, attempts, now) {
+  const fixed = now ? new Date(`${now}T12:00:00`).getTime() : null;
   const ctx = {
+    ...(fixed === null ? {} : { Date: class extends Date { constructor(...a) { super(...(a.length ? a : [fixed])); } static now() { return fixed; } } }),
     localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
     CARDS: [{ id: 'c33' }, { id: 'c34' }, { id: 'c35' }],
     ATTEMPT_LABELS: { self: 'сам', anchors: 'с опорой', none: 'не ответил' },
@@ -82,11 +85,19 @@ test('«не ответил», then «сам» on the same day: the card is unde
 });
 
 test('status follows the last day, not the stored mark; a mark without history keeps the old rule', () => {
-  const ctx = setupStatus({ c33: 'review', c35: 'mastered' }, { c33: [{ d: '2026-11-09', r: 'none' }, { d: '2026-11-10', r: 'self' }] });
+  const ctx = setupStatus({ c33: 'review', c35: 'mastered' }, { c33: [{ d: '2026-11-09', r: 'none' }, { d: '2026-11-10', r: 'self' }] }, '2026-11-12');
   assert.equal(ctx.reviewStatusText({ id: 'c33' }), 'Ответил сам ✓ · 10.11: сам · следующая проверка 14.11');
   assert.equal(ctx.cardStatus('c33'), 'mastered');
   assert.equal(ctx.cardStatus('c34'), 'unseen');
   assert.equal(ctx.cardStatus('c35'), 'mastered');
   assert.equal(ctx.reviewStatusText({ id: 'c34' }), 'Новая');
   assert.match(ctx.reviewStatusText({ id: 'c35' }), /^Ответил сам ✓ · пора повторить$/);
+});
+
+test('the next check date turns into «пора повторить» on that very day, not a day later', () => {
+  const attempts = { c33: [{ d: '2026-11-09', r: 'none' }, { d: '2026-11-10', r: 'self' }] };
+  const text = now => setupStatus({ c33: 'mastered' }, attempts, now).reviewStatusText({ id: 'c33' });
+  assert.equal(text('2026-11-13'), 'Ответил сам ✓ · 10.11: сам · следующая проверка 14.11');
+  assert.equal(text('2026-11-14'), 'Ответил сам ✓ · 10.11: сам · пора повторить');
+  assert.equal(text('2026-11-30'), 'Ответил сам ✓ · 10.11: сам · пора повторить');
 });

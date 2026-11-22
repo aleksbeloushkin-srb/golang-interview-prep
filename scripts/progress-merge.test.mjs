@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const { mergeProgressSnapshots, attemptDayResults, attemptStatus } = require('../js/progress-merge.js');
+const { mergeProgressSnapshots, keepAttempts, attemptDayResults, attemptStatus } = require('../js/progress-merge.js');
 const J = JSON.stringify;
 const P = (snap, key) => JSON.parse(snap[key]);
 
@@ -251,4 +251,36 @@ test('status from history: the last day decides — «сам» is mastered, a wo
   const local = { go_prep_progress_v2: J({ c1: 'mastered' }), go_prep_attempts_v1: J({ c1: [{ d: '2026-11-11', r: 'none' }, { d: '2026-11-11', r: 'self' }] }) };
   const server = { go_prep_progress_v2: J({ c1: 'review' }), go_prep_attempts_v1: J({ c1: [] }) };
   assert.equal(P(mergeProgressSnapshots(local, server), 'go_prep_progress_v2').c1, 'review');
+});
+
+test('keepAttempts: the 21st answer of a day keeps the day\'s worst result', () => {
+  const day = '2026-11-17';
+  const list = [{ d: day, r: 'none' }, ...Array.from({ length: 20 }, () => ({ d: day, r: 'self' }))];
+  const kept = keepAttempts(list, 20);
+  assert.equal(kept.length, 20);
+  assert.equal(attemptStatus(kept), 'review');
+  assert.deepEqual(attemptDayResults(kept), [{ day, rating: 'none' }]);
+});
+
+test('keepAttempts: many answers of one day do not push out earlier days', () => {
+  const earlier = ['2026-11-01', '2026-11-03', '2026-11-05'].map(d => ({ d, r: 'self' }));
+  const today = Array.from({ length: 25 }, (_, i) => ({ d: '2026-11-17', r: i === 3 ? 'anchors' : 'self' }));
+  const kept = keepAttempts([...earlier, ...today], 20);
+  assert.equal(kept.length, 20);
+  assert.deepEqual(attemptDayResults(kept).map(x => x.day), ['2026-11-01', '2026-11-03', '2026-11-05', '2026-11-17']);
+  assert.equal(attemptDayResults(kept).at(-1).rating, 'anchors');
+});
+
+test('keepAttempts: one answer per day — the oldest days go first, as before', () => {
+  const many = Array.from({ length: 25 }, (_, i) => ({ d: `2026-10-${String(i + 1).padStart(2, '0')}`, r: 'self' }));
+  const kept = keepAttempts(many, 20);
+  assert.deepEqual([kept[0].d, kept[19].d], ['2026-10-06', '2026-10-25']);
+});
+
+test('merge trims with the same rule: a busy day on one device keeps the other device\'s earlier days', () => {
+  const local = { go_prep_attempts_v1: J({ c1: Array.from({ length: 20 }, () => ({ d: '2026-11-17', r: 'self' })) }) };
+  const server = { go_prep_attempts_v1: J({ c1: [{ d: '2026-11-02', r: 'none' }, { d: '2026-11-17', r: 'none' }] }) };
+  const out = P(mergeProgressSnapshots(local, server), 'go_prep_attempts_v1').c1;
+  assert.equal(out.length, 20);
+  assert.deepEqual(attemptDayResults(out), [{ day: '2026-11-02', rating: 'none' }, { day: '2026-11-17', rating: 'none' }]);
 });

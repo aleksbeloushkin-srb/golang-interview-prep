@@ -141,12 +141,19 @@ function practiceMarkSolved(taskId) {
 
 // Повтор записи по таймеру pending-store.js; удалось — сообщение на странице задачи меняется на обычное.
 function practiceSolvedRetry() {
-  if (!practiceSolvedStore.write(practiceSolvedStore.read())) return;
+  if (practiceSolvedStore.write(practiceSolvedStore.read())) practiceSolvedNoteSaved();
+}
+
+function practiceSolvedNoteSaved() {
+  if (practiceSolvedStore.pending) return;
   document.querySelectorAll("[data-solved-pending]").forEach(node => {
     delete node.dataset.solvedPending;
     node.textContent = PRACTICE_SOLVED;
   });
 }
+
+// Отметку записала синхронизация и сняла повтор: её событие storage обновляет сообщение.
+window.addEventListener("storage", practiceSolvedNoteSaved);
 
 function practiceDraft(taskId, value) {
   try {

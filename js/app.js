@@ -506,12 +506,18 @@ function markCard(status) {
   }
   const list = getFilteredCards();
   if (!list.length || !state.revealed || !["mastered", "review"].includes(status)) return;
-  const card = list[state.index];
-  state.progress[card.id] = status;
-  saveProgress(card.id);
-  if (typeof reviewSessionMark === "function") reviewSessionMark(card.id);
-  // Removing the current item already shifts the next item into its place.
-  if (getFilteredCards().some(c => c.id === card.id)) state.index++;
+  saveCardMark(list[state.index].id, status, state.index);
+}
+
+// Отметка показанной карточки. Её ID и место в подборке взяты до записи попытки: после неё карточка может выйти
+// из подборки («На повторение»), и выбор по номеру попал бы в соседнюю.
+function saveCardMark(id, status, pos) {
+  state.progress[id] = status;
+  saveProgress(id);
+  if (typeof reviewSessionMark === "function") reviewSessionMark(id);
+  // Карточка осталась в подборке — дальше следующая за ней; вышла — следующая уже встала на её место.
+  const at = getFilteredCards().findIndex(c => c.id === id);
+  state.index = at >= 0 ? at + 1 : pos;
   state.revealed = false;
   renderCard();
   returnToQuestion();
@@ -552,7 +558,7 @@ function recordAttempt(cardId, result) {
   attemptsStore.change(all => {
     const list = (Array.isArray(all[cardId]) ? all[cardId] : []).filter(a => a && ATTEMPT_LABELS[a.r]);
     list.push({ d: day, r: result });
-    all[cardId] = list.slice(-20); // хватит, чтобы видеть динамику, и запись не растёт без конца
+    all[cardId] = keepAttempts(list, 20); // хватит, чтобы видеть динамику; итог дня и прежние дни не теряются (progress-merge.js)
   });
 }
 
@@ -570,10 +576,11 @@ function gradeCard(result) {
   }
   const list = getFilteredCards();
   if (!list.length || !state.revealed) return;
-  const id = list[state.index].id;
+  const pos = state.index;
+  const id = list[pos].id;
   recordAttempt(id, result);
   // Отметка — итог дня по истории, как у расписания: «не ответил», а потом «сам» в тот же день — всё ещё на повторении.
-  markCard(attemptStatus(loadAttempts()[id]) || (result === "self" ? "mastered" : "review"));
+  saveCardMark(id, attemptStatus(loadAttempts()[id]) || (result === "self" ? "mastered" : "review"), pos);
 }
 
 // Без входа отметки не сохраняются: сказать об этом до нажатия, а не после.
